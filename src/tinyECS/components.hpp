@@ -7,13 +7,13 @@
 // Player component
 struct Player
 {
-
+	std::string name;
 };
 
 // Tower
 struct Tower {
-	float range;	// for vision / detection
-	int timer_ms;	// when to shoot - this could also be a separate timer component...
+	float range;
+	int timer_ms;
 };
 
 // Invader
@@ -107,6 +107,76 @@ struct Mesh
 	std::vector<ColoredVertex> vertices;
 	std::vector<uint16_t> vertex_indices;
 };
+
+// =============================== ENCHANTED GROTTO COMPONENTS =========================================
+// represents a potion in our game
+struct Potion
+{
+	int effect; // NOTE: we can turn effect into an enum
+	int duration;
+	vec3 color;
+	float quality;
+};
+
+// an item that can be in an inventory
+struct Item
+{
+	int id;
+	std::string name;
+	bool isCollectable;
+	int amount;
+};
+
+// an item that can be added to potions
+struct Ingredient 
+{
+	float grindLevel; // -1 = ungrindable, 0 = ungrinded, 1 = full
+};
+
+// allows entities to have a storage system
+struct Inventory
+{
+	// commented out temporarily as Item results in a compilation error
+	// std::unordered_map<Item, int> items; // map of the item to the amount 
+	int capacity;
+	bool isFull;
+};
+
+struct Cauldron
+{
+	std::vector<Item> items; // could this also be Inventory?
+	int heatLevel;
+	int stirLevel;
+	vec3 color;
+};
+
+// a menu of our game (recipe book menu, potion making menu, grinding menu...)
+struct Menu
+{
+	bool mouseInput; // true if we allow mouse input
+	bool keyInput; // true if we allow key input
+};
+
+// a recipe in our recipe book menu
+struct Recipe
+{
+	std::string potionName;
+	int potionEffect;
+	int highestQualityEffect;
+	int highestQualityDuration;
+	vec3 finalPotionColor;
+	// commented out temporarily as Ingredient results in a compilation error
+	// std::unordered_map<Ingredient, int> ingredients; // the ingredient and quantity
+	int steps; // TODO: determine what this field should be
+};
+
+struct MortarAndPestle
+{
+	std::vector<Item> items; // could this also be Inventory?
+	int grindLevel;
+	int itemState;
+};
+
 
 /**
  * The following enumerators represent global identifiers refering to graphic

@@ -10,8 +10,6 @@ class ECSRegistry
 	std::vector<ContainerInterface*> registry_list;
 
 public:
-	// Manually created list of all components this game has
-	// TODO: A1 add a LightUp component
 	ComponentContainer<DeathTimer> deathTimers;
 	ComponentContainer<Motion> motions;
 	ComponentContainer<Collision> collisions;
@@ -23,16 +21,24 @@ public:
 	ComponentContainer<Deadly> deadlys;
 	ComponentContainer<DebugComponent> debugComponents;
 	ComponentContainer<vec3> colors;
-	// IMPORTANT: Add any new CC's below to the registry_list
 	ComponentContainer<Tower> towers;
 	ComponentContainer<GridLine> gridLines;
 	ComponentContainer<Invader> invaders;
 	ComponentContainer<Projectile> projectiles;
 
+	// Enchanted Grotto CCs
+	ComponentContainer<Potion> potions;
+	ComponentContainer<Item> items;
+	ComponentContainer<Ingredient> ingredients;
+	ComponentContainer<Inventory> inventories;
+	ComponentContainer<Cauldron> cauldrons;
+	ComponentContainer<Menu> menus;
+	ComponentContainer<Recipe> recipes;
+	ComponentContainer<MortarAndPestle> mortarAndPestles;
+
 	// constructor that adds all containers for looping over them
 	ECSRegistry()
 	{
-		// TODO: A1 add a LightUp component
 		registry_list.push_back(&deathTimers);
 		registry_list.push_back(&motions);
 		registry_list.push_back(&collisions);
@@ -48,6 +54,14 @@ public:
 		registry_list.push_back(&gridLines);
 		registry_list.push_back(&invaders);
 		registry_list.push_back(&projectiles);
+		registry_list.push_back(&potions);
+		registry_list.push_back(&items);
+		registry_list.push_back(&ingredients);
+		registry_list.push_back(&inventories);
+		registry_list.push_back(&cauldrons);
+		registry_list.push_back(&menus);
+		registry_list.push_back(&recipes);
+		registry_list.push_back(&mortarAndPestles);
 	}
 
 	void clear_all_components() {
