@@ -33,11 +33,11 @@ inline std::string mesh_path(const std::string& name) {return data_path() + "/me
 //
 // game constants
 //
-const int WINDOW_WIDTH_PX = 840;
-const int WINDOW_HEIGHT_PX = 600;
+const int WINDOW_WIDTH_PX = 1250;
+const int WINDOW_HEIGHT_PX = 700;
 
-const int GRID_CELL_WIDTH_PX = 60;
-const int GRID_CELL_HEIGHT_PX = 60;
+const int GRID_CELL_WIDTH_PX = 50;
+const int GRID_CELL_HEIGHT_PX = 50;
 const int GRID_LINE_WIDTH_PX = 2;
 
 const int TOWER_TIMER_MS = 1000;	// number of milliseconds between tower shots

@@ -69,6 +69,10 @@ void RenderSystem::initializeGlTextures()
 		const std::string& path = texture_paths[i];
 		ivec2& dimensions = texture_dimensions[i];
 
+		if (i == (uint)TEXTURE_ASSET_ID::FOREST_BG) {
+			stbi_set_flip_vertically_on_load(true); // need to flip this texture
+		}
+		
 		stbi_uc* data;
 		data = stbi_load(path.c_str(), &dimensions.x, &dimensions.y, NULL, 4);
 
