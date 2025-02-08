@@ -44,6 +44,7 @@ struct Motion {
 	float angle    = 0;
 	vec2  velocity = { 0, 0 };
 	vec2  scale    = { 10, 10 };
+	int moving_direction = 0;
 };
 
 // Stucture to store collision information
@@ -66,6 +67,7 @@ struct ScreenState
 {
 	float darken_screen_factor = -1;
 	GLuint biome = 1; // default to forest
+	std::vector<int> pressed_keys = {};
 };
 
 // A struct to refer to debugging graphics in the ECS
@@ -178,6 +180,11 @@ struct MortarAndPestle
 	int itemState;
 };
 
+struct Moving
+{
+
+};
+
 
 /**
  * The following enumerators represent global identifiers refering to graphic
@@ -241,4 +248,11 @@ struct RenderRequest {
 enum class BIOME {
 	GROTTO = 0,
 	FOREST = GROTTO + 1
+};
+
+enum class DIRECTION {
+	UP = 0,
+	DOWN = 1,
+	RIGHT = 2,
+	LEFT = 3
 };

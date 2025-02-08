@@ -6,6 +6,7 @@
 #include <cassert>
 #include <sstream>
 #include <iostream>
+#include <unordered_set>
 
 #include "physics_system.hpp"
 
@@ -164,19 +165,29 @@ bool WorldSystem::step(float elapsed_ms_since_last_update) {
 		}
 	}
 
+	// move the character
+	Entity &player = registry.invaders.entities[0];
+	if (registry.moving.has(player) && registry.motions.has(player)) {
+		Motion &player_motion = registry.motions.get(player);
+		float delta = elapsed_ms_since_last_update * 0.001f;
+
+		if (player_motion.moving_direction == (int) DIRECTION::UP) {
+			player_motion.position.y -= player_motion.velocity.y * delta;
+		} else if (player_motion.moving_direction == (int) DIRECTION::DOWN) {
+			player_motion.position.y += player_motion.velocity.y * delta;
+		} else if (player_motion.moving_direction == (int) DIRECTION::RIGHT) {
+			player_motion.position.x += player_motion.velocity.x * delta;
+		} else if (player_motion.moving_direction == (int) DIRECTION::LEFT) {
+			player_motion.position.x -= player_motion.velocity.x * delta;
+		}
+	}
+
+
 	// spawn new invaders
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	// TODO A1: limit them to cells on the far-left, except (0, 0)
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	next_invader_spawn -= elapsed_ms_since_last_update * current_speed;
-	if (next_invader_spawn < 0.f) {
-		// reset timer
-		next_invader_spawn = (INVADER_SPAWN_RATE_MS / 2) + uniform_dist(rng) * (INVADER_SPAWN_RATE_MS / 2);
-
-		// create invader with random initial position
-		createInvader(renderer, vec2(50.f + uniform_dist(rng) * (WINDOW_WIDTH_PX - 100.f), 100.f));
-	}
-
+	
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	// TODO A1: game over fade out
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -255,6 +266,10 @@ void WorldSystem::restart_game() {
 			grid_lines.push_back(createGridLine(vec2(0, col * cell_height), vec2(2 * WINDOW_WIDTH_PX, grid_line_width)));
 		}
 	}
+	if (registry.invaders.components.size() == 0) {
+		// create invader/player if it doesn't already exist
+		createInvader(renderer, vec2(4.5*GRID_CELL_WIDTH_PX, 5.5*GRID_CELL_HEIGHT_PX));
+	}
 }
 
 // Compute collisions between entities
@@ -315,6 +330,53 @@ void WorldSystem::on_key(int key, int, int action, int mod) {
 			}
 		}
 	}
+
+	Entity player = registry.invaders.entities[0]; // Assume only one player entity
+    if (!registry.motions.has(player)) {
+        return;
+    }
+    Motion &player_motion = registry.motions.get(player);
+	std::vector<int> &pressed_keys = registry.screenStates.components[0].pressed_keys;
+
+    if (action == GLFW_PRESS) {
+        pressed_keys.push_back(key);  // Add key to set
+        if (!registry.moving.has(player)) {
+            registry.moving.emplace(player); // Register movement
+        }
+
+        if (key == GLFW_KEY_W) {
+            player_motion.moving_direction = (int)DIRECTION::UP;
+        } else if (key == GLFW_KEY_S) {
+            player_motion.moving_direction = (int)DIRECTION::DOWN;
+        } else if (key == GLFW_KEY_D) {
+            player_motion.moving_direction = (int)DIRECTION::RIGHT;
+        } else if (key == GLFW_KEY_A) {
+            player_motion.moving_direction = (int)DIRECTION::LEFT;
+        }
+    }
+    if (action == GLFW_RELEASE) {
+        pressed_keys.erase(
+			std::remove(pressed_keys.begin(), pressed_keys.end(), key),
+			pressed_keys.end()
+		);
+		
+
+        if (pressed_keys.empty() && registry.moving.has(player)) {
+            registry.moving.remove(player); // Stop movement only when all keys are released
+        } else {
+			std::cout << "keys remaining" << pressed_keys[0] << std::endl;
+			int old_key = pressed_keys[pressed_keys.size() - 1]; // get the last direction
+			if (old_key == GLFW_KEY_W) {
+				player_motion.moving_direction = (int)DIRECTION::UP;
+			} else if (old_key == GLFW_KEY_S) {
+				player_motion.moving_direction = (int)DIRECTION::DOWN;
+			} else if (old_key == GLFW_KEY_D) {
+				player_motion.moving_direction = (int)DIRECTION::RIGHT;
+			} else if (old_key == GLFW_KEY_A) {
+				player_motion.moving_direction = (int)DIRECTION::LEFT;
+			}
+		}
+    }
 }
 
 void WorldSystem::on_mouse_move(vec2 mouse_position) {
