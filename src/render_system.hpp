@@ -31,7 +31,8 @@ class RenderSystem {
 	const std::array<std::string, texture_count> texture_paths = {
 		textures_path("invaders/blue_1.png"),
 		textures_path("towers/tower01.png"),
-		textures_path("projectiles/gold_bubble.png")
+		textures_path("projectiles/gold_bubble.png"),
+		textures_path("backgrounds/forest.jpg")
 	};
 
 	std::array<GLuint, effect_count> effects;
@@ -41,7 +42,7 @@ class RenderSystem {
 		shader_path("egg"),
 		shader_path("chicken"),
 		shader_path("textured"),
-		shader_path("vignette")
+		shader_path("background")
 	};
 
 	std::array<GLuint, geometry_count> vertex_buffers;

@@ -9,10 +9,10 @@ Entity createGridLine(vec2 start_pos, vec2 end_pos)
 {
 	Entity entity = Entity();
 
-	// TODO A1: create a gridLine component
+	GridLine& gridLine = registry.gridLines.emplace(entity);
+	gridLine.start_pos = start_pos;
+	gridLine.end_pos = end_pos;
 
-	// re-use the "DEBUG_LINE" renderRequest
-	/*
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -21,9 +21,11 @@ Entity createGridLine(vec2 start_pos, vec2 end_pos)
 			GEOMETRY_BUFFER_ID::DEBUG_LINE
 		}
 	);
-	*/
 
-	// TODO A1: grid line color (choose your own color)
+	registry.colors.insert(
+		entity,
+		glm::vec3(0.1f, 0.1f, 0.1f)
+	);
 
 	return entity;
 }
@@ -47,8 +49,9 @@ Entity createInvader(RenderSystem* renderer, vec2 position)
 	// TODO A1: initialize the position, scale, and physics components
 	auto& motion = registry.motions.emplace(entity);
 	motion.angle = 0.f;
-	motion.velocity = { 0, 0 };
+	motion.velocity = { 50.f, 50.f };
 	motion.position = position;
+	motion.moving_direction = (int) DIRECTION::DOWN;
 
 	// resize, set scale to negative if you want to make it face the opposite way
 	// motion.scale = vec2({ -INVADER_BB_WIDTH, INVADER_BB_WIDTH });

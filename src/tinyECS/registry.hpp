@@ -35,6 +35,7 @@ public:
 	ComponentContainer<Menu> menus;
 	ComponentContainer<Recipe> recipes;
 	ComponentContainer<MortarAndPestle> mortarAndPestles;
+	ComponentContainer<Moving> moving;
 
 	// constructor that adds all containers for looping over them
 	ECSRegistry()
@@ -62,6 +63,7 @@ public:
 		registry_list.push_back(&menus);
 		registry_list.push_back(&recipes);
 		registry_list.push_back(&mortarAndPestles);
+		registry_list.push_back(&moving);
 	}
 
 	void clear_all_components() {

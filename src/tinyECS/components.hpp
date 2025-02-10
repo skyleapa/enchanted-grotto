@@ -44,6 +44,7 @@ struct Motion {
 	float angle    = 0;
 	vec2  velocity = { 0, 0 };
 	vec2  scale    = { 10, 10 };
+	int moving_direction = 0;
 };
 
 // Stucture to store collision information
@@ -65,6 +66,8 @@ extern Debug debugging;
 struct ScreenState
 {
 	float darken_screen_factor = -1;
+	GLuint biome = 1; // default to forest
+	std::vector<int> pressed_keys = {};
 };
 
 // A struct to refer to debugging graphics in the ECS
@@ -177,6 +180,11 @@ struct MortarAndPestle
 	int itemState;
 };
 
+struct Moving
+{
+
+};
+
 
 /**
  * The following enumerators represent global identifiers refering to graphic
@@ -206,7 +214,8 @@ enum class TEXTURE_ASSET_ID {
 	INVADER = 0,
 	TOWER = INVADER + 1,
 	PROJECTILE = TOWER + 1,
-	TEXTURE_COUNT = PROJECTILE + 1
+	FOREST_BG = PROJECTILE + 1,
+	TEXTURE_COUNT = FOREST_BG + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 
@@ -215,8 +224,8 @@ enum class EFFECT_ASSET_ID {
 	EGG = COLOURED + 1,
 	CHICKEN = EGG + 1,
 	TEXTURED = CHICKEN + 1,
-	VIGNETTE = TEXTURED + 1,
-	EFFECT_COUNT = VIGNETTE + 1
+	BACKGROUND = TEXTURED + 1,
+	EFFECT_COUNT = BACKGROUND + 1
 };
 const int effect_count = (int)EFFECT_ASSET_ID::EFFECT_COUNT;
 
@@ -236,3 +245,14 @@ struct RenderRequest {
 	GEOMETRY_BUFFER_ID used_geometry = GEOMETRY_BUFFER_ID::GEOMETRY_COUNT;
 };
 
+enum class BIOME {
+	GROTTO = 0,
+	FOREST = GROTTO + 1
+};
+
+enum class DIRECTION {
+	UP = 0,
+	DOWN = 1,
+	RIGHT = 2,
+	LEFT = 3
+};
