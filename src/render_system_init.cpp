@@ -53,7 +53,7 @@ bool RenderSystem::init(GLFWwindow* window_arg)
 	gl_has_errors();
 
 	initScreenTexture();
-    initializeGlTextures();
+	initializeGlTextures();
 	initializeGlEffects();
 	initializeGlGeometryBuffers();
 
@@ -62,10 +62,10 @@ bool RenderSystem::init(GLFWwindow* window_arg)
 
 void RenderSystem::initializeGlTextures()
 {
-    glGenTextures((GLsizei)texture_gl_handles.size(), texture_gl_handles.data());
+	glGenTextures((GLsizei)texture_gl_handles.size(), texture_gl_handles.data());
 
-    for(uint i = 0; i < texture_paths.size(); i++)
-    {
+	for(uint i = 0; i < texture_paths.size(); i++)
+	{
 		const std::string& path = texture_paths[i];
 		ivec2& dimensions = texture_dimensions[i];
 
@@ -88,7 +88,7 @@ void RenderSystem::initializeGlTextures()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		gl_has_errors();
 		stbi_image_free(data);
-    }
+	}
 	gl_has_errors();
 }
 
@@ -248,7 +248,7 @@ RenderSystem::~RenderSystem()
 
 	// remove all entities created by the render system
 	while (registry.renderRequests.entities.size() > 0)
-	    registry.remove_all_components_of(registry.renderRequests.entities.back());
+		registry.remove_all_components_of(registry.renderRequests.entities.back());
 }
 
 // Initialize the screen texture from a standard sprite

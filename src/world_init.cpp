@@ -23,9 +23,9 @@ Entity createGridLine(vec2 start_pos, vec2 end_pos)
 	);
 
 	registry.colors.insert(
-        entity,
-        glm::vec3(0.1f, 0.1f, 0.1f)
-    );
+		entity,
+		glm::vec3(0.1f, 0.1f, 0.1f)
+	);
 
 	return entity;
 }
