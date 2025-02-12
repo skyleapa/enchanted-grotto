@@ -3,7 +3,7 @@
 #include "world_init.hpp"
 #include <iostream>
 
-vec4 get_bounding_box(const Motion& motion, float width_ratio = 1.0f, float height_ratio = 0.3f)
+vec4 get_bounding_box(const Motion& motion, float width_ratio, float height_ratio)
 {
 	// gets the full bounding box
 	float full_width = abs(motion.scale.x);
@@ -19,47 +19,59 @@ vec4 get_bounding_box(const Motion& motion, float width_ratio = 1.0f, float heig
 	return { box_x, box_y, box_width, box_height };
 }
 
-// use_bottom_box1 = to only check for the bottom region collides
-bool collides(const Motion& motion1, const Motion& motion2, bool use_bottom_box1 = false, bool use_bottom_box2 = false)
+bool collides(const Motion& motion1, const Motion& motion2, const Terrain* terrain1, const Terrain* terrain2)
 {
-	// get bounding boxes (can specify the size)
-	vec4 box1 = use_bottom_box1 ? get_bounding_box(motion1) : get_bounding_box(motion1, 0.2f, 0.1f);
-	vec4 box2 = use_bottom_box2 ? get_bounding_box(motion2) : get_bounding_box(motion2, 0.2f, 0.1f);
+    float width_ratio1 = 1.0f, height_ratio1 = 1.0f;
+    float width_ratio2 = 1.0f, height_ratio2 = 1.0f;
 
-	// using aabb collision
-	bool overlap_x = (box1.x < box2.x + box2.z) && (box1.x + box1.z > box2.x);
-	bool overlap_y = (box1.y < box2.y + box2.w) && (box1.y + box1.w > box2.y);
+    if (terrain1 && terrain1->collision_setting == 0) {
+        width_ratio1 = terrain1->width_ratio;
+        height_ratio1 = terrain1->height_ratio;
+    }
 
-	return overlap_x && overlap_y;
+    if (terrain2 && terrain2->collision_setting == 0) {
+        width_ratio2 = terrain2->width_ratio;
+        height_ratio2 = terrain2->height_ratio;
+    }
+
+    vec4 box1 = get_bounding_box(motion1, width_ratio1, height_ratio1);
+    vec4 box2 = get_bounding_box(motion2, width_ratio2, height_ratio2);
+
+    bool overlap_x = (box1.x < box2.x + box2.z) && (box1.x + box1.z > box2.x);
+    bool overlap_y = (box1.y < box2.y + box2.w) && (box1.y + box1.w > box2.y);
+
+    return overlap_x && overlap_y;
 }
 
 void PhysicsSystem::step(float elapsed_ms)
 {	
-	// check for collisions between all moving entities
-    ComponentContainer<Motion> &motion_container = registry.motions;
-	for(uint i = 0; i < motion_container.components.size(); i++)
+	ComponentContainer<Motion> &motion_container = registry.motions;
+	for (uint i = 0; i < motion_container.components.size(); i++)
 	{
 		Motion& motion_i = motion_container.components[i];
 		Entity entity_i = motion_container.entities[i];
-		
-		// note starting j at i+1 to compare all (i,j) pairs only once (and to not compare with itself)
-		for(uint j = i+1; j < motion_container.components.size(); j++)
+
+		for (uint j = i + 1; j < motion_container.components.size(); j++)
 		{
 			Motion& motion_j = motion_container.components[j];
 			Entity entity_j = motion_container.entities[j];
 
 			bool is_terrain1 = registry.terrains.has(entity_i);
 			bool is_terrain2 = registry.terrains.has(entity_j);
-			bool is_player1 = registry.invaders.has(entity_i);
-			bool is_player2 = registry.invaders.has(entity_j);
+			bool is_player1 = registry.players.has(entity_i);
+			bool is_player2 = registry.players.has(entity_j);
 
-			// If one entity is terrain and the other is a player, use the bottom bounding box
-			bool use_bottom_box1 = is_player1 && is_terrain2;
-			bool use_bottom_box2 = is_player2 && is_terrain1;
-
-			if (collides(motion_i, motion_j, use_bottom_box1, use_bottom_box2))
+			Terrain* terrain1 = is_terrain1 ? &registry.terrains.get(entity_i) : nullptr;
+			Terrain* terrain2 = is_terrain2 ? &registry.terrains.get(entity_j) : nullptr;
+			
+			// only check collisions if one is a player and the other is terrain
+			if ((is_player1 && is_terrain2) || (is_player2 && is_terrain1))
 			{
-				registry.collisions.emplace_with_duplicates(entity_i, entity_j);
+				if (collides(motion_i, motion_j, terrain1, terrain2))
+				{
+					std::cout << "COLLIDING" << std::endl;
+					registry.collisions.emplace_with_duplicates(entity_i, entity_j);
+				}
 			}
 		}
 	}

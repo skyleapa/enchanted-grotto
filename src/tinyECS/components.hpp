@@ -186,10 +186,16 @@ struct Moving
 
 };
 
-// Obstacles in our environment that the player cannot walk through, but may interact with
+// Obstacles in our environment that the player collides with
 struct Terrain
 {
-
+	// 0 - uses bottom bounding box for collisions, allows player to walk behind terrain (trees, rocks)
+	//     if 0, specify the ratio of the bounding box in proportion to the sprite. Bounding box collision
+	//     logic can be found in physics_system.cpp, boxes are drawn on bottom middle of sprite
+	// 1 - uses full bounding box for collisions, player cannot walk into terrain at all (river)
+	float collision_setting;
+	float width_ratio = 1.0f;
+	float height_ratio = 1.0f;
 };
 
 
@@ -219,11 +225,11 @@ struct Terrain
 
 enum class TEXTURE_ASSET_ID {
 	PLAYER = 0,
-	TOWER = PLAYER + 1,
-	PROJECTILE = TOWER + 1,
-	FOREST_BG = PROJECTILE + 1,
+	FOREST_BRIDGE = PLAYER + 1,
+	FOREST_RIVER = FOREST_BRIDGE + 1,
+	FOREST_BG = FOREST_RIVER + 1,
 	TREE = FOREST_BG + 1,
-	TEXTURE_COUNT = TREE + 1
+	TEXTURE_COUNT = TREE + 1,
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 
@@ -247,10 +253,19 @@ enum class GEOMETRY_BUFFER_ID {
 };
 const int geometry_count = (int)GEOMETRY_BUFFER_ID::GEOMETRY_COUNT;
 
+enum class RENDER_LAYER {
+    BACKGROUND,
+    TERRAIN,
+    STRUCTURE,
+    PLAYER
+};
+
 struct RenderRequest {
 	TEXTURE_ASSET_ID   used_texture  = TEXTURE_ASSET_ID::TEXTURE_COUNT;
 	EFFECT_ASSET_ID    used_effect   = EFFECT_ASSET_ID::EFFECT_COUNT;
 	GEOMETRY_BUFFER_ID used_geometry = GEOMETRY_BUFFER_ID::GEOMETRY_COUNT;
+	RENDER_LAYER layer = RENDER_LAYER::BACKGROUND;
+	int render_sub_layer = 0; // lower values are rendered under
 };
 
 enum class BIOME {

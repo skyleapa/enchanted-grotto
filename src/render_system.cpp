@@ -298,15 +298,38 @@ void RenderSystem::draw()
 	}), entities.end());
 
 	std::sort(entities.begin(), entities.end(), [](Entity a, Entity b) {
-		Motion& motionA = registry.motions.get(a);
-		Motion& motionB = registry.motions.get(b);
-
-		float bottomA = motionA.position.y + (motionA.scale.y / 2);
-		float bottomB = motionB.position.y + (motionB.scale.y / 2);
-
-		return bottomA < bottomB;
+		RenderRequest& renderA = registry.renderRequests.get(a);
+		RenderRequest& renderB = registry.renderRequests.get(b);
+	
+		// background always renders first
+		if (renderA.layer == RENDER_LAYER::BACKGROUND) return true;
+		if (renderB.layer == RENDER_LAYER::BACKGROUND) return false;
+	
+		// ensure Terrain renders above structures
+		if (renderA.layer == RENDER_LAYER::TERRAIN && renderB.layer == RENDER_LAYER::STRUCTURE) return false;
+		if (renderA.layer == RENDER_LAYER::STRUCTURE && renderB.layer == RENDER_LAYER::TERRAIN) return true;
+	
+		// player should always be above structures
+		if (renderA.layer == RENDER_LAYER::PLAYER && renderB.layer == RENDER_LAYER::STRUCTURE) return false;
+		if (renderA.layer == RENDER_LAYER::STRUCTURE && renderB.layer == RENDER_LAYER::PLAYER) return true;
+	
+		// sort structures by sub-layer (bridges on top)
+		if (renderA.layer == RENDER_LAYER::STRUCTURE && renderB.layer == RENDER_LAYER::STRUCTURE) {
+			return renderA.render_sub_layer > renderB.render_sub_layer;
+		}
+	
+		if (renderA.layer == RENDER_LAYER::TERRAIN || renderA.layer == RENDER_LAYER::PLAYER) {
+			Motion& motionA = registry.motions.get(a);
+			Motion& motionB = registry.motions.get(b);
+			float bottomA = motionA.position.y + (motionA.scale.y / 2);
+			float bottomB = motionB.position.y + (motionB.scale.y / 2);
+			return bottomA < bottomB;
+		}
+	
+		return false;
 	});
-
+	
+	
 
 	// draw all entities with a render request to the frame buffer
 	for (Entity entity : entities)

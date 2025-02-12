@@ -12,11 +12,7 @@
 
 // create the world
 WorldSystem::WorldSystem() : 
-next_invader_spawn(0),
-invader_spawn_rate_ms(INVADER_SPAWN_RATE_MS),
-max_towers(MAX_TOWERS_START),
 points(0)
-
 {
 	// seeding rng with random device
 	rng = std::default_random_engine(std::random_device()());
@@ -211,8 +207,8 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		}
 	}
 
-	assert(registry.screenStates.components.size() <= 1);
-	ScreenState &screen = registry.screenStates.components[0];
+	// assert(registry.screenStates.components.size() <= 1);
+	// ScreenState &screen = registry.screenStates.components[0];
 
 	float min_counter_ms = 3000.f;
 	for (Entity entity : registry.deathTimers.entities)
@@ -241,9 +237,6 @@ void WorldSystem::restart_game()
 	current_speed = 1.f;
 
 	points = 0;
-	max_towers = MAX_TOWERS_START;
-	next_invader_spawn = 0;
-	invader_spawn_rate_ms = INVADER_SPAWN_RATE_MS;
 
 	// Remove all entities that we created
 	// All that have a motion, we could also iterate over all bug, eagles, ... but that would be more cumbersome
@@ -275,69 +268,80 @@ void WorldSystem::restart_game()
 		}
 	}
 
-	// create trees if they don't exist
+	// create forest bridge
+	createForestBridge(renderer, vec2(306, 485));
+
+	// create forest river
+	createForestRiver(renderer, vec2(306, WINDOW_HEIGHT_PX / 2));
+
+	// create trees if they don't existsd
 	if (trees.size() == 0)
-	{
-		trees.push_back(createTree(renderer, vec2(GRID_CELL_WIDTH_PX * 8, GRID_CELL_HEIGHT_PX * 7)));
-		trees.push_back(createTree(renderer, vec2(GRID_CELL_WIDTH_PX * 18, GRID_CELL_HEIGHT_PX * 10)));
+	{	
+		trees.push_back(createTree(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 3)));
+		trees.push_back(createTree(renderer, vec2(GRID_CELL_WIDTH_PX * 19, GRID_CELL_HEIGHT_PX * 10)));
+		trees.push_back(createTree(renderer, vec2(GRID_CELL_WIDTH_PX * 23, GRID_CELL_HEIGHT_PX * 11)));
 	}
 
-
 	if (registry.players.components.size() == 0)
-	{
-		// create player if it doesn't already exist
-		createPlayer(renderer, vec2(4.5 * GRID_CELL_WIDTH_PX, 5.5 * GRID_CELL_HEIGHT_PX));
+	{ 
+		createPlayer(renderer, vec2(2 * GRID_CELL_WIDTH_PX, 2 * GRID_CELL_HEIGHT_PX));
 	}
 }
 
 // Compute collisions between entities
 void WorldSystem::handle_collisions()
 {
-	ComponentContainer<Collision> &collision_container = registry.collisions;
-	for (uint i = 0; i < collision_container.components.size(); i++)
-	{
-		Entity& first_entity = collision_container.entities[i];
+    ComponentContainer<Collision> &collision_container = registry.collisions;
+    
+    for (uint i = 0; i < collision_container.components.size(); i++)
+    {
+        Entity& first_entity = collision_container.entities[i];
+        
         if (registry.collisions.has(first_entity)) {
             Collision& first_collision = registry.collisions.get(first_entity);
             Entity& second_entity = first_collision.other;
+
             bool first_is_terrain = registry.terrains.has(first_entity);
             bool second_is_terrain = registry.terrains.has(second_entity);
 
-            if (first_is_terrain || second_is_terrain)
+            // Retrieve the terrain components if applicable
+            Terrain* terrain1 = first_is_terrain ? &registry.terrains.get(first_entity) : nullptr;
+            Terrain* terrain2 = second_is_terrain ? &registry.terrains.get(second_entity) : nullptr;
+
+            // Check if one entity is a player and the other is terrain
+            bool is_player1 = registry.players.has(first_entity);
+            bool is_player2 = registry.players.has(second_entity);
+
+            if ((is_player1 && first_is_terrain) || (is_player2 && second_is_terrain))
             {
-                Entity& terrain_entity = first_is_terrain ? first_entity : second_entity;
-                Entity& player_entity = first_is_terrain ? second_entity : first_entity;
+                // Collision handling based on terrain collision setting
+                Motion& player_motion = registry.motions.get(is_player1 ? first_entity : second_entity);
+                vec2 movement = player_motion.position - player_motion.previous_position;
 
-                if (registry.players.has(player_entity)) 
-                {
-                    Motion& player_motion = registry.motions.get(player_entity);
-                    vec2 movement = player_motion.position - player_motion.previous_position;
+				// Handle collision based on movement direction
+				if (std::abs(movement.x) > std::abs(movement.y)) {
+					// Horizontal collision: Stop X movement, allow Y movement
+					player_motion.position.x = player_motion.previous_position.x;
+				} else {
+					// Vertical collision: Stop Y movement, allow X movement
+					player_motion.position.y = player_motion.previous_position.y;
+				}
 
-                    if (registry.motions.has(terrain_entity))
-                    {
-                        Motion& terrain_motion = registry.motions.get(terrain_entity);
-                        vec2 terrain_pos = terrain_motion.position;
-
-                        // find the axis that caused the collision
-                        if (std::abs(movement.x) > std::abs(movement.y))
-                        {
-                            // horizontal collision -> stop X movement, allow Y movement
-                            player_motion.position.x = player_motion.previous_position.x;
-                        }
-                        else
-                        {
-                            // vertical collision -> stop y movement, allow X movement
-                            player_motion.position.y = player_motion.previous_position.y;
-                        }
-                    }
-                }
-			}
+				// If the terrain has a `collision_setting` of 1, stop the player's movement entirely
+				if ((terrain1 && terrain1->collision_setting == 1) || (terrain2 && terrain2->collision_setting == 1))
+				{
+					// Additional logic for full collision (the player cannot walk through the terrain)
+					player_motion.position = player_motion.previous_position;
+				}
+			
+            }
         }
-	}
+    }
 
-	// Remove all collisions from this simulation step
-	registry.collisions.clear();
+    // Clear all collisions after processing this step
+    registry.collisions.clear();
 }
+
 
 // Should the game be over ?
 bool WorldSystem::is_over() const

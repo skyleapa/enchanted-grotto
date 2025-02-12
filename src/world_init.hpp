@@ -7,15 +7,14 @@
 // trees
 Entity createTree(RenderSystem* renderer, vec2 position);
 
-// invaders
+// player
 Entity createPlayer(RenderSystem* renderer, vec2 position);
 
-// towers
-Entity createTower(RenderSystem* renderer, vec2 position);
-void removeTower(vec2 position);
+// forest bridge
+Entity createForestBridge(RenderSystem* renderer, vec2 position);
 
-// projectile
-Entity createProjectile(vec2 pos, vec2 size, vec2 velocity);
+// forest river
+Entity createForestRiver(RenderSystem* renderer, vec2 position);
 
 // grid lines to show tile positions
 Entity createGridLine(vec2 start_pos, vec2 end_pos);

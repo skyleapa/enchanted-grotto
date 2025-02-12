@@ -6,6 +6,9 @@ Entity createTree(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
 	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.height_ratio = 0.3f;
+	terrain.width_ratio = 0.25f;
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -23,7 +26,8 @@ Entity createTree(RenderSystem* renderer, vec2 position)
 		{
 			TEXTURE_ASSET_ID::TREE,
 			EFFECT_ASSET_ID::TEXTURED,
-			GEOMETRY_BUFFER_ID::SPRITE
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::TERRAIN
 		}
 	);
 
@@ -59,8 +63,8 @@ Entity createPlayer(RenderSystem* renderer, vec2 position)
 {
 	// reserve an entity
 	auto entity = Entity();
-
 	Player& player = registry.players.emplace(entity);
+	player.name = "Madoka";
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -68,12 +72,10 @@ Entity createPlayer(RenderSystem* renderer, vec2 position)
 
 	auto& motion = registry.motions.emplace(entity);
 	motion.angle = 0.f;
-	motion.velocity = { 50.f, 50.f };
+	motion.velocity = { 80.f, 80.f };
 	motion.position = position;
 	motion.moving_direction = (int) DIRECTION::DOWN;
 
-	// resize, set scale to negative if you want to make it face the opposite way
-	// motion.scale = vec2({ -INVADER_BB_WIDTH, INVADER_BB_WIDTH });
 	motion.scale = vec2({ PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT });
 
 	registry.eatables.emplace(entity);
@@ -82,75 +84,73 @@ Entity createPlayer(RenderSystem* renderer, vec2 position)
 		{
 			TEXTURE_ASSET_ID::PLAYER,
 			EFFECT_ASSET_ID::TEXTURED,
-			GEOMETRY_BUFFER_ID::SPRITE
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::PLAYER
 		}
 	);
 
 	return entity;
 }
 
-Entity createTower(RenderSystem* renderer, vec2 position)
+Entity createForestBridge(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
+	auto& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.width_ratio = 1.0f;
+	terrain.height_ratio = 0.2f;
 
-	// new tower
-	auto& t = registry.towers.emplace(entity);
-	t.range = (float)WINDOW_WIDTH_PX / (float)GRID_CELL_WIDTH_PX;
-	t.timer_ms = TOWER_TIMER_MS;	// arbitrary for now
-
-	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
 	registry.meshPtrs.emplace(entity, &mesh);
 
-	// Initialize the motion
 	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 180.f;	// A1-TD: CK: rotate to the left 180 degrees to fix orientation
+	motion.angle = 0.f;
 	motion.velocity = { 0.0f, 0.0f };
 	motion.position = position;
 
-	std::cout << "INFO: tower position: " << position.x << ", " << position.y << std::endl;
+	motion.scale = vec2({ FOREST_BRIDGE_WIDTH, FOREST_BRIDGE_HEIGHT });
 
-	// Setting initial values, scale is negative to make it face the opposite way
-	motion.scale = vec2({ -TOWER_BB_WIDTH, TOWER_BB_HEIGHT });
-
-	// create an (empty) Tower component to be able to refer to all towers
-	registry.deadlys.emplace(entity);
 	registry.renderRequests.insert(
 		entity,
 		{
-			TEXTURE_ASSET_ID::TOWER,
+			TEXTURE_ASSET_ID::FOREST_BRIDGE,
 			EFFECT_ASSET_ID::TEXTURED,
-			GEOMETRY_BUFFER_ID::SPRITE
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::STRUCTURE,
+			0 // this is the render sub layer (bridge should be above river)
 		}
 	);
 
 	return entity;
 }
 
-void removeTower(vec2 position) {
-	// remove any towers at this position
-	for (Entity& tower_entity : registry.towers.entities) {
-		// get each tower's position to determine it's row
-		const Motion& tower_motion = registry.motions.get(tower_entity);
-		
-		if (tower_motion.position.y == position.y) {
-			// remove this tower
-			registry.remove_all_components_of(tower_entity);
-			std::cout << "tower removed" << std::endl;
-		}
-	}
-}
 
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-// !!! TODO A1: create a new projectile w/ pos, size, & velocity
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Entity createProjectile(vec2 pos, vec2 size, vec2 velocity)
+Entity createForestRiver(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
+	auto& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 1.0f; // rivers are not walkable
 
-	// TODO: projectile
-	// TODO: motion
-	// TODO: renderRequests
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0.0f, 0.0f };
+	motion.position = position;
+
+	motion.scale = vec2({ FOREST_RIVER_WIDTH, FOREST_RIVER_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::FOREST_RIVER,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::STRUCTURE,
+			1 // this is the render sub layer (river should be below bridge)
+		}
+	);
 
 	return entity;
 }

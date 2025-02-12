@@ -40,27 +40,20 @@ const int GRID_CELL_WIDTH_PX = 50;
 const int GRID_CELL_HEIGHT_PX = 50;
 const int GRID_LINE_WIDTH_PX = 2;
 
-const int TOWER_TIMER_MS = 1000;	// number of milliseconds between tower shots
-const int MAX_TOWERS_START = 5;
+const float PLAYER_BB_WIDTH = (float)65;
+const float PLAYER_BB_HEIGHT = (float)100;
 
-const int INVADER_HEALTH = 50;
-const int INVADER_SPAWN_RATE_MS = 2 * 1000;
-
-const int PROJECTILE_DAMAGE = 10;
-
-// These are hard coded to the dimensions of the entity's texture
-
-// invaders are 64x64 px, but cells are 60x60
-const float PLAYER_BB_WIDTH = (float)GRID_CELL_WIDTH_PX;
-const float PLAYER_BB_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 2;
-
-// towers are 64x64 px, but cells are 60x60
 const float TOWER_BB_WIDTH = (float)GRID_CELL_WIDTH_PX;
 const float TOWER_BB_HEIGHT = (float)GRID_CELL_HEIGHT_PX;
 
-// tree dimensions
 const float TREE_WIDTH = (float)GRID_CELL_WIDTH_PX * 4;
 const float TREE_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 4;
+
+const float FOREST_RIVER_WIDTH = (float)200;
+const float FOREST_RIVER_HEIGHT = (float)700;
+
+const float FOREST_BRIDGE_WIDTH = (float)284;
+const float FOREST_BRIDGE_HEIGHT = (float)218;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
