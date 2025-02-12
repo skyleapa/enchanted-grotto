@@ -226,8 +226,9 @@ struct Terrain
 enum class TEXTURE_ASSET_ID {
 	PLAYER = 0,
 	FOREST_BRIDGE = PLAYER + 1,
-	FOREST_RIVER = FOREST_BRIDGE + 1,
-	FOREST_BG = FOREST_RIVER + 1,
+	FOREST_RIVER_ABOVE = FOREST_BRIDGE + 1,
+	FOREST_RIVER_BELOW = FOREST_RIVER_ABOVE + 1,
+	FOREST_BG = FOREST_RIVER_BELOW + 1,
 	TREE = FOREST_BG + 1,
 	TEXTURE_COUNT = TREE + 1,
 };
@@ -265,7 +266,7 @@ struct RenderRequest {
 	EFFECT_ASSET_ID    used_effect   = EFFECT_ASSET_ID::EFFECT_COUNT;
 	GEOMETRY_BUFFER_ID used_geometry = GEOMETRY_BUFFER_ID::GEOMETRY_COUNT;
 	RENDER_LAYER layer = RENDER_LAYER::BACKGROUND;
-	int render_sub_layer = 0; // lower values are rendered under
+	int render_sub_layer = 0; // lower values are rendered above
 };
 
 enum class BIOME {

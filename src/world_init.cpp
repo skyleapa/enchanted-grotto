@@ -7,8 +7,8 @@ Entity createTree(RenderSystem* renderer, vec2 position)
 	auto entity = Entity();
 	Terrain& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
-	terrain.height_ratio = 0.3f;
-	terrain.width_ratio = 0.25f;
+	terrain.height_ratio = 0.1f;
+	terrain.width_ratio = 0.2f;
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -72,7 +72,7 @@ Entity createPlayer(RenderSystem* renderer, vec2 position)
 
 	auto& motion = registry.motions.emplace(entity);
 	motion.angle = 0.f;
-	motion.velocity = { 80.f, 80.f };
+	motion.velocity = { PLAYER_SPEED, PLAYER_SPEED };
 	motion.position = position;
 	motion.moving_direction = (int) DIRECTION::DOWN;
 
@@ -98,7 +98,7 @@ Entity createForestBridge(RenderSystem* renderer, vec2 position)
 	auto& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
 	terrain.width_ratio = 1.0f;
-	terrain.height_ratio = 0.2f;
+	terrain.height_ratio = 0.35f;
 
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
 	registry.meshPtrs.emplace(entity, &mesh);
@@ -127,24 +127,28 @@ Entity createForestBridge(RenderSystem* renderer, vec2 position)
 
 Entity createForestRiver(RenderSystem* renderer, vec2 position)
 {
-	auto entity = Entity();
-	auto& terrain = registry.terrains.emplace(entity);
-	terrain.collision_setting = 1.0f; // rivers are not walkable
+	auto entity1 = Entity();
+	auto& terrain1 = registry.terrains.emplace(entity1);
+	terrain1.collision_setting = 1.0f; // rivers are not walkable
+
+	auto entity2 = Entity();
+	auto& terrain2 = registry.terrains.emplace(entity2);
+	terrain2.collision_setting = 1.0f; // rivers are not walkable
 
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
-	registry.meshPtrs.emplace(entity, &mesh);
+	registry.meshPtrs.emplace(entity1, &mesh);
+	registry.meshPtrs.emplace(entity2, &mesh);
 
-	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 0.f;
-	motion.velocity = { 0.0f, 0.0f };
-	motion.position = position;
-
-	motion.scale = vec2({ FOREST_RIVER_WIDTH, FOREST_RIVER_HEIGHT });
+	auto& motion1 = registry.motions.emplace(entity1);
+	motion1.angle = 0.f;
+	motion1.velocity = { 0.0f, 0.0f };
+	motion1.position = vec2(position.x, 200);
+	motion1.scale = vec2({ FOREST_RIVER_ABOVE_WIDTH, FOREST_RIVER_ABOVE_HEIGHT });
 
 	registry.renderRequests.insert(
-		entity,
+		entity1,
 		{
-			TEXTURE_ASSET_ID::FOREST_RIVER,
+			TEXTURE_ASSET_ID::FOREST_RIVER_ABOVE,
 			EFFECT_ASSET_ID::TEXTURED,
 			GEOMETRY_BUFFER_ID::SPRITE,
 			RENDER_LAYER::STRUCTURE,
@@ -152,7 +156,24 @@ Entity createForestRiver(RenderSystem* renderer, vec2 position)
 		}
 	);
 
-	return entity;
+	auto& motion2 = registry.motions.emplace(entity2);
+	motion2.angle = 0.f;
+	motion2.velocity = { 0.0f, 0.0f };
+	motion2.position = vec2(position.x, 625);
+	motion2.scale = vec2({ FOREST_RIVER_BELOW_WIDTH, FOREST_RIVER_BELOW_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity2,
+		{
+			TEXTURE_ASSET_ID::FOREST_RIVER_BELOW,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::STRUCTURE,
+			1 // this is the render sub layer (river should be below bridge)
+		}
+	);
+
+	return entity1;
 }
 
 Entity createLine(vec2 position, vec2 scale)
@@ -178,37 +199,5 @@ Entity createLine(vec2 position, vec2 scale)
 	motion.scale = scale;
 
 	registry.debugComponents.emplace(entity);
-	return entity;
-}
-
-// LEGACY
-Entity createChicken(RenderSystem* renderer, vec2 pos)
-{
-	auto entity = Entity();
-
-	// Store a reference to the potentially re-used mesh object
-	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::CHICKEN);
-	registry.meshPtrs.emplace(entity, &mesh);
-
-	// Setting initial motion values
-	Motion& motion = registry.motions.emplace(entity);
-	motion.position = pos;
-	motion.angle = 0.f;
-	motion.velocity = { 0.f, 0.f };
-	motion.scale = mesh.original_size * 300.f;
-	motion.scale.y *= -1; // point front to the right
-
-	// create an (empty) Chicken component to be able to refer to all towers
-	registry.players.emplace(entity);
-	registry.renderRequests.insert(
-		entity,
-		{
-			// usage TEXTURE_COUNT when no texture is needed, i.e., an .obj or other vertices are used instead
-			TEXTURE_ASSET_ID::TEXTURE_COUNT,
-			EFFECT_ASSET_ID::CHICKEN,
-			GEOMETRY_BUFFER_ID::CHICKEN
-		}
-	);
-
 	return entity;
 }

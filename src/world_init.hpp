@@ -21,7 +21,3 @@ Entity createGridLine(vec2 start_pos, vec2 end_pos);
 
 // debugging red lines
 Entity createLine(vec2 position, vec2 size);
-
-// legacy
-// the player
-Entity createChicken(RenderSystem* renderer, vec2 position);

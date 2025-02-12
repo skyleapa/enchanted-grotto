@@ -42,15 +42,16 @@ const int GRID_LINE_WIDTH_PX = 2;
 
 const float PLAYER_BB_WIDTH = (float)65;
 const float PLAYER_BB_HEIGHT = (float)100;
-
-const float TOWER_BB_WIDTH = (float)GRID_CELL_WIDTH_PX;
-const float TOWER_BB_HEIGHT = (float)GRID_CELL_HEIGHT_PX;
+const float PLAYER_SPEED = (float)100;
 
 const float TREE_WIDTH = (float)GRID_CELL_WIDTH_PX * 4;
 const float TREE_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 4;
 
-const float FOREST_RIVER_WIDTH = (float)200;
-const float FOREST_RIVER_HEIGHT = (float)700;
+const float FOREST_RIVER_ABOVE_WIDTH = (float)200;
+const float FOREST_RIVER_ABOVE_HEIGHT = (float)395;
+
+const float FOREST_RIVER_BELOW_WIDTH = (float)200;
+const float FOREST_RIVER_BELOW_HEIGHT = (float)153;
 
 const float FOREST_BRIDGE_WIDTH = (float)284;
 const float FOREST_BRIDGE_HEIGHT = (float)218;

@@ -19,10 +19,20 @@ vec4 get_bounding_box(const Motion& motion, float width_ratio, float height_rati
 	return { box_x, box_y, box_width, box_height };
 }
 
-bool collides(const Motion& motion1, const Motion& motion2, const Terrain* terrain1, const Terrain* terrain2)
+bool collides(const Motion& motion1, const Motion& motion2, const Terrain* terrain1, const Terrain* terrain2, bool is_player1, bool is_player2)
 {
     float width_ratio1 = 1.0f, height_ratio1 = 1.0f;
     float width_ratio2 = 1.0f, height_ratio2 = 1.0f;
+
+    // if entity is a player, apply a smaller bounding box
+    if (is_player1) {
+        width_ratio1 = 0.7f; 
+        height_ratio1 = 0.3f;
+    }
+    if (is_player2) {
+        width_ratio2 = 0.7f;
+        height_ratio2 = 0.3f;
+    }
 
     if (terrain1 && terrain1->collision_setting == 0) {
         width_ratio1 = terrain1->width_ratio;
@@ -42,6 +52,7 @@ bool collides(const Motion& motion1, const Motion& motion2, const Terrain* terra
 
     return overlap_x && overlap_y;
 }
+
 
 void PhysicsSystem::step(float elapsed_ms)
 {	
@@ -67,9 +78,8 @@ void PhysicsSystem::step(float elapsed_ms)
 			// only check collisions if one is a player and the other is terrain
 			if ((is_player1 && is_terrain2) || (is_player2 && is_terrain1))
 			{
-				if (collides(motion_i, motion_j, terrain1, terrain2))
+				if (collides(motion_i, motion_j, terrain1, terrain2, is_player1, is_player2))
 				{
-					std::cout << "COLLIDING" << std::endl;
 					registry.collisions.emplace_with_duplicates(entity_i, entity_j);
 				}
 			}

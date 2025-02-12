@@ -31,7 +31,8 @@ class RenderSystem {
 	const std::array<std::string, texture_count> texture_paths = {
 		textures_path("players/player_1.png"),
 		textures_path("terrain/forest_bridge.png"),
-		textures_path("terrain/forest_river.png"),
+		textures_path("terrain/forest_river_above.png"),
+		textures_path("terrain/forest_river_below.png"),
 		textures_path("backgrounds/forest_bg.png"),
 		textures_path("terrain/tree_1.png")
 	};
