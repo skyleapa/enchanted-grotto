@@ -75,6 +75,9 @@ private:
 	// grid
 	std::vector<Entity> grid_lines;
 
+	// trees
+	std::vector<Entity> trees;
+
 	// music references
 	Mix_Music* background_music;
 	Mix_Chunk* chicken_dead_sound;

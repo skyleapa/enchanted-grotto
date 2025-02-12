@@ -45,6 +45,7 @@ struct Motion {
 	vec2  velocity = { 0, 0 };
 	vec2  scale    = { 10, 10 };
 	int moving_direction = 0;
+	vec2 previous_position = { 0, 0 };
 };
 
 // Stucture to store collision information
@@ -185,6 +186,12 @@ struct Moving
 
 };
 
+// Obstacles in our environment that the player cannot walk through, but may interact with
+struct Terrain
+{
+
+};
+
 
 /**
  * The following enumerators represent global identifiers refering to graphic
@@ -211,11 +218,12 @@ struct Moving
  */
 
 enum class TEXTURE_ASSET_ID {
-	INVADER = 0,
-	TOWER = INVADER + 1,
+	PLAYER = 0,
+	TOWER = PLAYER + 1,
 	PROJECTILE = TOWER + 1,
 	FOREST_BG = PROJECTILE + 1,
-	TEXTURE_COUNT = FOREST_BG + 1
+	TREE = FOREST_BG + 1,
+	TEXTURE_COUNT = TREE + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 

@@ -4,8 +4,11 @@
 #include "tinyECS/tiny_ecs.hpp"
 #include "render_system.hpp"
 
+// trees
+Entity createTree(RenderSystem* renderer, vec2 position);
+
 // invaders
-Entity createInvader(RenderSystem* renderer, vec2 position);
+Entity createPlayer(RenderSystem* renderer, vec2 position);
 
 // towers
 Entity createTower(RenderSystem* renderer, vec2 position);

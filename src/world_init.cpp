@@ -2,9 +2,34 @@
 #include "tinyECS/registry.hpp"
 #include <iostream>
 
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-// !!! TODO A1: implement grid lines as gridLines with renderRequests and colors
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Entity createTree(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+	Terrain& terrain = registry.terrains.emplace(entity);
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ TREE_WIDTH, TREE_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::TREE,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE
+		}
+	);
+
+	return entity;
+}
+
 Entity createGridLine(vec2 start_pos, vec2 end_pos)
 {
 	Entity entity = Entity();
@@ -30,23 +55,17 @@ Entity createGridLine(vec2 start_pos, vec2 end_pos)
 	return entity;
 }
 
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-// !!! TODO A1: implement grid lines as gridLines with renderRequests and colors
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Entity createInvader(RenderSystem* renderer, vec2 position)
+Entity createPlayer(RenderSystem* renderer, vec2 position)
 {
 	// reserve an entity
 	auto entity = Entity();
 
-	// invader
-	Invader& invader = registry.invaders.emplace(entity);
-	invader.health = INVADER_HEALTH;
+	Player& player = registry.players.emplace(entity);
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
 	registry.meshPtrs.emplace(entity, &mesh);
 
-	// TODO A1: initialize the position, scale, and physics components
 	auto& motion = registry.motions.emplace(entity);
 	motion.angle = 0.f;
 	motion.velocity = { 50.f, 50.f };
@@ -55,14 +74,13 @@ Entity createInvader(RenderSystem* renderer, vec2 position)
 
 	// resize, set scale to negative if you want to make it face the opposite way
 	// motion.scale = vec2({ -INVADER_BB_WIDTH, INVADER_BB_WIDTH });
-	motion.scale = vec2({ INVADER_BB_WIDTH, INVADER_BB_HEIGHT });
+	motion.scale = vec2({ PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT });
 
-	// create an (empty) Bug component to be able to refer to all bug
 	registry.eatables.emplace(entity);
 	registry.renderRequests.insert(
 		entity,
 		{
-			TEXTURE_ASSET_ID::INVADER,
+			TEXTURE_ASSET_ID::PLAYER,
 			EFFECT_ASSET_ID::TEXTURED,
 			GEOMETRY_BUFFER_ID::SPRITE
 		}

@@ -86,7 +86,7 @@ GLFWwindow *WorldSystem::create_window()
 	glfwWindowHint(GLFW_SCALE_TO_MONITOR, GL_FALSE); // GLFW 3.3+
 
 	// Create the main window (for rendering, keyboard, and mouse input)
-	window = glfwCreateWindow(WINDOW_WIDTH_PX, WINDOW_HEIGHT_PX, "Towers vs Invaders Assignment", nullptr, nullptr);
+	window = glfwCreateWindow(WINDOW_WIDTH_PX, WINDOW_HEIGHT_PX, "Enchanted Grotto", nullptr, nullptr);
 	if (window == nullptr)
 	{
 		std::cerr << "ERROR: Failed to glfwCreateWindow in world_system.cpp" << std::endl;
@@ -186,10 +186,11 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	}
 
 	// move the character
-	Entity &player = registry.invaders.entities[0];
+	Entity &player = registry.players.entities[0];
 	if (registry.moving.has(player) && registry.motions.has(player))
 	{
 		Motion &player_motion = registry.motions.get(player);
+		player_motion.previous_position = player_motion.position;
 		float delta = elapsed_ms_since_last_update * 0.001f;
 
 		if (player_motion.moving_direction == (int)DIRECTION::UP)
@@ -210,21 +211,12 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		}
 	}
 
-	// spawn new invaders
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// TODO A1: limit them to cells on the far-left, except (0, 0)
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// TODO A1: game over fade out
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	assert(registry.screenStates.components.size() <= 1);
 	ScreenState &screen = registry.screenStates.components[0];
 
 	float min_counter_ms = 3000.f;
 	for (Entity entity : registry.deathTimers.entities)
 	{
-
 		// progress timer
 		DeathTimer &counter = registry.deathTimers.get(entity);
 		counter.counter_ms -= elapsed_ms_since_last_update;
@@ -232,20 +224,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		{
 			min_counter_ms = counter.counter_ms;
 		}
-
-		/* for A1, let the user press "R" to restart instead
-		// restart the game once the death timer expires
-		if (counter.counter_ms < 0) {
-			registry.deathTimers.remove(entity);
-			screen.darken_screen_factor = 0;
-			restart_game();
-			return true;
-		}
-		*/
 	}
-
-	// reduce window brightness if any of the present chickens is dying
-	screen.darken_screen_factor = 1 - min_counter_ms / 3000;
 
 	return true;
 }
@@ -253,7 +232,6 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 // Reset the world state to its initial state
 void WorldSystem::restart_game()
 {
-
 	std::cout << "Restarting..." << std::endl;
 
 	// Debugging for memory/component leaks
@@ -275,9 +253,6 @@ void WorldSystem::restart_game()
 	// debugging for memory/component leaks
 	registry.list_all_components();
 
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// TODO A1: create grid lines
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	int grid_line_width = GRID_LINE_WIDTH_PX;
 
 	// create grid lines if they do not already exist
@@ -299,33 +274,65 @@ void WorldSystem::restart_game()
 			grid_lines.push_back(createGridLine(vec2(0, col * cell_height), vec2(2 * WINDOW_WIDTH_PX, grid_line_width)));
 		}
 	}
-	if (registry.invaders.components.size() == 0)
+
+	// create trees if they don't exist
+	if (trees.size() == 0)
 	{
-		// create invader/player if it doesn't already exist
-		createInvader(renderer, vec2(4.5 * GRID_CELL_WIDTH_PX, 5.5 * GRID_CELL_HEIGHT_PX));
+		trees.push_back(createTree(renderer, vec2(GRID_CELL_WIDTH_PX * 8, GRID_CELL_HEIGHT_PX * 7)));
+		trees.push_back(createTree(renderer, vec2(GRID_CELL_WIDTH_PX * 18, GRID_CELL_HEIGHT_PX * 10)));
+	}
+
+
+	if (registry.players.components.size() == 0)
+	{
+		// create player if it doesn't already exist
+		createPlayer(renderer, vec2(4.5 * GRID_CELL_WIDTH_PX, 5.5 * GRID_CELL_HEIGHT_PX));
 	}
 }
 
 // Compute collisions between entities
 void WorldSystem::handle_collisions()
 {
-
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// TODO A1: Loop over all collisions detected by the physics system
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	ComponentContainer<Collision> &collision_container = registry.collisions;
 	for (uint i = 0; i < collision_container.components.size(); i++)
 	{
+		Entity& first_entity = collision_container.entities[i];
+        if (registry.collisions.has(first_entity)) {
+            Collision& first_collision = registry.collisions.get(first_entity);
+            Entity& second_entity = first_collision.other;
+            bool first_is_terrain = registry.terrains.has(first_entity);
+            bool second_is_terrain = registry.terrains.has(second_entity);
 
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		// TODO A1: handle collision between deadly (projectile) and invader
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		// Mix_PlayChannel(-1, chicken_dead_sound, 0);
+            if (first_is_terrain || second_is_terrain)
+            {
+                Entity& terrain_entity = first_is_terrain ? first_entity : second_entity;
+                Entity& player_entity = first_is_terrain ? second_entity : first_entity;
 
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		// TODO A1: handle collision between tower and invader
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		// Mix_PlayChannel(-1, chicken_eat_sound, 0);
+                if (registry.players.has(player_entity)) 
+                {
+                    Motion& player_motion = registry.motions.get(player_entity);
+                    vec2 movement = player_motion.position - player_motion.previous_position;
+
+                    if (registry.motions.has(terrain_entity))
+                    {
+                        Motion& terrain_motion = registry.motions.get(terrain_entity);
+                        vec2 terrain_pos = terrain_motion.position;
+
+                        // find the axis that caused the collision
+                        if (std::abs(movement.x) > std::abs(movement.y))
+                        {
+                            // horizontal collision -> stop X movement, allow Y movement
+                            player_motion.position.x = player_motion.previous_position.x;
+                        }
+                        else
+                        {
+                            // vertical collision -> stop y movement, allow X movement
+                            player_motion.position.y = player_motion.previous_position.y;
+                        }
+                    }
+                }
+			}
+        }
 	}
 
 	// Remove all collisions from this simulation step
@@ -378,7 +385,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		return;
 	}
 
-	Entity player = registry.invaders.entities[0]; // Assume only one player entity
+	Entity player = registry.players.entities[0]; // Assume only one player entity
 	if (!registry.motions.has(player))
 	{
 		return;
@@ -455,11 +462,6 @@ void WorldSystem::on_mouse_move(vec2 mouse_position)
 
 void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 {
-
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// TODO A1: Handle mouse clicking for invader and tower placement.
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 	// on button press
 	if (action == GLFW_PRESS)
 	{
@@ -468,21 +470,5 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 
 		std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
 		std::cout << "mouse tile position: " << tile_x << ", " << tile_y << std::endl;
-
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		// TODO A1: place invaders on the left, except top left spot
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		// TODO A1: place a tower on the right, except top right spot
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		// TODO A1: right-click removes towers
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		// TODO A1: left-click adds new tower (removing any existing towers), up to max_towers
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	}
 }
