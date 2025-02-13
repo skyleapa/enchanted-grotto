@@ -3,68 +3,72 @@
 #include "world_init.hpp"
 #include <iostream>
 
-// Returns the local bounding coordinates scaled by the current size of the entity
-vec2 get_bounding_box(const Motion& motion)
+vec4 get_bounding_box(const Motion& motion, float width_ratio, float height_ratio)
 {
-	// abs is to avoid negative scale due to the facing direction.
-	return { abs(motion.scale.x), abs(motion.scale.y) };
+	// gets the full bounding box
+	float full_width = abs(motion.scale.x);
+	float full_height = abs(motion.scale.y);
+
+	// compute a bottom centered bounding box
+	float box_width = full_width * width_ratio;
+	float box_height = full_height * height_ratio;
+
+	float box_x = motion.position.x - box_width / 2;				// center the box on x-axis
+	float box_y = motion.position.y + full_height / 2 - box_height; // put the box on the bottom
+
+	return {box_x, box_y, box_width, box_height};
 }
 
-// This is a SUPER APPROXIMATE check that puts a circle around the bounding boxes and sees
-// if the center point of either object is inside the other's bounding-box-circle. You can
-// surely implement a more accurate detection
-bool collides(const Motion& motion1, const Motion& motion2)
+bool collides(const Motion& player_motion, const Motion& terrain_motion, const Terrain* terrain)
 {
-	vec2 dp = motion1.position - motion2.position;
-	float dist_squared = dot(dp,dp);
-	const vec2 other_bonding_box = get_bounding_box(motion1) / 2.f;
-	const float other_r_squared = dot(other_bonding_box, other_bonding_box);
-	const vec2 my_bonding_box = get_bounding_box(motion2) / 2.f;
-	const float my_r_squared = dot(my_bonding_box, my_bonding_box);
-	const float r_squared = max(other_r_squared, my_r_squared);
-	if (dist_squared < r_squared)
-		return true;
-	return false;
+	// default full bounding box size
+	float player_width_ratio = 1.0f, player_height_ratio = 1.0f;
+	float terrain_width_ratio = 1.0f, terrain_height_ratio = 1.0f;
+
+	// apply a smaller bounding box for the player
+	player_width_ratio = 0.7f;
+	player_height_ratio = 0.3f;
+
+	// apply bottom collision box for terrain with collision setting = 0
+	if (terrain && terrain->collision_setting == 0)
+	{
+		terrain_width_ratio = terrain->width_ratio;
+		terrain_height_ratio = terrain->height_ratio;
+	}
+
+	vec4 player_box = get_bounding_box(player_motion, player_width_ratio, player_height_ratio);
+	vec4 terrain_box = get_bounding_box(terrain_motion, terrain_width_ratio, terrain_height_ratio);
+
+	bool overlap_x = (player_box.x < terrain_box.x + terrain_box.z) && (player_box.x + player_box.z > terrain_box.x);
+	bool overlap_y = (player_box.y < terrain_box.y + terrain_box.w) && (player_box.y + player_box.w > terrain_box.y);
+
+	return overlap_x && overlap_y;
 }
 
 void PhysicsSystem::step(float elapsed_ms)
 {
-	// Move each entity that has motion (invaders, projectiles, and even towers [they have 0 for velocity])
-	// based on how much time has passed, this is to (partially) avoid
-	// having entities move at different speed based on the machine.
-	auto& motion_registry = registry.motions;
-	for(uint i = 0; i< motion_registry.size(); i++)
-	{
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		// !!! TODO A1: update motion.position based on step_seconds and motion.velocity
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		Motion& motion = motion_registry.components[i];
-		Entity entity = motion_registry.entities[i];
-		float step_seconds = elapsed_ms / 1000.f;
-
-		(void)elapsed_ms; // placeholder to silence unused warning until implemented
-	}
-
-	// check for collisions between all moving entities
-    ComponentContainer<Motion> &motion_container = registry.motions;
-	for(uint i = 0; i < motion_container.components.size(); i++)
-	{
-		Motion& motion_i = motion_container.components[i];
-		Entity entity_i = motion_container.entities[i];
+	// get our one player
+	if (registry.players.entities.empty())
+		return;
 		
-		// note starting j at i+1 to compare all (i,j) pairs only once (and to not compare with itself)
-		for(uint j = i+1; j < motion_container.components.size(); j++)
+	Entity player_entity = registry.players.entities[0];
+	if (!registry.motions.has(player_entity))
+		return;
+
+	Motion &player_motion = registry.motions.get(player_entity);
+
+	for (Entity terrain_entity : registry.terrains.entities)
+	{
+		if (!registry.motions.has(terrain_entity))
+			continue;
+
+		Motion &terrain_motion = registry.motions.get(terrain_entity);
+		Terrain &terrain = registry.terrains.get(terrain_entity);
+
+		// only check collisions if one is a player and the other is terrain
+		if (collides(player_motion, terrain_motion, &terrain))
 		{
-			Motion& motion_j = motion_container.components[j];
-			if (collides(motion_i, motion_j))
-			{
-				Entity entity_j = motion_container.entities[j];
-				// Create a collisions event
-				// We are abusing the ECS system a bit in that we potentially insert muliple collisions for the same entity
-				// CK: why the duplication, except to allow searching by entity_id
-				registry.collisions.emplace_with_duplicates(entity_i, entity_j);
-				// registry.collisions.emplace_with_duplicates(entity_j, entity_i);
-			}
+			registry.collisions.emplace_with_duplicates(player_entity, terrain_entity);
 		}
 	}
 }

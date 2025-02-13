@@ -2,9 +2,38 @@
 #include "tinyECS/registry.hpp"
 #include <iostream>
 
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-// !!! TODO A1: implement grid lines as gridLines with renderRequests and colors
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Entity createTree(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.height_ratio = 0.1f;
+	terrain.width_ratio = 0.2f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ TREE_WIDTH, TREE_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::TREE,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::TERRAIN
+		}
+	);
+
+	return entity;
+}
+
 Entity createGridLine(vec2 start_pos, vec2 end_pos)
 {
 	Entity entity = Entity();
@@ -30,111 +59,121 @@ Entity createGridLine(vec2 start_pos, vec2 end_pos)
 	return entity;
 }
 
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-// !!! TODO A1: implement grid lines as gridLines with renderRequests and colors
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Entity createInvader(RenderSystem* renderer, vec2 position)
+Entity createPlayer(RenderSystem* renderer, vec2 position)
 {
 	// reserve an entity
 	auto entity = Entity();
-
-	// invader
-	Invader& invader = registry.invaders.emplace(entity);
-	invader.health = INVADER_HEALTH;
+	Player& player = registry.players.emplace(entity);
+	player.name = "Madoka";
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
 	registry.meshPtrs.emplace(entity, &mesh);
 
-	// TODO A1: initialize the position, scale, and physics components
 	auto& motion = registry.motions.emplace(entity);
 	motion.angle = 0.f;
-	motion.velocity = { 50.f, 50.f };
+	motion.velocity = { PLAYER_SPEED, PLAYER_SPEED };
 	motion.position = position;
 	motion.moving_direction = (int) DIRECTION::DOWN;
 
-	// resize, set scale to negative if you want to make it face the opposite way
-	// motion.scale = vec2({ -INVADER_BB_WIDTH, INVADER_BB_WIDTH });
-	motion.scale = vec2({ INVADER_BB_WIDTH, INVADER_BB_HEIGHT });
+	motion.scale = vec2({ PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT });
 
-	// create an (empty) Bug component to be able to refer to all bug
 	registry.eatables.emplace(entity);
 	registry.renderRequests.insert(
 		entity,
 		{
-			TEXTURE_ASSET_ID::INVADER,
+			TEXTURE_ASSET_ID::PLAYER,
 			EFFECT_ASSET_ID::TEXTURED,
-			GEOMETRY_BUFFER_ID::SPRITE
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::PLAYER
 		}
 	);
 
 	return entity;
 }
 
-Entity createTower(RenderSystem* renderer, vec2 position)
+Entity createForestBridge(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
+	auto& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.width_ratio = 0.9f;
+	terrain.height_ratio = 0.35f;
 
-	// new tower
-	auto& t = registry.towers.emplace(entity);
-	t.range = (float)WINDOW_WIDTH_PX / (float)GRID_CELL_WIDTH_PX;
-	t.timer_ms = TOWER_TIMER_MS;	// arbitrary for now
-
-	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
 	registry.meshPtrs.emplace(entity, &mesh);
 
-	// Initialize the motion
 	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 180.f;	// A1-TD: CK: rotate to the left 180 degrees to fix orientation
+	motion.angle = 0.f;
 	motion.velocity = { 0.0f, 0.0f };
 	motion.position = position;
 
-	std::cout << "INFO: tower position: " << position.x << ", " << position.y << std::endl;
+	motion.scale = vec2({ FOREST_BRIDGE_WIDTH, FOREST_BRIDGE_HEIGHT });
 
-	// Setting initial values, scale is negative to make it face the opposite way
-	motion.scale = vec2({ -TOWER_BB_WIDTH, TOWER_BB_HEIGHT });
-
-	// create an (empty) Tower component to be able to refer to all towers
-	registry.deadlys.emplace(entity);
 	registry.renderRequests.insert(
 		entity,
 		{
-			TEXTURE_ASSET_ID::TOWER,
+			TEXTURE_ASSET_ID::FOREST_BRIDGE,
 			EFFECT_ASSET_ID::TEXTURED,
-			GEOMETRY_BUFFER_ID::SPRITE
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::STRUCTURE,
+			0 // this is the render sub layer (bridge should be above river)
 		}
 	);
 
 	return entity;
 }
 
-void removeTower(vec2 position) {
-	// remove any towers at this position
-	for (Entity& tower_entity : registry.towers.entities) {
-		// get each tower's position to determine it's row
-		const Motion& tower_motion = registry.motions.get(tower_entity);
-		
-		if (tower_motion.position.y == position.y) {
-			// remove this tower
-			registry.remove_all_components_of(tower_entity);
-			std::cout << "tower removed" << std::endl;
-		}
-	}
-}
 
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-// !!! TODO A1: create a new projectile w/ pos, size, & velocity
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Entity createProjectile(vec2 pos, vec2 size, vec2 velocity)
+Entity createForestRiver(RenderSystem* renderer, vec2 position)
 {
-	auto entity = Entity();
+	auto entity1 = Entity();
+	auto& terrain1 = registry.terrains.emplace(entity1);
+	terrain1.collision_setting = 1.0f; // rivers are not walkable
 
-	// TODO: projectile
-	// TODO: motion
-	// TODO: renderRequests
+	auto entity2 = Entity();
+	auto& terrain2 = registry.terrains.emplace(entity2);
+	terrain2.collision_setting = 1.0f; // rivers are not walkable
 
-	return entity;
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity1, &mesh);
+	registry.meshPtrs.emplace(entity2, &mesh);
+
+	auto& motion1 = registry.motions.emplace(entity1);
+	motion1.angle = 0.f;
+	motion1.velocity = { 0.0f, 0.0f };
+	motion1.position = vec2(position.x, 200);
+	motion1.scale = vec2({ FOREST_RIVER_ABOVE_WIDTH, FOREST_RIVER_ABOVE_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity1,
+		{
+			TEXTURE_ASSET_ID::FOREST_RIVER_ABOVE,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::STRUCTURE,
+			1 // this is the render sub layer (river should be below bridge)
+		}
+	);
+
+	auto& motion2 = registry.motions.emplace(entity2);
+	motion2.angle = 0.f;
+	motion2.velocity = { 0.0f, 0.0f };
+	motion2.position = vec2(position.x, 625);
+	motion2.scale = vec2({ FOREST_RIVER_BELOW_WIDTH, FOREST_RIVER_BELOW_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity2,
+		{
+			TEXTURE_ASSET_ID::FOREST_RIVER_BELOW,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::STRUCTURE,
+			1 // this is the render sub layer (river should be below bridge)
+		}
+	);
+
+	return entity1;
 }
 
 Entity createLine(vec2 position, vec2 scale)
@@ -160,37 +199,5 @@ Entity createLine(vec2 position, vec2 scale)
 	motion.scale = scale;
 
 	registry.debugComponents.emplace(entity);
-	return entity;
-}
-
-// LEGACY
-Entity createChicken(RenderSystem* renderer, vec2 pos)
-{
-	auto entity = Entity();
-
-	// Store a reference to the potentially re-used mesh object
-	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::CHICKEN);
-	registry.meshPtrs.emplace(entity, &mesh);
-
-	// Setting initial motion values
-	Motion& motion = registry.motions.emplace(entity);
-	motion.position = pos;
-	motion.angle = 0.f;
-	motion.velocity = { 0.f, 0.f };
-	motion.scale = mesh.original_size * 300.f;
-	motion.scale.y *= -1; // point front to the right
-
-	// create an (empty) Chicken component to be able to refer to all towers
-	registry.players.emplace(entity);
-	registry.renderRequests.insert(
-		entity,
-		{
-			// usage TEXTURE_COUNT when no texture is needed, i.e., an .obj or other vertices are used instead
-			TEXTURE_ASSET_ID::TEXTURE_COUNT,
-			EFFECT_ASSET_ID::CHICKEN,
-			GEOMETRY_BUFFER_ID::CHICKEN
-		}
-	);
-
 	return entity;
 }
