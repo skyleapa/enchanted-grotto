@@ -269,14 +269,15 @@ void WorldSystem::restart_game()
 	}
 
 	if (registry.players.components.size() == 0)
-	{ 
+	{
 		createPlayer(renderer, vec2(2 * GRID_CELL_WIDTH_PX, 2 * GRID_CELL_HEIGHT_PX));
 	}
 
 	create_forest();
 }
 
-void WorldSystem::create_forest() {
+void WorldSystem::create_forest()
+{
 	// create forest bridge
 	createForestBridge(renderer, vec2(307, 485));
 
@@ -285,7 +286,7 @@ void WorldSystem::create_forest() {
 
 	// create trees if they don't exist
 	if (trees.size() == 0)
-	{	
+	{
 		trees.push_back(createTree(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 3)));
 		trees.push_back(createTree(renderer, vec2(GRID_CELL_WIDTH_PX * 19, GRID_CELL_HEIGHT_PX * 10)));
 		trees.push_back(createTree(renderer, vec2(GRID_CELL_WIDTH_PX * 23, GRID_CELL_HEIGHT_PX * 11)));
@@ -294,54 +295,43 @@ void WorldSystem::create_forest() {
 
 void WorldSystem::handle_collisions()
 {
-    ComponentContainer<Collision> &collision_container = registry.collisions;
-    
-    for (uint i = 0; i < collision_container.components.size(); i++)
-    {
-        Entity& first_entity = collision_container.entities[i];
-        
-        if (registry.collisions.has(first_entity)) {
-            Collision& first_collision = registry.collisions.get(first_entity);
-            Entity& second_entity = first_collision.other;
+	// get our player entity
+	if (registry.players.entities.empty()) return;
+	Entity player_entity = registry.players.entities[0];
+	if (!registry.motions.has(player_entity)) return;
 
-            bool first_is_terrain = registry.terrains.has(first_entity);
-            bool second_is_terrain = registry.terrains.has(second_entity);
+	Motion &player_motion = registry.motions.get(player_entity);
 
-            Terrain* terrain1 = first_is_terrain ? &registry.terrains.get(first_entity) : nullptr;
-            Terrain* terrain2 = second_is_terrain ? &registry.terrains.get(second_entity) : nullptr;
+	for (Entity collision_entity : registry.collisions.entities)
+	{
+		if (!registry.collisions.has(collision_entity)) continue;
+		Collision &collision = registry.collisions.get(collision_entity);
 
-            bool is_player1 = registry.players.has(first_entity);
-            bool is_player2 = registry.players.has(second_entity);
+		Entity terrain_entity = (collision_entity == player_entity) ? collision.other : collision_entity;
 
-            if ((is_player2 && first_is_terrain) || (is_player1 && second_is_terrain))
-            {
-                // handle collisions based on terrain collision setting
-                Motion& player_motion = registry.motions.get(is_player1 ? first_entity : second_entity);
-                vec2 movement = player_motion.position - player_motion.previous_position;
+		if (!registry.terrains.has(terrain_entity) || !registry.motions.has(terrain_entity)) 
+			continue;
 
-				// handle collisions based on movement direction
-				if (std::abs(movement.x) > std::abs(movement.y)) {
-					// horizontal collision, allow y movement
-					player_motion.position.x = player_motion.previous_position.x;
-				} else {
-					// vertical collision, allow x movement
-					player_motion.position.y = player_motion.previous_position.y;
-				}
+		Terrain &terrain = registry.terrains.get(terrain_entity);
+		vec2 movement = player_motion.position - player_motion.previous_position;
 
-				// terrain with collision setting of 1.0 is completely unwalkable (rivers)
-				if ((terrain1 && terrain1->collision_setting == 1.0) || (terrain2 && terrain2->collision_setting == 1.0))
-				{
-					player_motion.position = player_motion.previous_position;
-				}
-			
-            }
-        }
-    }
+		if (std::abs(movement.x) > std::abs(movement.y)) {
+			// horizontal collision -> stop X movement, allow Y movement
+			player_motion.position.x = player_motion.previous_position.x;
+		} else {
+			// vertical collision -> stop Y movement, allow X movement
+			player_motion.position.y = player_motion.previous_position.y;
+		}
 
-    // Clear all collisions after processing this step
-    registry.collisions.clear();
+		// when collision_setting == 1, entire area should be unwalkable (rivers)
+		if (terrain.collision_setting == 1.0f) {
+			player_motion.position = player_motion.previous_position;
+		}
+	}
+
+	// Clear all collisions after processing this step
+	registry.collisions.clear();
 }
-
 
 // Should the game be over ?
 bool WorldSystem::is_over() const

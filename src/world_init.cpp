@@ -97,7 +97,7 @@ Entity createForestBridge(RenderSystem* renderer, vec2 position)
 	auto entity = Entity();
 	auto& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
-	terrain.width_ratio = 1.0f;
+	terrain.width_ratio = 0.9f;
 	terrain.height_ratio = 0.35f;
 
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);

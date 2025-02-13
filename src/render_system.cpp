@@ -305,7 +305,7 @@ void RenderSystem::draw()
 		if (renderA.layer == RENDER_LAYER::BACKGROUND) return true;
 		if (renderB.layer == RENDER_LAYER::BACKGROUND) return false;
 	
-		// ensure Terrain renders above structures
+		// ensure terrain renders above structures
 		if (renderA.layer == RENDER_LAYER::TERRAIN && renderB.layer == RENDER_LAYER::STRUCTURE) return false;
 		if (renderA.layer == RENDER_LAYER::STRUCTURE && renderB.layer == RENDER_LAYER::TERRAIN) return true;
 	
@@ -328,7 +328,6 @@ void RenderSystem::draw()
 	
 		return false;
 	});
-	
 	
 
 	// draw all entities with a render request to the frame buffer
