@@ -242,7 +242,7 @@ void RenderSystem::drawToScreen()
 	GLuint biome = registry.screenStates.components[0].biome;
 	GLuint background_asset_id = (biome == (GLuint)BIOME::FOREST)
 									 ? (GLuint)TEXTURE_ASSET_ID::FOREST_BG
-									 : (GLuint)TEXTURE_ASSET_ID::INVADER;
+									 : (GLuint)TEXTURE_ASSET_ID::PLAYER;
 
 	// Bind textures (off-screen render and background)
 	glActiveTexture(GL_TEXTURE0);
@@ -291,8 +291,10 @@ void RenderSystem::draw()
 
 	drawToScreen();
 
+	std::vector<Entity> entities = process_render_requests();
+
 	// draw all entities with a render request to the frame buffer
-	for (Entity entity : registry.renderRequests.entities)
+	for (Entity entity : entities)
 	{
 		// filter to entities that have a motion component
 		if (registry.motions.has(entity))
@@ -307,10 +309,52 @@ void RenderSystem::draw()
 			drawGridLine(entity, projection_2D);
 		}
 	}
-
+	
 	// flicker-free display with a double buffer
 	glfwSwapBuffers(window);
 	gl_has_errors();
+}
+
+std::vector<Entity> RenderSystem::process_render_requests() {
+	std::vector<Entity> entities = registry.renderRequests.entities;
+
+	entities.erase(std::remove_if(entities.begin(), entities.end(), [](Entity e) {
+		return !registry.motions.has(e);
+	}), entities.end());
+
+	std::sort(entities.begin(), entities.end(), [](Entity a, Entity b) {
+		RenderRequest& renderA = registry.renderRequests.get(a);
+		RenderRequest& renderB = registry.renderRequests.get(b);
+	
+		// background always renders first
+		if (renderA.layer == RENDER_LAYER::BACKGROUND) return true;
+		if (renderB.layer == RENDER_LAYER::BACKGROUND) return false;
+	
+		// ensure terrain renders above structures
+		if (renderA.layer == RENDER_LAYER::TERRAIN && renderB.layer == RENDER_LAYER::STRUCTURE) return false;
+		if (renderA.layer == RENDER_LAYER::STRUCTURE && renderB.layer == RENDER_LAYER::TERRAIN) return true;
+	
+		// player should always be above structures
+		if (renderA.layer == RENDER_LAYER::PLAYER && renderB.layer == RENDER_LAYER::STRUCTURE) return false;
+		if (renderA.layer == RENDER_LAYER::STRUCTURE && renderB.layer == RENDER_LAYER::PLAYER) return true;
+	
+		// sort structures by sub-layer (bridges on top)
+		if (renderA.layer == RENDER_LAYER::STRUCTURE && renderB.layer == RENDER_LAYER::STRUCTURE) {
+			return renderA.render_sub_layer > renderB.render_sub_layer;
+		}
+	
+		if (renderA.layer == RENDER_LAYER::TERRAIN || renderA.layer == RENDER_LAYER::PLAYER) {
+			Motion& motionA = registry.motions.get(a);
+			Motion& motionB = registry.motions.get(b);
+			float bottomA = motionA.position.y + (motionA.scale.y / 2);
+			float bottomB = motionB.position.y + (motionB.scale.y / 2);
+			return bottomA < bottomB;
+		}
+	
+		return false;
+	});
+
+	return entities;
 }
 
 mat3 RenderSystem::createProjectionMatrix()
