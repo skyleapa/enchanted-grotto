@@ -291,6 +291,31 @@ void RenderSystem::draw()
 
 	drawToScreen();
 
+	std::vector<Entity> entities = process_render_requests();
+
+	// draw all entities with a render request to the frame buffer
+	for (Entity entity : entities)
+	{
+		// filter to entities that have a motion component
+		if (registry.motions.has(entity))
+		{
+			// Note, its not very efficient to access elements indirectly via the entity
+			// albeit iterating through all Sprites in sequence. A good point to optimize
+			drawTexturedMesh(entity, projection_2D);
+		}
+		// draw grid lines separately, as they do not have motion but need to be rendered
+		else if (registry.gridLines.has(entity))
+		{
+			drawGridLine(entity, projection_2D);
+		}
+	}
+	
+	// flicker-free display with a double buffer
+	glfwSwapBuffers(window);
+	gl_has_errors();
+}
+
+std::vector<Entity> RenderSystem::process_render_requests() {
 	std::vector<Entity> entities = registry.renderRequests.entities;
 
 	entities.erase(std::remove_if(entities.begin(), entities.end(), [](Entity e) {
@@ -328,28 +353,8 @@ void RenderSystem::draw()
 	
 		return false;
 	});
-	
 
-	// draw all entities with a render request to the frame buffer
-	for (Entity entity : entities)
-	{
-		// filter to entities that have a motion component
-		if (registry.motions.has(entity))
-		{
-			// Note, its not very efficient to access elements indirectly via the entity
-			// albeit iterating through all Sprites in sequence. A good point to optimize
-			drawTexturedMesh(entity, projection_2D);
-		}
-		// draw grid lines separately, as they do not have motion but need to be rendered
-		else if (registry.gridLines.has(entity))
-		{
-			drawGridLine(entity, projection_2D);
-		}
-	}
-	
-	// flicker-free display with a double buffer
-	glfwSwapBuffers(window);
-	gl_has_errors();
+	return entities;
 }
 
 mat3 RenderSystem::createProjectionMatrix()

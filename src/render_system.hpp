@@ -78,6 +78,8 @@ public:
 	// Draw all entities
 	void draw();
 
+	std::vector<Entity> process_render_requests();
+
 	mat3 createProjectionMatrix();
 
 	Entity get_screen_state_entity() { return screen_state_entity; }
