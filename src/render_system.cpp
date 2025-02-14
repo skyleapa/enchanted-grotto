@@ -250,7 +250,11 @@ void RenderSystem::drawToScreen()
 	gl_has_errors();
 
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, texture_gl_handles[background_asset_id]); // Background texture
+	if (biome == (GLuint) BIOME::FOREST) {
+		glBindTexture(GL_TEXTURE_2D, texture_gl_handles[background_asset_id]); // Background texture
+	} else {
+		glBindTexture(GL_TEXTURE_2D, off_screen_render_buffer_color);
+	}
 	glUniform1i(glGetUniformLocation(background_program, "background_texture"), 1);
 	gl_has_errors();
 
@@ -325,7 +329,7 @@ std::vector<Entity> RenderSystem::process_render_requests() {
 	std::sort(entities.begin(), entities.end(), [](Entity a, Entity b) {
 		RenderRequest& renderA = registry.renderRequests.get(a);
 		RenderRequest& renderB = registry.renderRequests.get(b);
-	
+
 		// background always renders first
 		if (renderA.layer == RENDER_LAYER::BACKGROUND) return true;
 		if (renderB.layer == RENDER_LAYER::BACKGROUND) return false;
@@ -349,8 +353,7 @@ std::vector<Entity> RenderSystem::process_render_requests() {
 			float bottomA = motionA.position.y + (motionA.scale.y / 2);
 			float bottomB = motionB.position.y + (motionB.scale.y / 2);
 			return bottomA < bottomB;
-		}
-	
+		}	
 		return false;
 	});
 

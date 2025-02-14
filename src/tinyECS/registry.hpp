@@ -37,6 +37,7 @@ public:
 	ComponentContainer<MortarAndPestle> mortarAndPestles;
 	ComponentContainer<Moving> moving;
 	ComponentContainer<Terrain> terrains;
+	ComponentContainer<Entrance> entrances;
 
 	// constructor that adds all containers for looping over them
 	ECSRegistry()
@@ -66,6 +67,7 @@ public:
 		registry_list.push_back(&mortarAndPestles);
 		registry_list.push_back(&moving);
 		registry_list.push_back(&terrains);
+		registry_list.push_back(&entrances);
 	}
 
 	void clear_all_components() {

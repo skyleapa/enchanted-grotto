@@ -11,8 +11,7 @@
 #include "physics_system.hpp"
 
 // create the world
-WorldSystem::WorldSystem() : 
-points(0)
+WorldSystem::WorldSystem() : points(0)
 {
 	// seeding rng with random device
 	rng = std::default_random_engine(std::random_device()());
@@ -156,6 +155,35 @@ void WorldSystem::init(RenderSystem *renderer_arg)
 bool WorldSystem::step(float elapsed_ms_since_last_update)
 {
 
+	// handle switching biomes
+	ScreenState &screen = registry.screenStates.components[0];
+	Entity &player = registry.players.entities[0];
+	assert(registry.motions.has(player)); // TODO: remove assert on submission 
+	Motion& player_motion = registry.motions.get(player);
+
+	if (screen.is_switching_biome) {
+		if (screen.freeze_timer > 0) {
+			screen.freeze_timer -= elapsed_ms_since_last_update; // fade will occur here
+		}
+		if (screen.freeze_timer <= 1000 && screen.biome != screen.switching_to_biome) {
+			// at this point screen is fully black then fades in
+			screen.biome = screen.switching_to_biome;
+			restart_game();
+			if (screen.biome == (GLuint) BIOME::GROTTO) {
+				player_motion.scale = {PLAYER_BB_WIDTH * 1.3, PLAYER_BB_HEIGHT * 1.3}; // make player larger in grotto
+			} else {
+				player_motion.scale = {PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT};
+			}
+		} else if (screen.freeze_timer <= 0) {
+			screen.is_switching_biome = false;
+			screen.freeze_timer = 2000;
+			Entity &player = registry.players.entities[0];
+			Motion& player_motion = registry.motions.get(player);
+			player_motion.velocity = {PLAYER_SPEED, PLAYER_SPEED};
+			screen.pressed_keys = {};
+		}
+	}
+
 	// Updating window title with points
 	std::stringstream title_ss;
 	title_ss << "Points: " << points;
@@ -182,10 +210,8 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	}
 
 	// move the character
-	Entity &player = registry.players.entities[0];
 	if (registry.moving.has(player) && registry.motions.has(player))
 	{
-		Motion &player_motion = registry.motions.get(player);
 		player_motion.previous_position = player_motion.position;
 		float delta = elapsed_ms_since_last_update * 0.001f;
 
@@ -270,10 +296,17 @@ void WorldSystem::restart_game()
 
 	if (registry.players.components.size() == 0)
 	{
-		createPlayer(renderer, vec2(2 * GRID_CELL_WIDTH_PX, 2 * GRID_CELL_HEIGHT_PX));
+		createPlayer(renderer, vec2(GROTTO_ENTRANCE_X, GROTTO_ENTRANCE_Y + 50));
 	}
 
-	create_forest();
+	int biome = registry.screenStates.components[0].biome;
+	if (biome == (GLuint)BIOME::FOREST)
+	{
+		create_forest();
+	}
+	else if (biome == (GLuint)BIOME::GROTTO)
+	{
+	}
 }
 
 void WorldSystem::create_forest()
@@ -291,40 +324,49 @@ void WorldSystem::create_forest()
 		trees.push_back(createTree(renderer, vec2(GRID_CELL_WIDTH_PX * 19, GRID_CELL_HEIGHT_PX * 10)));
 		trees.push_back(createTree(renderer, vec2(GRID_CELL_WIDTH_PX * 23, GRID_CELL_HEIGHT_PX * 11)));
 	}
+
+	createGrottoEntrance(renderer, vec2(990, 90));
 }
 
 void WorldSystem::handle_collisions()
 {
 	// get our player entity
-	if (registry.players.entities.empty()) return;
+	if (registry.players.entities.empty())
+		return;
 	Entity player_entity = registry.players.entities[0];
-	if (!registry.motions.has(player_entity)) return;
+	if (!registry.motions.has(player_entity))
+		return;
 
 	Motion &player_motion = registry.motions.get(player_entity);
 
 	for (Entity collision_entity : registry.collisions.entities)
 	{
-		if (!registry.collisions.has(collision_entity)) continue;
+		if (!registry.collisions.has(collision_entity))
+			continue;
 		Collision &collision = registry.collisions.get(collision_entity);
 
 		Entity terrain_entity = (collision_entity == player_entity) ? collision.other : collision_entity;
 
-		if (!registry.terrains.has(terrain_entity) || !registry.motions.has(terrain_entity)) 
+		if (!registry.terrains.has(terrain_entity) || !registry.motions.has(terrain_entity))
 			continue;
 
 		Terrain &terrain = registry.terrains.get(terrain_entity);
 		vec2 movement = player_motion.position - player_motion.previous_position;
 
-		if (std::abs(movement.x) > std::abs(movement.y)) {
+		if (std::abs(movement.x) > std::abs(movement.y))
+		{
 			// horizontal collision -> stop X movement, allow Y movement
 			player_motion.position.x = player_motion.previous_position.x;
-		} else {
+		}
+		else
+		{
 			// vertical collision -> stop Y movement, allow X movement
 			player_motion.position.y = player_motion.previous_position.y;
 		}
 
 		// when collision_setting == 1, entire area should be unwalkable (rivers)
-		if (terrain.collision_setting == 1.0f) {
+		if (terrain.collision_setting == 1.0f)
+		{
 			player_motion.position = player_motion.previous_position;
 		}
 	}
@@ -350,13 +392,13 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 	}
 
 	// Resetting game
-	if (action == GLFW_RELEASE && key == GLFW_KEY_R)
-	{
-		int w, h;
-		glfwGetWindowSize(window, &w, &h);
+	// if (action == GLFW_RELEASE && key == GLFW_KEY_R)
+	// {
+	// 	int w, h;
+	// 	glfwGetWindowSize(window, &w, &h);
 
-		restart_game();
-	}
+	// 	restart_game();
+	// }
 
 	// Debugging - not used in A1, but left intact for the debug lines
 	if (key == GLFW_KEY_D)
@@ -374,7 +416,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		}
 	}
 
-	if (key != GLFW_KEY_W && key != GLFW_KEY_S && key != GLFW_KEY_D && key != GLFW_KEY_A)
+	if (registry.screenStates.components[0].is_switching_biome || (key != GLFW_KEY_W && key != GLFW_KEY_S && key != GLFW_KEY_D && key != GLFW_KEY_A))
 	{
 		return;
 	}

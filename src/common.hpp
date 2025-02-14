@@ -56,6 +56,11 @@ const float FOREST_RIVER_BELOW_HEIGHT = (float)153;
 const float FOREST_BRIDGE_WIDTH = (float)284;
 const float FOREST_BRIDGE_HEIGHT = (float)218;
 
+const float GROTTO_ENTRANCE_WIDTH = (float)175;
+const float GROTTO_ENTRANCE_HEIGHT = (float)175;
+const float GROTTO_ENTRANCE_X = (float)1000;
+const float GROTTO_ENTRANCE_Y = (float)100;
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
 #endif

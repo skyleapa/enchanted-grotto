@@ -16,6 +16,9 @@ Entity createForestBridge(RenderSystem* renderer, vec2 position);
 // forest river
 Entity createForestRiver(RenderSystem* renderer, vec2 position);
 
+// grotto entrance in forest
+Entity createGrottoEntrance(RenderSystem* renderer, vec2 position);
+
 // grid lines to show tile positions
 Entity createGridLine(vec2 start_pos, vec2 end_pos);
 

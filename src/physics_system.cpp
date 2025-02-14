@@ -3,7 +3,7 @@
 #include "world_init.hpp"
 #include <iostream>
 
-vec4 get_bounding_box(const Motion& motion, float width_ratio, float height_ratio)
+vec4 get_bounding_box(const Motion &motion, float width_ratio, float height_ratio)
 {
 	// gets the full bounding box
 	float full_width = abs(motion.scale.x);
@@ -19,7 +19,7 @@ vec4 get_bounding_box(const Motion& motion, float width_ratio, float height_rati
 	return {box_x, box_y, box_width, box_height};
 }
 
-bool collides(const Motion& player_motion, const Motion& terrain_motion, const Terrain* terrain)
+bool collides(const Motion &player_motion, const Motion &terrain_motion, const Terrain *terrain)
 {
 	// default full bounding box size
 	float player_width_ratio = 1.0f, player_height_ratio = 1.0f;
@@ -45,12 +45,33 @@ bool collides(const Motion& player_motion, const Motion& terrain_motion, const T
 	return overlap_x && overlap_y;
 }
 
+bool enterEntrance(const Motion &player_motion, const Motion &entrance_motion)
+{
+	float player_width_ratio = 1.0f, player_height_ratio = 1.0f;
+	float entrance_width_ratio = 0.7f, entrance_height_ratio = 0.9f;
+
+	vec4 player_box = get_bounding_box(player_motion, player_width_ratio, player_height_ratio);
+	vec4 entrance_box = get_bounding_box(entrance_motion, entrance_width_ratio, entrance_height_ratio);
+
+	// add padding to bottom so that character is fully within entrance
+	float padding = 5;
+	entrance_box.w -= padding;
+	entrance_box.y -= padding;
+
+	bool fully_contained_x = (player_box.x >= entrance_box.x) &&
+							 (player_box.x + player_box.z <= entrance_box.x + entrance_box.z);
+	bool fully_contained_y = (player_box.y >= entrance_box.y) &&
+							 (player_box.y + player_box.w <= entrance_box.y + entrance_box.w);
+
+	return fully_contained_x && fully_contained_y;
+}
+
 void PhysicsSystem::step(float elapsed_ms)
 {
 	// get our one player
 	if (registry.players.entities.empty())
 		return;
-		
+
 	Entity player_entity = registry.players.entities[0];
 	if (!registry.motions.has(player_entity))
 		return;
@@ -69,6 +90,21 @@ void PhysicsSystem::step(float elapsed_ms)
 		if (collides(player_motion, terrain_motion, &terrain))
 		{
 			registry.collisions.emplace_with_duplicates(player_entity, terrain_entity);
+		}
+	}
+	for (Entity entrance : registry.entrances.entities)
+	{
+		if (!registry.motions.has(entrance))
+			continue;
+
+		Motion &entrance_motion = registry.motions.get(entrance);
+		if (enterEntrance(player_motion, entrance_motion))
+		{
+			std::cout << "entering grotto" << std::endl;
+			ScreenState &state = registry.screenStates.components[0];
+			state.is_switching_biome = true;
+			state.switching_to_biome = (GLuint)BIOME::GROTTO;
+			player_motion.velocity = {0, 0};
 		}
 	}
 }
