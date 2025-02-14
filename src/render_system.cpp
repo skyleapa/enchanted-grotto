@@ -325,7 +325,13 @@ std::vector<Entity> RenderSystem::process_render_requests() {
 	std::sort(entities.begin(), entities.end(), [](Entity a, Entity b) {
 		RenderRequest& renderA = registry.renderRequests.get(a);
 		RenderRequest& renderB = registry.renderRequests.get(b);
-	
+		
+		/*
+		Rendering order is specified in components.hpp where background < terrain < structure < player
+		Examples: 
+		-	Terrain: Trees, rocks, bushes
+		-	Structure: Bridge, river
+		*/
 		// background always renders first
 		if (renderA.layer == RENDER_LAYER::BACKGROUND) return true;
 		if (renderB.layer == RENDER_LAYER::BACKGROUND) return false;

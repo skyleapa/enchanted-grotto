@@ -78,7 +78,6 @@ Entity createPlayer(RenderSystem* renderer, vec2 position)
 
 	motion.scale = vec2({ PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT });
 
-	registry.eatables.emplace(entity);
 	registry.renderRequests.insert(
 		entity,
 		{
