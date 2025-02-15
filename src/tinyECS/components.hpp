@@ -10,40 +10,14 @@ struct Player
 	std::string name;
 };
 
-// Tower
-struct Tower {
-	float range;
-	int timer_ms;
-};
-
-// Invader
-struct Invader {
-	int health;
-};
-
-// Projectile
-struct Projectile {
-	int damage;
-};
-
-// used for Entities that cause damage
-struct Deadly
-{
-
-};
-
-// used for edible entities
-struct Eatable
-{
-
-};
-
 // All data relevant to the shape and motion of entities
 struct Motion {
 	vec2  position = { 0, 0 };
 	float angle    = 0;
 	vec2  velocity = { 0, 0 };
 	vec2  scale    = { 10, 10 };
+	int moving_direction = 0;
+	vec2 previous_position = { 0, 0 };
 };
 
 // Stucture to store collision information
@@ -65,6 +39,8 @@ extern Debug debugging;
 struct ScreenState
 {
 	float darken_screen_factor = -1;
+	GLuint biome = 1; // default to forest
+	std::vector<int> pressed_keys = {};
 };
 
 // A struct to refer to debugging graphics in the ECS
@@ -177,6 +153,23 @@ struct MortarAndPestle
 	int itemState;
 };
 
+struct Moving
+{
+
+};
+
+// Obstacles in our environment that the player collides with
+struct Terrain
+{
+	// 0 - uses bottom bounding box for collisions, allows player to walk behind terrain (trees, rocks)
+	//     if 0, specify the ratio of the bounding box in proportion to the sprite. Bounding box collision
+	//     logic can be found in physics_system.cpp, boxes are drawn on bottom middle of sprite
+	// 1 - uses full bounding box for collisions, player cannot walk into terrain at all (river)
+	float collision_setting;
+	float width_ratio = 1.0f;
+	float height_ratio = 1.0f;
+};
+
 
 /**
  * The following enumerators represent global identifiers refering to graphic
@@ -203,10 +196,13 @@ struct MortarAndPestle
  */
 
 enum class TEXTURE_ASSET_ID {
-	INVADER = 0,
-	TOWER = INVADER + 1,
-	PROJECTILE = TOWER + 1,
-	TEXTURE_COUNT = PROJECTILE + 1
+	PLAYER = 0,
+	FOREST_BRIDGE = PLAYER + 1,
+	FOREST_RIVER_ABOVE = FOREST_BRIDGE + 1,
+	FOREST_RIVER_BELOW = FOREST_RIVER_ABOVE + 1,
+	FOREST_BG = FOREST_RIVER_BELOW + 1,
+	TREE = FOREST_BG + 1,
+	TEXTURE_COUNT = TREE + 1,
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 
@@ -215,8 +211,8 @@ enum class EFFECT_ASSET_ID {
 	EGG = COLOURED + 1,
 	CHICKEN = EGG + 1,
 	TEXTURED = CHICKEN + 1,
-	VIGNETTE = TEXTURED + 1,
-	EFFECT_COUNT = VIGNETTE + 1
+	BACKGROUND = TEXTURED + 1,
+	EFFECT_COUNT = BACKGROUND + 1
 };
 const int effect_count = (int)EFFECT_ASSET_ID::EFFECT_COUNT;
 
@@ -230,9 +226,29 @@ enum class GEOMETRY_BUFFER_ID {
 };
 const int geometry_count = (int)GEOMETRY_BUFFER_ID::GEOMETRY_COUNT;
 
+enum class RENDER_LAYER {
+    BACKGROUND,
+    TERRAIN,
+    STRUCTURE,
+    PLAYER
+};
+
 struct RenderRequest {
 	TEXTURE_ASSET_ID   used_texture  = TEXTURE_ASSET_ID::TEXTURE_COUNT;
 	EFFECT_ASSET_ID    used_effect   = EFFECT_ASSET_ID::EFFECT_COUNT;
 	GEOMETRY_BUFFER_ID used_geometry = GEOMETRY_BUFFER_ID::GEOMETRY_COUNT;
+	RENDER_LAYER layer = RENDER_LAYER::BACKGROUND;
+	int render_sub_layer = 0; // lower values are rendered above
 };
 
+enum class BIOME {
+	GROTTO = 0,
+	FOREST = GROTTO + 1
+};
+
+enum class DIRECTION {
+	UP = 0,
+	DOWN = 1,
+	RIGHT = 2,
+	LEFT = 3
+};

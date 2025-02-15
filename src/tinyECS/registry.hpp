@@ -17,14 +17,9 @@ public:
 	ComponentContainer<Mesh*> meshPtrs;
 	ComponentContainer<RenderRequest> renderRequests;
 	ComponentContainer<ScreenState> screenStates;
-	ComponentContainer<Eatable> eatables;
-	ComponentContainer<Deadly> deadlys;
 	ComponentContainer<DebugComponent> debugComponents;
 	ComponentContainer<vec3> colors;
-	ComponentContainer<Tower> towers;
 	ComponentContainer<GridLine> gridLines;
-	ComponentContainer<Invader> invaders;
-	ComponentContainer<Projectile> projectiles;
 
 	// Enchanted Grotto CCs
 	ComponentContainer<Potion> potions;
@@ -35,6 +30,8 @@ public:
 	ComponentContainer<Menu> menus;
 	ComponentContainer<Recipe> recipes;
 	ComponentContainer<MortarAndPestle> mortarAndPestles;
+	ComponentContainer<Moving> moving;
+	ComponentContainer<Terrain> terrains;
 
 	// constructor that adds all containers for looping over them
 	ECSRegistry()
@@ -46,14 +43,9 @@ public:
 		registry_list.push_back(&meshPtrs);
 		registry_list.push_back(&renderRequests);
 		registry_list.push_back(&screenStates);
-		registry_list.push_back(&eatables);
-		registry_list.push_back(&deadlys);
 		registry_list.push_back(&debugComponents);
 		registry_list.push_back(&colors);
-		registry_list.push_back(&towers);
 		registry_list.push_back(&gridLines);
-		registry_list.push_back(&invaders);
-		registry_list.push_back(&projectiles);
 		registry_list.push_back(&potions);
 		registry_list.push_back(&items);
 		registry_list.push_back(&ingredients);
@@ -62,6 +54,8 @@ public:
 		registry_list.push_back(&menus);
 		registry_list.push_back(&recipes);
 		registry_list.push_back(&mortarAndPestles);
+		registry_list.push_back(&moving);
+		registry_list.push_back(&terrains);
 	}
 
 	void clear_all_components() {

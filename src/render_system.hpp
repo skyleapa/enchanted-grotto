@@ -29,9 +29,12 @@ class RenderSystem {
 
 	// Make sure these paths remain in sync with the associated enumerators (see TEXTURE_ASSET_ID).
 	const std::array<std::string, texture_count> texture_paths = {
-		textures_path("invaders/blue_1.png"),
-		textures_path("towers/tower01.png"),
-		textures_path("projectiles/gold_bubble.png")
+		textures_path("players/player_1.png"),
+		textures_path("terrain/forest_bridge.png"),
+		textures_path("terrain/forest_river_above.png"),
+		textures_path("terrain/forest_river_below.png"),
+		textures_path("backgrounds/forest_bg.png"),
+		textures_path("terrain/tree_1.png")
 	};
 
 	std::array<GLuint, effect_count> effects;
@@ -41,7 +44,7 @@ class RenderSystem {
 		shader_path("egg"),
 		shader_path("chicken"),
 		shader_path("textured"),
-		shader_path("vignette")
+		shader_path("background")
 	};
 
 	std::array<GLuint, geometry_count> vertex_buffers;
@@ -74,6 +77,8 @@ public:
 
 	// Draw all entities
 	void draw();
+
+	std::vector<Entity> process_render_requests();
 
 	mat3 createProjectionMatrix();
 
