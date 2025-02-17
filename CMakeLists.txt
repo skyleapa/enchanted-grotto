@@ -9,6 +9,10 @@ set (CMAKE_CXX_STANDARD 17)
 # nice hierarchichal structure in MSVC
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+# Option to build the game (default: ON)
+option(BUILD_GAME "Build the game executable and library" ON)
+option(BUILD_TESTING "Build the tests" OFF)
+
 # detect OS
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(IS_OS_MAC 1)
@@ -37,22 +41,25 @@ if (IS_OS_MAC)
     link_directories(/opt/homebrew/lib)
 endif()
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
-target_include_directories(${PROJECT_NAME} PUBLIC src/)
+if(BUILD_GAME)
+    add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+    target_include_directories(${PROJECT_NAME} PUBLIC src/)
 
-# Added this so policy CMP0065 doesn't scream
-set_target_properties(${PROJECT_NAME} PROPERTIES ENABLE_EXPORTS 0)
+    # Added this so policy CMP0065 doesn't scream
+    set_target_properties(${PROJECT_NAME} PROPERTIES ENABLE_EXPORTS 0)
 
-# External header-only libraries in the ext/
-target_include_directories(${PROJECT_NAME} PUBLIC ext/stb_image/)
-target_include_directories(${PROJECT_NAME} PUBLIC ext/gl3w)
+    # External header-only libraries in the ext/
+    target_include_directories(${PROJECT_NAME} PUBLIC ext/stb_image/)
+    target_include_directories(${PROJECT_NAME} PUBLIC ext/gl3w)
+    target_include_directories(${PROJECT_NAME} PUBLIC ext)  # For nlohmann/json.hpp
 
-# Find OpenGL
-find_package(OpenGL REQUIRED)
+    # Find OpenGL
+    find_package(OpenGL REQUIRED)
 
-if (OPENGL_FOUND)
-   target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIR})
-   target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENGL_gl_LIBRARY})
+    if (OPENGL_FOUND)
+       target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIR})
+       target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENGL_gl_LIBRARY})
+    endif()
 endif()
 
 set(glm_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/glm/cmake/glm) # if necessary
@@ -69,15 +76,17 @@ if (IS_OS_LINUX OR IS_OS_MAC)
     pkg_search_module(SDL2 REQUIRED sdl2)
     pkg_search_module(SDL2MIXER REQUIRED SDL2_mixer)
 
-    # Link Frameworks on OSX
-    if (IS_OS_MAC)
-       find_library(COCOA_LIBRARY Cocoa)
-       find_library(CF_LIBRARY CoreFoundation)
-       target_link_libraries(${PROJECT_NAME} PUBLIC ${COCOA_LIBRARY} ${CF_LIBRARY})
+    if(BUILD_GAME)
+        # Link Frameworks on OSX
+        if (IS_OS_MAC)
+           find_library(COCOA_LIBRARY Cocoa)
+           find_library(CF_LIBRARY CoreFoundation)
+           target_link_libraries(${PROJECT_NAME} PUBLIC ${COCOA_LIBRARY} ${CF_LIBRARY})
+        endif()
+        
+        # Increase warning level
+        target_compile_options(${PROJECT_NAME} PUBLIC "-Wall")
     endif()
-
-    # Increase warning level
-    target_compile_options(${PROJECT_NAME} PUBLIC "-Wall")
 elseif (IS_OS_WINDOWS)
 # https://stackoverflow.com/questions/17126860/cmake-link-precompiled-library-depending-on-os-and-architecture
     set(GLFW_FOUND TRUE)
@@ -92,41 +101,40 @@ elseif (IS_OS_WINDOWS)
     set(SDL2_LIBRARIES "${CMAKE_CURRENT_SOURCE_DIR}/ext/sdl/lib/SDL2-x64.lib")
     set(SDL2MIXER_LIBRARIES "${CMAKE_CURRENT_SOURCE_DIR}/ext/sdl/lib/SDL2_mixer-x64.lib")
 
-    # matching DLLs
-    set(GLFW_DLL "${CMAKE_CURRENT_SOURCE_DIR}/ext/glfw/lib/glfw3-x64.dll")
-    set(SDL_DLL "${CMAKE_CURRENT_SOURCE_DIR}/ext/sdl/lib/SDL2-x64.dll")
-    set(SDLMIXER_DLL "${CMAKE_CURRENT_SOURCE_DIR}/ext/sdl/lib/SDL2_mixer-x64.dll")
+    if(BUILD_GAME)
+        # matching DLLs
+        set(GLFW_DLL "${CMAKE_CURRENT_SOURCE_DIR}/ext/glfw/lib/glfw3-x64.dll")
+        set(SDL_DLL "${CMAKE_CURRENT_SOURCE_DIR}/ext/sdl/lib/SDL2-x64.dll")
+        set(SDLMIXER_DLL "${CMAKE_CURRENT_SOURCE_DIR}/ext/sdl/lib/SDL2_mixer-x64.dll")
 
-    # copy DLLs to build folder and remove if necessary name
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${GLFW_DLL}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/glfw3.dll")
+        # copy DLLs to build folder and remove if necessary name
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${GLFW_DLL}"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/glfw3.dll")
 
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${SDL_DLL}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/SDL2.dll")
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${SDL_DLL}"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/SDL2.dll")
 
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${SDLMIXER_DLL}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/SDL2_mixer.dll")
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${SDLMIXER_DLL}"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/SDL2_mixer.dll")
 
-    # increase warning level from default 3 to 4
-    add_compile_options(/w4)
+        # increase warning level from default 3 to 4
+        add_compile_options(/w4)
 
-    # turn warning "not all control paths return a value" into an error
-    add_compile_options(/we4715)
+        # turn warning "not all control paths return a value" into an error
+        add_compile_options(/we4715)
 
-    # use sane exception handling, rather than trying to catch segfaults and allowing resource
-    # leaks and UB. Yup... See "Default exception handling behavior" at
-    # https://docs.microsoft.com/en-us/cpp/build/reference/eh-exception-handling-model?view=vs-2019
-    add_compile_options(/EHsc)
+        # use sane exception handling
+        add_compile_options(/EHsc)
 
-    # turn warning C4239 (non-standard extension that allows temporaries to be bound to
-    # non-const references, yay microsoft) into an error
-    add_compile_options(/we4239)
+        # turn warning C4239 into an error
+        add_compile_options(/we4239)
+    endif()
 endif()
 
 # if we can't find the include and lib, then report error and quit.
@@ -138,12 +146,34 @@ if (NOT GLFW_FOUND OR NOT SDL2_FOUND)
     endif()
 endif()
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${GLFW_INCLUDE_DIRS})
-target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
+if(BUILD_GAME)
+    target_include_directories(${PROJECT_NAME} PUBLIC ${GLFW_INCLUDE_DIRS})
+    target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
 
-target_link_libraries(${PROJECT_NAME} PUBLIC ${GLFW_LIBRARIES} ${SDL2_LIBRARIES} ${SDL2MIXER_LIBRARIES} glm::glm)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${GLFW_LIBRARIES} ${SDL2_LIBRARIES} ${SDL2MIXER_LIBRARIES} glm::glm)
 
-# needed to add this for Linux
-if(IS_OS_LINUX)
-    target_link_libraries(${PROJECT_NAME} PUBLIC glfw ${CMAKE_DL_LIBS})
+    # needed to add this for Linux
+    if(IS_OS_LINUX)
+        target_link_libraries(${PROJECT_NAME} PUBLIC glfw ${CMAKE_DL_LIBS})
+    endif()
+endif()
+
+# Only include testing setup if BUILD_TESTING is ON
+if(BUILD_TESTING)
+    # Based on googletest docs: http://google.github.io/googletest/quickstart-cmake.html
+
+    include(FetchContent)
+    FetchContent_Declare(
+      googletest
+      URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+    )
+
+    # For Windows: Prevent overriding the parent project's compiler/linker settings
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(googletest)
+
+    enable_testing()
+
+    # Add test directory
+    add_subdirectory(test)
 endif()
