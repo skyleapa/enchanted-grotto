@@ -56,6 +56,18 @@ const float FOREST_RIVER_BELOW_HEIGHT = (float)153;
 const float FOREST_BRIDGE_WIDTH = (float)284;
 const float FOREST_BRIDGE_HEIGHT = (float)218;
 
+const float GROTTO_ENTRANCE_WIDTH = (float)400;
+const float GROTTO_ENTRANCE_HEIGHT = (float)180;
+
+const float BUSH_WIDTH = (float)GRID_CELL_WIDTH_PX * 5.5;
+const float BUSH_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 5.5;
+
+const float FRUIT_WIDTH = (float)GRID_CELL_WIDTH_PX * 1.5;
+const float FRUIT_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 1.8;
+
+const float COFFEE_BEAN_WIDTH = (float)GRID_CELL_WIDTH_PX * 0.9;
+const float COFFEE_BEAN_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 0.9;
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
 #endif

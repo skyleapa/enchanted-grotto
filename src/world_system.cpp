@@ -282,6 +282,19 @@ void WorldSystem::create_forest()
 		trees.push_back(createTree(renderer, vec2(GRID_CELL_WIDTH_PX * 19, GRID_CELL_HEIGHT_PX * 10)));
 		trees.push_back(createTree(renderer, vec2(GRID_CELL_WIDTH_PX * 23, GRID_CELL_HEIGHT_PX * 11)));
 	}
+
+	createGrottoEntrance(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 1));
+
+	createBush(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5));
+
+	createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 10, GRID_CELL_HEIGHT_PX * 3), 1, "Magical Fruit", 1);
+	createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 19, GRID_CELL_HEIGHT_PX * 10), 1, "Magical Fruit", 1);
+	createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 23, GRID_CELL_HEIGHT_PX * 11), 1, "Magical Fruit", 1);
+
+	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5), 1, "Coffee Bean", 1);
+	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 9.9, GRID_CELL_HEIGHT_PX * 12.1), 1, "Coffee Bean", 1);
+	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 12, GRID_CELL_HEIGHT_PX * 12.7), 1, "Coffee Bean", 1);
+
 }
 
 void WorldSystem::handle_collisions()
@@ -348,6 +361,10 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 
 		restart_game();
 	}
+
+	if (action == GLFW_PRESS && key == GLFW_KEY_F) {
+        handle_player_pickup();
+    }
 
 	if (key != GLFW_KEY_W && key != GLFW_KEY_S && key != GLFW_KEY_D && key != GLFW_KEY_A)
 	{
@@ -440,4 +457,46 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 		std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
 		std::cout << "mouse tile position: " << tile_x << ", " << tile_y << std::endl;
 	}
+}
+
+void WorldSystem::handle_player_pickup() {
+    // Check if player exists
+    if (registry.players.entities.empty()) {
+        return;
+    }
+
+    Entity player = registry.players.entities[0]; // Assume single-player
+    if (!registry.motions.has(player) || !registry.inventories.has(player)) {
+        return;
+    }
+
+    Motion& player_motion = registry.motions.get(player);
+    Inventory& player_inventory = registry.inventories.get(player);
+
+    std::cout << "Current Inventory Size: " << player_inventory.items.size() << "/" << player_inventory.capacity << std::endl;
+
+    if (registry.items.entities.empty()) {
+        return;
+    }
+
+    for (Entity item : registry.items.entities) {
+        if (!registry.items.has(item) || !registry.motions.has(item)) {
+            continue;
+        }
+
+        Motion& item_motion = registry.motions.get(item);
+        Item& item_info = registry.items.get(item);
+        float distance = glm::distance(player_motion.position, item_motion.position);
+
+        // Check if item is in pickup range
+        if (distance < 53.0f) {
+            // Check if player has space in inventory, then remove item from world
+            if (player_inventory.items.size() < player_inventory.capacity) {
+                player_inventory.items.push_back(item);
+                registry.remove_all_components_of(item);
+                std::cout << item_info.name << " added to inventory!" << std::endl;
+            } 
+            return;
+        }
+    }
 }

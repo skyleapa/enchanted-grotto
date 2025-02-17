@@ -47,6 +47,9 @@ public:
 	// should the game be over ?
 	bool is_over() const;
 
+	void handle_player_pickup();
+
+
 private:
 
 	float mouse_pos_x = 0.0f;

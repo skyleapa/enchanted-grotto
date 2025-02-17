@@ -114,6 +114,7 @@ struct Inventory
 {
 	// commented out temporarily as Item results in a compilation error
 	// std::unordered_map<Item, int> items; // map of the item to the amount 
+	std::vector<Entity> items;
 	int capacity;
 	bool isFull;
 };
@@ -202,7 +203,11 @@ enum class TEXTURE_ASSET_ID {
 	FOREST_RIVER_BELOW = FOREST_RIVER_ABOVE + 1,
 	FOREST_BG = FOREST_RIVER_BELOW + 1,
 	TREE = FOREST_BG + 1,
-	TEXTURE_COUNT = TREE + 1,
+	BUSH = TREE + 1,
+	FRUIT = BUSH + 1,
+	COFFEE_BEAN = FRUIT + 1,
+	GROTTO_ENTRANCE = COFFEE_BEAN + 1,
+	TEXTURE_COUNT = GROTTO_ENTRANCE + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 
@@ -230,6 +235,7 @@ enum class RENDER_LAYER {
     BACKGROUND,
     TERRAIN,
     STRUCTURE,
+	ITEM,
     PLAYER
 };
 

@@ -78,6 +78,10 @@ Entity createPlayer(RenderSystem* renderer, vec2 position)
 
 	motion.scale = vec2({ PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT });
 
+	auto& inventory = registry.inventories.emplace(entity);
+    inventory.capacity = 5;
+    inventory.isFull = false;
+
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -199,4 +203,132 @@ Entity createLine(vec2 position, vec2 scale)
 
 	registry.debugComponents.emplace(entity);
 	return entity;
+}
+
+Entity createGrottoEntrance(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.height_ratio = 0.1f;
+	terrain.width_ratio = 0.2f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ GROTTO_ENTRANCE_WIDTH, GROTTO_ENTRANCE_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::GROTTO_ENTRANCE,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::TERRAIN
+		}
+	);
+
+	return entity;
+}
+
+Entity createBush(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.height_ratio = 0.1f;
+	terrain.width_ratio = 0.2f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ BUSH_WIDTH, BUSH_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::BUSH,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::TERRAIN
+		}
+	);
+
+	return entity;
+}
+
+Entity createFruit(RenderSystem* renderer, vec2 position, int id, std::string name, int amount) {
+    auto entity = Entity();
+
+    Item& item = registry.items.emplace(entity);
+    item.id = id;
+    item.name = name;
+    item.isCollectable = true; // Make sure the item can be collected
+    item.amount = amount;
+
+    Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+    registry.meshPtrs.emplace(entity, &mesh);
+
+	// Create motion
+    auto& motion = registry.motions.emplace(entity);
+    motion.angle = 180.f;
+    motion.velocity = { 0, 0 };
+    motion.position = position;
+    motion.scale = vec2({ FRUIT_WIDTH, FRUIT_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::FRUIT,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::ITEM
+		}
+	);
+
+    return entity;
+}
+
+Entity createCoffeeBean(RenderSystem* renderer, vec2 position, int id, std::string name, int amount) {
+    auto entity = Entity();
+
+    Item& item = registry.items.emplace(entity);
+    item.id = id;
+    item.name = name;
+    item.isCollectable = true; // Make sure the item can be collected
+    item.amount = amount;
+
+    Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+    registry.meshPtrs.emplace(entity, &mesh);
+
+	// Create motion
+    auto& motion = registry.motions.emplace(entity);
+    motion.angle = 180.f;
+    motion.velocity = { 0, 0 };
+    motion.position = position;
+    motion.scale = vec2({ COFFEE_BEAN_WIDTH, COFFEE_BEAN_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::COFFEE_BEAN,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::ITEM
+		}
+	);
+
+    return entity;
 }
