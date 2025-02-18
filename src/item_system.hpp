@@ -30,7 +30,7 @@ public:
     bool loadGameState(const std::string& filename);
     
     // Item factory methods
-    static Entity createItem(const std::string& name, int type_id, int amount = 1);
+    static Entity createItem(const std::string& name, int type_id, int amount = 1, bool isCollectable = false);
     static Entity createIngredient(const std::string& name, int type_id, int amount = 1);
     static Entity createPotion(const std::string& name, int type_id, int effect, int duration, const vec3& color, float quality);
     

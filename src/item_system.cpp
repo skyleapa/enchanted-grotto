@@ -2,19 +2,20 @@
 #include <iostream>
 #include <fstream>
 
-Entity ItemSystem::createItem(const std::string& name, int type_id, int amount) {
+Entity ItemSystem::createItem(const std::string& name, int type_id, int amount, bool isCollectable) {
     Entity entity = Entity();
     
     Item& item = registry.items.emplace(entity);
     item.type_id = type_id;
     item.name = name;
     item.amount = amount;
+    item.isCollectable = isCollectable;
     
     return entity;
 }
 
 Entity ItemSystem::createIngredient(const std::string& name, int type_id, int amount) {
-    Entity entity = createItem(name, type_id, amount);
+    Entity entity = createItem(name, type_id, amount, false);
     
     // Add ingredient-specific component
     Ingredient& ingredient = registry.ingredients.emplace(entity);
@@ -24,7 +25,7 @@ Entity ItemSystem::createIngredient(const std::string& name, int type_id, int am
 }
 
 Entity ItemSystem::createPotion(const std::string& name, int type_id, int effect, int duration, const vec3& color, float quality) {
-    Entity entity = createItem(name, type_id, 1);
+    Entity entity = createItem(name, type_id, 1, false);
     
     // Add potion-specific component
     Potion& potion = registry.potions.emplace(entity);
@@ -47,7 +48,7 @@ void ItemSystem::step(float elapsed_ms) {
 }
 
 Entity ItemSystem::createItemEntity(const std::string& name, int type_id, int amount) {
-    return createItem(name, type_id, amount);
+    return createItem(name, type_id, amount, false);
 }
 
 void ItemSystem::destroyItem(Entity item) {
@@ -196,7 +197,7 @@ Entity ItemSystem::deserializeItem(const nlohmann::json& data) {
             pot_data["quality"]
         );
     } else {
-        entity = createItem(data["name"], data["type_id"], data["amount"]);
+        entity = createItem(data["name"], data["type_id"], data["amount"], false);
     }
     
     return entity;

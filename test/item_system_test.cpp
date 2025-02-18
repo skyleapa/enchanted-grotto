@@ -23,6 +23,13 @@ TEST_F(ItemSystemTest, ItemCreation) {
     EXPECT_EQ(item.name, "Test Item");
     EXPECT_EQ(item.type_id, 1);
     EXPECT_EQ(item.amount, 5);
+    EXPECT_FALSE(item.isCollectable);
+    
+    // Test basic item with explicit isCollectable = true
+    Entity collectible = ItemSystem::createItem("Collectible Item", 2, 1, true);
+    ASSERT_TRUE(registry.items.has(collectible));
+    Item& coll_item = registry.items.get(collectible);
+    EXPECT_TRUE(coll_item.isCollectable);
     
     // Test ingredient
     Entity ingredient = ItemSystem::createIngredient("Test Herb", 2, 3);
@@ -30,6 +37,7 @@ TEST_F(ItemSystemTest, ItemCreation) {
     ASSERT_TRUE(registry.ingredients.has(ingredient));
     Ingredient& ing = registry.ingredients.get(ingredient);
     EXPECT_FLOAT_EQ(ing.grindLevel, 0.0f);
+    EXPECT_FALSE(registry.items.get(ingredient).isCollectable);
     
     // Test potion
     Entity potion = ItemSystem::createPotion("Health Potion", 3, 1, 30, vec3(1,0,0), 0.8f);
@@ -39,6 +47,7 @@ TEST_F(ItemSystemTest, ItemCreation) {
     EXPECT_EQ(pot.effect, 1);
     EXPECT_EQ(pot.duration, 30);
     EXPECT_FLOAT_EQ(pot.quality, 0.8f);
+    EXPECT_FALSE(registry.items.get(potion).isCollectable);
 }
 
 // Test inventory operations
