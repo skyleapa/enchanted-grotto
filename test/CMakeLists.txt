@@ -3,6 +3,7 @@ add_library(test_lib STATIC
     registry.cpp
     ../src/tinyECS/tiny_ecs.cpp
     ../src/item_system.cpp
+    ../src/tinyECS/registry.cpp
 )
 
 # Add include directories for test library

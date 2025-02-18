@@ -6,11 +6,7 @@
 // Based on googletest docs: http://google.github.io/googletest/reference/testing.html
 class ItemSystemTest : public ::testing::Test {
 protected:
-    ECSRegistry registry;
     ItemSystem item_system;
-
-    ItemSystemTest() : item_system(registry) {
-    }
 
     void SetUp() override {
         // Reset the registry before each test

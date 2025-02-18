@@ -23,7 +23,7 @@ int main()
 	WorldSystem   world_system;
 	RenderSystem  renderer_system;
 	PhysicsSystem physics_system;
-	ItemSystem    item_system(registry);
+	ItemSystem    item_system;
 
 	// initialize window
 	GLFWwindow* window = world_system.create_window();

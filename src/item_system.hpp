@@ -14,7 +14,7 @@ class ItemSystem;
 // Main system for managing items and inventories
 class ItemSystem {
 public:
-    ItemSystem(ECSRegistry& reg) : registry(reg) {}
+    ItemSystem() {}
     
     void init();
     void step(float elapsed_ms);
@@ -43,6 +43,4 @@ private:
     nlohmann::json serializeInventory(Entity inventory) const;
     Entity deserializeItem(const nlohmann::json& data);
     void deserializeInventory(Entity inventory, const nlohmann::json& data);
-    
-    ECSRegistry& registry;
 }; 
