@@ -365,9 +365,10 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		restart_game();
 	}
 
-	if (action == GLFW_PRESS && key == GLFW_KEY_F) {
-        handle_player_pickup();
-    }
+	if (action == GLFW_PRESS && key == GLFW_KEY_F) 
+	{
+		handle_player_pickup();
+	}
 
 	if (key != GLFW_KEY_W && key != GLFW_KEY_S && key != GLFW_KEY_D && key != GLFW_KEY_A)
 	{
@@ -462,112 +463,119 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 	}
 }
 
-void WorldSystem::handle_player_pickup() {
-    // Check if player exists
-    if (registry.players.entities.empty()) {
-        return;
-    }
+void WorldSystem::handle_player_pickup()
+{
+	// Check if player exists
+	if (registry.players.entities.empty())
+		return;
 
-    Entity player = registry.players.entities[0]; // Assume single-player
-    if (!registry.motions.has(player) || !registry.inventories.has(player)) {
-        return;
-    }
+	Entity player = registry.players.entities[0]; // Assume single-player
+	if (!registry.motions.has(player) || !registry.inventories.has(player))
+		return;
 
-    Motion& player_motion = registry.motions.get(player);
-    Inventory& player_inventory = registry.inventories.get(player);
+	Motion &player_motion = registry.motions.get(player);
+	Inventory &player_inventory = registry.inventories.get(player);
 
-    //std::cout << "Current Inventory Size: " << player_inventory.items.size() << "/" << player_inventory.capacity << std::endl;
+	if (registry.items.entities.empty())
+		return;
 
-    if (registry.items.entities.empty()) {
-        return;
-    }
+	for (Entity item : registry.items.entities)
+	{
+		if (!registry.items.has(item) || !registry.motions.has(item))
+			continue;
 
-    for (Entity item : registry.items.entities) {
-        if (!registry.items.has(item) || !registry.motions.has(item)) {
-            continue;
-        }
+		Motion &item_motion = registry.motions.get(item);
+		Item &item_info = registry.items.get(item);
 
-        Motion& item_motion = registry.motions.get(item);
-        Item& item_info = registry.items.get(item);
-        float distance = glm::distance(player_motion.position, item_motion.position);
+		// Check if item is collectable
+		if (!item_info.isCollectable)
+			continue;
 
-        // Check if item is in pickup range
-        if (distance < 55.0f) {
-			// Check if player has space in inventory, then remove item from world
-            if (player_inventory.items.size() < player_inventory.capacity) {
-                player_inventory.items.push_back(item);
+		float distance = glm::distance(player_motion.position, item_motion.position);
 
-                Entity textboxEntity = Entity();
-                bool foundTextbox = false;
+		// If item is not in pickup range, continue
+		if (distance > ITEM_PICKUP_RADIUS)
+			continue;
 
-                for (Entity textbox : registry.textboxes.entities) {
-                    if (registry.textboxes.get(textbox).targetItem == item) {
-                        textboxEntity = textbox;
-                        foundTextbox = true;
-                        break;
-                    }
-                }
+		// If inventory is full, return
+		if (player_inventory.items.size() >= player_inventory.capacity)
+			return;
 
-                if (foundTextbox) {
-                    registry.remove_all_components_of(textboxEntity);
-                }
+		// Add item to inventory
+		player_inventory.items.push_back(item);
 
-                registry.remove_all_components_of(item);
-                
-                return;
-            } else {
-                //std::cout << "Inventory is full!" << std::endl;
-            }
-        }
-    }
+		// Find and remove associated textbox if it exists
+		for (Entity textbox : registry.textboxes.entities)
+		{
+			if (registry.textboxes.get(textbox).targetItem == item)
+			{
+				registry.remove_all_components_of(textbox);
+				break;
+			}
+		}
+
+		// Remove the item from the world
+		registry.remove_all_components_of(item);
+		return;
+	}
 }
 
+void WorldSystem::update_textbox_visibility()
+{
+	if (registry.players.entities.empty())
+		return;
 
-void WorldSystem::update_textbox_visibility() {
-    if (registry.players.entities.empty()) return;
+	Entity player = registry.players.entities[0];
+	if (!registry.motions.has(player))
+		return;
 
-    Entity player = registry.players.entities[0];
-    if (!registry.motions.has(player)) return;
+	Motion &player_motion = registry.motions.get(player);
 
-    Motion& player_motion = registry.motions.get(player);
+	for (Entity item : registry.items.entities)
+	{
+		if (!registry.items.has(item) || !registry.motions.has(item))
+			continue;
 
-    for (Entity item : registry.items.entities) {
-        if (!registry.items.has(item) || !registry.motions.has(item)) continue;
+		Motion &item_motion = registry.motions.get(item);
 
-        Motion& item_motion = registry.motions.get(item);
+		float distance = glm::distance(player_motion.position, item_motion.position);
 
-        float distance = glm::distance(player_motion.position, item_motion.position);
+		// Find the textbox linked to this item
+		Entity textboxEntity;
+		bool foundTextbox = false;
 
-        // Find the textbox linked to this item
-        Entity textboxEntity = Entity();
-        bool foundTextbox = false;
+		for (Entity textbox : registry.textboxes.entities)
+		{
+			if (registry.textboxes.get(textbox).targetItem == item)
+			{
+				textboxEntity = textbox;
+				foundTextbox = true;
+				break;
+			}
+		}
 
-        for (Entity textbox : registry.textboxes.entities) {
-            if (registry.textboxes.get(textbox).targetItem == item) {
-                textboxEntity = textbox;
-                foundTextbox = true;
-                break;
-            }
-        }
+		// Update isVisible based on distance
+		if (foundTextbox)
+		{
+			Textbox &textbox = registry.textboxes.get(textboxEntity);
+			textbox.isVisible = (distance < TEXTBOX_VISIBILITY_RADIUS);
 
-        // Update isVisible based on distance
-        if (foundTextbox) {
-            Textbox& textbox = registry.textboxes.get(textboxEntity);
-            textbox.isVisible = (distance < 70.0f);
+			RenderRequest renderRequest = getTextboxRenderRequest(textbox);
 
-            RenderRequest renderRequest = getTextboxRenderRequest(textbox);
-
-            if (textbox.isVisible) {
-                if (!registry.renderRequests.has(textboxEntity)) {
-                    registry.renderRequests.insert(textboxEntity, renderRequest);
-                }
-            } else {
-                if (registry.renderRequests.has(textboxEntity)) {
-                    registry.renderRequests.remove(textboxEntity);
-                }
-            }
-        }
-    }
+			if (textbox.isVisible)
+			{
+				if (!registry.renderRequests.has(textboxEntity))
+				{
+					registry.renderRequests.insert(textboxEntity, renderRequest);
+				}
+			}
+			else
+			{
+				if (registry.renderRequests.has(textboxEntity))
+				{
+					registry.renderRequests.remove(textboxEntity);
+				}
+			}
+		}
+	}
 }
-
-

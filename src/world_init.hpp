@@ -37,4 +37,5 @@ Entity createCoffeeBean(RenderSystem* renderer, vec2 position, int id, std::stri
 // interaction textbox
 Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity);
 
+// render textbox
 RenderRequest getTextboxRenderRequest(Textbox& textbox);
