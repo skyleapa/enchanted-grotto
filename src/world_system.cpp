@@ -303,8 +303,6 @@ void WorldSystem::restart_game()
 	}
 
 	if (registry.players.components.size() == 0)
-
-	if (registry.players.components.size() == 0)
 	{
 		createPlayer(renderer, vec2(GROTTO_ENTRANCE_X, GROTTO_ENTRANCE_Y + 50));
 	}
@@ -422,37 +420,11 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		close_window();
 	}
 
-	// Resetting game
-	if (action == GLFW_RELEASE && key == GLFW_KEY_R)
-	{
-		int w, h;
-		glfwGetWindowSize(window, &w, &h);
-
-		restart_game();
-	}
-
-	// Debugging - not used in A1, but left intact for the debug lines
-	if (key == GLFW_KEY_D)
-	{
-		if (action == GLFW_RELEASE)
-		{
-			if (debugging.in_debug_mode)
-			{
-				debugging.in_debug_mode = false;
-			}
-			else
-			{
-				debugging.in_debug_mode = true;
-			}
-		}
-	}
-
 	if (registry.screenStates.components[0].is_switching_biome || (key != GLFW_KEY_W && key != GLFW_KEY_S && key != GLFW_KEY_D && key != GLFW_KEY_A))
 	{
 		return;
 	}
 
-	Entity player = registry.players.entities[0]; // Assume only one player entity
 	Entity player = registry.players.entities[0]; // Assume only one player entity
 	if (!registry.motions.has(player))
 	{
