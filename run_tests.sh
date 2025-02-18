@@ -1,7 +1,4 @@
 #!/bin/bash
-rm -rf build
-mkdir build
-cd build
-cmake .. -DBUILD_GAME=OFF -DBUILD_TESTING=ON
-make
-ctest --output-on-failure
+cmake -S . -B build -DBUILD_GAME=OFF -DBUILD_TESTING=ON
+cmake --build build
+cd build && ctest --output-on-failure

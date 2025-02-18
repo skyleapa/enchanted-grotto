@@ -8,9 +8,6 @@
 #include <fstream>
 #include "nlohmann/json.hpp"
 
-// Forward declarations
-class ItemSystem;
-
 // Main system for managing items and inventories
 class ItemSystem {
 public:
