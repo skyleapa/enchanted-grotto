@@ -45,7 +45,8 @@ class RenderSystem {
 		shader_path("egg"),
 		shader_path("chicken"),
 		shader_path("textured"),
-		shader_path("background")
+		shader_path("background"),
+		shader_path("fade"),
 	};
 
 	std::array<GLuint, geometry_count> vertex_buffers;
@@ -90,6 +91,7 @@ private:
 	void drawGridLine(Entity entity, const mat3& projection);
 	void drawTexturedMesh(Entity entity, const mat3& projection);
 	void drawToScreen();
+	void fadeScreen();
 
 	// Window handle
 	GLFWwindow* window;

@@ -69,7 +69,7 @@ extern Debug debugging;
 // Sets the brightness of the screen
 struct ScreenState
 {
-	float darken_screen_factor = -1;
+	float darken_screen_factor = 0;
 	GLuint biome = 1; // default to forest
 	std::vector<int> pressed_keys = {};
 	bool is_switching_biome = false;
@@ -252,7 +252,8 @@ enum class EFFECT_ASSET_ID
 	CHICKEN = EGG + 1,
 	TEXTURED = CHICKEN + 1,
 	BACKGROUND = TEXTURED + 1,
-	EFFECT_COUNT = BACKGROUND + 1
+	FADE = BACKGROUND + 1,
+	EFFECT_COUNT = FADE + 1
 };
 const int effect_count = (int)EFFECT_ASSET_ID::EFFECT_COUNT;
 

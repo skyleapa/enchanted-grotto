@@ -158,27 +158,43 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	// handle switching biomes
 	ScreenState &screen = registry.screenStates.components[0];
 	Entity &player = registry.players.entities[0];
-	assert(registry.motions.has(player)); // TODO: remove assert on submission 
-	Motion& player_motion = registry.motions.get(player);
+	assert(registry.motions.has(player)); // TODO: remove assert on submission
+	Motion &player_motion = registry.motions.get(player);
 
-	if (screen.is_switching_biome) {
-		if (screen.freeze_timer > 0) {
+	if (screen.is_switching_biome)
+	{
+		if (screen.freeze_timer > 0)
+		{
 			screen.freeze_timer -= elapsed_ms_since_last_update; // fade will occur here
+			if (screen.darken_screen_factor <= 1) screen.darken_screen_factor += elapsed_ms_since_last_update * 0.001f;
 		}
-		if (screen.freeze_timer <= 1000 && screen.biome != screen.switching_to_biome) {
+
+		if (screen.freeze_timer <= 1000)
+		{
 			// at this point screen is fully black then fades in
-			screen.biome = screen.switching_to_biome;
-			restart_game();
-			if (screen.biome == (GLuint) BIOME::GROTTO) {
-				player_motion.scale = {PLAYER_BB_WIDTH * 1.3, PLAYER_BB_HEIGHT * 1.3}; // make player larger in grotto
-			} else {
-				player_motion.scale = {PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT};
+			if (screen.biome != screen.switching_to_biome)
+			{ // restart with new biome only once
+				screen.biome = screen.switching_to_biome;
+				restart_game();
+				screen.darken_screen_factor = 1;
+				if (screen.biome == (GLuint)BIOME::GROTTO)
+				{
+					player_motion.scale = {PLAYER_BB_WIDTH * 1.3, PLAYER_BB_HEIGHT * 1.3}; // make player larger in grotto
+				}
+				else
+				{
+					player_motion.scale = {PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT};
+				}
 			}
-		} else if (screen.freeze_timer <= 0) {
+			if (screen.darken_screen_factor >= 0) screen.darken_screen_factor -= elapsed_ms_since_last_update * 0.001f;
+		}
+		else if (screen.freeze_timer <= 0)
+		{
+			screen.darken_screen_factor = 0;
 			screen.is_switching_biome = false;
 			screen.freeze_timer = 2000;
 			Entity &player = registry.players.entities[0];
-			Motion& player_motion = registry.motions.get(player);
+			Motion &player_motion = registry.motions.get(player);
 			player_motion.velocity = {PLAYER_SPEED, PLAYER_SPEED};
 			screen.pressed_keys = {};
 		}
@@ -390,15 +406,6 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 	{
 		close_window();
 	}
-
-	// Resetting game
-	// if (action == GLFW_RELEASE && key == GLFW_KEY_R)
-	// {
-	// 	int w, h;
-	// 	glfwGetWindowSize(window, &w, &h);
-
-	// 	restart_game();
-	// }
 
 	// Debugging - not used in A1, but left intact for the debug lines
 	if (key == GLFW_KEY_D)

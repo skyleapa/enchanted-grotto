@@ -100,7 +100,6 @@ void PhysicsSystem::step(float elapsed_ms)
 		Motion &entrance_motion = registry.motions.get(entrance);
 		if (enterEntrance(player_motion, entrance_motion))
 		{
-			std::cout << "entering grotto" << std::endl;
 			ScreenState &state = registry.screenStates.components[0];
 			state.is_switching_biome = true;
 			state.switching_to_biome = (GLuint)BIOME::GROTTO;
