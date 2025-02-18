@@ -158,41 +158,41 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	// handle switching biomes
 	ScreenState &screen = registry.screenStates.components[0];
 	Entity &player = registry.players.entities[0];
-	assert(registry.motions.has(player)); // TODO: remove assert on submission
 	Motion &player_motion = registry.motions.get(player);
 
 	if (screen.is_switching_biome)
 	{
-		if (screen.freeze_timer > 0)
+		if (screen.fade_status == 0)
 		{
-			screen.freeze_timer -= elapsed_ms_since_last_update; // fade will occur here
-			if (screen.darken_screen_factor <= 1) screen.darken_screen_factor += elapsed_ms_since_last_update * 0.001f;
+			screen.darken_screen_factor += elapsed_ms_since_last_update * 0.001f;
+			if (screen.darken_screen_factor >= 1) screen.fade_status = 1; // after fade out
 		}
-
-		if (screen.freeze_timer <= 1000)
+		else if (screen.fade_status == 1)
 		{
-			// at this point screen is fully black then fades in
 			if (screen.biome != screen.switching_to_biome)
-			{ // restart with new biome only once
+			{
 				screen.biome = screen.switching_to_biome;
 				restart_game();
 				screen.darken_screen_factor = 1;
 				if (screen.biome == (GLuint)BIOME::GROTTO)
 				{
 					player_motion.scale = {PLAYER_BB_WIDTH * 1.3, PLAYER_BB_HEIGHT * 1.3}; // make player larger in grotto
+					player_motion.position = vec2({player_motion.position.x, 600});		   // bring player to front of door
 				}
 				else
 				{
 					player_motion.scale = {PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT};
 				}
 			}
-			if (screen.darken_screen_factor >= 0) screen.darken_screen_factor -= elapsed_ms_since_last_update * 0.001f;
+			screen.darken_screen_factor -= elapsed_ms_since_last_update * 0.001f;
+			if (screen.darken_screen_factor <= 0) screen.fade_status = 2; // after fade in
 		}
-		else if (screen.freeze_timer <= 0)
+		else
 		{
+			// complete biome switch
 			screen.darken_screen_factor = 0;
 			screen.is_switching_biome = false;
-			screen.freeze_timer = 2000;
+			screen.fade_status = 0;
 			Entity &player = registry.players.entities[0];
 			Motion &player_motion = registry.motions.get(player);
 			player_motion.velocity = {PLAYER_SPEED, PLAYER_SPEED};
@@ -322,6 +322,7 @@ void WorldSystem::restart_game()
 	}
 	else if (biome == (GLuint)BIOME::GROTTO)
 	{
+		create_grotto();
 	}
 }
 
@@ -342,6 +343,10 @@ void WorldSystem::create_forest()
 	}
 
 	createGrottoEntrance(renderer, vec2(990, 90));
+}
+
+void WorldSystem::create_grotto()
+{
 }
 
 void WorldSystem::handle_collisions()

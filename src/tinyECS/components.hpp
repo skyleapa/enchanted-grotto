@@ -74,7 +74,8 @@ struct ScreenState
 	std::vector<int> pressed_keys = {};
 	bool is_switching_biome = false;
 	GLuint switching_to_biome = 1; // track biome that is being switched to
-	float freeze_timer = 2000;
+	// float freeze_timer = 1000; // tracks how long screen should stay black for between biome switching
+	float fade_status = 0; // 0 - before fade out, 1 after fade out, 2 - after fade in
 };
 
 // A struct to refer to debugging graphics in the ECS
@@ -241,7 +242,8 @@ enum class TEXTURE_ASSET_ID
 	FOREST_BG = FOREST_RIVER_BELOW + 1,
 	TREE = FOREST_BG + 1,
 	GROTTO_ENTRANCE = TREE + 1,
-	TEXTURE_COUNT = GROTTO_ENTRANCE + 1,
+	GROTTO_BG = GROTTO_ENTRANCE + 1,
+	TEXTURE_COUNT = GROTTO_BG + 1,
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 
