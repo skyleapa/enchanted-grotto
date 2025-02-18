@@ -258,8 +258,11 @@ bool ItemSystem::loadGameState(const std::string& filename) {
         nlohmann::json data;
         file >> data;
         
-        // Clear existing state
-        registry.clear_all_components();
+        registry.items.clear();
+        registry.potions.clear();
+        registry.ingredients.clear();
+        registry.inventories.clear();
+        registry.cauldrons.clear();
         
         // Load inventories
         for (const auto& inv_data : data["inventories"]) {
