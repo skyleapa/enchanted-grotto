@@ -17,7 +17,7 @@ protected:
 // Test item creation and initialization
 TEST_F(ItemSystemTest, ItemCreation) {
     // Test basic item
-    Entity basic = ItemSystem::createItem(registry, "Test Item", 1, 5);
+    Entity basic = ItemSystem::createItem("Test Item", 1, 5);
     ASSERT_TRUE(registry.items.has(basic));
     Item& item = registry.items.get(basic);
     EXPECT_EQ(item.name, "Test Item");
@@ -25,14 +25,14 @@ TEST_F(ItemSystemTest, ItemCreation) {
     EXPECT_EQ(item.amount, 5);
     
     // Test ingredient
-    Entity ingredient = ItemSystem::createIngredient(registry, "Test Herb", 2, 3);
+    Entity ingredient = ItemSystem::createIngredient("Test Herb", 2, 3);
     ASSERT_TRUE(registry.items.has(ingredient));
     ASSERT_TRUE(registry.ingredients.has(ingredient));
     Ingredient& ing = registry.ingredients.get(ingredient);
     EXPECT_FLOAT_EQ(ing.grindLevel, 0.0f);
     
     // Test potion
-    Entity potion = ItemSystem::createPotion(registry, "Health Potion", 3, 1, 30, vec3(1,0,0), 0.8f);
+    Entity potion = ItemSystem::createPotion("Health Potion", 3, 1, 30, vec3(1,0,0), 0.8f);
     ASSERT_TRUE(registry.items.has(potion));
     ASSERT_TRUE(registry.potions.has(potion));
     Potion& pot = registry.potions.get(potion);
@@ -49,8 +49,8 @@ TEST_F(ItemSystemTest, InventoryOperations) {
     inventory.capacity = 5;
     
     // Test adding items
-    Entity item1 = ItemSystem::createItem(registry, "Item 1", 1, 1);
-    Entity item2 = ItemSystem::createItem(registry, "Item 2", 2, 1);
+    Entity item1 = ItemSystem::createItem("Item 1", 1, 1);
+    Entity item2 = ItemSystem::createItem("Item 2", 2, 1);
     
     EXPECT_TRUE(item_system.addItemToInventory(inv, item1));
     EXPECT_EQ(inventory.items.size(), 1);
@@ -63,8 +63,8 @@ TEST_F(ItemSystemTest, InventoryOperations) {
     EXPECT_FALSE(item_system.removeItemFromInventory(inv, item1)); // Already removed
     
     // Test stacking
-    Entity stackable1 = ItemSystem::createItem(registry, "Stack Item", 3, 5);
-    Entity stackable2 = ItemSystem::createItem(registry, "Stack Item", 3, 3);
+    Entity stackable1 = ItemSystem::createItem("Stack Item", 3, 5);
+    Entity stackable2 = ItemSystem::createItem("Stack Item", 3, 3);
     
     EXPECT_TRUE(item_system.addItemToInventory(inv, stackable1));
     EXPECT_TRUE(item_system.addItemToInventory(inv, stackable2));
@@ -90,9 +90,9 @@ TEST_F(ItemSystemTest, Serialization) {
     Inventory& inventory = registry.inventories.emplace(inv);
     inventory.capacity = 10;
     
-    Entity item = ItemSystem::createItem(registry, "Test Item", 1, 5);
-    Entity potion = ItemSystem::createPotion(registry, "Test Potion", 2, 1, 30, vec3(1,0,0), 0.9f);
-    Entity ingredient = ItemSystem::createIngredient(registry, "Test Herb", 3, 2);
+    Entity item = ItemSystem::createItem("Test Item", 1, 5);
+    Entity potion = ItemSystem::createPotion("Test Potion", 2, 1, 30, vec3(1,0,0), 0.9f);
+    Entity ingredient = ItemSystem::createIngredient("Test Herb", 3, 2);
     
     EXPECT_TRUE(item_system.addItemToInventory(inv, item));
     EXPECT_TRUE(item_system.addItemToInventory(inv, potion));
@@ -155,8 +155,8 @@ TEST_F(ItemSystemTest, ErrorHandling) {
     Inventory& inventory = registry.inventories.emplace(inv);
     inventory.capacity = 1;
     
-    Entity item1 = ItemSystem::createItem(registry, "Item 1", 1, 1);
-    Entity item2 = ItemSystem::createItem(registry, "Item 2", 2, 1);
+    Entity item1 = ItemSystem::createItem("Item 1", 1, 1);
+    Entity item2 = ItemSystem::createItem("Item 2", 2, 1);
     
     EXPECT_TRUE(item_system.addItemToInventory(inv, item1));
     EXPECT_FALSE(item_system.addItemToInventory(inv, item2)); // Should fail, inventory full
@@ -168,7 +168,7 @@ TEST_F(ItemSystemTest, ErrorHandling) {
 // Test entity ID continuity
 TEST_F(ItemSystemTest, EntityIDContinuity) {
     // Create and save an item
-    Entity item1 = ItemSystem::createItem(registry, "Test Item", 1, 1);
+    Entity item1 = ItemSystem::createItem("Test Item", 1, 1);
     unsigned int first_id = item1.id();
     
     // Save state
@@ -179,7 +179,7 @@ TEST_F(ItemSystemTest, EntityIDContinuity) {
     
     // Load state and create a new item
     EXPECT_TRUE(item_system.loadGameState("test_save.json"));
-    Entity item2 = ItemSystem::createItem(registry, "New Item", 2, 1);
+    Entity item2 = ItemSystem::createItem("New Item", 2, 1);
     
     // The new item should have a new unique ID
     EXPECT_NE(item2.id(), first_id);
