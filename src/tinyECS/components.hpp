@@ -97,7 +97,7 @@ struct Potion
 // an item that can be in an inventory
 struct Item
 {
-	int id;
+	int type_id;
 	std::string name;
 	bool isCollectable;
 	int amount;
@@ -112,18 +112,16 @@ struct Ingredient
 // allows entities to have a storage system
 struct Inventory
 {
-	// commented out temporarily as Item results in a compilation error
-	// std::unordered_map<Item, int> items; // map of the item to the amount 
+	std::vector<Entity> items;
 	int capacity;
 	bool isFull;
 };
 
 struct Cauldron
 {
-	std::vector<Item> items; // could this also be Inventory?
-	int heatLevel;
-	int stirLevel;
-	vec3 color;
+	int heatLevel;             // 1-3
+	int stirLevel;             // 1-10
+	vec3 color;                // RGB color
 };
 
 // a menu of our game (recipe book menu, potion making menu, grinding menu...)
@@ -143,12 +141,12 @@ struct Recipe
 	vec3 finalPotionColor;
 	// commented out temporarily as Ingredient results in a compilation error
 	// std::unordered_map<Ingredient, int> ingredients; // the ingredient and quantity
-	int steps; // TODO: determine what this field should be
+	int steps;         // TODO: Array[pair<ActionEnum, int>]
 };
 
 struct MortarAndPestle
 {
-	std::vector<Item> items; // could this also be Inventory?
+	std::vector<Entity> items;
 	int grindLevel;
 	int itemState;
 };
