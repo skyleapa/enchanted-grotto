@@ -11,13 +11,14 @@ struct Player
 };
 
 // All data relevant to the shape and motion of entities
-struct Motion {
-	vec2  position = { 0, 0 };
-	float angle    = 0;
-	vec2  velocity = { 0, 0 };
-	vec2  scale    = { 10, 10 };
+struct Motion
+{
+	vec2 position = {0, 0};
+	float angle = 0;
+	vec2 velocity = {0, 0};
+	vec2 scale = {10, 10};
 	int moving_direction = 0;
-	vec2 previous_position = { 0, 0 };
+	vec2 previous_position = {0, 0};
 };
 
 // Stucture to store collision information
@@ -25,11 +26,12 @@ struct Collision
 {
 	// Note, the first object is stored in the ECS container.entities
 	Entity other; // the second object involved in the collision
-	Collision(Entity& other) { this->other = other; };
+	Collision(Entity &other) { this->other = other; };
 };
 
 // Data structure for toggling debug mode
-struct Debug {
+struct Debug
+{
 	bool in_debug_mode = 0;
 	bool in_freeze_mode = 0;
 };
@@ -50,9 +52,10 @@ struct DebugComponent
 };
 
 // used to hold grid line start and end positions
-struct GridLine {
-	vec2 start_pos = {  0,  0 };
-	vec2 end_pos   = { 10, 10 };	// default to diagonal line
+struct GridLine
+{
+	vec2 start_pos = {0, 0};
+	vec2 end_pos = {10, 10}; // default to diagonal line
 };
 
 // A timer that will be associated to dying chicken
@@ -78,8 +81,8 @@ struct TexturedVertex
 // Mesh datastructure for storing vertex and index buffers
 struct Mesh
 {
-	static bool loadFromOBJFile(std::string obj_path, std::vector<ColoredVertex>& out_vertices, std::vector<uint16_t>& out_vertex_indices, vec2& out_size);
-	vec2 original_size = {1,1};
+	static bool loadFromOBJFile(std::string obj_path, std::vector<ColoredVertex> &out_vertices, std::vector<uint16_t> &out_vertex_indices, vec2 &out_size);
+	vec2 original_size = {1, 1};
 	std::vector<ColoredVertex> vertices;
 	std::vector<uint16_t> vertex_indices;
 };
@@ -104,7 +107,7 @@ struct Item
 };
 
 // an item that can be added to potions
-struct Ingredient 
+struct Ingredient
 {
 	float grindLevel; // -1 = ungrindable, 0 = ungrinded, 1 = full
 };
@@ -128,7 +131,7 @@ struct Cauldron
 struct Menu
 {
 	bool mouseInput; // true if we allow mouse input
-	bool keyInput; // true if we allow key input
+	bool keyInput;	 // true if we allow key input
 };
 
 // a recipe in our recipe book menu
@@ -153,7 +156,6 @@ struct MortarAndPestle
 
 struct Moving
 {
-
 };
 
 // Obstacles in our environment that the player collides with
@@ -168,6 +170,11 @@ struct Terrain
 	float height_ratio = 1.0f;
 };
 
+struct Textbox
+{
+	Entity targetItem;		// The item this textbox belongs to
+	bool isVisible = false; // Visibility of the textbox
+};
 
 /**
  * The following enumerators represent global identifiers refering to graphic
@@ -193,18 +200,27 @@ struct Terrain
  * enums there are, and as a default value to represent uninitialized fields.
  */
 
-enum class TEXTURE_ASSET_ID {
+enum class TEXTURE_ASSET_ID
+{
 	PLAYER = 0,
 	FOREST_BRIDGE = PLAYER + 1,
 	FOREST_RIVER_ABOVE = FOREST_BRIDGE + 1,
 	FOREST_RIVER_BELOW = FOREST_RIVER_ABOVE + 1,
 	FOREST_BG = FOREST_RIVER_BELOW + 1,
 	TREE = FOREST_BG + 1,
-	TEXTURE_COUNT = TREE + 1,
+	BUSH = TREE + 1,
+	FRUIT = BUSH + 1,
+	COFFEE_BEAN = FRUIT + 1,
+	GROTTO_ENTRANCE = COFFEE_BEAN + 1,
+	TEXTBOX_FRUIT = GROTTO_ENTRANCE + 1,
+	TEXTBOX_COFFEE_BEAN = TEXTBOX_FRUIT + 1,
+	TEXTBOX_ENTER_GROTTO = TEXTBOX_COFFEE_BEAN + 1,
+	TEXTURE_COUNT = TEXTBOX_ENTER_GROTTO + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 
-enum class EFFECT_ASSET_ID {
+enum class EFFECT_ASSET_ID
+{
 	COLOURED = 0,
 	EGG = COLOURED + 1,
 	CHICKEN = EGG + 1,
@@ -214,7 +230,8 @@ enum class EFFECT_ASSET_ID {
 };
 const int effect_count = (int)EFFECT_ASSET_ID::EFFECT_COUNT;
 
-enum class GEOMETRY_BUFFER_ID {
+enum class GEOMETRY_BUFFER_ID
+{
 	CHICKEN = 0,
 	SPRITE = CHICKEN + 1,
 	EGG = SPRITE + 1,
@@ -224,27 +241,32 @@ enum class GEOMETRY_BUFFER_ID {
 };
 const int geometry_count = (int)GEOMETRY_BUFFER_ID::GEOMETRY_COUNT;
 
-enum class RENDER_LAYER {
-    BACKGROUND,
-    TERRAIN,
-    STRUCTURE,
-    PLAYER
+enum class RENDER_LAYER
+{
+	BACKGROUND,
+	TERRAIN,
+	STRUCTURE,
+	ITEM,
+	PLAYER
 };
 
-struct RenderRequest {
-	TEXTURE_ASSET_ID   used_texture  = TEXTURE_ASSET_ID::TEXTURE_COUNT;
-	EFFECT_ASSET_ID    used_effect   = EFFECT_ASSET_ID::EFFECT_COUNT;
+struct RenderRequest
+{
+	TEXTURE_ASSET_ID used_texture = TEXTURE_ASSET_ID::TEXTURE_COUNT;
+	EFFECT_ASSET_ID used_effect = EFFECT_ASSET_ID::EFFECT_COUNT;
 	GEOMETRY_BUFFER_ID used_geometry = GEOMETRY_BUFFER_ID::GEOMETRY_COUNT;
 	RENDER_LAYER layer = RENDER_LAYER::BACKGROUND;
 	int render_sub_layer = 0; // lower values are rendered above
 };
 
-enum class BIOME {
+enum class BIOME
+{
 	GROTTO = 0,
 	FOREST = GROTTO + 1
 };
 
-enum class DIRECTION {
+enum class DIRECTION
+{
 	UP = 0,
 	DOWN = 1,
 	RIGHT = 2,

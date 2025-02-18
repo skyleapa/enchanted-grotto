@@ -21,3 +21,21 @@ Entity createGridLine(vec2 start_pos, vec2 end_pos);
 
 // debugging red lines
 Entity createLine(vec2 position, vec2 size);
+
+// grotto entrance
+Entity createGrottoEntrance(RenderSystem* renderer, vec2 position, int id, std::string name);
+
+// bushes
+Entity createBush(RenderSystem* renderer, vec2 position);
+
+// magical fruit
+Entity createFruit(RenderSystem* renderer, vec2 position, int id, std::string name, int amount);
+
+// coffee bean
+Entity createCoffeeBean(RenderSystem* renderer, vec2 position, int id, std::string name, int amount);
+
+// interaction textbox
+Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity);
+
+// render textbox
+RenderRequest getTextboxRenderRequest(Textbox& textbox);

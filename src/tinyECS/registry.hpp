@@ -32,6 +32,7 @@ public:
 	ComponentContainer<MortarAndPestle> mortarAndPestles;
 	ComponentContainer<Moving> moving;
 	ComponentContainer<Terrain> terrains;
+	ComponentContainer<Textbox> textboxes;
 
 	// constructor that adds all containers for looping over them
 	ECSRegistry()

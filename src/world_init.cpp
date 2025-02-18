@@ -78,6 +78,10 @@ Entity createPlayer(RenderSystem* renderer, vec2 position)
 
 	motion.scale = vec2({ PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT });
 
+	auto& inventory = registry.inventories.emplace(entity);
+	inventory.capacity = 10;
+	inventory.isFull = false;
+
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -199,4 +203,194 @@ Entity createLine(vec2 position, vec2 scale)
 
 	registry.debugComponents.emplace(entity);
 	return entity;
+}
+
+Entity createGrottoEntrance(RenderSystem* renderer, vec2 position, int id, std::string name)
+{
+	auto entity = Entity();
+
+	Item& item = registry.items.emplace(entity);
+	item.id = id;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ GROTTO_ENTRANCE_WIDTH, GROTTO_ENTRANCE_HEIGHT });
+
+	Entity textbox = createTextbox(renderer, position, entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::GROTTO_ENTRANCE,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::TERRAIN
+		}
+	);
+
+	return entity;
+}
+
+Entity createBush(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.height_ratio = 0.1f;
+	terrain.width_ratio = 0.2f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ BUSH_WIDTH, BUSH_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::BUSH,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::TERRAIN
+		}
+	);
+
+	return entity;
+}
+
+Entity createFruit(RenderSystem* renderer, vec2 position, int id, std::string name, int amount) {
+	auto entity = Entity();
+
+	Item& item = registry.items.emplace(entity);
+	item.id = id;
+	item.name = name;
+	item.isCollectable = true; // Make sure the item can be collected
+	item.amount = amount;
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	// Create motion
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+	motion.scale = vec2({ FRUIT_WIDTH, FRUIT_HEIGHT });
+
+	Entity textbox = createTextbox(renderer, position, entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::FRUIT,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::ITEM
+		}
+	);
+
+	return entity;
+}
+
+Entity createCoffeeBean(RenderSystem *renderer, vec2 position, int id, std::string name, int amount)
+{
+	auto entity = Entity();
+	
+	Item& item = registry.items.emplace(entity);
+	item.id = id;
+	item.name = name;
+	item.isCollectable = true; // Make sure the item can be collected
+	item.amount = amount;
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	// Create motion
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = {0, 0};
+	motion.position = position;
+	motion.scale = vec2({COFFEE_BEAN_WIDTH, COFFEE_BEAN_HEIGHT});
+
+	Entity textbox = createTextbox(renderer, position, entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::COFFEE_BEAN,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::ITEM});
+
+	return entity;
+}
+
+Entity createTextbox(RenderSystem *renderer, vec2 position, Entity itemEntity)
+{
+	auto entity = Entity();
+
+	// Create a Textbox component
+	Textbox& textbox = registry.textboxes.emplace(entity);
+	textbox.targetItem = itemEntity;
+	textbox.isVisible = false; // Initially hidden
+
+	// Store mesh reference
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	// Motion component (position it above the item)
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = {0, 0};
+	motion.position = position + vec2(-TEXTBOX_WIDTH / 2, 0);
+	motion.scale = vec2(TEXTBOX_WIDTH, -TEXTBOX_HEIGHT);
+
+	return entity;
+}
+
+RenderRequest getTextboxRenderRequest(Textbox &textbox)
+{
+	if (!registry.items.has(textbox.targetItem))
+	{
+		// std::cerr << "ERROR: Target item not found for textbox!" << std::endl;
+		return {};
+	}
+
+	Item &item = registry.items.get(textbox.targetItem);
+
+	// Find correct texture based on item type
+	TEXTURE_ASSET_ID texture;
+	if (item.name == "Magical Fruit")
+	{
+		texture = TEXTURE_ASSET_ID::TEXTBOX_FRUIT;
+	}
+	else if (item.name == "Coffee Bean")
+	{
+		texture = TEXTURE_ASSET_ID::TEXTBOX_COFFEE_BEAN;
+	}
+	else if (item.name == "Grotto Entrance")
+	{
+		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_GROTTO;
+	}
+
+	return {
+		texture,
+		EFFECT_ASSET_ID::TEXTURED,
+		GEOMETRY_BUFFER_ID::SPRITE,
+		RENDER_LAYER::ITEM};
 }

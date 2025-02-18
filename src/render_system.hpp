@@ -34,7 +34,14 @@ class RenderSystem {
 		textures_path("terrain/forest_river_above.png"),
 		textures_path("terrain/forest_river_below.png"),
 		textures_path("backgrounds/forest_bg.png"),
-		textures_path("terrain/tree_1.png")
+		textures_path("terrain/tree_1.png"),
+		textures_path("terrain/bush.png"),
+		textures_path("collectibles/magical_fruit.png"),
+		textures_path("collectibles/coffee_bean.png"),
+		textures_path("terrain/grotto_entrance.png"),
+		textures_path("collectibles/textbox_magical_fruit.png"),
+		textures_path("collectibles/textbox_coffee_bean.png"),
+		textures_path("collectibles/textbox_enter_grotto.png")
 	};
 
 	std::array<GLuint, effect_count> effects;

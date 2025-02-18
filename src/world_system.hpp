@@ -13,6 +13,9 @@
 
 #include "render_system.hpp"
 
+#include <map>
+
+
 // Container for all our entities and game logic.
 // Individual rendering / updates are deferred to the update() methods.
 class WorldSystem
@@ -46,6 +49,11 @@ public:
 
 	// should the game be over ?
 	bool is_over() const;
+
+	void handle_player_pickup();
+	
+	void update_textbox_visibility();
+
 
 private:
 
