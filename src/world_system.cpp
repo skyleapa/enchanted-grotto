@@ -11,7 +11,7 @@
 #include "physics_system.hpp"
 
 // create the world
-WorldSystem::WorldSystem() : points(0)
+WorldSystem::WorldSystem()
 {
 	// seeding rng with random device
 	rng = std::default_random_engine(std::random_device()());
@@ -199,12 +199,6 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		}
 		return true; // don't need to do any other steps
 	}
-
-	// Updating window title with points
-	std::stringstream title_ss;
-	title_ss << "Points: " << points;
-	glfwSetWindowTitle(window, title_ss.str().c_str());
-
 	// Remove debug info from the last step
 	while (registry.debugComponents.entities.size() > 0)
 		registry.remove_all_components_of(registry.debugComponents.entities.back());
@@ -278,8 +272,6 @@ void WorldSystem::restart_game()
 	// Reset the game speed
 	current_speed = 1.f;
 
-	points = 0;
-
 	// Remove all entities that we created
 	// All that have a motion, we could also iterate over all bug, eagles, ... but that would be more cumbersome
 	while (registry.motions.entities.size() > 0)
@@ -309,6 +301,8 @@ void WorldSystem::restart_game()
 			grid_lines.push_back(createGridLine(vec2(0, col * cell_height), vec2(2 * WINDOW_WIDTH_PX, grid_line_width)));
 		}
 	}
+
+	if (registry.players.components.size() == 0)
 
 	if (registry.players.components.size() == 0)
 	{
@@ -428,6 +422,15 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		close_window();
 	}
 
+	// Resetting game
+	if (action == GLFW_RELEASE && key == GLFW_KEY_R)
+	{
+		int w, h;
+		glfwGetWindowSize(window, &w, &h);
+
+		restart_game();
+	}
+
 	// Debugging - not used in A1, but left intact for the debug lines
 	if (key == GLFW_KEY_D)
 	{
@@ -449,6 +452,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		return;
 	}
 
+	Entity player = registry.players.entities[0]; // Assume only one player entity
 	Entity player = registry.players.entities[0]; // Assume only one player entity
 	if (!registry.motions.has(player))
 	{

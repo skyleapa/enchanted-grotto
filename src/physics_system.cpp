@@ -72,15 +72,12 @@ void PhysicsSystem::step(float elapsed_ms)
 	// get our one player
 	if (registry.players.entities.empty())
 		return;
-
+		
 	Entity player_entity = registry.players.entities[0];
 	if (!registry.motions.has(player_entity))
 		return;
 
-	Motion &player_motion = registry.motions.get(player_entity);
-
-	// check if player is out of bounds
-	
+	Motion &player_motion = registry.motions.get(player_entity);	
 
 	for (Entity terrain_entity : registry.terrains.entities)
 	{

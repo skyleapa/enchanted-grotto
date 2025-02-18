@@ -10,35 +10,6 @@ struct Player
 	std::string name;
 };
 
-// Tower
-struct Tower
-{
-	float range;
-	int timer_ms;
-};
-
-// Invader
-struct Invader
-{
-	int health;
-};
-
-// Projectile
-struct Projectile
-{
-	int damage;
-};
-
-// used for Entities that cause damage
-struct Deadly
-{
-};
-
-// used for edible entities
-struct Eatable
-{
-};
-
 // All data relevant to the shape and motion of entities
 struct Motion
 {
@@ -47,7 +18,7 @@ struct Motion
 	vec2 velocity = {0, 0};
 	vec2 scale = {10, 10};
 	int moving_direction = 0;
-	vec2 previous_position = {0, 0};
+	vec2 previous_position = { 0, 0 };
 };
 
 // Stucture to store collision information

@@ -304,11 +304,12 @@ void RenderSystem::draw()
 	mat3 projection_2D = createProjectionMatrix();
 
 	if (!registry.screenStates.components[0].is_switching_biome) drawToScreen();
-	
 
 	std::vector<Entity> entities = process_render_requests();
 
+
 	// draw all entities with a render request to the frame buffer
+	for (Entity entity : entities)
 	for (Entity entity : entities)
 	{
 		// filter to entities that have a motion component
@@ -342,7 +343,13 @@ std::vector<Entity> RenderSystem::process_render_requests() {
 	std::sort(entities.begin(), entities.end(), [](Entity a, Entity b) {
 		RenderRequest& renderA = registry.renderRequests.get(a);
 		RenderRequest& renderB = registry.renderRequests.get(b);
-
+		
+		/*
+		Rendering order is specified in components.hpp where background < terrain < structure < player
+		Examples: 
+		-	Terrain: Trees, rocks, bushes
+		-	Structure: Bridge, river
+		*/
 		// background always renders first
 		if (renderA.layer == RENDER_LAYER::BACKGROUND) return true;
 		if (renderB.layer == RENDER_LAYER::BACKGROUND) return false;
@@ -366,7 +373,8 @@ std::vector<Entity> RenderSystem::process_render_requests() {
 			float bottomA = motionA.position.y + (motionA.scale.y / 2);
 			float bottomB = motionB.position.y + (motionB.scale.y / 2);
 			return bottomA < bottomB;
-		}	
+		}
+	
 		return false;
 	});
 
