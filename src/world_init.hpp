@@ -23,7 +23,7 @@ Entity createGridLine(vec2 start_pos, vec2 end_pos);
 Entity createLine(vec2 position, vec2 size);
 
 // grotto entrance
-Entity createGrottoEntrance(RenderSystem* renderer, vec2 position);
+Entity createGrottoEntrance(RenderSystem* renderer, vec2 position, int id, std::string name);
 
 // bushes
 Entity createBush(RenderSystem* renderer, vec2 position);

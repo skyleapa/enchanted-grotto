@@ -285,17 +285,17 @@ void WorldSystem::create_forest()
 		trees.push_back(createTree(renderer, vec2(GRID_CELL_WIDTH_PX * 23, GRID_CELL_HEIGHT_PX * 11)));
 	}
 
-	createGrottoEntrance(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 1));
+	createGrottoEntrance(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 1), 7, "Grotto Entrance");
 
 	createBush(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5));
 
 	createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 10, GRID_CELL_HEIGHT_PX * 3), 1, "Magical Fruit", 1);
-	createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 19, GRID_CELL_HEIGHT_PX * 10), 1, "Magical Fruit", 1);
-	createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 23, GRID_CELL_HEIGHT_PX * 11), 1, "Magical Fruit", 1);
+	createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 19, GRID_CELL_HEIGHT_PX * 10), 2, "Magical Fruit", 1);
+	createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 23, GRID_CELL_HEIGHT_PX * 11), 3, "Magical Fruit", 1);
 
-	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5), 1, "Coffee Bean", 1);
-	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 9.9, GRID_CELL_HEIGHT_PX * 12.1), 1, "Coffee Bean", 1);
-	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 12, GRID_CELL_HEIGHT_PX * 12.7), 1, "Coffee Bean", 1);
+	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5), 4, "Coffee Bean", 1);
+	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 9.9, GRID_CELL_HEIGHT_PX * 12.1), 5, "Coffee Bean", 1);
+	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 12, GRID_CELL_HEIGHT_PX * 12.7), 6, "Coffee Bean", 1);
 
 	//createTextboxMagicalFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 1));
 }
@@ -476,7 +476,7 @@ void WorldSystem::handle_player_pickup() {
     Motion& player_motion = registry.motions.get(player);
     Inventory& player_inventory = registry.inventories.get(player);
 
-    std::cout << "Current Inventory Size: " << player_inventory.items.size() << "/" << player_inventory.capacity << std::endl;
+    //std::cout << "Current Inventory Size: " << player_inventory.items.size() << "/" << player_inventory.capacity << std::endl;
 
     if (registry.items.entities.empty()) {
         return;
@@ -492,17 +492,36 @@ void WorldSystem::handle_player_pickup() {
         float distance = glm::distance(player_motion.position, item_motion.position);
 
         // Check if item is in pickup range
-        if (distance < 53.0f) {
-            // Check if player has space in inventory, then remove item from world
+        if (distance < 55.0f) {
+			// Check if player has space in inventory, then remove item from world
             if (player_inventory.items.size() < player_inventory.capacity) {
                 player_inventory.items.push_back(item);
+
+                Entity textboxEntity = Entity();
+                bool foundTextbox = false;
+
+                for (Entity textbox : registry.textboxes.entities) {
+                    if (registry.textboxes.get(textbox).targetItem == item) {
+                        textboxEntity = textbox;
+                        foundTextbox = true;
+                        break;
+                    }
+                }
+
+                if (foundTextbox) {
+                    registry.remove_all_components_of(textboxEntity);
+                }
+
                 registry.remove_all_components_of(item);
-                std::cout << item_info.name << " added to inventory!" << std::endl;
-            } 
-            return;
+                
+                return;
+            } else {
+                //std::cout << "Inventory is full!" << std::endl;
+            }
         }
     }
 }
+
 
 void WorldSystem::update_textbox_visibility() {
     if (registry.players.entities.empty()) return;
@@ -520,12 +539,12 @@ void WorldSystem::update_textbox_visibility() {
         float distance = glm::distance(player_motion.position, item_motion.position);
 
         // Find the textbox linked to this item
-        Entity promptEntity = Entity();
+        Entity textboxEntity = Entity();
         bool foundTextbox = false;
 
-        for (Entity prompt : registry.textboxes.entities) {
-            if (registry.textboxes.get(prompt).targetItem == item) {
-                promptEntity = prompt;
+        for (Entity textbox : registry.textboxes.entities) {
+            if (registry.textboxes.get(textbox).targetItem == item) {
+                textboxEntity = textbox;
                 foundTextbox = true;
                 break;
             }
@@ -533,19 +552,18 @@ void WorldSystem::update_textbox_visibility() {
 
         // Update isVisible based on distance
         if (foundTextbox) {
-            Textbox& textbox = registry.textboxes.get(promptEntity);
-            bool wasVisible = textbox.isVisible;
+            Textbox& textbox = registry.textboxes.get(textboxEntity);
             textbox.isVisible = (distance < 70.0f);
 
             RenderRequest renderRequest = getTextboxRenderRequest(textbox);
 
             if (textbox.isVisible) {
-                if (!registry.renderRequests.has(promptEntity)) {
-                    registry.renderRequests.insert(promptEntity, renderRequest);
+                if (!registry.renderRequests.has(textboxEntity)) {
+                    registry.renderRequests.insert(textboxEntity, renderRequest);
                 }
             } else {
-                if (registry.renderRequests.has(promptEntity)) {
-                    registry.renderRequests.remove(promptEntity);
+                if (registry.renderRequests.has(textboxEntity)) {
+                    registry.renderRequests.remove(textboxEntity);
                 }
             }
         }

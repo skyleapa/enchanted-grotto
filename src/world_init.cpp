@@ -79,7 +79,7 @@ Entity createPlayer(RenderSystem* renderer, vec2 position)
 	motion.scale = vec2({ PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT });
 
 	auto& inventory = registry.inventories.emplace(entity);
-    inventory.capacity = 5;
+    inventory.capacity = 10;
     inventory.isFull = false;
 
 	registry.renderRequests.insert(
@@ -205,13 +205,15 @@ Entity createLine(vec2 position, vec2 scale)
 	return entity;
 }
 
-Entity createGrottoEntrance(RenderSystem* renderer, vec2 position)
+Entity createGrottoEntrance(RenderSystem* renderer, vec2 position, int id, std::string name)
 {
 	auto entity = Entity();
-	Terrain& terrain = registry.terrains.emplace(entity);
-	terrain.collision_setting = 0.0f;
-	terrain.height_ratio = 0.1f;
-	terrain.width_ratio = 0.2f;
+
+    Item& item = registry.items.emplace(entity);
+    item.id = id;
+    item.name = name;
+    item.isCollectable = false;
+    item.amount = 1;
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -223,6 +225,8 @@ Entity createGrottoEntrance(RenderSystem* renderer, vec2 position)
 	motion.position = position;
 
 	motion.scale = vec2({ GROTTO_ENTRANCE_WIDTH, GROTTO_ENTRANCE_HEIGHT });
+
+	Entity textbox = createTextbox(renderer, position, entity);
 
 	registry.renderRequests.insert(
 		entity,
@@ -373,7 +377,9 @@ RenderRequest getTextboxRenderRequest(Textbox& textbox) {
         texture = TEXTURE_ASSET_ID::TEXTBOX_FRUIT;
     } else if (item.name == "Coffee Bean") {
 		texture = TEXTURE_ASSET_ID::TEXTBOX_COFFEE_BEAN;
-	} 
+	} else if (item.name == "Grotto Entrance") {
+		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_GROTTO;
+	}
 
     return {
         texture,
