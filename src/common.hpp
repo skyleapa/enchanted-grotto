@@ -61,6 +61,8 @@ const float GROTTO_ENTRANCE_HEIGHT = (float)175;
 const float GROTTO_ENTRANCE_X = (float)1000;
 const float GROTTO_ENTRANCE_Y = (float)100;
 
+const float BOUNDARY_LINE_HEIGHT = 3;
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
 #endif

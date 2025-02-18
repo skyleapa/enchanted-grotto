@@ -193,25 +193,61 @@ Entity createGrottoEntrance(RenderSystem *renderer, vec2 position)
 	return entity;
 }
 
-Entity createLine(vec2 position, vec2 scale)
+Entity create_grotto_non_interactive_entities(RenderSystem *renderer, vec2 position, vec2 scale, float angle, GLuint texture_asset_id,
+											  float width_ratio, float height_ratio, float can_collide)
 {
-	Entity entity = Entity();
+	auto entity = Entity();
+	if (can_collide == 1) {
+		auto &terrain = registry.terrains.emplace(entity);
+		terrain.collision_setting = can_collide;
+		terrain.width_ratio = width_ratio;
+		terrain.height_ratio = height_ratio;
+	}
 
-	// Store a reference to the potentially re-used mesh object (the value is stored in the resource cache)
-	registry.renderRequests.insert(
-		entity,
-		{// usage TEXTURE_COUNT when no texture is needed, i.e., an .obj or other vertices are used instead
-		 TEXTURE_ASSET_ID::TEXTURE_COUNT,
-		 EFFECT_ASSET_ID::EGG,
-		 GEOMETRY_BUFFER_ID::DEBUG_LINE});
+	Mesh &mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
 
-	// Create motion
-	Motion &motion = registry.motions.emplace(entity);
-	motion.angle = 0.f;
-	motion.velocity = {0, 0};
+	auto &motion = registry.motions.emplace(entity);
+	motion.angle = angle;
+	motion.velocity = {0.0f, 0.0f};
 	motion.position = position;
 	motion.scale = scale;
 
-	registry.debugComponents.emplace(entity);
+	registry.renderRequests.insert(
+		entity,
+		{
+			static_cast<TEXTURE_ASSET_ID>(texture_asset_id),
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::STRUCTURE,
+			0 // this is the render sub layer (bridge should be above river)
+		});
+
+	return entity;
+}
+
+Entity create_boundary_line(RenderSystem *renderer, vec2 position, vec2 scale)
+{
+	auto entity = Entity();
+	auto &terrain1 = registry.terrains.emplace(entity);
+	terrain1.collision_setting = 1.0f; // cannot walk past boundaries
+
+	Mesh &mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto &motion = registry.motions.emplace(entity);
+	motion.angle = 0;
+	motion.velocity = {0.0f, 0.0f};
+	motion.position = position;
+	motion.scale = scale;
+
+	registry.renderRequests.insert(
+		entity,
+		{TEXTURE_ASSET_ID::BOUNDARY_LINE,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::STRUCTURE,
+		 1});
+
 	return entity;
 }

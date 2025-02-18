@@ -21,6 +21,7 @@ vec4 get_bounding_box(const Motion &motion, float width_ratio, float height_rati
 
 bool collides(const Motion &player_motion, const Motion &terrain_motion, const Terrain *terrain)
 {
+
 	// default full bounding box size
 	float player_width_ratio = 1.0f, player_height_ratio = 1.0f;
 	float terrain_width_ratio = 1.0f, terrain_height_ratio = 1.0f;
@@ -78,6 +79,9 @@ void PhysicsSystem::step(float elapsed_ms)
 
 	Motion &player_motion = registry.motions.get(player_entity);
 
+	// check if player is out of bounds
+	
+
 	for (Entity terrain_entity : registry.terrains.entities)
 	{
 		if (!registry.motions.has(terrain_entity))
@@ -103,7 +107,6 @@ void PhysicsSystem::step(float elapsed_ms)
 			ScreenState &state = registry.screenStates.components[0];
 			state.is_switching_biome = true;
 			state.switching_to_biome = (GLuint)BIOME::GROTTO;
-			player_motion.velocity = {0, 0};
 		}
 	}
 }
