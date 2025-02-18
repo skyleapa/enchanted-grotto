@@ -210,7 +210,7 @@ Entity createGrottoEntrance(RenderSystem* renderer, vec2 position, int id, std::
 	auto entity = Entity();
 
 	Item& item = registry.items.emplace(entity);
-	item.id = id;
+	item.type_id = id;
 	item.name = name;
 	item.isCollectable = false;
 	item.amount = 1;
@@ -277,7 +277,7 @@ Entity createFruit(RenderSystem* renderer, vec2 position, int id, std::string na
 	auto entity = Entity();
 
 	Item& item = registry.items.emplace(entity);
-	item.id = id;
+	item.type_id = id;
 	item.name = name;
 	item.isCollectable = true; // Make sure the item can be collected
 	item.amount = amount;
@@ -312,7 +312,7 @@ Entity createCoffeeBean(RenderSystem *renderer, vec2 position, int id, std::stri
 	auto entity = Entity();
 	
 	Item& item = registry.items.emplace(entity);
-	item.id = id;
+	item.type_id = id;
 	item.name = name;
 	item.isCollectable = true; // Make sure the item can be collected
 	item.amount = amount;
