@@ -215,6 +215,8 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		}
 	}
 
+	update_textbox_visibility();
+
 	return true;
 }
 
@@ -295,6 +297,7 @@ void WorldSystem::create_forest()
 	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 9.9, GRID_CELL_HEIGHT_PX * 12.1), 1, "Coffee Bean", 1);
 	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 12, GRID_CELL_HEIGHT_PX * 12.7), 1, "Coffee Bean", 1);
 
+	//createTextboxMagicalFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 1));
 }
 
 void WorldSystem::handle_collisions()
@@ -500,3 +503,53 @@ void WorldSystem::handle_player_pickup() {
         }
     }
 }
+
+void WorldSystem::update_textbox_visibility() {
+    if (registry.players.entities.empty()) return;
+
+    Entity player = registry.players.entities[0];
+    if (!registry.motions.has(player)) return;
+
+    Motion& player_motion = registry.motions.get(player);
+
+    for (Entity item : registry.items.entities) {
+        if (!registry.items.has(item) || !registry.motions.has(item)) continue;
+
+        Motion& item_motion = registry.motions.get(item);
+
+        float distance = glm::distance(player_motion.position, item_motion.position);
+
+        // Find the textbox linked to this item
+        Entity promptEntity = Entity();
+        bool foundTextbox = false;
+
+        for (Entity prompt : registry.textboxes.entities) {
+            if (registry.textboxes.get(prompt).targetItem == item) {
+                promptEntity = prompt;
+                foundTextbox = true;
+                break;
+            }
+        }
+
+        // Update isVisible based on distance
+        if (foundTextbox) {
+            Textbox& textbox = registry.textboxes.get(promptEntity);
+            bool wasVisible = textbox.isVisible;
+            textbox.isVisible = (distance < 70.0f);
+
+            RenderRequest renderRequest = getTextboxRenderRequest(textbox);
+
+            if (textbox.isVisible) {
+                if (!registry.renderRequests.has(promptEntity)) {
+                    registry.renderRequests.insert(promptEntity, renderRequest);
+                }
+            } else {
+                if (registry.renderRequests.has(promptEntity)) {
+                    registry.renderRequests.remove(promptEntity);
+                }
+            }
+        }
+    }
+}
+
+

@@ -34,3 +34,7 @@ Entity createFruit(RenderSystem* renderer, vec2 position, int id, std::string na
 // coffee bean
 Entity createCoffeeBean(RenderSystem* renderer, vec2 position, int id, std::string name, int amount);
 
+// interaction textbox
+Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity);
+
+RenderRequest getTextboxRenderRequest(Textbox& textbox);

@@ -171,6 +171,13 @@ struct Terrain
 	float height_ratio = 1.0f;
 };
 
+struct Textbox {
+    Entity targetItem;  // The item this textbox belongs to
+    bool isVisible = false;  // Visibility of the textbox
+};
+
+
+
 
 /**
  * The following enumerators represent global identifiers refering to graphic
@@ -207,7 +214,10 @@ enum class TEXTURE_ASSET_ID {
 	FRUIT = BUSH + 1,
 	COFFEE_BEAN = FRUIT + 1,
 	GROTTO_ENTRANCE = COFFEE_BEAN + 1,
-	TEXTURE_COUNT = GROTTO_ENTRANCE + 1
+	TEXTBOX_FRUIT = GROTTO_ENTRANCE + 1,
+	TEXTBOX_COFFEE_BEAN = TEXTBOX_FRUIT + 1,
+	TEXTBOX_ENTER_GROTTO = TEXTBOX_COFFEE_BEAN + 1,
+	TEXTURE_COUNT = TEXTBOX_ENTER_GROTTO + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 

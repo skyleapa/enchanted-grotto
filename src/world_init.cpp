@@ -288,6 +288,8 @@ Entity createFruit(RenderSystem* renderer, vec2 position, int id, std::string na
     motion.position = position;
     motion.scale = vec2({ FRUIT_WIDTH, FRUIT_HEIGHT });
 
+	Entity textbox = createTextbox(renderer, position, entity);
+
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -320,6 +322,8 @@ Entity createCoffeeBean(RenderSystem* renderer, vec2 position, int id, std::stri
     motion.position = position;
     motion.scale = vec2({ COFFEE_BEAN_WIDTH, COFFEE_BEAN_HEIGHT });
 
+	Entity textbox = createTextbox(renderer, position, entity);
+
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -332,3 +336,52 @@ Entity createCoffeeBean(RenderSystem* renderer, vec2 position, int id, std::stri
 
     return entity;
 }
+
+Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity) {
+    auto entity = Entity();
+    
+    // Create a Textbox component
+    Textbox& textbox = registry.textboxes.emplace(entity);
+    textbox.targetItem = itemEntity;
+    textbox.isVisible = false;  // Initially hidden
+
+    // Store mesh reference
+    Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+    registry.meshPtrs.emplace(entity, &mesh);
+
+    // Motion component (position it above the item)
+    auto& motion = registry.motions.emplace(entity);
+    motion.angle = 0.f;
+    motion.velocity = { 0, 0 };
+    motion.position = position + vec2(-TEXTBOX_WIDTH / 2, 0); 
+    motion.scale = vec2(TEXTBOX_WIDTH, -TEXTBOX_HEIGHT);
+
+    return entity;
+}
+
+RenderRequest getTextboxRenderRequest(Textbox& textbox) {
+    if (!registry.items.has(textbox.targetItem)) {
+        //std::cerr << "ERROR: Target item not found for textbox!" << std::endl;
+        return {}; 
+    }
+
+    Item& item = registry.items.get(textbox.targetItem);
+
+    // Find correct texture based on item type
+    TEXTURE_ASSET_ID texture;
+    if (item.name == "Magical Fruit") {
+        texture = TEXTURE_ASSET_ID::TEXTBOX_FRUIT;
+    } else if (item.name == "Coffee Bean") {
+		texture = TEXTURE_ASSET_ID::TEXTBOX_COFFEE_BEAN;
+	} 
+
+    return {
+        texture,
+        EFFECT_ASSET_ID::TEXTURED,
+        GEOMETRY_BUFFER_ID::SPRITE,
+        RENDER_LAYER::ITEM
+    };
+}
+
+
+

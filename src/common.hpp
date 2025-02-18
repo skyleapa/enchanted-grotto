@@ -68,6 +68,9 @@ const float FRUIT_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 1.8;
 const float COFFEE_BEAN_WIDTH = (float)GRID_CELL_WIDTH_PX * 0.9;
 const float COFFEE_BEAN_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 0.9;
 
+const float TEXTBOX_WIDTH = (float)GRID_CELL_WIDTH_PX * 4;
+const float TEXTBOX_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 4;
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
 #endif
