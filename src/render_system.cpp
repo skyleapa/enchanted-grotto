@@ -246,7 +246,6 @@ void RenderSystem::drawToScreen()
 	glActiveTexture(GL_TEXTURE1);
 	// Load biome as background texture
 	GLuint biome = registry.screenStates.components[0].biome;
-	// GLuint background_asset_id;
 	switch (biome) {
 		case ((GLuint) BIOME::FOREST):
 			// background_asset_id = (GLuint)TEXTURE_ASSET_ID::FOREST_BG;
@@ -260,17 +259,60 @@ void RenderSystem::drawToScreen()
 			glBindTexture(GL_TEXTURE_2D, off_screen_render_buffer_color);
 			break;
 	}
-
 	glUniform1i(glGetUniformLocation(background_program, "background_texture"), 1);
-	if (registry.screenStates.components[0].is_switching_biome) {
-		glUniform1f(glGetUniformLocation(background_program, "darken_screen_factor"), registry.screenStates.components[0].darken_screen_factor);
-	}
-
 	gl_has_errors();
 
 	// Draw background geometry (a triangle, for instance)
 	glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, nullptr); // Draw the background
 	gl_has_errors();
+}
+
+void RenderSystem::fadeScreen()
+{
+	// Setting shaders for the background
+	glUseProgram(effects[(GLuint)EFFECT_ASSET_ID::FADE]);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	gl_has_errors();
+
+	// Clearing backbuffer
+	int w, h;
+	glfwGetFramebufferSize(window, &w, &h); // Note, this will be 2x the resolution given to glfwCreateWindow on retina displays
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, w, h);
+	glDepthRange(0, 10);
+	gl_has_errors();
+
+	// Draw the background texture on the quad geometry
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[(GLuint)GEOMETRY_BUFFER_ID::SCREEN_TRIANGLE]);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffers[(GLuint)GEOMETRY_BUFFER_ID::SCREEN_TRIANGLE]);
+	gl_has_errors();
+
+	// Set background program
+	const GLuint fade_program = effects[(GLuint)EFFECT_ASSET_ID::FADE];
+	gl_has_errors();
+
+	// Set vertex position and texture coordinates (both stored in the same VBO)
+	GLint in_position_loc = glGetAttribLocation(fade_program, "in_position");
+	glEnableVertexAttribArray(in_position_loc);
+	glVertexAttribPointer(in_position_loc, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void *)0);
+	gl_has_errors();
+
+	// Bind textures (off-screen render and background)
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, off_screen_render_buffer_color);
+	gl_has_errors();
+
+	if (registry.screenStates.components[0].is_switching_biome) {
+		glUniform1f(glGetUniformLocation(fade_program, "darken_screen_factor"), registry.screenStates.components[0].darken_screen_factor);
+	}
+	gl_has_errors();
+
+	// Draw background geometry (a triangle, for instance)
+	glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, nullptr); // Draw the background
+	gl_has_errors();
+
+	glDisable(GL_BLEND);
 }
 
 // Render our game world
@@ -303,13 +345,13 @@ void RenderSystem::draw()
 
 	mat3 projection_2D = createProjectionMatrix();
 
-	if (!registry.screenStates.components[0].is_switching_biome) drawToScreen();
+	// if (!registry.screenStates.components[0].is_switching_biome) drawToScreen();
+	drawToScreen();
 
 	std::vector<Entity> entities = process_render_requests();
 
 
 	// draw all entities with a render request to the frame buffer
-	for (Entity entity : entities)
 	for (Entity entity : entities)
 	{
 		// filter to entities that have a motion component
@@ -326,7 +368,7 @@ void RenderSystem::draw()
 		}
 	}
 
-	if (registry.screenStates.components[0].is_switching_biome) drawToScreen();
+	if (registry.screenStates.components[0].is_switching_biome) fadeScreen();
 	
 	// flicker-free display with a double buffer
 	glfwSwapBuffers(window);

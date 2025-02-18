@@ -4,19 +4,19 @@ uniform sampler2D screen_texture;
 uniform float darken_screen_factor;
 
 in vec2 texcoord;
-
-layout(location = 0) out vec4 color;
-
-// darken the screen, i.e., fade to black
-vec4 fade_color(vec4 in_color) 
-{
-	if (darken_screen_factor > 0)
-		in_color -= darken_screen_factor * vec4(0.8, 0.8, 0.8, 0);
-	return in_color;
-}
+out vec4 color;
 
 void main()
 {
-	vec4 in_color = texture(screen_texture, texcoord);
-	// color = fade_color(in_color);
+    vec4 in_color = texture(screen_texture, texcoord);
+
+    // If darken factor is 0, keep it fully transparent
+    if (darken_screen_factor <= 0.0) {
+        color = vec4(0.0, 0.0, 0.0, 0.0);
+    } else {
+        // Fade effect: interpolate between original color and black
+        vec4 fade_color = mix(in_color, vec4(0.0, 0.0, 0.0, 1.0), darken_screen_factor);
+        fade_color.a = darken_screen_factor; // Gradually increase alpha as it fades
+        color = fade_color;
+    }
 }
