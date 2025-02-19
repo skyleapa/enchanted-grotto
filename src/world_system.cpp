@@ -514,8 +514,12 @@ void WorldSystem::handle_player_pickup()
 			}
 		}
 
-		// Remove the item from the world
-		registry.remove_all_components_of(item);
+		// Remove only the visual components of the item
+		if (registry.motions.has(item))
+			registry.motions.remove(item);
+		if (registry.renderRequests.has(item))
+			registry.renderRequests.remove(item);
+
 		return;
 	}
 }
