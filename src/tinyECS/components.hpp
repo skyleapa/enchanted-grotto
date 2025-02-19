@@ -88,19 +88,6 @@ struct Mesh
 };
 
 // =============================== ENCHANTED GROTTO COMPONENTS =========================================
-
-// Potion Types
-// IMPORTANT: Add new effects to the end of the list to not break serialization!
-// IMPORTANT: Add the displayname for each PotionEffect to common.hpp EFFECT_NAME
-// Type descriptions and their values:
-// FAILED: A potion that did not match any of the ingredients listed in any recipe
-// SPEED: Increases player speed. Value is the speed multiplier
-enum class PotionEffect
-{
-	FAILED = 0,
-	SPEED = FAILED + 1
-};
-
 // represents a potion in our game
 struct Potion
 {
@@ -109,16 +96,6 @@ struct Potion
 	float effectValue;    // Type-dependent value of potion 
 	float quality;        // 0-1, a summary of how good the potion is
 	vec3 color;
-};
-
-// Item Types
-// IMPORTANT: Add new types to the end of the list to not break serialization!
-// IMPORTANT: Add the displayname for each ItemType to common.hpp ITEM_NAME
-enum class ItemType
-{
-	POTION = 0,
-	COFFEE_BEANS = POTION + 1,
-	MAGICAL_FRUIT = COFFEE_BEANS + 1
 };
 
 // an item that can be in an inventory
@@ -159,53 +136,6 @@ struct Menu
 {
 	bool mouseInput; // true if we allow mouse input
 	bool keyInput;	 // true if we allow key input
-};
-
-// Action types
-// WAIT: Records a wait time of some constant minutes defined in common.hpp (default 5).
-//       The value represents how many units of that constant wait time have been recorded.
-//       e.g. A WAIT with value 6 and default wait time of 5 is a 30 minute wait
-// ADD_INGREDINET: Player puts in an ingredient. The value is the index in the cauldron
-//                 inventory that stores the entity ID of that item
-// MODIFY_HEAT: Player modifies the heat level. Value is a float 0-1, the resulting heat level
-// STIR: Player stirs. Action should be recorded when player puts down the ladle.
-//       Value is the number of stirs recorded
-// BOTTLE: Should always be the last action. Value ignored.
-// Note that MODIFY_HEAT is always the first action, since the heat can only be modified once
-// the cauldron has been filled
-enum class ActionType
-{
-	WAIT,
-	ADD_INGREDIENT,
-	MODIFY_HEAT,
-	STIR,
-	BOTTLE
-};
-
-// An action that records a step done by the player in the cauldron
-struct Action
-{
-	ActionType type;
-	int value;
-};
-
-// A recipe-specific short format for storing ingredient requirements
-struct RecipeIngredient
-{
-	ItemType type;
-	int amount;
-	float grindAmount;
-};
-
-// a recipe in our recipe book menu
-struct Recipe
-{
-	PotionEffect effect;
-	int highestQualityEffect;        // corresponds to effectValue
-	int highestQualityDuration;
-	vec3 finalPotionColor;
-	std::vector<RecipeIngredient> ingredients;
-	std::vector<Action> steps;
 };
 
 // TODO: Better Mortar and pestle representation

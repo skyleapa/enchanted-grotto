@@ -74,11 +74,43 @@ const float TEXTBOX_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 4;
 const float ITEM_PICKUP_RADIUS = (float)70;
 const float TEXTBOX_VISIBILITY_RADIUS = (float)70;
 
-// Item and potion names
+// Item and potion constants. The enums are declared here instead of in components.hpp
+// because this file is included in components, not the other way around - otherwise,
+// it would result in compilation errors because the name constants would be referring
+// to enums that have not been declared yet.
+//
+// Additionally, the structs that are included here can also be considered constants,
+// since they have no associated component container in the registry and are only
+// used for comparisons or storage in other components.
+
+// Item Types and names
+// IMPORTANT: Add new types to the end of the list to not break serialization!
+// IMPORTANT: Add the displayname for each ItemType to ITEM_NAME
+enum class ItemType
+{
+	POTION = 0,
+	COFFEE_BEANS = POTION + 1,
+	MAGICAL_FRUIT = COFFEE_BEANS + 1,
+	GROTTO_ENTRANCE = MAGICAL_FRUIT + 1
+};
+
 const std::unordered_map<ItemType, std::string> ITEM_NAMES = {
 	{ItemType::POTION, "Potion"},
 	{ItemType::COFFEE_BEANS, "Coffee Beans"},
-	{ItemType::MAGICAL_FRUIT, "Magical Fruit"}
+	{ItemType::MAGICAL_FRUIT, "Magical Fruit"},
+	{ItemType::GROTTO_ENTRANCE, "Grotto Entrance"}
+};
+
+// Potion Types and names
+// IMPORTANT: Add new effects to the end of the list to not break serialization!
+// IMPORTANT: Add the displayname for each PotionEffect to EFFECT_NAME
+// Type descriptions and their values:
+// FAILED: A potion that did not match any of the ingredients listed in any recipe
+// SPEED: Increases player speed. Value is the speed multiplier
+enum class PotionEffect
+{
+	FAILED = 0,
+	SPEED = FAILED + 1
 };
 
 const std::unordered_map<PotionEffect, std::string> EFFECT_NAMES = {
@@ -86,11 +118,58 @@ const std::unordered_map<PotionEffect, std::string> EFFECT_NAMES = {
 	{PotionEffect::SPEED, "Speed"}
 };
 
+// Action types
+// WAIT: Records a wait time of some constant minutes defined in common.hpp (default 5).
+//       The value represents how many units of that constant wait time have been recorded.
+//       e.g. A WAIT with value 6 and default wait time of 5 is a 30 minute wait
+// ADD_INGREDINET: Player puts in an ingredient. The value is the index in the cauldron
+//                 inventory that stores the entity ID of that item
+// MODIFY_HEAT: Player modifies the heat level. Value is a float 0-1, the resulting heat level
+// STIR: Player stirs. Action should be recorded when player puts down the ladle.
+//       Value is the number of stirs recorded
+// BOTTLE: Should always be the last action. Value ignored.
+// Note that MODIFY_HEAT is always the first action, since the heat can only be modified once
+// the cauldron has been filled
+enum class ActionType
+{
+	WAIT,
+	ADD_INGREDIENT,
+	MODIFY_HEAT,
+	STIR,
+	BOTTLE
+};
+
+// An action that records a step done by the player in the cauldron
+struct Action
+{
+	ActionType type;
+	int value;
+};
+
+// A recipe-specific short format for storing ingredient requirements
+struct RecipeIngredient
+{
+	ItemType type;
+	int amount;
+	float grindAmount;
+};
+
+// A recipe in our recipe book menu
+struct Recipe
+{
+	PotionEffect effect;
+	float highestQualityEffect;        // corresponds to effectValue
+	int highestQualityDuration;
+	vec3 finalPotionColor;
+	std::vector<RecipeIngredient> ingredients;
+	std::vector<Action> steps;
+};
+
 // RECIPE LIST
 const std::vector<Recipe> RECIPES = {
 	{
 		.effect = PotionEffect::SPEED,
-		.highestQualityEffect = 3.0,
+		.highestQualityEffect = 3.0f,
 		.highestQualityDuration = 180,
 		.finalPotionColor = vec3(0, 255, 255),
 		.ingredients = {
