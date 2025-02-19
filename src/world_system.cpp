@@ -157,14 +157,18 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 
 	// handle switching biomes
 	ScreenState &screen = registry.screenStates.components[0];
+	if (registry.players.entities.size() < 1)
+		return true;
 	Entity &player = registry.players.entities[0];
+	if (!registry.motions.has(player))
+		return true;
 	Motion &player_motion = registry.motions.get(player);
 
 	if (screen.is_switching_biome)
 	{
 		if (screen.fade_status == 0)
 		{
-			screen.darken_screen_factor += elapsed_ms_since_last_update * 0.001f;
+			screen.darken_screen_factor += elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
 			if (screen.darken_screen_factor >= 1)
 				screen.fade_status = 1; // after fade out
 		}
@@ -177,15 +181,15 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 				screen.darken_screen_factor = 1;
 				if (screen.biome == (GLuint)BIOME::GROTTO)
 				{
-					player_motion.scale = {PLAYER_BB_WIDTH * 1.8, PLAYER_BB_HEIGHT * 1.8}; // make player larger in grotto
-					player_motion.position = vec2({player_motion.position.x, 550});		   // bring player to front of door
+					player_motion.scale = {PLAYER_BB_WIDTH * PlAYER_BB_GROTTO_SIZE_FACTOR, PLAYER_BB_HEIGHT * PlAYER_BB_GROTTO_SIZE_FACTOR};
+					player_motion.position = vec2({player_motion.position.x, GRID_CELL_HEIGHT_PX * 11}); // bring player to front of door
 				}
 				else
 				{
 					player_motion.scale = {PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT};
 				}
 			}
-			screen.darken_screen_factor -= elapsed_ms_since_last_update * 0.001f;
+			screen.darken_screen_factor -= elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
 			if (screen.darken_screen_factor <= 0)
 				screen.fade_status = 2; // after fade in
 		}
@@ -220,10 +224,10 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	}
 
 	// move the character
-	if (registry.moving.has(player) && registry.motions.has(player))
+	if (registry.moving.has(player))
 	{
 		player_motion.previous_position = player_motion.position;
-		float delta = elapsed_ms_since_last_update * 0.001f;
+		float delta = elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
 
 		if (player_motion.moving_direction == (int)DIRECTION::UP)
 		{
@@ -240,21 +244,6 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		else if (player_motion.moving_direction == (int)DIRECTION::LEFT)
 		{
 			player_motion.position.x -= player_motion.velocity.x * delta;
-		}
-	}
-
-	// assert(registry.screenStates.components.size() <= 1);
-	// ScreenState &screen = registry.screenStates.components[0];
-
-	float min_counter_ms = 3000.f;
-	for (Entity entity : registry.deathTimers.entities)
-	{
-		// progress timer
-		DeathTimer &counter = registry.deathTimers.get(entity);
-		counter.counter_ms -= elapsed_ms_since_last_update;
-		if (counter.counter_ms < min_counter_ms)
-		{
-			min_counter_ms = counter.counter_ms;
 		}
 	}
 
@@ -323,13 +312,14 @@ void WorldSystem::restart_game()
 void WorldSystem::create_forest()
 {
 	// create boundaries
-	create_boundary_line(renderer, vec2({0, 70}), vec2({WINDOW_WIDTH_PX * 3, BOUNDARY_LINE_HEIGHT}));
-	create_boundary_line(renderer, vec2({0, WINDOW_HEIGHT_PX}), vec2({WINDOW_WIDTH_PX * 3, BOUNDARY_LINE_HEIGHT}));
-	create_boundary_line(renderer, vec2({0, 0}), vec2({BOUNDARY_LINE_HEIGHT, WINDOW_HEIGHT_PX * 2}));
-	create_boundary_line(renderer, vec2({WINDOW_WIDTH_PX, 0}), vec2({BOUNDARY_LINE_HEIGHT, WINDOW_HEIGHT_PX * 2}));
-	create_boundary_line(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 2), vec2({GROTTO_ENTRANCE_WIDTH - 150, BOUNDARY_LINE_HEIGHT}));
-	create_boundary_line(renderer, vec2(GRID_CELL_WIDTH_PX * 17 + 10, 5), vec2({BOUNDARY_LINE_HEIGHT, 100}));
-	create_boundary_line(renderer, vec2(GRID_CELL_WIDTH_PX * 23 - 10, 5), vec2({BOUNDARY_LINE_HEIGHT, 100}));
+	create_boundary_line(renderer, vec2({WINDOW_WIDTH_PX / 2, GRID_CELL_HEIGHT_PX * 1.3}), vec2({WINDOW_WIDTH_PX, BOUNDARY_LINE_THICKNESS}));		 // top
+	create_boundary_line(renderer, vec2({WINDOW_WIDTH_PX / 2, WINDOW_HEIGHT_PX}), vec2({WINDOW_WIDTH_PX, BOUNDARY_LINE_THICKNESS}));				 // bottom
+	create_boundary_line(renderer, vec2({0, WINDOW_HEIGHT_PX / 2}), vec2({BOUNDARY_LINE_THICKNESS, WINDOW_HEIGHT_PX}));								 // left
+	create_boundary_line(renderer, vec2({WINDOW_WIDTH_PX, WINDOW_HEIGHT_PX / 2}), vec2({BOUNDARY_LINE_THICKNESS, WINDOW_HEIGHT_PX}));				 // right
+	create_boundary_line(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 2), vec2({GRID_CELL_WIDTH_PX * 5, BOUNDARY_LINE_THICKNESS})); // grotto bottom
+	create_boundary_line(renderer, vec2(GRID_CELL_WIDTH_PX * 17.2, GRID_CELL_HEIGHT_PX), vec2({BOUNDARY_LINE_THICKNESS, GRID_CELL_HEIGHT_PX * 2}));	 // grotto left
+	create_boundary_line(renderer, vec2(GRID_CELL_WIDTH_PX * 22.8, GRID_CELL_HEIGHT_PX), vec2({BOUNDARY_LINE_THICKNESS, GRID_CELL_HEIGHT_PX * 2}));	 // grotto right
+
 	// create forest bridge
 	createForestBridge(renderer, vec2(307, 485));
 
@@ -360,15 +350,16 @@ void WorldSystem::create_forest()
 void WorldSystem::create_grotto()
 {
 	// positions are according to sample grotto interior
-	create_boundary_line(renderer, vec2({0, 200}), vec2({WINDOW_WIDTH_PX * 3, BOUNDARY_LINE_HEIGHT}));
-	create_boundary_line(renderer, vec2({0, WINDOW_HEIGHT_PX}), vec2({WINDOW_WIDTH_PX * 3, BOUNDARY_LINE_HEIGHT}));
-	create_boundary_line(renderer, vec2({0, 0}), vec2({BOUNDARY_LINE_HEIGHT, WINDOW_HEIGHT_PX * 2}));
-	create_boundary_line(renderer, vec2({WINDOW_WIDTH_PX, 0}), vec2({BOUNDARY_LINE_HEIGHT, WINDOW_HEIGHT_PX * 2}));
+	create_boundary_line(renderer, vec2({WINDOW_WIDTH_PX / 2, GRID_CELL_HEIGHT_PX * 4}), vec2({WINDOW_WIDTH_PX, BOUNDARY_LINE_THICKNESS})); // top
+	create_boundary_line(renderer, vec2({WINDOW_WIDTH_PX / 2, WINDOW_HEIGHT_PX}), vec2({WINDOW_WIDTH_PX, BOUNDARY_LINE_THICKNESS}));		// bottom
+	create_boundary_line(renderer, vec2({0, WINDOW_HEIGHT_PX / 2}), vec2({BOUNDARY_LINE_THICKNESS, WINDOW_HEIGHT_PX}));						// left
+	create_boundary_line(renderer, vec2({WINDOW_WIDTH_PX, WINDOW_HEIGHT_PX / 2}), vec2({BOUNDARY_LINE_THICKNESS, WINDOW_HEIGHT_PX}));		// right
+	create_boundary_line(renderer, vec2({GRID_CELL_WIDTH_PX * 20.5, GRID_CELL_HEIGHT_PX * 13.6}), vec2({190, BOUNDARY_LINE_THICKNESS}));	// door
 
-	create_grotto_non_interactive_entities(renderer, vec2({1025, 450}), vec2({185, 315}), 0, (GLuint)TEXTURE_ASSET_ID::GROTTO_CARPET, 0, 0, 0);
-	create_grotto_non_interactive_entities(renderer, vec2({1050, 150}), vec2({335, 260}), 180, (GLuint)TEXTURE_ASSET_ID::GROTTO_TOP_BOOKSHELF, 0, 0, 1);
-	create_grotto_non_interactive_entities(renderer, vec2({1210, 455}), vec2({90, 429}), 180, (GLuint)TEXTURE_ASSET_ID::GROTTO_RIGHT_BOOKSHELF, 0, 0, 1);
-	create_grotto_non_interactive_entities(renderer, vec2({240, 590}), vec2({495 * 1.03, 210 * 1.03}), 180, (GLuint)TEXTURE_ASSET_ID::GROTTO_POOL, 0, 0, 1);
+	create_grotto_non_interactive_entities(renderer, vec2({GRID_CELL_WIDTH_PX * 20.5, GRID_CELL_HEIGHT_PX * 9}), vec2({185, 315}), 0, (GLuint)TEXTURE_ASSET_ID::GROTTO_CARPET, 0);
+	create_grotto_non_interactive_entities(renderer, vec2({GRID_CELL_WIDTH_PX * 21, GRID_CELL_HEIGHT_PX * 3}), vec2({335, 260}), 180, (GLuint)TEXTURE_ASSET_ID::GROTTO_TOP_BOOKSHELF, 1);
+	create_grotto_non_interactive_entities(renderer, vec2({GRID_CELL_WIDTH_PX * 24.2, GRID_CELL_HEIGHT_PX * 9.1}), vec2({90, 429}), 180, (GLuint)TEXTURE_ASSET_ID::GROTTO_RIGHT_BOOKSHELF, 1);
+	create_grotto_non_interactive_entities(renderer, vec2({GRID_CELL_WIDTH_PX * 4.8, GRID_CELL_HEIGHT_PX * 11.8}), vec2({510, 215}), 180, (GLuint)TEXTURE_ASSET_ID::GROTTO_POOL, 1);
 
 	create_cauldron(renderer, vec2({GRID_CELL_WIDTH_PX * 13.35, GRID_CELL_HEIGHT_PX * 5.85}), vec2({175, 280}), 8, "Cauldron");
 	create_mortar_pestle(renderer, vec2({GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22}), vec2({213, 141}), 9, "Mortar and Pestle");
@@ -670,7 +661,6 @@ void WorldSystem::update_textbox_visibility()
 
 			if (textbox.isVisible)
 			{
-				// std::cout << "textbox is visible" <<std::endl;
 				if (!registry.renderRequests.has(textboxEntity))
 				{
 					registry.renderRequests.insert(textboxEntity, renderRequest);

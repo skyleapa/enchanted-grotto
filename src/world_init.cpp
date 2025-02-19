@@ -168,16 +168,13 @@ Entity createForestRiver(RenderSystem *renderer, vec2 position)
 	return entity1;
 }
 
-Entity create_grotto_non_interactive_entities(RenderSystem *renderer, vec2 position, vec2 scale, float angle, GLuint texture_asset_id,
-											  float width_ratio, float height_ratio, float can_collide)
+Entity create_grotto_non_interactive_entities(RenderSystem *renderer, vec2 position, vec2 scale, float angle, GLuint texture_asset_id, float can_collide)
 {
 	auto entity = Entity();
 	if (can_collide == 1)
 	{
 		auto &terrain = registry.terrains.emplace(entity);
 		terrain.collision_setting = can_collide;
-		terrain.width_ratio = width_ratio;
-		terrain.height_ratio = height_ratio;
 	}
 
 	Mesh &mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);

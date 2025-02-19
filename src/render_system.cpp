@@ -248,11 +248,9 @@ void RenderSystem::drawToScreen()
 	GLuint biome = registry.screenStates.components[0].biome;
 	switch (biome) {
 		case ((GLuint) BIOME::FOREST):
-			// background_asset_id = (GLuint)TEXTURE_ASSET_ID::FOREST_BG;
 			glBindTexture(GL_TEXTURE_2D, texture_gl_handles[(GLuint)TEXTURE_ASSET_ID::FOREST_BG]); // Background texture
 			break;
 		case ((GLuint) BIOME::GROTTO):
-			// background_asset_id = (GLuint)TEXTURE_ASSET_ID::GROTTO_BG;
 			glBindTexture(GL_TEXTURE_2D, texture_gl_handles[(GLuint)TEXTURE_ASSET_ID::GROTTO_BG]); // Background texture
 			break;
 		default:
@@ -345,11 +343,9 @@ void RenderSystem::draw()
 
 	mat3 projection_2D = createProjectionMatrix();
 
-	// if (!registry.screenStates.components[0].is_switching_biome) drawToScreen();
 	drawToScreen();
 
 	std::vector<Entity> entities = process_render_requests();
-
 
 	// draw all entities with a render request to the frame buffer
 	for (Entity entity : entities)

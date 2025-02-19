@@ -45,7 +45,6 @@ struct ScreenState
 	std::vector<int> pressed_keys = {};
 	bool is_switching_biome = false;
 	GLuint switching_to_biome = 1; // track biome that is being switched to
-	// float freeze_timer = 1000; // tracks how long screen should stay black for between biome switching
 	float fade_status = 0; // 0 - before fade out, 1 after fade out, 2 - after fade in
 };
 

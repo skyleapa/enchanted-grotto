@@ -46,38 +46,17 @@ bool collides(const Motion &player_motion, const Motion &terrain_motion, const T
 	return overlap_x && overlap_y;
 }
 
-bool enterEntrance(const Motion &player_motion, const Motion &entrance_motion)
-{
-	float player_width_ratio = 1.0f, player_height_ratio = 1.0f;
-	float entrance_width_ratio = 0.7f, entrance_height_ratio = 0.9f;
-
-	vec4 player_box = get_bounding_box(player_motion, player_width_ratio, player_height_ratio);
-	vec4 entrance_box = get_bounding_box(entrance_motion, entrance_width_ratio, entrance_height_ratio);
-
-	// add padding to bottom so that character is fully within entrance
-	float padding = 5;
-	entrance_box.w -= padding;
-	entrance_box.y -= padding;
-
-	bool fully_contained_x = (player_box.x >= entrance_box.x) &&
-							 (player_box.x + player_box.z <= entrance_box.x + entrance_box.z);
-	bool fully_contained_y = (player_box.y >= entrance_box.y) &&
-							 (player_box.y + player_box.w <= entrance_box.y + entrance_box.w);
-
-	return fully_contained_x && fully_contained_y;
-}
-
 void PhysicsSystem::step(float elapsed_ms)
 {
 	// get our one player
 	if (registry.players.entities.empty())
 		return;
-		
+
 	Entity player_entity = registry.players.entities[0];
 	if (!registry.motions.has(player_entity))
 		return;
 
-	Motion &player_motion = registry.motions.get(player_entity);	
+	Motion &player_motion = registry.motions.get(player_entity);
 
 	for (Entity terrain_entity : registry.terrains.entities)
 	{
