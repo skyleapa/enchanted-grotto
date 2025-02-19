@@ -5,23 +5,20 @@
 #include "render_system.hpp"
 
 // trees
-Entity createTree(RenderSystem* renderer, vec2 position);
+Entity createTree(RenderSystem *renderer, vec2 position);
 
 // player
-Entity createPlayer(RenderSystem* renderer, vec2 position);
+Entity createPlayer(RenderSystem *renderer, vec2 position);
 
 // forest bridge
-Entity createForestBridge(RenderSystem* renderer, vec2 position);
+Entity createForestBridge(RenderSystem *renderer, vec2 position);
 
 // forest river
-Entity createForestRiver(RenderSystem* renderer, vec2 position);
-
-// grotto entrance in forest
-Entity createGrottoEntrance(RenderSystem* renderer, vec2 position);
+Entity createForestRiver(RenderSystem *renderer, vec2 position);
 
 // create static grotto items
 Entity create_grotto_non_interactive_entities(RenderSystem *renderer, vec2 position, vec2 scale, float angle, GLuint texture_asset_id,
-    float width_ratio, float height_ratio, float can_collide);
+                                              float width_ratio, float height_ratio, float can_collide);
 
 Entity create_boundary_line(RenderSystem *renderer, vec2 position, vec2 scale);
 
@@ -32,19 +29,31 @@ Entity createGridLine(vec2 start_pos, vec2 end_pos);
 Entity createLine(vec2 position, vec2 size);
 
 // grotto entrance
-Entity createGrottoEntrance(RenderSystem* renderer, vec2 position, int id, std::string name);
+Entity createGrottoEntrance(RenderSystem *renderer, vec2 position, int id, std::string name);
 
 // bushes
-Entity createBush(RenderSystem* renderer, vec2 position);
+Entity createBush(RenderSystem *renderer, vec2 position);
 
 // magical fruit
-Entity createFruit(RenderSystem* renderer, vec2 position, int id, std::string name, int amount);
+Entity createFruit(RenderSystem *renderer, vec2 position, int id, std::string name, int amount);
 
 // coffee bean
-Entity createCoffeeBean(RenderSystem* renderer, vec2 position, int id, std::string name, int amount);
+Entity createCoffeeBean(RenderSystem *renderer, vec2 position, int id, std::string name, int amount);
+
+// cauldron
+Entity create_cauldron(RenderSystem *renderer, vec2 position, vec2 scale, int id, std::string name);
+
+// mortar and pestle
+Entity create_mortar_pestle(RenderSystem *renderer, vec2 position, vec2 scale, int id, std::string name);
+
+// chest
+Entity create_chest(RenderSystem *renderer, vec2 position, vec2 scale, int id, std::string name);
+
+// recipe book
+Entity create_recipe_book(RenderSystem *renderer, vec2 position, vec2 scale, int id, std::string name);
 
 // interaction textbox
-Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity);
+Entity createTextbox(RenderSystem *renderer, vec2 position, Entity itemEntity);
 
 // render textbox
-RenderRequest getTextboxRenderRequest(Textbox& textbox);
+RenderRequest getTextboxRenderRequest(Textbox &textbox);

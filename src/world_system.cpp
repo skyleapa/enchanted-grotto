@@ -177,8 +177,8 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 				screen.darken_screen_factor = 1;
 				if (screen.biome == (GLuint)BIOME::GROTTO)
 				{
-					player_motion.scale = {PLAYER_BB_WIDTH * 1.3, PLAYER_BB_HEIGHT * 1.3}; // make player larger in grotto
-					player_motion.position = vec2({player_motion.position.x, 600});		   // bring player to front of door
+					player_motion.scale = {PLAYER_BB_WIDTH * 1.8, PLAYER_BB_HEIGHT * 1.8}; // make player larger in grotto
+					player_motion.position = vec2({player_motion.position.x, 550});		   // bring player to front of door
 				}
 				else
 				{
@@ -327,7 +327,9 @@ void WorldSystem::create_forest()
 	create_boundary_line(renderer, vec2({0, WINDOW_HEIGHT_PX}), vec2({WINDOW_WIDTH_PX * 3, BOUNDARY_LINE_HEIGHT}));
 	create_boundary_line(renderer, vec2({0, 0}), vec2({BOUNDARY_LINE_HEIGHT, WINDOW_HEIGHT_PX * 2}));
 	create_boundary_line(renderer, vec2({WINDOW_WIDTH_PX, 0}), vec2({BOUNDARY_LINE_HEIGHT, WINDOW_HEIGHT_PX * 2}));
-
+	create_boundary_line(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 2), vec2({GROTTO_ENTRANCE_WIDTH - 150, BOUNDARY_LINE_HEIGHT}));
+	create_boundary_line(renderer, vec2(GRID_CELL_WIDTH_PX * 17 + 10, 5), vec2({BOUNDARY_LINE_HEIGHT, 100}));
+	create_boundary_line(renderer, vec2(GRID_CELL_WIDTH_PX * 23 - 10, 5), vec2({BOUNDARY_LINE_HEIGHT, 100}));
 	// create forest bridge
 	createForestBridge(renderer, vec2(307, 485));
 
@@ -353,7 +355,6 @@ void WorldSystem::create_forest()
 	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5), 4, "Coffee Bean", 1);
 	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 9.9, GRID_CELL_HEIGHT_PX * 12.1), 5, "Coffee Bean", 1);
 	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 12, GRID_CELL_HEIGHT_PX * 12.7), 6, "Coffee Bean", 1);
-
 }
 
 void WorldSystem::create_grotto()
@@ -366,8 +367,13 @@ void WorldSystem::create_grotto()
 
 	create_grotto_non_interactive_entities(renderer, vec2({1025, 450}), vec2({185, 315}), 0, (GLuint)TEXTURE_ASSET_ID::GROTTO_CARPET, 0, 0, 0);
 	create_grotto_non_interactive_entities(renderer, vec2({1050, 150}), vec2({335, 260}), 180, (GLuint)TEXTURE_ASSET_ID::GROTTO_TOP_BOOKSHELF, 0, 0, 1);
-	create_grotto_non_interactive_entities(renderer, vec2({1205, 455}), vec2({81, 429}), 0, (GLuint)TEXTURE_ASSET_ID::GROTTO_RIGHT_BOOKSHELF, 0, 0, 1);
+	create_grotto_non_interactive_entities(renderer, vec2({1210, 455}), vec2({90, 429}), 180, (GLuint)TEXTURE_ASSET_ID::GROTTO_RIGHT_BOOKSHELF, 0, 0, 1);
 	create_grotto_non_interactive_entities(renderer, vec2({240, 590}), vec2({495 * 1.03, 210 * 1.03}), 180, (GLuint)TEXTURE_ASSET_ID::GROTTO_POOL, 0, 0, 1);
+
+	create_cauldron(renderer, vec2({GRID_CELL_WIDTH_PX * 13.35, GRID_CELL_HEIGHT_PX * 5.85}), vec2({175, 280}), 8, "Cauldron");
+	create_mortar_pestle(renderer, vec2({GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22}), vec2({213, 141}), 9, "Mortar and Pestle");
+	create_recipe_book(renderer, vec2({GRID_CELL_WIDTH_PX * 4.15, GRID_CELL_HEIGHT_PX * 5.05}), vec2({108, 160}), 10, "Recipe Book");
+	create_chest(renderer, vec2({GRID_CELL_WIDTH_PX * 1.35, GRID_CELL_HEIGHT_PX * 5.2}), vec2({100, 150}), 11, "Chest");
 }
 
 void WorldSystem::handle_collisions()
@@ -442,9 +448,9 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		restart_game();
 	}
 
-	if (action == GLFW_PRESS && key == GLFW_KEY_F) 
+	if (action == GLFW_PRESS && key == GLFW_KEY_F)
 	{
-		handle_player_pickup();
+		handle_player_interaction();
 	}
 
 	if (registry.screenStates.components[0].is_switching_biome || (key != GLFW_KEY_W && key != GLFW_KEY_S && key != GLFW_KEY_D && key != GLFW_KEY_A))
@@ -540,7 +546,7 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 	}
 }
 
-void WorldSystem::handle_player_pickup()
+void WorldSystem::handle_player_interaction()
 {
 	// Check if player exists
 	if (registry.players.entities.empty())
@@ -564,8 +570,8 @@ void WorldSystem::handle_player_pickup()
 		Motion &item_motion = registry.motions.get(item);
 		Item &item_info = registry.items.get(item);
 
-		// Check if item is collectable
-		if (!item_info.isCollectable)
+		// Check if item is collectable or is an interactable entrance
+		if (!item_info.isCollectable && !registry.entrances.has(item))
 			continue;
 
 		float distance = glm::distance(player_motion.position, item_motion.position);
@@ -574,12 +580,31 @@ void WorldSystem::handle_player_pickup()
 		if (distance > ITEM_PICKUP_RADIUS)
 			continue;
 
-		// If inventory is full, return
-		if (player_inventory.items.size() >= player_inventory.capacity)
-			return;
+		if (registry.entrances.has(item))
+		{
+			Entrance &entrance = registry.entrances.get(item);
+			if (entrance.target_biome == (GLuint)BIOME::GROTTO)
+			{
+				ScreenState &state = registry.screenStates.components[0];
+				state.is_switching_biome = true;
+				state.switching_to_biome = (GLuint)BIOME::GROTTO;
+			}
+			else
+			{ // temporary
+				ScreenState &state = registry.screenStates.components[0];
+				state.is_switching_biome = true;
+				state.switching_to_biome = (GLuint)BIOME::GROTTO;
+			}
+		}
+		else
+		{
+			// If inventory is full, return
+			if (player_inventory.items.size() >= player_inventory.capacity)
+				return;
 
-		// Add item to inventory
-		player_inventory.items.push_back(item);
+			// Add item to inventory
+			player_inventory.items.push_back(item);
+		}
 
 		// Find and remove associated textbox if it exists
 		for (Entity textbox : registry.textboxes.entities)
@@ -592,9 +617,9 @@ void WorldSystem::handle_player_pickup()
 		}
 
 		// Remove only the visual components of the item
-		if (registry.motions.has(item))
+		if (registry.motions.has(item) && !registry.entrances.has(item))
 			registry.motions.remove(item);
-		if (registry.renderRequests.has(item))
+		if (registry.renderRequests.has(item) && !registry.entrances.has(item))
 			registry.renderRequests.remove(item);
 
 		return;
@@ -645,6 +670,7 @@ void WorldSystem::update_textbox_visibility()
 
 			if (textbox.isVisible)
 			{
+				// std::cout << "textbox is visible" <<std::endl;
 				if (!registry.renderRequests.has(textboxEntity))
 				{
 					registry.renderRequests.insert(textboxEntity, renderRequest);

@@ -93,17 +93,4 @@ void PhysicsSystem::step(float elapsed_ms)
 			registry.collisions.emplace_with_duplicates(player_entity, terrain_entity);
 		}
 	}
-	for (Entity entrance : registry.entrances.entities)
-	{
-		if (!registry.motions.has(entrance))
-			continue;
-
-		Motion &entrance_motion = registry.motions.get(entrance);
-		if (enterEntrance(player_motion, entrance_motion))
-		{
-			ScreenState &state = registry.screenStates.components[0];
-			state.is_switching_biome = true;
-			state.switching_to_biome = (GLuint)BIOME::GROTTO;
-		}
-	}
 }

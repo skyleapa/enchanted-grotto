@@ -53,7 +53,7 @@ public:
 	// should the game be over ?
 	bool is_over() const;
 
-	void handle_player_pickup();
+	void handle_player_interaction();
 	
 	void update_textbox_visibility();
 
