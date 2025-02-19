@@ -175,11 +175,10 @@ TEST_F(ItemSystemTest, ErrorHandling) {
     EXPECT_FALSE(item_system.loadGameState("nonexistent_file.json"));
 }
 
-/* No longer needed due to item id enums
 // Test entity ID continuity
 TEST_F(ItemSystemTest, EntityIDContinuity) {
     // Create and save an item
-    Entity item1 = ItemSystem::createItem("Test Item", 1, 1);
+    Entity item1 = ItemSystem::createItem(ItemType::COFFEE_BEANS, 1);
     unsigned int first_id = item1.id();
     
     // Save state
@@ -190,8 +189,8 @@ TEST_F(ItemSystemTest, EntityIDContinuity) {
     
     // Load state and create a new item
     EXPECT_TRUE(item_system.loadGameState("test_save.json"));
-    Entity item2 = ItemSystem::createItem("New Item", 2, 1);
+    Entity item2 = ItemSystem::createItem(ItemType::MAGICAL_FRUIT, 1);
     
     // The new item should have a new unique ID
     EXPECT_NE(item2.id(), first_id);
-} */
+}
