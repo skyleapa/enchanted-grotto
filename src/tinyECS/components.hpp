@@ -18,7 +18,7 @@ struct Motion
 	vec2 velocity = {0, 0};
 	vec2 scale = {10, 10};
 	int moving_direction = 0;
-	vec2 previous_position = { 0, 0 };
+	vec2 previous_position = {0, 0};
 };
 
 // Stucture to store collision information
@@ -104,7 +104,7 @@ struct Potion
 // an item that can be in an inventory
 struct Item
 {
-	int id;
+	int type_id;
 	std::string name;
 	bool isCollectable;
 	int amount;
@@ -119,18 +119,16 @@ struct Ingredient
 // allows entities to have a storage system
 struct Inventory
 {
-	// commented out temporarily as Item results in a compilation error
-	// std::unordered_map<Item, int> items; // map of the item to the amount
+	std::vector<Entity> items;
 	int capacity;
 	bool isFull;
 };
 
 struct Cauldron
 {
-	std::vector<Item> items; // could this also be Inventory?
-	int heatLevel;
-	int stirLevel;
-	vec3 color;
+	int heatLevel;             // 1-3
+	int stirLevel;             // 1-10
+	vec3 color;                // RGB color
 };
 
 // a menu of our game (recipe book menu, potion making menu, grinding menu...)
@@ -150,12 +148,12 @@ struct Recipe
 	vec3 finalPotionColor;
 	// commented out temporarily as Ingredient results in a compilation error
 	// std::unordered_map<Ingredient, int> ingredients; // the ingredient and quantity
-	int steps; // TODO: determine what this field should be
+	int steps;         // TODO: Array[pair<ActionEnum, int>]
 };
 
 struct MortarAndPestle
 {
-	std::vector<Item> items; // could this also be Inventory?
+	std::vector<Entity> items;
 	int grindLevel;
 	int itemState;
 };
@@ -178,6 +176,12 @@ struct Terrain
 
 struct Entrance
 {
+};
+
+struct Textbox
+{
+	Entity targetItem;		// The item this textbox belongs to
+	bool isVisible = false; // Visibility of the textbox
 };
 
 /**
@@ -223,7 +227,13 @@ enum class TEXTURE_ASSET_ID
 	GROTTO_RIGHT_BOOKSHELF = GROTTO_RECIPE_BOOK + 1,
 	GROTTO_TOP_BOOKSHELF = GROTTO_RIGHT_BOOKSHELF + 1,
 	BOUNDARY_LINE = GROTTO_TOP_BOOKSHELF + 1,
-	TEXTURE_COUNT = BOUNDARY_LINE + 1,
+	BUSH = BOUNDARY_LINE + 1,
+	FRUIT = BUSH + 1,
+	COFFEE_BEAN = FRUIT + 1,
+	TEXTBOX_FRUIT = COFFEE_BEAN + 1,
+	TEXTBOX_COFFEE_BEAN = TEXTBOX_FRUIT + 1,
+	TEXTBOX_ENTER_GROTTO = TEXTBOX_COFFEE_BEAN + 1,
+	TEXTURE_COUNT = TEXTBOX_ENTER_GROTTO + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 
@@ -256,7 +266,8 @@ enum class RENDER_LAYER
 	TERRAIN,
 	STRUCTURE,
 	PLAYER,
-	GRIDLINES
+	GRIDLINES,
+	ITEM
 };
 
 struct RenderRequest

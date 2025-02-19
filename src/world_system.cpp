@@ -258,6 +258,8 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		}
 	}
 
+	update_textbox_visibility();
+
 	return true;
 }
 
@@ -340,7 +342,18 @@ void WorldSystem::create_forest()
 		trees.push_back(createTree(renderer, vec2(GRID_CELL_WIDTH_PX * 23, GRID_CELL_HEIGHT_PX * 11)));
 	}
 
-	createGrottoEntrance(renderer, vec2(990, 90));
+	createGrottoEntrance(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 1), 7, "Grotto Entrance");
+
+	createBush(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5));
+
+	createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 10, GRID_CELL_HEIGHT_PX * 3), 1, "Magical Fruit", 1);
+	createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 19, GRID_CELL_HEIGHT_PX * 10), 2, "Magical Fruit", 1);
+	createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 23, GRID_CELL_HEIGHT_PX * 11), 3, "Magical Fruit", 1);
+
+	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5), 4, "Coffee Bean", 1);
+	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 9.9, GRID_CELL_HEIGHT_PX * 12.1), 5, "Coffee Bean", 1);
+	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 12, GRID_CELL_HEIGHT_PX * 12.7), 6, "Coffee Bean", 1);
+
 }
 
 void WorldSystem::create_grotto()
@@ -418,6 +431,20 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 	if (action == GLFW_RELEASE && key == GLFW_KEY_ESCAPE)
 	{
 		close_window();
+	}
+
+	// Resetting game
+	if (action == GLFW_RELEASE && key == GLFW_KEY_R)
+	{
+		int w, h;
+		glfwGetWindowSize(window, &w, &h);
+
+		restart_game();
+	}
+
+	if (action == GLFW_PRESS && key == GLFW_KEY_F) 
+	{
+		handle_player_pickup();
 	}
 
 	if (registry.screenStates.components[0].is_switching_biome || (key != GLFW_KEY_W && key != GLFW_KEY_S && key != GLFW_KEY_D && key != GLFW_KEY_A))
@@ -510,5 +537,126 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 
 		std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
 		std::cout << "mouse tile position: " << tile_x << ", " << tile_y << std::endl;
+	}
+}
+
+void WorldSystem::handle_player_pickup()
+{
+	// Check if player exists
+	if (registry.players.entities.empty())
+		return;
+
+	Entity player = registry.players.entities[0]; // Assume single-player
+	if (!registry.motions.has(player) || !registry.inventories.has(player))
+		return;
+
+	Motion &player_motion = registry.motions.get(player);
+	Inventory &player_inventory = registry.inventories.get(player);
+
+	if (registry.items.entities.empty())
+		return;
+
+	for (Entity item : registry.items.entities)
+	{
+		if (!registry.items.has(item) || !registry.motions.has(item))
+			continue;
+
+		Motion &item_motion = registry.motions.get(item);
+		Item &item_info = registry.items.get(item);
+
+		// Check if item is collectable
+		if (!item_info.isCollectable)
+			continue;
+
+		float distance = glm::distance(player_motion.position, item_motion.position);
+
+		// If item is not in pickup range, continue
+		if (distance > ITEM_PICKUP_RADIUS)
+			continue;
+
+		// If inventory is full, return
+		if (player_inventory.items.size() >= player_inventory.capacity)
+			return;
+
+		// Add item to inventory
+		player_inventory.items.push_back(item);
+
+		// Find and remove associated textbox if it exists
+		for (Entity textbox : registry.textboxes.entities)
+		{
+			if (registry.textboxes.get(textbox).targetItem == item)
+			{
+				registry.remove_all_components_of(textbox);
+				break;
+			}
+		}
+
+		// Remove only the visual components of the item
+		if (registry.motions.has(item))
+			registry.motions.remove(item);
+		if (registry.renderRequests.has(item))
+			registry.renderRequests.remove(item);
+
+		return;
+	}
+}
+
+void WorldSystem::update_textbox_visibility()
+{
+	if (registry.players.entities.empty())
+		return;
+
+	Entity player = registry.players.entities[0];
+	if (!registry.motions.has(player))
+		return;
+
+	Motion &player_motion = registry.motions.get(player);
+
+	for (Entity item : registry.items.entities)
+	{
+		if (!registry.items.has(item) || !registry.motions.has(item))
+			continue;
+
+		Motion &item_motion = registry.motions.get(item);
+
+		float distance = glm::distance(player_motion.position, item_motion.position);
+
+		// Find the textbox linked to this item
+		Entity textboxEntity;
+		bool foundTextbox = false;
+
+		for (Entity textbox : registry.textboxes.entities)
+		{
+			if (registry.textboxes.get(textbox).targetItem == item)
+			{
+				textboxEntity = textbox;
+				foundTextbox = true;
+				break;
+			}
+		}
+
+		// Update isVisible based on distance
+		if (foundTextbox)
+		{
+			Textbox &textbox = registry.textboxes.get(textboxEntity);
+			textbox.isVisible = (distance < TEXTBOX_VISIBILITY_RADIUS);
+
+			RenderRequest renderRequest = getTextboxRenderRequest(textbox);
+
+			if (textbox.isVisible)
+			{
+				if (!registry.renderRequests.has(textboxEntity))
+				{
+					registry.renderRequests.insert(textboxEntity, renderRequest);
+				}
+			}
+			else
+			{
+				if (registry.renderRequests.has(textboxEntity))
+				{
+					registry.renderRequests.remove(textboxEntity);
+				}
+			}
+		}
 	}
 }

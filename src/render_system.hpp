@@ -45,7 +45,13 @@ class RenderSystem {
 		textures_path("terrain/grotto/grotto_recipe_book.png"),
 		textures_path("terrain/grotto/grotto_right_bookshelves.png"),
 		textures_path("terrain/grotto/grotto_top_bookshelves.png"),
-		textures_path("terrain/boundary_transparent.png")
+		textures_path("terrain/boundary_transparent.png"),
+		textures_path("terrain/forest/bush.png"),
+		textures_path("collectibles/magical_fruit.png"),
+		textures_path("collectibles/coffee_bean.png"),
+		textures_path("collectibles/textbox_magical_fruit.png"),
+		textures_path("collectibles/textbox_coffee_bean.png"),
+		textures_path("collectibles/textbox_enter_grotto.png")
 	};
 
 	std::array<GLuint, effect_count> effects;
