@@ -74,6 +74,44 @@ const float TEXTBOX_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 4;
 const float ITEM_PICKUP_RADIUS = (float)70;
 const float TEXTBOX_VISIBILITY_RADIUS = (float)70;
 
+// Item and potion names
+const std::unordered_map<ItemType, std::string> ITEM_NAMES = {
+	{ItemType::POTION, "Potion"},
+	{ItemType::COFFEE_BEANS, "Coffee Beans"},
+	{ItemType::MAGICAL_FRUIT, "Magical Fruit"}
+};
+
+const std::unordered_map<PotionEffect, std::string> EFFECT_NAMES = {
+	{PotionEffect::FAILED, "Failed"},
+	{PotionEffect::SPEED, "Speed"}
+};
+
+// RECIPE LIST
+const std::vector<Recipe> RECIPES = {
+	{
+		.effect = PotionEffect::SPEED,
+		.highestQualityEffect = 3.0,
+		.highestQualityDuration = 180,
+		.finalPotionColor = vec3(0, 255, 255),
+		.ingredients = {
+			{.type=ItemType::COFFEE_BEANS, .amount=5, .grindAmount=1},
+			{.type=ItemType::MAGICAL_FRUIT, .amount=3, .grindAmount=0},
+		},
+		.steps = {
+			{.type = ActionType::MODIFY_HEAT, .value = 1},
+			{.type = ActionType::WAIT, .value = 2},
+			{.type = ActionType::ADD_INGREDIENT, .value = 0},
+			{.type = ActionType::ADD_INGREDIENT, .value = 1},
+			{.type = ActionType::STIR, .value = 3},
+			{.type = ActionType::WAIT, .value = 6},
+			{.type = ActionType::BOTTLE},
+		}
+	}
+};
+
+// Default time represented by each "WAIT" action
+const int DEFAULT_WAIT = 5;
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
 #endif

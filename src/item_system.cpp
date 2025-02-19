@@ -2,20 +2,26 @@
 #include <iostream>
 #include <fstream>
 
-Entity ItemSystem::createItem(const std::string& name, int type_id, int amount, bool isCollectable) {
+Entity ItemSystem::createItem(ItemType type, int amount, bool isCollectable) {
     Entity entity = Entity();
     
     Item& item = registry.items.emplace(entity);
-    item.type_id = type_id;
-    item.name = name;
+    item.type = type;
     item.amount = amount;
     item.isCollectable = isCollectable;
+
+    // Get name
+    if (type == ItemType::POTION) {
+        item.name = EFFECT_NAMES.at(type) + " Potion";
+    } else {
+        item.name = ITEM_NAMES.at(type);
+    }
     
     return entity;
 }
 
-Entity ItemSystem::createIngredient(const std::string& name, int type_id, int amount) {
-    Entity entity = createItem(name, type_id, amount, false);
+Entity ItemSystem::createIngredient(ItemType type, int amount) {
+    Entity entity = createItem(type, amount, false);
     
     // Add ingredient-specific component
     Ingredient& ingredient = registry.ingredients.emplace(entity);
@@ -24,8 +30,8 @@ Entity ItemSystem::createIngredient(const std::string& name, int type_id, int am
     return entity;
 }
 
-Entity ItemSystem::createPotion(const std::string& name, int type_id, int effect, int duration, const vec3& color, float quality) {
-    Entity entity = createItem(name, type_id, 1, false);
+Entity ItemSystem::createPotion(PotionEffect effect, int duration, const vec3& color, float quality, float effectValue) {
+    Entity entity = createItem(ItemType::POTION, 1, false);
     
     // Add potion-specific component
     Potion& potion = registry.potions.emplace(entity);
@@ -33,6 +39,7 @@ Entity ItemSystem::createPotion(const std::string& name, int type_id, int effect
     potion.duration = duration;
     potion.color = color;
     potion.quality = quality;
+    potion.effectValue = effectValue;
     
     return entity;
 }
@@ -47,8 +54,8 @@ void ItemSystem::step(float elapsed_ms) {
     (void)elapsed_ms;
 }
 
-Entity ItemSystem::createItemEntity(const std::string& name, int type_id, int amount) {
-    return createItem(name, type_id, amount, false);
+Entity ItemSystem::createItemEntity(ItemType type, int amount) {
+    return createItem(type, amount, false);
 }
 
 void ItemSystem::destroyItem(Entity item) {
@@ -69,7 +76,7 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
     for (Entity existing : inv.items) {
         if (registry.items.has(existing)) {
             Item& existing_item = registry.items.get(existing);
-            if (existing_item.type_id == item_comp.type_id) {
+            if (existing_item.type == item_comp.type) {
                 existing_item.amount += item_comp.amount;
                 destroyItem(item);
                 return true;
@@ -125,8 +132,7 @@ nlohmann::json ItemSystem::serializeItem(Entity item) const {
     
     const Item& item_comp = registry.items.get(item);
     data["saved_id"] = item.id();  // Store the Entity ID for reference during deserialization
-    data["type_id"] = item_comp.type_id;
-    data["name"] = item_comp.name;
+    data["type"] = item_comp.type;
     data["amount"] = item_comp.amount;
     
     // Serialize ingredient data if present
@@ -146,7 +152,8 @@ nlohmann::json ItemSystem::serializeItem(Entity item) const {
             {"effect", pot.effect},
             {"duration", pot.duration},
             {"color", {pot.color.x, pot.color.y, pot.color.z}},
-            {"quality", pot.quality}
+            {"quality", pot.quality},
+            {"effectValue", pot.effectValue}
         };
     }
     
@@ -177,10 +184,10 @@ nlohmann::json ItemSystem::serializeInventory(Entity inventory) const {
 
 Entity ItemSystem::deserializeItem(const nlohmann::json& data) {
     Entity entity;
-    
+
     std::string type = data.value("type", "basic");
     if (type == "ingredient") {
-        entity = createIngredient(data["name"], data["type_id"], data["amount"]);
+        entity = createIngredient(data["type"], data["amount"]);
         if (registry.ingredients.has(entity)) {
             Ingredient& ing = registry.ingredients.get(entity);
             auto& ing_data = data["ingredient"];
@@ -189,17 +196,16 @@ Entity ItemSystem::deserializeItem(const nlohmann::json& data) {
     } else if (type == "potion") {
         auto& pot_data = data["potion"];
         entity = createPotion(
-            data["name"],
-            data["type_id"],
             pot_data["effect"],
             pot_data["duration"],
             vec3(pot_data["color"][0], pot_data["color"][1], pot_data["color"][2]),
-            pot_data["quality"]
+            pot_data["quality"],
+            pot_data["effectValue"]
         );
     } else {
-        entity = createItem(data["name"], data["type_id"], data["amount"], false);
+        entity = createItem(data["type"], data["amount"], false);
     }
-    
+
     return entity;
 }
 

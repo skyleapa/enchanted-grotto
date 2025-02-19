@@ -21,7 +21,7 @@ target_include_directories(test_lib PUBLIC
 # Link required libraries
 target_link_libraries(test_lib PUBLIC
     ${OPENGL_LIBRARIES}
-    glfw
+    ${GLFW_LIBRARIES}
     ${SDL2_LIBRARIES}
     ${SDL2MIXER_LIBRARIES}
     glm::glm

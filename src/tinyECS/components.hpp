@@ -88,19 +88,43 @@ struct Mesh
 };
 
 // =============================== ENCHANTED GROTTO COMPONENTS =========================================
+
+// Potion Types
+// IMPORTANT: Add new effects to the end of the list to not break serialization!
+// IMPORTANT: Add the displayname for each PotionEffect to common.hpp EFFECT_NAME
+// Type descriptions and their values:
+// FAILED: A potion that did not match any of the ingredients listed in any recipe
+// SPEED: Increases player speed. Value is the speed multiplier
+enum class PotionEffect
+{
+	FAILED = 0,
+	SPEED = FAILED + 1
+};
+
 // represents a potion in our game
 struct Potion
 {
-	int effect; // NOTE: we can turn effect into an enum
-	int duration;
+	PotionEffect effect;
+	int duration;         // in seconds
+	float effectValue;    // Type-dependent value of potion 
+	float quality;        // 0-1, a summary of how good the potion is
 	vec3 color;
-	float quality;
+};
+
+// Item Types
+// IMPORTANT: Add new types to the end of the list to not break serialization!
+// IMPORTANT: Add the displayname for each ItemType to common.hpp ITEM_NAME
+enum class ItemType
+{
+	POTION = 0,
+	COFFEE_BEANS = POTION + 1,
+	MAGICAL_FRUIT = COFFEE_BEANS + 1
 };
 
 // an item that can be in an inventory
 struct Item
 {
-	int type_id;
+	ItemType type;
 	std::string name;
 	bool isCollectable;
 	int amount;
@@ -122,9 +146,12 @@ struct Inventory
 
 struct Cauldron
 {
-	int heatLevel;             // 1-3
-	int stirLevel;             // 1-10
-	vec3 color;                // RGB color
+	float heatLevel;              // 0-1
+	vec3 color;                   // RGB color
+	bool filled;                  // Whether the cauldron has water
+	int timeElapsed;              // Time elapsed since water filled and heat knob turned, in ms
+	int timeSinceLastAction;      // Time elapsed since the last action, in ms
+	std::vector<Action> actions;  // Records player actions
 };
 
 // a menu of our game (recipe book menu, potion making menu, grinding menu...)
@@ -134,19 +161,54 @@ struct Menu
 	bool keyInput;	 // true if we allow key input
 };
 
+// Action types
+// WAIT: Records a wait time of some constant minutes defined in common.hpp (default 5).
+//       The value represents how many units of that constant wait time have been recorded.
+//       e.g. A WAIT with value 6 and default wait time of 5 is a 30 minute wait
+// ADD_INGREDINET: Player puts in an ingredient. The value is the index in the cauldron
+//                 inventory that stores the entity ID of that item
+// MODIFY_HEAT: Player modifies the heat level. Value is a float 0-1, the resulting heat level
+// STIR: Player stirs. Action should be recorded when player puts down the ladle.
+//       Value is the number of stirs recorded
+// BOTTLE: Should always be the last action. Value ignored.
+// Note that MODIFY_HEAT is always the first action, since the heat can only be modified once
+// the cauldron has been filled
+enum class ActionType
+{
+	WAIT,
+	ADD_INGREDIENT,
+	MODIFY_HEAT,
+	STIR,
+	BOTTLE
+};
+
+// An action that records a step done by the player in the cauldron
+struct Action
+{
+	ActionType type;
+	int value;
+};
+
+// A recipe-specific short format for storing ingredient requirements
+struct RecipeIngredient
+{
+	ItemType type;
+	int amount;
+	float grindAmount;
+};
+
 // a recipe in our recipe book menu
 struct Recipe
 {
-	std::string potionName;
-	int potionEffect;
-	int highestQualityEffect;
+	PotionEffect effect;
+	int highestQualityEffect;        // corresponds to effectValue
 	int highestQualityDuration;
 	vec3 finalPotionColor;
-	// commented out temporarily as Ingredient results in a compilation error
-	// std::unordered_map<Ingredient, int> ingredients; // the ingredient and quantity
-	int steps;         // TODO: Array[pair<ActionEnum, int>]
+	std::vector<RecipeIngredient> ingredients;
+	std::vector<Action> steps;
 };
 
+// TODO: Better Mortar and pestle representation
 struct MortarAndPestle
 {
 	std::vector<Entity> items;
