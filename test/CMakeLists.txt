@@ -2,8 +2,9 @@
 add_library(test_lib STATIC
     registry.cpp
     ../src/tinyECS/tiny_ecs.cpp
-    ../src/item_system.cpp
     ../src/tinyECS/registry.cpp
+    ../src/item_system.cpp
+    ../src/potion_system.cpp
 )
 
 # Add include directories for test library
@@ -29,20 +30,21 @@ target_link_libraries(test_lib PUBLIC
 
 # Test executable
 add_executable(
-  item_system_test
+  system_tests
   item_system_test.cpp
+  potion_system_test.cpp
 )
 
 # Link against GoogleTest and test library
 target_link_libraries(
-  item_system_test
+  system_tests
   PRIVATE
   GTest::gtest_main
   test_lib
 )
 
 # Include directories for test executable
-target_include_directories(item_system_test PRIVATE
+target_include_directories(system_tests PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/ext
     ${CMAKE_SOURCE_DIR}/ext/gl3w
@@ -55,4 +57,4 @@ target_include_directories(item_system_test PRIVATE
 
 # Discover tests
 include(GoogleTest)
-gtest_discover_tests(item_system_test) 
+gtest_discover_tests(system_tests) 

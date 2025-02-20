@@ -10,3 +10,4 @@ struct Item;
 struct Potion;
 struct Ingredient;
 struct Inventory; 
+struct Cauldron;

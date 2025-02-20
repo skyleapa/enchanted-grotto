@@ -106,15 +106,18 @@ const std::unordered_map<ItemType, std::string> ITEM_NAMES = {
 // IMPORTANT: Add the displayname for each PotionEffect to EFFECT_NAME
 // Type descriptions and their values:
 // FAILED: A potion that did not match any of the ingredients listed in any recipe
-// SPEED: Increases player speed. Value is the speed multiplier
+// WATER: When a player bottles a cauldron that doesn't have any ingredients
+// SPEED: Increases player speed. Value is the speed multiplier - 1
 enum class PotionEffect
 {
 	FAILED = 0,
-	SPEED = FAILED + 1
+	WATER = FAILED + 1,
+	SPEED = WATER + 1
 };
 
 const std::unordered_map<PotionEffect, std::string> EFFECT_NAMES = {
 	{PotionEffect::FAILED, "Failed"},
+	{PotionEffect::WATER, "Water"},
 	{PotionEffect::SPEED, "Speed"}
 };
 
@@ -124,19 +127,15 @@ const std::unordered_map<PotionEffect, std::string> EFFECT_NAMES = {
 //       e.g. A WAIT with value 6 and default wait time of 5 is a 30 minute wait
 // ADD_INGREDINET: Player puts in an ingredient. The value is the index in the cauldron
 //                 inventory that stores the entity ID of that item
-// MODIFY_HEAT: Player modifies the heat level. Value is a float 0-1, the resulting heat level
+// MODIFY_HEAT: Player modifies the heat level. Value is an int 1-100, the resulting heat level
 // STIR: Player stirs. Action should be recorded when player puts down the ladle.
 //       Value is the number of stirs recorded
-// BOTTLE: Should always be the last action. Value ignored.
-// Note that MODIFY_HEAT is always the first action, since the heat can only be modified once
-// the cauldron has been filled
 enum class ActionType
 {
 	WAIT,
 	ADD_INGREDIENT,
 	MODIFY_HEAT,
-	STIR,
-	BOTTLE
+	STIR
 };
 
 // An action that records a step done by the player in the cauldron
@@ -169,27 +168,46 @@ struct Recipe
 const std::vector<Recipe> RECIPES = {
 	{
 		.effect = PotionEffect::SPEED,
-		.highestQualityEffect = 3.0f,
+		.highestQualityEffect = 3.0f,       // 300% faster (4x as fast)
 		.highestQualityDuration = 180,
-		.finalPotionColor = vec3(0, 255, 255),
+		.finalPotionColor = vec3(255, 157, 35),
 		.ingredients = {
-			{.type=ItemType::COFFEE_BEANS, .amount=5, .grindAmount=1},
-			{.type=ItemType::MAGICAL_FRUIT, .amount=3, .grindAmount=0},
+			{.type=ItemType::COFFEE_BEANS, .amount=5, .grindAmount=1.0f},
+			{.type=ItemType::MAGICAL_FRUIT, .amount=3, .grindAmount=0.0f},
 		},
 		.steps = {
-			{.type = ActionType::MODIFY_HEAT, .value = 1},
+			{.type = ActionType::MODIFY_HEAT, .value = 100},
 			{.type = ActionType::WAIT, .value = 2},
 			{.type = ActionType::ADD_INGREDIENT, .value = 0},
 			{.type = ActionType::ADD_INGREDIENT, .value = 1},
 			{.type = ActionType::STIR, .value = 3},
-			{.type = ActionType::WAIT, .value = 6},
-			{.type = ActionType::BOTTLE},
+			{.type = ActionType::WAIT, .value = 6}
 		}
 	}
 };
 
-// Default time represented by each "WAIT" action
-const int DEFAULT_WAIT = 5;
+// Default time represented by each "WAIT" action, in ms
+const int DEFAULT_WAIT = 5000;
+
+// Potion settings
+const vec3 DEFAULT_COLOR = vec3(116, 204, 244);
+const float MIN_POTENCY_PERCENTAGE = 0.1;
+const float MIN_DURATION_PERCENTAGE = 0.05;
+
+// Cauldron color settings
+const int COLOR_FADE_DURATION = 2000;
+
+// Recipe penalty settings
+// If potion difficulty > 1, potions are harder to make good quality and vice versa
+// If potion difficulty = 0, potions are always the highest quality
+// Each penalty is multiplied by the difference in value to the recipe
+const float POTION_DIFFICULTY = 1.0f;
+const float INGREDIENT_TYPE_PENALTY = 0.5f;
+const float INGREDIENT_AMOUNT_PENALTY = 0.1f;
+const float INGREDIENT_GRIND_PENALTY = 1.0f;
+const float STIR_PENALTY = 0.3f;
+const float WAIT_PENALTY = 0.2f;
+const float HEAT_PENALTY = 0.01f; // Heat is measured 1-100
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f

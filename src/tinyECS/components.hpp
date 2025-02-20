@@ -88,7 +88,10 @@ struct Mesh
 };
 
 // =============================== ENCHANTED GROTTO COMPONENTS =========================================
+
 // represents a potion in our game
+// note that cauldron entities may have this component too, so
+// add an if condition if potions need to be looped through
 struct Potion
 {
 	PotionEffect effect;
@@ -123,12 +126,14 @@ struct Inventory
 
 struct Cauldron
 {
-	float heatLevel;              // 0-1
-	vec3 color;                   // RGB color
-	bool filled;                  // Whether the cauldron has water
-	int timeElapsed;              // Time elapsed since water filled and heat knob turned, in ms
-	int timeSinceLastAction;      // Time elapsed since the last action, in ms
-	std::vector<Action> actions;  // Records player actions
+	int heatLevel = 0;                // 0-100
+	vec3 color = DEFAULT_COLOR;       // RGB color
+	bool filled = false;              // Whether the cauldron has water
+	int timeElapsed = 0;              // Time elapsed since water filled and heat knob turned, in ms
+	int timeSinceLastAction = 0;      // Time elapsed since the last action, in ms. -1 means
+	int colorElapsed = 0;             // Time in ms for color updates
+	std::vector<Action> actions;      // Records player actions
+	// If stir quality ever gets added, a penalty can be recorded here
 };
 
 // a menu of our game (recipe book menu, potion making menu, grinding menu...)
