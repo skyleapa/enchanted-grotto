@@ -97,7 +97,7 @@ Potion PotionSystem::bottlePotion(Entity cauldron) {
 	cc.timeElapsed = 0;
 	cc.timeSinceLastAction = 0;
 	cc.actions.clear();
-    return potion;
+	return potion;
 }
 
 ////////////////////////////
@@ -144,7 +144,7 @@ Potion PotionSystem::getPotion(Entity cauldron) {
 	if (registry.potions.has(cauldron)) {
 		return registry.potions.get(cauldron);
 	}
-    return getDefaultPotion();
+	return getDefaultPotion();
 }
 
 Potion PotionSystem::getDefaultPotion() {
@@ -154,7 +154,7 @@ Potion PotionSystem::getDefaultPotion() {
 	potion.effect = PotionEffect::WATER;
 	potion.effectValue = 0;
 	potion.quality = 1.0f;
-    return potion;
+	return potion;
 }
 
 vec3 PotionSystem::interpolateColor(vec3 init, vec3 end, float ratio) {
@@ -167,7 +167,7 @@ vec3 PotionSystem::interpolateColor(vec3 init, vec3 end, float ratio) {
 			res[i] = init[i] - diff;
 		}
 	}
-    return res;
+	return res;
 }
 
 ///////////// Potion calculation functions ///////////
