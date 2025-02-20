@@ -312,13 +312,10 @@ void WorldSystem::restart_game()
 void WorldSystem::create_forest()
 {
 	// create boundaries
-	create_boundary_line(renderer, vec2({WINDOW_WIDTH_PX / 2, GRID_CELL_HEIGHT_PX * 1.3}), vec2({WINDOW_WIDTH_PX, BOUNDARY_LINE_THICKNESS}));		 // top
-	create_boundary_line(renderer, vec2({WINDOW_WIDTH_PX / 2, WINDOW_HEIGHT_PX}), vec2({WINDOW_WIDTH_PX, BOUNDARY_LINE_THICKNESS}));				 // bottom
-	create_boundary_line(renderer, vec2({0, WINDOW_HEIGHT_PX / 2}), vec2({BOUNDARY_LINE_THICKNESS, WINDOW_HEIGHT_PX}));								 // left
-	create_boundary_line(renderer, vec2({WINDOW_WIDTH_PX, WINDOW_HEIGHT_PX / 2}), vec2({BOUNDARY_LINE_THICKNESS, WINDOW_HEIGHT_PX}));				 // right
-	create_boundary_line(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 2), vec2({GRID_CELL_WIDTH_PX * 5, BOUNDARY_LINE_THICKNESS})); // grotto bottom
-	create_boundary_line(renderer, vec2(GRID_CELL_WIDTH_PX * 17.2, GRID_CELL_HEIGHT_PX), vec2({BOUNDARY_LINE_THICKNESS, GRID_CELL_HEIGHT_PX * 2}));	 // grotto left
-	create_boundary_line(renderer, vec2(GRID_CELL_WIDTH_PX * 22.8, GRID_CELL_HEIGHT_PX), vec2({BOUNDARY_LINE_THICKNESS, GRID_CELL_HEIGHT_PX * 2}));	 // grotto right
+	for (const auto &[position, scale] : biome_boundaries.at((int)BIOME::FOREST))
+	{
+		create_boundary_line(renderer, position, scale);
+	}
 
 	// create forest bridge
 	createForestBridge(renderer, vec2(307, 485));
@@ -350,16 +347,18 @@ void WorldSystem::create_forest()
 void WorldSystem::create_grotto()
 {
 	// positions are according to sample grotto interior
-	create_boundary_line(renderer, vec2({WINDOW_WIDTH_PX / 2, GRID_CELL_HEIGHT_PX * 4}), vec2({WINDOW_WIDTH_PX, BOUNDARY_LINE_THICKNESS})); // top
-	create_boundary_line(renderer, vec2({WINDOW_WIDTH_PX / 2, WINDOW_HEIGHT_PX}), vec2({WINDOW_WIDTH_PX, BOUNDARY_LINE_THICKNESS}));		// bottom
-	create_boundary_line(renderer, vec2({0, WINDOW_HEIGHT_PX / 2}), vec2({BOUNDARY_LINE_THICKNESS, WINDOW_HEIGHT_PX}));						// left
-	create_boundary_line(renderer, vec2({WINDOW_WIDTH_PX, WINDOW_HEIGHT_PX / 2}), vec2({BOUNDARY_LINE_THICKNESS, WINDOW_HEIGHT_PX}));		// right
-	create_boundary_line(renderer, vec2({GRID_CELL_WIDTH_PX * 20.5, GRID_CELL_HEIGHT_PX * 13.6}), vec2({190, BOUNDARY_LINE_THICKNESS}));	// door
+	for (const auto &[position, scale] : biome_boundaries.at((int)BIOME::GROTTO))
+	{
+		create_boundary_line(renderer, position, scale);
+	}
 
-	create_grotto_non_interactive_entities(renderer, vec2({GRID_CELL_WIDTH_PX * 20.5, GRID_CELL_HEIGHT_PX * 9}), vec2({185, 315}), 0, (GLuint)TEXTURE_ASSET_ID::GROTTO_CARPET, 0);
-	create_grotto_non_interactive_entities(renderer, vec2({GRID_CELL_WIDTH_PX * 21, GRID_CELL_HEIGHT_PX * 3}), vec2({335, 260}), 180, (GLuint)TEXTURE_ASSET_ID::GROTTO_TOP_BOOKSHELF, 1);
-	create_grotto_non_interactive_entities(renderer, vec2({GRID_CELL_WIDTH_PX * 24.2, GRID_CELL_HEIGHT_PX * 9.1}), vec2({90, 429}), 180, (GLuint)TEXTURE_ASSET_ID::GROTTO_RIGHT_BOOKSHELF, 1);
-	create_grotto_non_interactive_entities(renderer, vec2({GRID_CELL_WIDTH_PX * 4.8, GRID_CELL_HEIGHT_PX * 11.8}), vec2({510, 215}), 180, (GLuint)TEXTURE_ASSET_ID::GROTTO_POOL, 1);
+	// for (const auto& [position, size, rotation, texture, layer] : grotto_static_entity_pos) {
+	// 	create_grotto_static_entities(renderer, position, size, rotation, texture, layer);
+	// }
+	create_grotto_static_entities(renderer, vec2({GRID_CELL_WIDTH_PX * 20.5, GRID_CELL_HEIGHT_PX * 9}), vec2({180, 310}), 0, (GLuint)TEXTURE_ASSET_ID::GROTTO_CARPET, 0);
+	create_grotto_static_entities(renderer, vec2({GRID_CELL_WIDTH_PX * 21, GRID_CELL_HEIGHT_PX * 3}), vec2({335, 260}), 180, (GLuint)TEXTURE_ASSET_ID::GROTTO_TOP_BOOKSHELF, 1);
+	create_grotto_static_entities(renderer, vec2({GRID_CELL_WIDTH_PX * 24.2, GRID_CELL_HEIGHT_PX * 9.1}), vec2({90, 429}), 180, (GLuint)TEXTURE_ASSET_ID::GROTTO_RIGHT_BOOKSHELF, 1);
+	create_grotto_static_entities(renderer, vec2({GRID_CELL_WIDTH_PX * 4.8, GRID_CELL_HEIGHT_PX * 11.9}), vec2({510, 215}), 180, (GLuint)TEXTURE_ASSET_ID::GROTTO_POOL, 1);
 
 	create_cauldron(renderer, vec2({GRID_CELL_WIDTH_PX * 13.35, GRID_CELL_HEIGHT_PX * 5.85}), vec2({175, 280}), 8, "Cauldron");
 	create_mortar_pestle(renderer, vec2({GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22}), vec2({213, 141}), 9, "Mortar and Pestle");

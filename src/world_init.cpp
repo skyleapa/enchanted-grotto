@@ -168,7 +168,7 @@ Entity createForestRiver(RenderSystem *renderer, vec2 position)
 	return entity1;
 }
 
-Entity create_grotto_non_interactive_entities(RenderSystem *renderer, vec2 position, vec2 scale, float angle, GLuint texture_asset_id, float can_collide)
+Entity create_grotto_static_entities(RenderSystem *renderer, vec2 position, vec2 scale, float angle, GLuint texture_asset_id, float can_collide)
 {
 	auto entity = Entity();
 	if (can_collide == 1)

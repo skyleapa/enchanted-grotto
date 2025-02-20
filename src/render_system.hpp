@@ -45,7 +45,7 @@ class RenderSystem {
 		textures_path("terrain/grotto/grotto_recipe_book.png"),
 		textures_path("terrain/grotto/grotto_right_bookshelves.png"),
 		textures_path("terrain/grotto/grotto_top_bookshelves.png"),
-		textures_path("terrain/boundary_transparent.png"),
+		textures_path("terrain/boundary_black.png"),
 		textures_path("terrain/forest/bush.png"),
 		textures_path("interactables/magical_fruit.png"),
 		textures_path("interactables/coffee_bean.png"),

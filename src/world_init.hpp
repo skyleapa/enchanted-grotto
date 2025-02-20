@@ -17,7 +17,7 @@ Entity createForestBridge(RenderSystem *renderer, vec2 position);
 Entity createForestRiver(RenderSystem *renderer, vec2 position);
 
 // create static grotto items
-Entity create_grotto_non_interactive_entities(RenderSystem *renderer, vec2 position, vec2 scale, float angle, GLuint texture_asset_id, float can_collide);
+Entity create_grotto_static_entities(RenderSystem *renderer, vec2 position, vec2 scale, float angle, GLuint texture_asset_id, float can_collide);
 
 Entity create_boundary_line(RenderSystem *renderer, vec2 position, vec2 scale);
 

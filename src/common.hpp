@@ -5,6 +5,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <map>
 
 // glfw (OpenGL)
 #define NOMINMAX
@@ -80,6 +81,10 @@ const float TEXTBOX_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 4;
 
 const float ITEM_PICKUP_RADIUS = (float)70;
 const float TEXTBOX_VISIBILITY_RADIUS = (float)70;
+
+extern const std::map<int, std::vector<std::tuple<vec2, vec2>>> biome_boundaries;
+
+extern const std::vector<std::tuple<vec2, vec2, float, GLuint, int>> grotto_static_entity_pos;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
