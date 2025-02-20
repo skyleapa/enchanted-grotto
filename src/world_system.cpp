@@ -361,9 +361,9 @@ void WorldSystem::create_grotto()
 	create_grotto_static_entities(renderer, vec2({GRID_CELL_WIDTH_PX * 4.8, GRID_CELL_HEIGHT_PX * 11.9}), vec2({510, 215}), 180, (GLuint)TEXTURE_ASSET_ID::GROTTO_POOL, 1);
 
 	create_cauldron(renderer, vec2({GRID_CELL_WIDTH_PX * 13.35, GRID_CELL_HEIGHT_PX * 5.85}), vec2({175, 280}), 8, "Cauldron");
-	create_mortar_pestle(renderer, vec2({GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22}), vec2({213, 141}), 9, "Mortar and Pestle");
-	create_recipe_book(renderer, vec2({GRID_CELL_WIDTH_PX * 4.15, GRID_CELL_HEIGHT_PX * 5.05}), vec2({108, 160}), 10, "Recipe Book");
-	create_chest(renderer, vec2({GRID_CELL_WIDTH_PX * 1.35, GRID_CELL_HEIGHT_PX * 5.2}), vec2({100, 150}), 11, "Chest");
+	createMortarPestle(renderer, vec2({GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22}), vec2({213, 141}), 9, "Mortar and Pestle");
+	createRecipeBook(renderer, vec2({GRID_CELL_WIDTH_PX * 4.15, GRID_CELL_HEIGHT_PX * 5.05}), vec2({108, 160}), 10, "Recipe Book");
+	createChest(renderer, vec2({GRID_CELL_WIDTH_PX * 1.35, GRID_CELL_HEIGHT_PX * 5.2}), vec2({100, 150}), 11, "Chest");
 }
 
 void WorldSystem::handle_collisions()
@@ -427,15 +427,6 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 	if (action == GLFW_RELEASE && key == GLFW_KEY_ESCAPE)
 	{
 		close_window();
-	}
-
-	// Resetting game
-	if (action == GLFW_RELEASE && key == GLFW_KEY_R)
-	{
-		int w, h;
-		glfwGetWindowSize(window, &w, &h);
-
-		restart_game();
 	}
 
 	if (action == GLFW_PRESS && key == GLFW_KEY_F)

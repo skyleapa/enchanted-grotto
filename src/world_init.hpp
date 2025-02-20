@@ -43,13 +43,13 @@ Entity createCoffeeBean(RenderSystem *renderer, vec2 position, int id, std::stri
 Entity create_cauldron(RenderSystem *renderer, vec2 position, vec2 scale, int id, std::string name);
 
 // mortar and pestle
-Entity create_mortar_pestle(RenderSystem *renderer, vec2 position, vec2 scale, int id, std::string name);
+Entity createMortarPestle(RenderSystem *renderer, vec2 position, vec2 scale, int id, std::string name);
 
 // chest
-Entity create_chest(RenderSystem *renderer, vec2 position, vec2 scale, int id, std::string name);
+Entity createChest(RenderSystem *renderer, vec2 position, vec2 scale, int id, std::string name);
 
 // recipe book
-Entity create_recipe_book(RenderSystem *renderer, vec2 position, vec2 scale, int id, std::string name);
+Entity createRecipeBook(RenderSystem *renderer, vec2 position, vec2 scale, int id, std::string name);
 
 // interaction textbox
 Entity createTextbox(RenderSystem *renderer, vec2 position, Entity itemEntity);

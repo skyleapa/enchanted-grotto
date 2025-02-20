@@ -329,8 +329,8 @@ void RenderSystem::draw()
 	glViewport(0, 0, w, h);
 	glDepthRange(0.00001, 10);
 
-	// white background
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	// black background
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 	glClearDepth(10.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -388,6 +388,11 @@ std::vector<Entity> RenderSystem::process_render_requests() {
 		-	Terrain: Trees, rocks, bushes
 		-	Structure: Bridge, river
 		*/
+
+		// ITEM always renders above everything
+		if (renderA.layer == RENDER_LAYER::ITEM) return false;
+		if (renderB.layer == RENDER_LAYER::ITEM) return true;
+		
 		// background always renders first
 		if (renderA.layer == RENDER_LAYER::BACKGROUND) return true;
 		if (renderB.layer == RENDER_LAYER::BACKGROUND) return false;

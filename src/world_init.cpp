@@ -45,7 +45,7 @@ Entity createGridLine(vec2 start_pos, vec2 end_pos)
 			TEXTURE_ASSET_ID::TEXTURE_COUNT,
 			EFFECT_ASSET_ID::EGG,
 			GEOMETRY_BUFFER_ID::DEBUG_LINE,
-			RENDER_LAYER::GRIDLINES,
+			RENDER_LAYER::BACKGROUND,
 		});
 
 	registry.colors.insert(
@@ -268,8 +268,8 @@ Entity createBush(RenderSystem *renderer, vec2 position)
 	auto entity = Entity();
 	Terrain &terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
-	terrain.height_ratio = 0.1f;
-	terrain.width_ratio = 0.2f;
+	terrain.height_ratio = 0.2f;
+	terrain.width_ratio = 0.45f;
 
 	// store a reference to the potentially re-used mesh object
 	Mesh &mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -395,7 +395,7 @@ Entity create_cauldron(RenderSystem *renderer, vec2 position, vec2 scale, int id
 	return entity;
 }
 
-Entity create_mortar_pestle(RenderSystem *renderer, vec2 position, vec2 scale, int id, std::string name)
+Entity createMortarPestle(RenderSystem *renderer, vec2 position, vec2 scale, int id, std::string name)
 {
 	auto entity = Entity();
 
@@ -434,7 +434,7 @@ Entity create_mortar_pestle(RenderSystem *renderer, vec2 position, vec2 scale, i
 	return entity;
 }
 
-Entity create_chest(RenderSystem *renderer, vec2 position, vec2 scale, int id, std::string name)
+Entity createChest(RenderSystem *renderer, vec2 position, vec2 scale, int id, std::string name)
 {
 	auto entity = Entity();
 
@@ -473,7 +473,7 @@ Entity create_chest(RenderSystem *renderer, vec2 position, vec2 scale, int id, s
 	return entity;
 }
 
-Entity create_recipe_book(RenderSystem *renderer, vec2 position, vec2 scale, int id, std::string name)
+Entity createRecipeBook(RenderSystem *renderer, vec2 position, vec2 scale, int id, std::string name)
 {
 	auto entity = Entity();
 
