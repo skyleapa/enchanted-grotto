@@ -234,7 +234,7 @@ Entity createGrottoEntrance(RenderSystem *renderer, vec2 position, int id, std::
 	entrance.target_biome = (GLuint)BIOME::GROTTO;
 
 	Item &item = registry.items.emplace(entity);
-	item.type_id = id;
+	item.type = ItemType::GROTTO_ENTRANCE;
 	item.name = name;
 	item.isCollectable = false;
 	item.amount = 1;
@@ -296,8 +296,8 @@ Entity createFruit(RenderSystem *renderer, vec2 position, int id, std::string na
 {
 	auto entity = Entity();
 
-	Item &item = registry.items.emplace(entity);
-	item.type_id = id;
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::MAGICAL_FRUIT;
 	item.name = name;
 	item.isCollectable = true; // Make sure the item can be collected
 	item.amount = amount;
@@ -327,9 +327,9 @@ Entity createFruit(RenderSystem *renderer, vec2 position, int id, std::string na
 Entity createCoffeeBean(RenderSystem *renderer, vec2 position, int id, std::string name, int amount)
 {
 	auto entity = Entity();
-
-	Item &item = registry.items.emplace(entity);
-	item.type_id = id;
+	
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::COFFEE_BEANS;
 	item.name = name;
 	item.isCollectable = true; // Make sure the item can be collected
 	item.amount = amount;
@@ -366,7 +366,7 @@ Entity create_cauldron(RenderSystem *renderer, vec2 position, vec2 scale, int id
 	terrain.width_ratio = 1.f;
 
 	Item &item = registry.items.emplace(entity);
-	item.type_id = id;
+	item.type = ItemType::CAULDRON;
 	item.name = name;
 	item.isCollectable = false;
 	item.amount = 0;
@@ -405,7 +405,7 @@ Entity createMortarPestle(RenderSystem *renderer, vec2 position, vec2 scale, int
 	terrain.width_ratio = 0.9f;
 
 	Item &item = registry.items.emplace(entity);
-	item.type_id = id;
+	item.type = ItemType::MORTAR_PESTLE;
 	item.name = name;
 	item.isCollectable = false;
 	item.amount = 0;
@@ -444,7 +444,7 @@ Entity createChest(RenderSystem *renderer, vec2 position, vec2 scale, int id, st
 	terrain.width_ratio = 1.f;
 
 	Item &item = registry.items.emplace(entity);
-	item.type_id = id;
+	item.type = ItemType::CHEST;
 	item.name = name;
 	item.isCollectable = false;
 	item.amount = 0;
@@ -483,7 +483,7 @@ Entity createRecipeBook(RenderSystem *renderer, vec2 position, vec2 scale, int i
 	terrain.width_ratio = 1.f;
 
 	Item &item = registry.items.emplace(entity);
-	item.type_id = id;
+	item.type = ItemType::RECIPE_BOOK;
 	item.name = name;
 	item.isCollectable = false;
 	item.amount = 0;

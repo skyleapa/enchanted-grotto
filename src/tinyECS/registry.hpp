@@ -28,7 +28,6 @@ public:
 	ComponentContainer<Inventory> inventories;
 	ComponentContainer<Cauldron> cauldrons;
 	ComponentContainer<Menu> menus;
-	ComponentContainer<Recipe> recipes;
 	ComponentContainer<MortarAndPestle> mortarAndPestles;
 	ComponentContainer<Moving> moving;
 	ComponentContainer<Terrain> terrains;
@@ -54,7 +53,6 @@ public:
 		registry_list.push_back(&inventories);
 		registry_list.push_back(&cauldrons);
 		registry_list.push_back(&menus);
-		registry_list.push_back(&recipes);
 		registry_list.push_back(&mortarAndPestles);
 		registry_list.push_back(&moving);
 		registry_list.push_back(&terrains);
