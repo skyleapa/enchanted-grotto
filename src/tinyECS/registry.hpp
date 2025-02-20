@@ -31,6 +31,7 @@ public:
 	ComponentContainer<MortarAndPestle> mortarAndPestles;
 	ComponentContainer<Moving> moving;
 	ComponentContainer<Terrain> terrains;
+	ComponentContainer<Entrance> entrances;
 	ComponentContainer<Textbox> textboxes;
 
 	// constructor that adds all containers for looping over them
@@ -55,6 +56,8 @@ public:
 		registry_list.push_back(&mortarAndPestles);
 		registry_list.push_back(&moving);
 		registry_list.push_back(&terrains);
+		registry_list.push_back(&entrances);
+		registry_list.push_back(&textboxes);
 	}
 
 	void clear_all_components() {

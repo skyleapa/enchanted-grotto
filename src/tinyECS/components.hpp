@@ -13,12 +13,12 @@ struct Player
 // All data relevant to the shape and motion of entities
 struct Motion
 {
-	vec2 position = {0, 0};
+	vec2 position = { 0, 0 };
 	float angle = 0;
-	vec2 velocity = {0, 0};
-	vec2 scale = {10, 10};
+	vec2 velocity = { 0, 0 };
+	vec2 scale = { 10, 10 };
 	int moving_direction = 0;
-	vec2 previous_position = {0, 0};
+	vec2 previous_position = { 0, 0 };
 };
 
 // Stucture to store collision information
@@ -26,7 +26,7 @@ struct Collision
 {
 	// Note, the first object is stored in the ECS container.entities
 	Entity other; // the second object involved in the collision
-	Collision(Entity &other) { this->other = other; };
+	Collision(Entity& other) { this->other = other; };
 };
 
 // Data structure for toggling debug mode
@@ -40,9 +40,12 @@ extern Debug debugging;
 // Sets the brightness of the screen
 struct ScreenState
 {
-	float darken_screen_factor = -1;
+	float darken_screen_factor = 0;
 	GLuint biome = 1; // default to forest
 	std::vector<int> pressed_keys = {};
+	bool is_switching_biome = false;
+	GLuint switching_to_biome = 1; // track biome that is being switched to
+	float fade_status = 0; // 0 - before fade out, 1 after fade out, 2 - after fade in
 };
 
 // A struct to refer to debugging graphics in the ECS
@@ -54,8 +57,8 @@ struct DebugComponent
 // used to hold grid line start and end positions
 struct GridLine
 {
-	vec2 start_pos = {0, 0};
-	vec2 end_pos = {10, 10}; // default to diagonal line
+	vec2 start_pos = { 0, 0 };
+	vec2 end_pos = { 10, 10 }; // default to diagonal line
 };
 
 // A timer that will be associated to dying chicken
@@ -81,8 +84,8 @@ struct TexturedVertex
 // Mesh datastructure for storing vertex and index buffers
 struct Mesh
 {
-	static bool loadFromOBJFile(std::string obj_path, std::vector<ColoredVertex> &out_vertices, std::vector<uint16_t> &out_vertex_indices, vec2 &out_size);
-	vec2 original_size = {1, 1};
+	static bool loadFromOBJFile(std::string obj_path, std::vector<ColoredVertex>& out_vertices, std::vector<uint16_t>& out_vertex_indices, vec2& out_size);
+	vec2 original_size = { 1, 1 };
 	std::vector<ColoredVertex> vertices;
 	std::vector<uint16_t> vertex_indices;
 };
@@ -167,6 +170,11 @@ struct Terrain
 	float height_ratio = 1.0f;
 };
 
+struct Entrance
+{
+	GLuint target_biome = 0;
+};
+
 struct Textbox
 {
 	Entity targetItem;		// The item this textbox belongs to
@@ -205,14 +213,26 @@ enum class TEXTURE_ASSET_ID
 	FOREST_RIVER_BELOW = FOREST_RIVER_ABOVE + 1,
 	FOREST_BG = FOREST_RIVER_BELOW + 1,
 	TREE = FOREST_BG + 1,
-	BUSH = TREE + 1,
+	GROTTO_ENTRANCE = TREE + 1,
+	GROTTO_BG = GROTTO_ENTRANCE + 1,
+	GROTTO_CARPET = GROTTO_BG + 1,
+	GROTTO_CAULDRON = GROTTO_CARPET + 1,
+	GROTTO_CHEST = GROTTO_CAULDRON + 1,
+	GROTTO_MORTAR_PESTLE = GROTTO_CHEST + 1,
+	GROTTO_POOL = GROTTO_MORTAR_PESTLE + 1,
+	GROTTO_RECIPE_BOOK = GROTTO_POOL + 1,
+	GROTTO_RIGHT_BOOKSHELF = GROTTO_RECIPE_BOOK + 1,
+	GROTTO_TOP_BOOKSHELF = GROTTO_RIGHT_BOOKSHELF + 1,
+	BOUNDARY_LINE = GROTTO_TOP_BOOKSHELF + 1,
+	BUSH = BOUNDARY_LINE + 1,
 	FRUIT = BUSH + 1,
 	COFFEE_BEAN = FRUIT + 1,
-	GROTTO_ENTRANCE = COFFEE_BEAN + 1,
-	TEXTBOX_FRUIT = GROTTO_ENTRANCE + 1,
+	TEXTBOX_FRUIT = COFFEE_BEAN + 1,
 	TEXTBOX_COFFEE_BEAN = TEXTBOX_FRUIT + 1,
 	TEXTBOX_ENTER_GROTTO = TEXTBOX_COFFEE_BEAN + 1,
-	TEXTURE_COUNT = TEXTBOX_ENTER_GROTTO + 1
+	TEXTBOX_GROTTO_EXIT = TEXTBOX_ENTER_GROTTO + 1,
+	TEXTBOX_CAULDRON = TEXTBOX_GROTTO_EXIT + 1,
+	TEXTURE_COUNT = TEXTBOX_CAULDRON + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 
@@ -223,7 +243,8 @@ enum class EFFECT_ASSET_ID
 	CHICKEN = EGG + 1,
 	TEXTURED = CHICKEN + 1,
 	BACKGROUND = TEXTURED + 1,
-	EFFECT_COUNT = BACKGROUND + 1
+	FADE = BACKGROUND + 1,
+	EFFECT_COUNT = FADE + 1
 };
 const int effect_count = (int)EFFECT_ASSET_ID::EFFECT_COUNT;
 
@@ -243,8 +264,8 @@ enum class RENDER_LAYER
 	BACKGROUND,
 	TERRAIN,
 	STRUCTURE,
-	ITEM,
-	PLAYER
+	PLAYER,
+	ITEM
 };
 
 struct RenderRequest
@@ -259,7 +280,8 @@ struct RenderRequest
 enum class BIOME
 {
 	GROTTO = 0,
-	FOREST = GROTTO + 1
+	FOREST = GROTTO + 1,
+	BLANK = FOREST + 1,
 };
 
 enum class DIRECTION

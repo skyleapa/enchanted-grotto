@@ -16,11 +16,12 @@ vec4 get_bounding_box(const Motion& motion, float width_ratio, float height_rati
 	float box_x = motion.position.x - box_width / 2;				// center the box on x-axis
 	float box_y = motion.position.y + full_height / 2 - box_height; // put the box on the bottom
 
-	return {box_x, box_y, box_width, box_height};
+	return { box_x, box_y, box_width, box_height };
 }
 
 bool collides(const Motion& player_motion, const Motion& terrain_motion, const Terrain* terrain)
 {
+
 	// default full bounding box size
 	float player_width_ratio = 1.0f, player_height_ratio = 1.0f;
 	float terrain_width_ratio = 1.0f, terrain_height_ratio = 1.0f;
@@ -50,20 +51,20 @@ void PhysicsSystem::step(float elapsed_ms)
 	// get our one player
 	if (registry.players.entities.empty())
 		return;
-		
+
 	Entity player_entity = registry.players.entities[0];
 	if (!registry.motions.has(player_entity))
 		return;
 
-	Motion &player_motion = registry.motions.get(player_entity);
+	Motion& player_motion = registry.motions.get(player_entity);
 
 	for (Entity terrain_entity : registry.terrains.entities)
 	{
 		if (!registry.motions.has(terrain_entity))
 			continue;
 
-		Motion &terrain_motion = registry.motions.get(terrain_entity);
-		Terrain &terrain = registry.terrains.get(terrain_entity);
+		Motion& terrain_motion = registry.motions.get(terrain_entity);
+		Terrain& terrain = registry.terrains.get(terrain_entity);
 
 		// only check collisions if one is a player and the other is terrain
 		if (collides(player_motion, terrain_motion, &terrain))

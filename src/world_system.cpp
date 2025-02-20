@@ -1,6 +1,7 @@
 // Header
 #include "world_system.hpp"
 #include "world_init.hpp"
+#include "common.hpp"
 
 // stlib
 #include <cassert>
@@ -38,7 +39,7 @@ WorldSystem::~WorldSystem()
 // Debugging
 namespace
 {
-	void glfw_err_cb(int error, const char *desc)
+	void glfw_err_cb(int error, const char* desc)
 	{
 		std::cerr << error << ": " << desc << std::endl;
 	}
@@ -52,7 +53,7 @@ void WorldSystem::close_window()
 
 // World initialization
 // Note, this has a lot of OpenGL specific things, could be moved to the renderer
-GLFWwindow *WorldSystem::create_window()
+GLFWwindow* WorldSystem::create_window()
 {
 
 	///////////////////////////////////////
@@ -92,12 +93,12 @@ GLFWwindow *WorldSystem::create_window()
 	// Input is handled using GLFW, for more info see
 	// http://www.glfw.org/docs/latest/input_guide.html
 	glfwSetWindowUserPointer(window, this);
-	auto key_redirect = [](GLFWwindow *wnd, int _0, int _1, int _2, int _3)
-	{ ((WorldSystem *)glfwGetWindowUserPointer(wnd))->on_key(_0, _1, _2, _3); };
-	auto cursor_pos_redirect = [](GLFWwindow *wnd, double _0, double _1)
-	{ ((WorldSystem *)glfwGetWindowUserPointer(wnd))->on_mouse_move({_0, _1}); };
-	auto mouse_button_pressed_redirect = [](GLFWwindow *wnd, int _button, int _action, int _mods)
-	{ ((WorldSystem *)glfwGetWindowUserPointer(wnd))->on_mouse_button_pressed(_button, _action, _mods); };
+	auto key_redirect = [](GLFWwindow* wnd, int _0, int _1, int _2, int _3)
+		{ ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_key(_0, _1, _2, _3); };
+	auto cursor_pos_redirect = [](GLFWwindow* wnd, double _0, double _1)
+		{ ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_move({ _0, _1 }); };
+	auto mouse_button_pressed_redirect = [](GLFWwindow* wnd, int _button, int _action, int _mods)
+		{ ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_button_pressed(_button, _action, _mods); };
 
 	glfwSetKeyCallback(window, key_redirect);
 	glfwSetCursorPosCallback(window, cursor_pos_redirect);
@@ -130,15 +131,15 @@ bool WorldSystem::start_and_load_sounds()
 	if (background_music == nullptr || chicken_dead_sound == nullptr || chicken_eat_sound == nullptr)
 	{
 		fprintf(stderr, "Failed to load sounds\n %s\n %s\n %s\n make sure the data directory is present",
-				audio_path("music.wav").c_str(),
-				audio_path("chicken_dead.wav").c_str(),
-				audio_path("chicken_eat.wav").c_str());
+			audio_path("music.wav").c_str(),
+			audio_path("chicken_dead.wav").c_str(),
+			audio_path("chicken_eat.wav").c_str());
 		return false;
 	}
 	return true;
 }
 
-void WorldSystem::init(RenderSystem *renderer_arg)
+void WorldSystem::init(RenderSystem* renderer_arg)
 {
 
 	this->renderer = renderer_arg;
@@ -154,19 +155,68 @@ void WorldSystem::init(RenderSystem *renderer_arg)
 // Update our game world
 bool WorldSystem::step(float elapsed_ms_since_last_update)
 {
+
+	// handle switching biomes
+	ScreenState& screen = registry.screenStates.components[0];
+	if (registry.players.entities.size() < 1)
+		return true;
+	Entity& player = registry.players.entities[0];
+	if (!registry.motions.has(player))
+		return true;
+	Motion& player_motion = registry.motions.get(player);
+
+	if (screen.is_switching_biome)
+	{
+		if (screen.fade_status == 0)
+		{
+			screen.darken_screen_factor += elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
+			if (screen.darken_screen_factor >= 1)
+				screen.fade_status = 1; // after fade out
+		}
+		else if (screen.fade_status == 1)
+		{
+			if (screen.biome != screen.switching_to_biome)
+			{
+				screen.biome = screen.switching_to_biome;
+				restart_game();
+				screen.darken_screen_factor = 1;
+				if (screen.biome == (GLuint)BIOME::GROTTO)
+				{
+					player_motion.scale = { PLAYER_BB_WIDTH * PlAYER_BB_GROTTO_SIZE_FACTOR, PLAYER_BB_HEIGHT * PlAYER_BB_GROTTO_SIZE_FACTOR };
+					player_motion.position = vec2({ player_motion.position.x, GRID_CELL_HEIGHT_PX * 11 }); // bring player to front of door
+				}
+				else
+				{
+					player_motion.scale = { PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT };
+				}
+			}
+			screen.darken_screen_factor -= elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
+			if (screen.darken_screen_factor <= 0)
+				screen.fade_status = 2; // after fade in
+		}
+		else
+		{
+			// complete biome switch
+			screen.darken_screen_factor = 0;
+			screen.is_switching_biome = false;
+			screen.fade_status = 0;
+			screen.pressed_keys = {};
+		}
+		return true; // don't need to do any other steps
+	}
 	// Remove debug info from the last step
 	while (registry.debugComponents.entities.size() > 0)
 		registry.remove_all_components_of(registry.debugComponents.entities.back());
 
 	// Removing out of screen entities
-	auto &motions_registry = registry.motions;
+	auto& motions_registry = registry.motions;
 
 	// Remove entities that leave the screen on the left side
 	// Iterate backwards to be able to remove without unterfering with the next object to visit
 	// (the containers exchange the last element with the current)
 	for (int i = (int)motions_registry.components.size() - 1; i >= 0; --i)
 	{
-		Motion &motion = motions_registry.components[i];
+		Motion& motion = motions_registry.components[i];
 		if (motion.position.x + abs(motion.scale.x) < 0.f)
 		{
 			if (!registry.players.has(motions_registry.entities[i])) // don't remove the player
@@ -175,12 +225,10 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	}
 
 	// move the character
-	Entity &player = registry.players.entities[0];
-	if (registry.moving.has(player) && registry.motions.has(player))
+	if (registry.moving.has(player))
 	{
-		Motion &player_motion = registry.motions.get(player);
 		player_motion.previous_position = player_motion.position;
-		float delta = elapsed_ms_since_last_update * 0.001f;
+		float delta = elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
 
 		if (player_motion.moving_direction == (int)DIRECTION::UP)
 		{
@@ -197,21 +245,6 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		else if (player_motion.moving_direction == (int)DIRECTION::LEFT)
 		{
 			player_motion.position.x -= player_motion.velocity.x * delta;
-		}
-	}
-
-	// assert(registry.screenStates.components.size() <= 1);
-	// ScreenState &screen = registry.screenStates.components[0];
-
-	float min_counter_ms = 3000.f;
-	for (Entity entity : registry.deathTimers.entities)
-	{
-		// progress timer
-		DeathTimer &counter = registry.deathTimers.get(entity);
-		counter.counter_ms -= elapsed_ms_since_last_update;
-		if (counter.counter_ms < min_counter_ms)
-		{
-			min_counter_ms = counter.counter_ms;
 		}
 	}
 
@@ -263,14 +296,28 @@ void WorldSystem::restart_game()
 
 	if (registry.players.components.size() == 0)
 	{
-		createPlayer(renderer, vec2(2 * GRID_CELL_WIDTH_PX, 2 * GRID_CELL_HEIGHT_PX));
+		createPlayer(renderer, vec2(GROTTO_ENTRANCE_X, GROTTO_ENTRANCE_Y + 50));
 	}
 
-	create_forest();
+	int biome = registry.screenStates.components[0].biome;
+	if (biome == (GLuint)BIOME::FOREST)
+	{
+		create_forest();
+	}
+	else if (biome == (GLuint)BIOME::GROTTO)
+	{
+		create_grotto();
+	}
 }
 
 void WorldSystem::create_forest()
 {
+	// create boundaries
+	for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::FOREST))
+	{
+		create_boundary_line(renderer, position, scale);
+	}
+
 	// create forest bridge
 	createForestBridge(renderer, vec2(307, 485));
 
@@ -296,42 +343,65 @@ void WorldSystem::create_forest()
 	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5), 4, "Coffee Bean", 1);
 	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 9.9, GRID_CELL_HEIGHT_PX * 12.1), 5, "Coffee Bean", 1);
 	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 12, GRID_CELL_HEIGHT_PX * 12.7), 6, "Coffee Bean", 1);
+}
 
-	//createTextboxMagicalFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 1));
+void WorldSystem::create_grotto()
+{
+	// positions are according to sample grotto interior
+	for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::GROTTO))
+	{
+		create_boundary_line(renderer, position, scale);
+	}
+
+	for (const auto& [position, size, rotation, texture, layer] : grotto_static_entity_pos) {
+		create_grotto_static_entities(renderer, position, size, rotation, texture, layer);
+	}
+
+	create_cauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.35, GRID_CELL_HEIGHT_PX * 5.85 }), vec2({ 175, 280 }), 8, "Cauldron");
+	createMortarPestle(renderer, vec2({ GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22 }), vec2({ 213, 141 }), 9, "Mortar and Pestle");
+	createRecipeBook(renderer, vec2({ GRID_CELL_WIDTH_PX * 4.15, GRID_CELL_HEIGHT_PX * 5.05 }), vec2({ 108, 160 }), 10, "Recipe Book");
+	createChest(renderer, vec2({ GRID_CELL_WIDTH_PX * 1.35, GRID_CELL_HEIGHT_PX * 5.2 }), vec2({ 100, 150 }), 11, "Chest");
 }
 
 void WorldSystem::handle_collisions()
 {
 	// get our player entity
-	if (registry.players.entities.empty()) return;
+	if (registry.players.entities.empty())
+		return;
 	Entity player_entity = registry.players.entities[0];
-	if (!registry.motions.has(player_entity)) return;
+	if (!registry.motions.has(player_entity))
+		return;
 
-	Motion &player_motion = registry.motions.get(player_entity);
+	Motion& player_motion = registry.motions.get(player_entity);
 
 	for (Entity collision_entity : registry.collisions.entities)
 	{
-		if (!registry.collisions.has(collision_entity)) continue;
-		Collision &collision = registry.collisions.get(collision_entity);
+		if (!registry.collisions.has(collision_entity))
+			continue;
+		Collision& collision = registry.collisions.get(collision_entity);
 
 		Entity terrain_entity = (collision_entity == player_entity) ? collision.other : collision_entity;
 
-		if (!registry.terrains.has(terrain_entity) || !registry.motions.has(terrain_entity)) 
+		if (!registry.terrains.has(terrain_entity) || !registry.motions.has(terrain_entity))
 			continue;
 
-		Terrain &terrain = registry.terrains.get(terrain_entity);
+		Terrain& terrain = registry.terrains.get(terrain_entity);
 		vec2 movement = player_motion.position - player_motion.previous_position;
 
-		if (std::abs(movement.x) > std::abs(movement.y)) {
+		if (std::abs(movement.x) > std::abs(movement.y))
+		{
 			// horizontal collision -> stop X movement, allow Y movement
 			player_motion.position.x = player_motion.previous_position.x;
-		} else {
+		}
+		else
+		{
 			// vertical collision -> stop Y movement, allow X movement
 			player_motion.position.y = player_motion.previous_position.y;
 		}
 
 		// when collision_setting == 1, entire area should be unwalkable (rivers)
-		if (terrain.collision_setting == 1.0f) {
+		if (terrain.collision_setting == 1.0f)
+		{
 			player_motion.position = player_motion.previous_position;
 		}
 	}
@@ -356,21 +426,12 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		close_window();
 	}
 
-	// Resetting game
-	if (action == GLFW_RELEASE && key == GLFW_KEY_R)
+	if (action == GLFW_PRESS && key == GLFW_KEY_F)
 	{
-		int w, h;
-		glfwGetWindowSize(window, &w, &h);
-
-		restart_game();
+		handle_player_interaction();
 	}
 
-	if (action == GLFW_PRESS && key == GLFW_KEY_F) 
-	{
-		handle_player_pickup();
-	}
-
-	if (key != GLFW_KEY_W && key != GLFW_KEY_S && key != GLFW_KEY_D && key != GLFW_KEY_A)
+	if (registry.screenStates.components[0].is_switching_biome || (key != GLFW_KEY_W && key != GLFW_KEY_S && key != GLFW_KEY_D && key != GLFW_KEY_A))
 	{
 		return;
 	}
@@ -380,8 +441,8 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 	{
 		return;
 	}
-	Motion &player_motion = registry.motions.get(player);
-	std::vector<int> &pressed_keys = registry.screenStates.components[0].pressed_keys;
+	Motion& player_motion = registry.motions.get(player);
+	std::vector<int>& pressed_keys = registry.screenStates.components[0].pressed_keys;
 
 	if (action == GLFW_PRESS)
 	{
@@ -463,7 +524,7 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 	}
 }
 
-void WorldSystem::handle_player_pickup()
+void WorldSystem::handle_player_interaction()
 {
 	// Check if player exists
 	if (registry.players.entities.empty())
@@ -473,8 +534,7 @@ void WorldSystem::handle_player_pickup()
 	if (!registry.motions.has(player) || !registry.inventories.has(player))
 		return;
 
-	Motion &player_motion = registry.motions.get(player);
-	Inventory &player_inventory = registry.inventories.get(player);
+	Motion& player_motion = registry.motions.get(player);
 
 	if (registry.items.entities.empty())
 		return;
@@ -484,11 +544,11 @@ void WorldSystem::handle_player_pickup()
 		if (!registry.items.has(item) || !registry.motions.has(item))
 			continue;
 
-		Motion &item_motion = registry.motions.get(item);
-		Item &item_info = registry.items.get(item);
+		Motion& item_motion = registry.motions.get(item);
+		Item& item_info = registry.items.get(item);
 
-		// Check if item is collectable
-		if (!item_info.isCollectable)
+		// Check if item is collectable or is an interactable entrance
+		if (!item_info.isCollectable && !registry.entrances.has(item))
 			continue;
 
 		float distance = glm::distance(player_motion.position, item_motion.position);
@@ -497,31 +557,61 @@ void WorldSystem::handle_player_pickup()
 		if (distance > ITEM_PICKUP_RADIUS)
 			continue;
 
-		// If inventory is full, return
-		if (player_inventory.items.size() >= player_inventory.capacity)
-			return;
-
-		// Add item to inventory
-		player_inventory.items.push_back(item);
-
-		// Find and remove associated textbox if it exists
-		for (Entity textbox : registry.textboxes.entities)
+		// Handle interaction
+		bool handle_textbox = false;
+		if (registry.entrances.has(item))
 		{
-			if (registry.textboxes.get(textbox).targetItem == item)
-			{
-				registry.remove_all_components_of(textbox);
-				break;
-			}
+			handle_textbox = handle_entrance_interaction(item);
+		}
+		else if (item_info.isCollectable)
+		{
+			handle_textbox = handle_item_pickup(player, item);
 		}
 
-		// Remove only the visual components of the item
-		if (registry.motions.has(item))
-			registry.motions.remove(item);
-		if (registry.renderRequests.has(item))
-			registry.renderRequests.remove(item);
+		if (handle_textbox) {
+			for (Entity textbox : registry.textboxes.entities)
+			{
+				if (registry.textboxes.get(textbox).targetItem == item)
+				{
+					registry.remove_all_components_of(textbox);
+					break;
+				}
+			}
 
-		return;
+			// Remove only the visual components of the item
+			if (registry.motions.has(item) && !registry.entrances.has(item))
+				registry.motions.remove(item);
+			if (registry.renderRequests.has(item) && !registry.entrances.has(item))
+				registry.renderRequests.remove(item);
+			return;
+		}
 	}
+	return;
+}
+
+bool WorldSystem::handle_entrance_interaction(Entity entrance_entity)
+{
+	Entrance& entrance = registry.entrances.get(entrance_entity);
+	if (entrance.target_biome == (GLuint)BIOME::GROTTO)
+	{
+		ScreenState& state = registry.screenStates.components[0];
+		state.is_switching_biome = true;
+		state.switching_to_biome = (GLuint)BIOME::GROTTO;
+	}
+	return true;
+}
+
+bool WorldSystem::handle_item_pickup(Entity player, Entity item)
+{
+	Inventory& player_inventory = registry.inventories.get(player);
+
+	// If inventory is full, return
+	if (player_inventory.items.size() >= player_inventory.capacity)
+		return false;
+
+	// Add item to inventory
+	player_inventory.items.push_back(item);
+	return true;
 }
 
 void WorldSystem::update_textbox_visibility()
@@ -533,14 +623,14 @@ void WorldSystem::update_textbox_visibility()
 	if (!registry.motions.has(player))
 		return;
 
-	Motion &player_motion = registry.motions.get(player);
+	Motion& player_motion = registry.motions.get(player);
 
 	for (Entity item : registry.items.entities)
 	{
 		if (!registry.items.has(item) || !registry.motions.has(item))
 			continue;
 
-		Motion &item_motion = registry.motions.get(item);
+		Motion& item_motion = registry.motions.get(item);
 
 		float distance = glm::distance(player_motion.position, item_motion.position);
 
@@ -561,7 +651,7 @@ void WorldSystem::update_textbox_visibility()
 		// Update isVisible based on distance
 		if (foundTextbox)
 		{
-			Textbox &textbox = registry.textboxes.get(textboxEntity);
+			Textbox& textbox = registry.textboxes.get(textboxEntity);
 			textbox.isVisible = (distance < TEXTBOX_VISIBILITY_RADIUS);
 
 			RenderRequest renderRequest = getTextboxRenderRequest(textbox);
