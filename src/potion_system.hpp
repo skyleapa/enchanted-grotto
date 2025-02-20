@@ -27,6 +27,7 @@ public:
 
 	// Record a stir action to the cauldron
 	// Call this only when the mouse is released from the ladle
+	// This method does nothing if the cauldron inventory is empty
 	static void stirCauldron(Entity cauldron, int stirs);
 
 	// Gets the resulting potion in its current state and

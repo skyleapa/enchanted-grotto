@@ -41,7 +41,6 @@ TEST_F(PotionSystemTest, ActionRecording) {
     EXPECT_EQ(cc.timeElapsed, 0);
 
     // Now record a heat action
-    cc.filled = true;
     PotionSystem::changeHeat(cauldron, 100);
     EXPECT_EQ(cc.actions.size(), 1);
     EXPECT_EQ(cc.actions[0].type, ActionType::MODIFY_HEAT);
@@ -57,6 +56,10 @@ TEST_F(PotionSystemTest, ActionRecording) {
     potion_system.updateCauldrons(DEFAULT_WAIT);
     EXPECT_EQ(cc.actions.size(), 2);
     EXPECT_EQ(cc.actions[1].value, 2);
+
+    // Then a stir action, which shouldn't do anything since the cauldron is empty
+    PotionSystem::stirCauldron(cauldron, 100);
+    EXPECT_EQ(cc.actions.size(), 2);
 
     // Add an example item
     Entity coffee_bean = createIngredient(ItemType::COFFEE_BEANS, 1, 0.5f);

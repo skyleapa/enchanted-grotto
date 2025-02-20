@@ -84,6 +84,10 @@ void PotionSystem::changeHeat(Entity cauldron, int value) {
 }
 
 void PotionSystem::stirCauldron(Entity cauldron, int stirs) {
+	Inventory& ci = registry.inventories.get(cauldron);
+	if (ci.items.size() == 0) {
+		return;
+	}
 	recordAction(cauldron, ActionType::STIR, stirs);
 }
 
