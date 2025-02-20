@@ -12,6 +12,7 @@
 #include "render_system.hpp"
 #include "world_system.hpp"
 #include "item_system.hpp"
+#include "potion_system.hpp"
 
 using Clock = std::chrono::high_resolution_clock;
 
@@ -24,6 +25,7 @@ int main()
 	RenderSystem  renderer_system;
 	PhysicsSystem physics_system;
 	ItemSystem    item_system;
+	PotionSystem  potion_system;
 
 	// initialize window
 	GLFWwindow* window = world_system.create_window();
@@ -61,6 +63,7 @@ int main()
 		ai_system.step(elapsed_ms);
 		physics_system.step(elapsed_ms);
 		item_system.step(elapsed_ms);
+		potion_system.updateCauldrons(elapsed_ms);
 		world_system.handle_collisions();
 
 		renderer_system.draw();

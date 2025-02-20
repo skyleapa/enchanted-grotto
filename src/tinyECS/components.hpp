@@ -88,19 +88,23 @@ struct Mesh
 };
 
 // =============================== ENCHANTED GROTTO COMPONENTS =========================================
+
 // represents a potion in our game
+// note that cauldron entities may have this component too, so
+// add an if condition if potions need to be looped through
 struct Potion
 {
-	int effect; // NOTE: we can turn effect into an enum
-	int duration;
+	PotionEffect effect;
+	int duration;         // in seconds
+	float effectValue;    // Type-dependent value of potion 
+	float quality;        // 0-1, a summary of how good the potion is
 	vec3 color;
-	float quality;
 };
 
 // an item that can be in an inventory
 struct Item
 {
-	int type_id;
+	ItemType type;
 	std::string name;
 	bool isCollectable;
 	int amount;
@@ -122,9 +126,14 @@ struct Inventory
 
 struct Cauldron
 {
-	int heatLevel;             // 1-3
-	int stirLevel;             // 1-10
-	vec3 color;                // RGB color
+	int heatLevel = 0;                // 0-100
+	vec3 color = DEFAULT_COLOR;       // RGB color
+	bool filled = false;              // Whether the cauldron has water
+	int timeElapsed = 0;              // Time elapsed since water filled and heat knob turned, in ms
+	int timeSinceLastAction = 0;      // Time elapsed since the last action, in ms. -1 means
+	int colorElapsed = 0;             // Time in ms for color updates
+	std::vector<Action> actions;      // Records player actions
+	// If stir quality ever gets added, a penalty can be recorded here
 };
 
 // a menu of our game (recipe book menu, potion making menu, grinding menu...)
@@ -134,19 +143,7 @@ struct Menu
 	bool keyInput;	 // true if we allow key input
 };
 
-// a recipe in our recipe book menu
-struct Recipe
-{
-	std::string potionName;
-	int potionEffect;
-	int highestQualityEffect;
-	int highestQualityDuration;
-	vec3 finalPotionColor;
-	// commented out temporarily as Ingredient results in a compilation error
-	// std::unordered_map<Ingredient, int> ingredients; // the ingredient and quantity
-	int steps;         // TODO: Array[pair<ActionEnum, int>]
-};
-
+// TODO: Better Mortar and pestle representation
 struct MortarAndPestle
 {
 	std::vector<Entity> items;
