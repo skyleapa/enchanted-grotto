@@ -26,10 +26,10 @@ using namespace glm;
 // Get defintion of PROJECT_SOURCE_DIR from:
 #include "../ext/project_path.hpp"
 inline std::string data_path() { return std::string(PROJECT_SOURCE_DIR) + "data"; };
-inline std::string shader_path(const std::string &name) { return std::string(PROJECT_SOURCE_DIR) + "/shaders/" + name; };
-inline std::string textures_path(const std::string &name) { return data_path() + "/textures/" + std::string(name); };
-inline std::string audio_path(const std::string &name) { return data_path() + "/audio/" + std::string(name); };
-inline std::string mesh_path(const std::string &name) { return data_path() + "/meshes/" + std::string(name); };
+inline std::string shader_path(const std::string& name) { return std::string(PROJECT_SOURCE_DIR) + "/shaders/" + name; };
+inline std::string textures_path(const std::string& name) { return data_path() + "/textures/" + std::string(name); };
+inline std::string audio_path(const std::string& name) { return data_path() + "/audio/" + std::string(name); };
+inline std::string mesh_path(const std::string& name) { return data_path() + "/meshes/" + std::string(name); };
 
 //
 // game constants
@@ -80,6 +80,7 @@ const float TEXTBOX_WIDTH = (float)GRID_CELL_WIDTH_PX * 4;
 const float TEXTBOX_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 4;
 
 const float ITEM_PICKUP_RADIUS = (float)70;
+const float INTERACTION_RADIUS = (float)70;
 const float TEXTBOX_VISIBILITY_RADIUS = (float)70;
 
 extern const std::map<int, std::vector<std::tuple<vec2, vec2>>> biome_boundaries;
@@ -189,8 +190,8 @@ const std::vector<Recipe> RECIPES = {
 		.highestQualityDuration = 180,
 		.finalPotionColor = vec3(255, 157, 35),
 		.ingredients = {
-			{.type=ItemType::COFFEE_BEANS, .amount=5, .grindAmount=1.0f},
-			{.type=ItemType::MAGICAL_FRUIT, .amount=3, .grindAmount=0.0f},
+			{.type = ItemType::COFFEE_BEANS, .amount = 5, .grindAmount = 1.0f},
+			{.type = ItemType::MAGICAL_FRUIT, .amount = 3, .grindAmount = 0.0f},
 		},
 		.steps = {
 			{.type = ActionType::MODIFY_HEAT, .value = 100},
@@ -235,7 +236,7 @@ const float HEAT_PENALTY = 0.01f; // Heat is measured 1-100
 // We recommend making all components non-copyable by derving from ComponentNonCopyable
 struct Transform
 {
-	mat3 mat = {{1.f, 0.f, 0.f}, {0.f, 1.f, 0.f}, {0.f, 0.f, 1.f}}; // start with the identity
+	mat3 mat = { {1.f, 0.f, 0.f}, {0.f, 1.f, 0.f}, {0.f, 0.f, 1.f} }; // start with the identity
 	void scale(vec2 scale);
 	void rotate(float radians);
 	void translate(vec2 offset);

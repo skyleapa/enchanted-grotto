@@ -13,12 +13,12 @@ struct Player
 // All data relevant to the shape and motion of entities
 struct Motion
 {
-	vec2 position = {0, 0};
+	vec2 position = { 0, 0 };
 	float angle = 0;
-	vec2 velocity = {0, 0};
-	vec2 scale = {10, 10};
+	vec2 velocity = { 0, 0 };
+	vec2 scale = { 10, 10 };
 	int moving_direction = 0;
-	vec2 previous_position = {0, 0};
+	vec2 previous_position = { 0, 0 };
 };
 
 // Stucture to store collision information
@@ -26,7 +26,7 @@ struct Collision
 {
 	// Note, the first object is stored in the ECS container.entities
 	Entity other; // the second object involved in the collision
-	Collision(Entity &other) { this->other = other; };
+	Collision(Entity& other) { this->other = other; };
 };
 
 // Data structure for toggling debug mode
@@ -57,8 +57,8 @@ struct DebugComponent
 // used to hold grid line start and end positions
 struct GridLine
 {
-	vec2 start_pos = {0, 0};
-	vec2 end_pos = {10, 10}; // default to diagonal line
+	vec2 start_pos = { 0, 0 };
+	vec2 end_pos = { 10, 10 }; // default to diagonal line
 };
 
 // A timer that will be associated to dying chicken
@@ -84,8 +84,8 @@ struct TexturedVertex
 // Mesh datastructure for storing vertex and index buffers
 struct Mesh
 {
-	static bool loadFromOBJFile(std::string obj_path, std::vector<ColoredVertex> &out_vertices, std::vector<uint16_t> &out_vertex_indices, vec2 &out_size);
-	vec2 original_size = {1, 1};
+	static bool loadFromOBJFile(std::string obj_path, std::vector<ColoredVertex>& out_vertices, std::vector<uint16_t>& out_vertex_indices, vec2& out_size);
+	vec2 original_size = { 1, 1 };
 	std::vector<ColoredVertex> vertices;
 	std::vector<uint16_t> vertex_indices;
 };

@@ -54,6 +54,10 @@ public:
 	bool is_over() const;
 
 	void handle_player_interaction();
+
+	bool handle_entrance_interaction(Entity entrance_entity);
+
+	bool handle_item_pickup(Entity player, Entity item);
 	
 	void update_textbox_visibility();
 

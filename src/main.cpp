@@ -48,7 +48,7 @@ int main()
 	// variable timestep loop
 	auto t = Clock::now();
 	while (!world_system.is_over()) {
-		
+
 		// processes system messages, if this wasn't present the window would become unresponsive
 		glfwPollEvents();
 
