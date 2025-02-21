@@ -1,6 +1,7 @@
 #include "potion_system.hpp"
 #include <unordered_set>
 #include <iostream>
+#include <cfloat>
 
 void PotionSystem::updateCauldrons(float elapsed_ms) {
 	for (Entity cauldron : registry.cauldrons.entities) {
@@ -64,9 +65,9 @@ void PotionSystem::addIngredient(Entity cauldron, Entity ingredient) {
 		// Float comparison moment. Return if grindlevels are far enough apart
 		Ingredient& curIng = registry.ingredients.get(ingredient);
 		Ingredient& lastIng = registry.ingredients.get(lastIngredient);
-		// if (fabs(lastIng.grindLevel - curIng.grindLevel) >= __FLT_EPSILON__) {
-		// 	break;
-		// }
+		if (fabs(lastIng.grindLevel - curIng.grindLevel) >= FLT_EPSILON) {
+			break;
+		}
 
 		lastItem.amount += curItem.amount;
 		updatePotion(cauldron);
