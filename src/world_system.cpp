@@ -570,23 +570,23 @@ void WorldSystem::handle_player_interaction()
 		}
 
 		if (handle_textbox)
-        {
-            // Set textbox to invisible
-            for (Entity textbox : registry.textboxes.entities)
-            {
-                if (registry.textboxes.get(textbox).targetItem == item)
-                {
-                    registry.textboxes.get(textbox).isVisible = false;
-                    break;
-                }
-            }
+		{
+			// Set textbox to invisible
+			for (Entity textbox : registry.textboxes.entities)
+			{
+				if (registry.textboxes.get(textbox).targetItem == item)
+				{
+					registry.textboxes.get(textbox).isVisible = false;
+					break;
+				}
+			}
 
-            // Remove visual components of the item
-            if (registry.motions.has(item) && !registry.entrances.has(item))
-                registry.motions.remove(item);
-            if (registry.renderRequests.has(item) && !registry.entrances.has(item))
-                registry.renderRequests.remove(item);
-            return;
+			// Remove visual components of the item
+			if (registry.motions.has(item) && !registry.entrances.has(item))
+				registry.motions.remove(item);
+			if (registry.renderRequests.has(item) && !registry.entrances.has(item))
+				registry.renderRequests.remove(item);
+			return;
 		}
 	}
 	return;
@@ -649,46 +649,50 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 	{
 		Item& item_info = registry.items.get(item);
 
-		// Only items that are waiting to respawn
+		if (item_info.respawnTime <= 0)
+			continue;
+
+		item_info.respawnTime -= elapsed_ms;
+
 		if (item_info.respawnTime > 0)
-		{
-			item_info.respawnTime -= elapsed_ms;
+			return;
 
-			if (item_info.respawnTime <= 0)
+		// Respawn item at its original position
+		Motion& motion = registry.motions.emplace(item);
+		motion.position = item_info.originalPosition;
+		motion.angle = 180.f;
+		motion.velocity = { 0, 0 };
+		motion.scale = (item_info.name == "Magical Fruit") 
+			? vec2(FRUIT_WIDTH, FRUIT_HEIGHT) 
+			: vec2(COFFEE_BEAN_WIDTH, COFFEE_BEAN_HEIGHT);
+
+		// Restore render request
+		registry.renderRequests.insert(
+			item,
 			{
-				// Respawn item at its original position
-				Motion& motion = registry.motions.emplace(item);
-				motion.position = item_info.originalPosition;
-				motion.angle = 180.f;
-				motion.velocity = { 0, 0 };
-				motion.scale = vec2(item_info.name == "Magical Fruit" ? vec2(FRUIT_WIDTH, FRUIT_HEIGHT)
-					: vec2(COFFEE_BEAN_WIDTH, COFFEE_BEAN_HEIGHT));
-
-				registry.renderRequests.insert(
-					item,
-					{
-						(item_info.name == "Magical Fruit") ? TEXTURE_ASSET_ID::FRUIT : TEXTURE_ASSET_ID::COFFEE_BEAN,
-						EFFECT_ASSET_ID::TEXTURED,
-						GEOMETRY_BUFFER_ID::SPRITE,
-						RENDER_LAYER::ITEM
-					}
-				);
-
-				// Restore textbox visibility
-				for (Entity textbox : registry.textboxes.entities)
-				{
-					if (registry.textboxes.get(textbox).targetItem == item)
-					{
-						registry.textboxes.get(textbox).isVisible = true;
-						RenderRequest renderRequest = getTextboxRenderRequest(registry.textboxes.get(textbox));
-						registry.renderRequests.insert(textbox, renderRequest);
-						break;
-					}
-				}
-
-				item_info.respawnTime = 0;
+				(item_info.name == "Magical Fruit") ? TEXTURE_ASSET_ID::FRUIT : TEXTURE_ASSET_ID::COFFEE_BEAN,
+				EFFECT_ASSET_ID::TEXTURED,
+				GEOMETRY_BUFFER_ID::SPRITE,
+				RENDER_LAYER::ITEM
 			}
+		);
+
+		// Restore textbox visibility
+		for (Entity textbox : registry.textboxes.entities)
+		{
+			if (registry.textboxes.get(textbox).targetItem != item)
+				continue;
+
+			Textbox& textboxComp = registry.textboxes.get(textbox);
+			textboxComp.isVisible = true;
+
+			RenderRequest renderRequest = getTextboxRenderRequest(textboxComp);
+			registry.renderRequests.insert(textbox, renderRequest);
+			break;
 		}
+
+		// Reset respawn time
+		item_info.respawnTime = 0;
 	}
 }
 
