@@ -111,6 +111,8 @@ struct Item
 	std::string name;
 	bool isCollectable;
 	int amount;
+	float respawn_time = 0.0f;
+	vec2 original_position;
 };
 
 // an item that can be added to potions

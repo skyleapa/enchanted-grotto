@@ -249,6 +249,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	}
 
 	update_textbox_visibility();
+	handle_item_respawn(elapsed_ms_since_last_update);
 
 	return true;
 }
@@ -568,22 +569,24 @@ void WorldSystem::handle_player_interaction()
 			handle_textbox = handle_item_pickup(player, item);
 		}
 
-		if (handle_textbox) {
-			for (Entity textbox : registry.textboxes.entities)
-			{
-				if (registry.textboxes.get(textbox).targetItem == item)
-				{
-					registry.remove_all_components_of(textbox);
-					break;
-				}
-			}
+		if (handle_textbox)
+        {
+            // ✅ Instead of removing the textbox, just set it to invisible
+            for (Entity textbox : registry.textboxes.entities)
+            {
+                if (registry.textboxes.get(textbox).targetItem == item)
+                {
+                    registry.textboxes.get(textbox).isVisible = false;
+                    break;
+                }
+            }
 
-			// Remove only the visual components of the item
-			if (registry.motions.has(item) && !registry.entrances.has(item))
-				registry.motions.remove(item);
-			if (registry.renderRequests.has(item) && !registry.entrances.has(item))
-				registry.renderRequests.remove(item);
-			return;
+            // ✅ Remove only the visual components of the item
+            if (registry.motions.has(item) && !registry.entrances.has(item))
+                registry.motions.remove(item);
+            if (registry.renderRequests.has(item) && !registry.entrances.has(item))
+                registry.renderRequests.remove(item);
+            return;
 		}
 	}
 	return;
@@ -604,14 +607,89 @@ bool WorldSystem::handle_entrance_interaction(Entity entrance_entity)
 bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 {
 	Inventory& player_inventory = registry.inventories.get(player);
+	Item& item_info = registry.items.get(item);
 
-	// If inventory is full, return
+	// If inventory is full, return false
 	if (player_inventory.items.size() >= player_inventory.capacity)
 		return false;
 
-	// Add item to inventory
+	item_info.original_position = registry.motions.get(item).position;
 	player_inventory.items.push_back(item);
+
+	// Set a random respawn time (5-15 seconds)
+	item_info.respawn_time = (rand() % 10000 + 5000);
+
+	// Hide item by removing motion & render components
+	if (registry.motions.has(item))
+		registry.motions.remove(item);
+
+	if (registry.renderRequests.has(item))
+		registry.renderRequests.remove(item);
+
+	// Hide the textbox
+	for (Entity textbox : registry.textboxes.entities)
+	{
+		if (registry.textboxes.get(textbox).targetItem == item)
+		{
+			registry.textboxes.get(textbox).isVisible = false;
+			if (registry.renderRequests.has(textbox)) {
+				registry.renderRequests.remove(textbox);
+			}
+			break;
+		}
+	}
+
 	return true;
+}
+
+
+void WorldSystem::handle_item_respawn(float elapsed_ms)
+{
+	for (Entity item : registry.items.entities)
+	{
+		Item& item_info = registry.items.get(item);
+
+		// Only items that are waiting to respawn
+		if (item_info.respawn_time > 0)
+		{
+			item_info.respawn_time -= elapsed_ms; // Convert ms to seconds
+
+			if (item_info.respawn_time <= 0)
+			{
+				// Respawn item at its original position
+				Motion& motion = registry.motions.emplace(item);
+				motion.position = item_info.original_position;
+				motion.angle = 180.f;
+				motion.velocity = { 0, 0 };
+				motion.scale = vec2(item_info.name == "Magical Fruit" ? vec2(FRUIT_WIDTH, FRUIT_HEIGHT)
+					: vec2(COFFEE_BEAN_WIDTH, COFFEE_BEAN_HEIGHT));
+
+				registry.renderRequests.insert(
+					item,
+					{
+						(item_info.name == "Magical Fruit") ? TEXTURE_ASSET_ID::FRUIT : TEXTURE_ASSET_ID::COFFEE_BEAN,
+						EFFECT_ASSET_ID::TEXTURED,
+						GEOMETRY_BUFFER_ID::SPRITE,
+						RENDER_LAYER::ITEM
+					}
+				);
+
+				// Restore textbox visibility
+				for (Entity textbox : registry.textboxes.entities)
+				{
+					if (registry.textboxes.get(textbox).targetItem == item)
+					{
+						registry.textboxes.get(textbox).isVisible = true;
+						RenderRequest renderRequest = getTextboxRenderRequest(registry.textboxes.get(textbox));
+						registry.renderRequests.insert(textbox, renderRequest);
+						break;
+					}
+				}
+
+				item_info.respawn_time = 0;
+			}
+		}
+	}
 }
 
 void WorldSystem::update_textbox_visibility()

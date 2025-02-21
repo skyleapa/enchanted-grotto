@@ -64,9 +64,9 @@ void PotionSystem::addIngredient(Entity cauldron, Entity ingredient) {
 		// Float comparison moment. Return if grindlevels are far enough apart
 		Ingredient& curIng = registry.ingredients.get(ingredient);
 		Ingredient& lastIng = registry.ingredients.get(lastIngredient);
-		if (fabs(lastIng.grindLevel - curIng.grindLevel) >= __FLT_EPSILON__) {
-			break;
-		}
+		// if (fabs(lastIng.grindLevel - curIng.grindLevel) >= __FLT_EPSILON__) {
+		// 	break;
+		// }
 
 		lastItem.amount += curItem.amount;
 		updatePotion(cauldron);
@@ -141,7 +141,7 @@ void PotionSystem::recordAction(Entity cauldron, ActionType action, int value = 
 	} while (false);
 
 	// Otherwise just add the action to the list
-	cc.actions.push_back({ .type = action, .value = value });
+	cc.actions.push_back({ action, value });
 	updatePotion(cauldron);
 }
 
