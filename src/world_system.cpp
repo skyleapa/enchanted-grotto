@@ -571,7 +571,7 @@ void WorldSystem::handle_player_interaction()
 
 		if (handle_textbox)
         {
-            // ✅ Instead of removing the textbox, just set it to invisible
+            // Set textbox to invisible
             for (Entity textbox : registry.textboxes.entities)
             {
                 if (registry.textboxes.get(textbox).targetItem == item)
@@ -581,7 +581,7 @@ void WorldSystem::handle_player_interaction()
                 }
             }
 
-            // ✅ Remove only the visual components of the item
+            // Remove visual components of the item
             if (registry.motions.has(item) && !registry.entrances.has(item))
                 registry.motions.remove(item);
             if (registry.renderRequests.has(item) && !registry.entrances.has(item))
