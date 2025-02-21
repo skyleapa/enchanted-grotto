@@ -613,11 +613,11 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 	if (player_inventory.items.size() >= player_inventory.capacity)
 		return false;
 
-	item_info.original_position = registry.motions.get(item).position;
+	item_info.originalPosition = registry.motions.get(item).position;
 	player_inventory.items.push_back(item);
 
 	// Set a random respawn time (5-15 seconds)
-	item_info.respawn_time = (rand() % 10000 + 5000);
+	item_info.respawnTime = (rand() % 10000 + 5000);
 
 	// Hide item by removing motion & render components
 	if (registry.motions.has(item))
@@ -650,15 +650,15 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 		Item& item_info = registry.items.get(item);
 
 		// Only items that are waiting to respawn
-		if (item_info.respawn_time > 0)
+		if (item_info.respawnTime > 0)
 		{
-			item_info.respawn_time -= elapsed_ms;
+			item_info.respawnTime -= elapsed_ms;
 
-			if (item_info.respawn_time <= 0)
+			if (item_info.respawnTime <= 0)
 			{
 				// Respawn item at its original position
 				Motion& motion = registry.motions.emplace(item);
-				motion.position = item_info.original_position;
+				motion.position = item_info.originalPosition;
 				motion.angle = 180.f;
 				motion.velocity = { 0, 0 };
 				motion.scale = vec2(item_info.name == "Magical Fruit" ? vec2(FRUIT_WIDTH, FRUIT_HEIGHT)
@@ -686,7 +686,7 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 					}
 				}
 
-				item_info.respawn_time = 0;
+				item_info.respawnTime = 0;
 			}
 		}
 	}
