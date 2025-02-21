@@ -652,7 +652,7 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 		// Only items that are waiting to respawn
 		if (item_info.respawn_time > 0)
 		{
-			item_info.respawn_time -= elapsed_ms; // Convert ms to seconds
+			item_info.respawn_time -= elapsed_ms;
 
 			if (item_info.respawn_time <= 0)
 			{
