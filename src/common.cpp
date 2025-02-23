@@ -65,7 +65,11 @@ const std::map<int, std::vector<std::tuple<vec2, vec2>>> biome_boundaries = {
 	  std::make_tuple(vec2(WINDOW_WIDTH_PX / 2, WINDOW_HEIGHT_PX), vec2(WINDOW_WIDTH_PX, BOUNDARY_LINE_THICKNESS)),
 	  std::make_tuple(vec2(0, WINDOW_HEIGHT_PX / 2), vec2(BOUNDARY_LINE_THICKNESS, WINDOW_HEIGHT_PX)),
 	  std::make_tuple(vec2(WINDOW_WIDTH_PX, WINDOW_HEIGHT_PX / 2), vec2(BOUNDARY_LINE_THICKNESS, WINDOW_HEIGHT_PX)),
-	  std::make_tuple(vec2(GRID_CELL_WIDTH_PX * 20.5, GRID_CELL_HEIGHT_PX * 13.6), vec2(190, BOUNDARY_LINE_THICKNESS))}},
+	  std::make_tuple(vec2(GRID_CELL_WIDTH_PX * 20.5, GRID_CELL_HEIGHT_PX * 13.6), vec2(190, BOUNDARY_LINE_THICKNESS)),
+	  std::make_tuple(vec2(GRID_CELL_WIDTH_PX * 13.30, GRID_CELL_HEIGHT_PX * 7.5), vec2(GRID_CELL_WIDTH_PX * 3.7, GRID_CELL_HEIGHT_PX * 1.5)),
+	  std::make_tuple(vec2(GRID_CELL_WIDTH_PX * 4.75, GRID_CELL_HEIGHT_PX * 6.35), vec2(460, BOUNDARY_LINE_THICKNESS)),
+	  std::make_tuple(vec2(475, 260), vec2(BOUNDARY_LINE_THICKNESS, 110))
+	}},
 	{(int)BIOME::FOREST,
 	 {std::make_tuple(vec2(WINDOW_WIDTH_PX / 2, GRID_CELL_HEIGHT_PX * 1.3), vec2(WINDOW_WIDTH_PX, BOUNDARY_LINE_THICKNESS)),
 	  std::make_tuple(vec2(WINDOW_WIDTH_PX / 2, WINDOW_HEIGHT_PX), vec2(WINDOW_WIDTH_PX, BOUNDARY_LINE_THICKNESS)),

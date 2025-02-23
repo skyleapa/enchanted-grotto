@@ -10,6 +10,8 @@ void main()
 {
     vec4 in_color = texture(screen_texture, texcoord);
 
+    // M1 interpolation implementation
+
     // If darken factor is 0, keep it fully transparent
     if (darken_screen_factor <= 0.0) {
         color = vec4(0.0, 0.0, 0.0, 0.0);
