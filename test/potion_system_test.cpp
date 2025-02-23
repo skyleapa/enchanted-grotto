@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <climits>
 #include "../src/common.hpp"
 #include "../src/potion_system.hpp"
 #include "../src/tinyECS/registry.hpp"
