@@ -99,6 +99,8 @@ void RenderSystem::drawTexturedMesh(Entity entity,
 	// Transformation code, see Rendering and Transformation in the template
 	// specification for more info Incrementally updates transformation matrix,
 	// thus ORDER IS IMPORTANT
+
+	// Basic 2D transformations
 	Transform transform;
 	transform.translate(motion.position);
 	transform.scale(motion.scale);
@@ -345,6 +347,8 @@ void RenderSystem::draw()
 
 	drawToScreen();
 
+	// Textured geometry, ensuring that render layers are respected, and that y-position sorting
+	// occurs for terrain and players
 	std::vector<Entity> entities = process_render_requests();
 
 	// draw all entities with a render request to the frame buffer
@@ -373,21 +377,22 @@ void RenderSystem::draw()
 
 std::vector<Entity> RenderSystem::process_render_requests() {
 	std::vector<Entity> entities = registry.renderRequests.entities;
-
+	
+	// don't render entities with no motion (position)
 	entities.erase(std::remove_if(entities.begin(), entities.end(), [](Entity e) {
 		return !registry.motions.has(e);
 		}), entities.end());
-
-	std::sort(entities.begin(), entities.end(), [](Entity a, Entity b) {
-		RenderRequest& renderA = registry.renderRequests.get(a);
-		RenderRequest& renderB = registry.renderRequests.get(b);
-
-		/*
+	
+	/*
 		Rendering order is specified in components.hpp where background < terrain < structure < player
+		Note: Terrain and Player is y-position sorted, so that players can go behind and in front of trees ect.
 		Examples:
 		-	Terrain: Trees, rocks, bushes
 		-	Structure: Bridge, river
-		*/
+	*/
+	std::sort(entities.begin(), entities.end(), [](Entity a, Entity b) {
+		RenderRequest& renderA = registry.renderRequests.get(a);
+		RenderRequest& renderB = registry.renderRequests.get(b);
 
 		// ITEM always renders above everything
 		if (renderA.layer == RENDER_LAYER::ITEM) return false;
@@ -397,7 +402,7 @@ std::vector<Entity> RenderSystem::process_render_requests() {
 		if (renderA.layer == RENDER_LAYER::BACKGROUND) return true;
 		if (renderB.layer == RENDER_LAYER::BACKGROUND) return false;
 
-		// ensure terrain renders above structures
+		// ensure structure renders above terrain
 		if (renderA.layer == RENDER_LAYER::TERRAIN && renderB.layer == RENDER_LAYER::STRUCTURE) return false;
 		if (renderA.layer == RENDER_LAYER::STRUCTURE && renderB.layer == RENDER_LAYER::TERRAIN) return true;
 
@@ -410,6 +415,7 @@ std::vector<Entity> RenderSystem::process_render_requests() {
 			return renderA.render_sub_layer > renderB.render_sub_layer;
 		}
 
+		// Include y-position sorting between terrain and player, so that players can move behind terrain
 		if (renderA.layer == RENDER_LAYER::TERRAIN || renderA.layer == RENDER_LAYER::PLAYER) {
 			Motion& motionA = registry.motions.get(a);
 			Motion& motionB = registry.motions.get(b);
@@ -419,7 +425,7 @@ std::vector<Entity> RenderSystem::process_render_requests() {
 		}
 
 		return false;
-		});
+	});
 
 	return entities;
 }

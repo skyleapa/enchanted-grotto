@@ -5,3 +5,4 @@ ext/project_path.hpp
 data/.DS_Store
 data/textures/.DS_Store
 game_state.json
+.DS_Store
