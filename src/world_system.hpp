@@ -61,6 +61,8 @@ public:
 	
 	void update_textbox_visibility();
 
+	void handle_item_respawn(float elapsed_ms);
+
 
 private:
 

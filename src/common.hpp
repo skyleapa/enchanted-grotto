@@ -183,25 +183,45 @@ struct Recipe
 };
 
 // RECIPE LIST
+// const std::vector<Recipe> RECIPES = {
+// 	{
+// 		.effect = PotionEffect::SPEED,
+// 		.highestQualityEffect = 3.0f,       // 300% faster (4x as fast)
+// 		.highestQualityDuration = 180,
+// 		.finalPotionColor = vec3(255, 157, 35),
+// 		.ingredients = {
+// 			{.type = ItemType::COFFEE_BEANS, .amount = 5, .grindAmount = 1.0f},
+// 			{.type = ItemType::MAGICAL_FRUIT, .amount = 3, .grindAmount = 0.0f},
+// 		},
+// 		.steps = {
+// 			{.type = ActionType::MODIFY_HEAT, .value = 100},
+// 			{.type = ActionType::WAIT, .value = 2},
+// 			{.type = ActionType::ADD_INGREDIENT, .value = 0},
+// 			{.type = ActionType::ADD_INGREDIENT, .value = 1},
+// 			{.type = ActionType::STIR, .value = 3},
+// 			{.type = ActionType::WAIT, .value = 6}
+// 		}
+// 	}
+// };
 const std::vector<Recipe> RECIPES = {
-	{
-		.effect = PotionEffect::SPEED,
-		.highestQualityEffect = 3.0f,       // 300% faster (4x as fast)
-		.highestQualityDuration = 180,
-		.finalPotionColor = vec3(255, 157, 35),
-		.ingredients = {
-			{.type = ItemType::COFFEE_BEANS, .amount = 5, .grindAmount = 1.0f},
-			{.type = ItemType::MAGICAL_FRUIT, .amount = 3, .grindAmount = 0.0f},
-		},
-		.steps = {
-			{.type = ActionType::MODIFY_HEAT, .value = 100},
-			{.type = ActionType::WAIT, .value = 2},
-			{.type = ActionType::ADD_INGREDIENT, .value = 0},
-			{.type = ActionType::ADD_INGREDIENT, .value = 1},
-			{.type = ActionType::STIR, .value = 3},
-			{.type = ActionType::WAIT, .value = 6}
-		}
-	}
+    {
+        PotionEffect::SPEED,
+        3.0f,  // highestQualityEffect
+        180,   // highestQualityDuration
+        vec3(255, 157, 35), // finalPotionColor
+        {
+            { ItemType::COFFEE_BEANS, 5, 1.0f }, // ingredients
+            { ItemType::MAGICAL_FRUIT, 3, 0.0f }
+        },
+        {
+            { ActionType::MODIFY_HEAT, 100 }, // steps
+            { ActionType::WAIT, 2 },
+            { ActionType::ADD_INGREDIENT, 0 },
+            { ActionType::ADD_INGREDIENT, 1 },
+            { ActionType::STIR, 3 },
+            { ActionType::WAIT, 6 }
+        }
+    }
 };
 
 // Default time represented by each "WAIT" action, in ms
