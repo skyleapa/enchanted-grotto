@@ -301,6 +301,7 @@ Entity createFruit(RenderSystem* renderer, vec2 position, int id, std::string na
 	item.name = name;
 	item.isCollectable = true; // Make sure the item can be collected
 	item.amount = amount;
+	item.originalPosition = position;
 
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
 	registry.meshPtrs.emplace(entity, &mesh);
@@ -333,6 +334,7 @@ Entity createCoffeeBean(RenderSystem* renderer, vec2 position, int id, std::stri
 	item.name = name;
 	item.isCollectable = true; // Make sure the item can be collected
 	item.amount = amount;
+	item.originalPosition = position;
 
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
 	registry.meshPtrs.emplace(entity, &mesh);
