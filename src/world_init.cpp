@@ -362,11 +362,6 @@ Entity create_cauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id
 {
 	auto entity = Entity();
 
-	Terrain& terrain = registry.terrains.emplace(entity);
-	terrain.collision_setting = 0.0f;
-	terrain.height_ratio = 0.4f;
-	terrain.width_ratio = 1.f;
-
 	Item& item = registry.items.emplace(entity);
 	item.type = ItemType::CAULDRON;
 	item.name = name;
@@ -400,11 +395,6 @@ Entity create_cauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id
 Entity createMortarPestle(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name)
 {
 	auto entity = Entity();
-
-	Terrain& terrain = registry.terrains.emplace(entity);
-	terrain.collision_setting = 0.0f;
-	terrain.height_ratio = 0.7f;
-	terrain.width_ratio = 0.9f;
 
 	Item& item = registry.items.emplace(entity);
 	item.type = ItemType::MORTAR_PESTLE;
@@ -440,11 +430,6 @@ Entity createChest(RenderSystem* renderer, vec2 position, vec2 scale, int id, st
 {
 	auto entity = Entity();
 
-	Terrain& terrain = registry.terrains.emplace(entity);
-	terrain.collision_setting = 0.0f;
-	terrain.height_ratio = 0.7f;
-	terrain.width_ratio = 1.f;
-
 	Item& item = registry.items.emplace(entity);
 	item.type = ItemType::CHEST;
 	item.name = name;
@@ -478,11 +463,6 @@ Entity createChest(RenderSystem* renderer, vec2 position, vec2 scale, int id, st
 Entity createRecipeBook(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name)
 {
 	auto entity = Entity();
-
-	Terrain& terrain = registry.terrains.emplace(entity);
-	terrain.collision_setting = 0.0f;
-	terrain.height_ratio = 0.7f;
-	terrain.width_ratio = 1.f;
 
 	Item& item = registry.items.emplace(entity);
 	item.type = ItemType::RECIPE_BOOK;

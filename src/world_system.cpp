@@ -2,6 +2,7 @@
 #include "world_system.hpp"
 #include "world_init.hpp"
 #include "common.hpp"
+#include "item_system.hpp"
 
 // stlib
 #include <cassert>
@@ -155,6 +156,26 @@ void WorldSystem::init(RenderSystem* renderer_arg)
 // Update our game world
 bool WorldSystem::step(float elapsed_ms_since_last_update)
 {
+	// Updating window title with number of fruits to show serialization
+	std::stringstream title_ss;
+	int inventory_items = 0;
+	int fruits = 0;
+	int beans = 0;
+
+	for (int i = 0; i < registry.inventories.size(); i++) {
+		Inventory& inv = registry.inventories.components[i];
+		inventory_items += inv.items.size();
+		for (int j = 0; j < inv.items.size(); j++) {
+			if (registry.items.has(inv.items[j])) {
+				Item& item = registry.items.get(inv.items[j]);
+				if (item.type == ItemType::MAGICAL_FRUIT) fruits++;
+				else if (item.type == ItemType::COFFEE_BEANS) beans++;
+			}
+		}
+	}
+
+	title_ss << inventory_items << " items in inventory: " << fruits << " fruits " << beans << " beans";
+	glfwSetWindowTitle(window, title_ss.str().c_str());
 
 	// handle switching biomes
 	ScreenState& screen = registry.screenStates.components[0];
@@ -178,17 +199,25 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 			if (screen.biome != screen.switching_to_biome)
 			{
 				screen.biome = screen.switching_to_biome;
+
+				// handle serialization
+				ItemSystem item_system;
+				item_system.saveGameState("game_state.json");
+				while (registry.inventories.entities.size() > 0)
+					registry.remove_all_components_of(registry.inventories.entities.back());
 				restart_game();
+				item_system.init();
 				screen.darken_screen_factor = 1;
 				if (screen.biome == (GLuint)BIOME::GROTTO)
 				{
 					player_motion.scale = { PLAYER_BB_WIDTH * PlAYER_BB_GROTTO_SIZE_FACTOR, PLAYER_BB_HEIGHT * PlAYER_BB_GROTTO_SIZE_FACTOR };
 					player_motion.position = vec2({ player_motion.position.x, GRID_CELL_HEIGHT_PX * 11 }); // bring player to front of door
 				}
-				else
+				else if (screen.biome == (GLuint)BIOME::FOREST)
 				{
 					player_motion.scale = { PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT };
 				}
+				player_motion.velocity = { PLAYER_SPEED, PLAYER_SPEED };
 			}
 			screen.darken_screen_factor -= elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
 			if (screen.darken_screen_factor <= 0)

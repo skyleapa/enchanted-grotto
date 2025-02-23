@@ -44,7 +44,7 @@ const int GRID_LINE_WIDTH_PX = 2;
 const float PLAYER_BB_WIDTH = (float)65;
 const float PLAYER_BB_HEIGHT = (float)100;
 const float PlAYER_BB_GROTTO_SIZE_FACTOR = 1.8;
-const float PLAYER_SPEED = (float)100;
+const float PLAYER_SPEED = (float)200;
 
 const float TIME_UPDATE_FACTOR = 0.001f;
 
