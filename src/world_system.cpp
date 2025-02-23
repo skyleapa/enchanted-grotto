@@ -366,6 +366,8 @@ void WorldSystem::create_grotto()
 
 void WorldSystem::handle_collisions()
 {
+	// Collision Resolution - Ensure player cannot go into bounding box, but can move around it
+
 	// get our player entity
 	if (registry.players.entities.empty())
 		return;

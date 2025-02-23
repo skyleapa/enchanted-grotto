@@ -21,7 +21,6 @@ vec4 get_bounding_box(const Motion& motion, float width_ratio, float height_rati
 
 bool collides(const Motion& player_motion, const Motion& terrain_motion, const Terrain* terrain)
 {
-
 	// default full bounding box size
 	float player_width_ratio = 1.0f, player_height_ratio = 1.0f;
 	float terrain_width_ratio = 1.0f, terrain_height_ratio = 1.0f;
@@ -36,10 +35,12 @@ bool collides(const Motion& player_motion, const Motion& terrain_motion, const T
 		terrain_width_ratio = terrain->width_ratio;
 		terrain_height_ratio = terrain->height_ratio;
 	}
-
+	
+	// gets our bounding boxes for the player and terrain
 	vec4 player_box = get_bounding_box(player_motion, player_width_ratio, player_height_ratio);
 	vec4 terrain_box = get_bounding_box(terrain_motion, terrain_width_ratio, terrain_height_ratio);
 
+	// calculate our AABB overlapping bounding boxes
 	bool overlap_x = (player_box.x < terrain_box.x + terrain_box.z) && (player_box.x + player_box.z > terrain_box.x);
 	bool overlap_y = (player_box.y < terrain_box.y + terrain_box.w) && (player_box.y + player_box.w > terrain_box.y);
 
@@ -65,8 +66,8 @@ void PhysicsSystem::step(float elapsed_ms)
 
 		Motion& terrain_motion = registry.motions.get(terrain_entity);
 		Terrain& terrain = registry.terrains.get(terrain_entity);
-
-		// only check collisions if one is a player and the other is terrain
+		
+		// Collision Detection: only check collisions if one is a player and the other is terrain
 		if (collides(player_motion, terrain_motion, &terrain))
 		{
 			registry.collisions.emplace_with_duplicates(player_entity, terrain_entity);
