@@ -61,7 +61,7 @@ Uploaded to `/doc/test-plan.docx`
 Uploaded to `/doc/bug-report.xlsx`
 
 12. Demo video
-TODO: include YouTube link
+https://www.youtube.com/watch?v=Tv99njp9Pmo
 
 ## Creative Elements: 
 ### Software Engineering: Reloadability (19)
