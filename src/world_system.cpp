@@ -146,8 +146,8 @@ void WorldSystem::init(RenderSystem* renderer_arg)
 	this->renderer = renderer_arg;
 
 	// start playing background music indefinitely
-	std::cout << "Starting music..." << std::endl;
-	Mix_PlayMusic(background_music, -1);
+	// std::cout << "Starting music..." << std::endl;
+	// Mix_PlayMusic(background_music, -1);
 
 	// Set all states to default
 	restart_game();
@@ -302,28 +302,6 @@ void WorldSystem::restart_game()
 	// debugging for memory/component leaks
 	registry.list_all_components();
 
-	int grid_line_width = GRID_LINE_WIDTH_PX;
-
-	// create grid lines if they do not already exist
-	if (grid_lines.size() == 0)
-	{
-		// vertical lines
-		int cell_width = GRID_CELL_WIDTH_PX;
-		for (int col = 0; col < 24 + 1; col++)
-		{
-			// width of 2 to make the grid easier to see
-			grid_lines.push_back(createGridLine(vec2(col * cell_width, 0), vec2(grid_line_width, 2 * WINDOW_HEIGHT_PX)));
-		}
-
-		// horizontal lines
-		int cell_height = GRID_CELL_HEIGHT_PX;
-		for (int col = 0; col < 13 + 1; col++)
-		{
-			// width of 2 to make the grid easier to see
-			grid_lines.push_back(createGridLine(vec2(0, col * cell_height), vec2(2 * WINDOW_WIDTH_PX, grid_line_width)));
-		}
-	}
-
 	if (registry.players.components.size() == 0)
 	{
 		createPlayer(renderer, vec2(GROTTO_ENTRANCE_X, GROTTO_ENTRANCE_Y + 50));
@@ -332,6 +310,7 @@ void WorldSystem::restart_game()
 	int biome = registry.screenStates.components[0].biome;
 	if (biome == (GLuint)BIOME::FOREST)
 	{
+		trees.clear();
 		create_forest();
 	}
 	else if (biome == (GLuint)BIOME::GROTTO)
@@ -463,6 +442,12 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		handle_player_interaction();
 	}
 
+	if (action == GLFW_PRESS && key == GLFW_KEY_R)
+	{
+		restart_game();
+	}
+
+	// no character movement allowed when switching biomes
 	if (registry.screenStates.components[0].is_switching_biome || (key != GLFW_KEY_W && key != GLFW_KEY_S && key != GLFW_KEY_D && key != GLFW_KEY_A))
 	{
 		return;
@@ -476,6 +461,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 	Motion& player_motion = registry.motions.get(player);
 	std::vector<int>& pressed_keys = registry.screenStates.components[0].pressed_keys;
 
+	// Handle character movement
 	if (action == GLFW_PRESS)
 	{
 		pressed_keys.push_back(key); // Add key to set
