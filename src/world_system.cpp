@@ -490,32 +490,35 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 	}
 	if (action == GLFW_RELEASE)
 	{
-		pressed_keys.erase(
-			std::remove(pressed_keys.begin(), pressed_keys.end(), key),
-			pressed_keys.end());
-
+		if (pressed_keys.size() > 0) {
+			pressed_keys.erase(
+				std::remove(pressed_keys.begin(), pressed_keys.end(), key),
+				pressed_keys.end());
+		}
 		if (pressed_keys.empty() && registry.moving.has(player))
 		{
 			registry.moving.remove(player); // Stop movement only when all keys are released
 		}
 		else
 		{
-			int old_key = pressed_keys[pressed_keys.size() - 1]; // get the last direction
-			if (old_key == GLFW_KEY_W)
-			{
-				player_motion.moving_direction = (int)DIRECTION::UP;
-			}
-			else if (old_key == GLFW_KEY_S)
-			{
-				player_motion.moving_direction = (int)DIRECTION::DOWN;
-			}
-			else if (old_key == GLFW_KEY_D)
-			{
-				player_motion.moving_direction = (int)DIRECTION::RIGHT;
-			}
-			else if (old_key == GLFW_KEY_A)
-			{
-				player_motion.moving_direction = (int)DIRECTION::LEFT;
+			if (pressed_keys.size() > 0) {
+				int old_key = pressed_keys[pressed_keys.size() - 1]; // get the last direction
+				if (old_key == GLFW_KEY_W)
+				{
+					player_motion.moving_direction = (int)DIRECTION::UP;
+				}
+				else if (old_key == GLFW_KEY_S)
+				{
+					player_motion.moving_direction = (int)DIRECTION::DOWN;
+				}
+				else if (old_key == GLFW_KEY_D)
+				{
+					player_motion.moving_direction = (int)DIRECTION::RIGHT;
+				}
+				else if (old_key == GLFW_KEY_A)
+				{
+					player_motion.moving_direction = (int)DIRECTION::LEFT;
+				}
 			}
 		}
 	}
@@ -679,8 +682,8 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 		motion.position = item_info.originalPosition;
 		motion.angle = 180.f;
 		motion.velocity = { 0, 0 };
-		motion.scale = (item_info.name == "Magical Fruit") 
-			? vec2(FRUIT_WIDTH, FRUIT_HEIGHT) 
+		motion.scale = (item_info.name == "Magical Fruit")
+			? vec2(FRUIT_WIDTH, FRUIT_HEIGHT)
 			: vec2(COFFEE_BEAN_WIDTH, COFFEE_BEAN_HEIGHT);
 
 		// Restore render request
