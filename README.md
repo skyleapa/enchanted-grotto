@@ -10,6 +10,7 @@ Both systems take in a `game|test` argument:
 ```bash
 .\run [game|test]
 ```
+Note that on some Windows configurations, CMake may place the game executable in the `/build/Debug` folder. If the script fails, the executable is most likely there and can be run directly.
 
 ### Linux/macOS:
 ```bash
