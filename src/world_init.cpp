@@ -68,9 +68,8 @@ Entity createPlayer(RenderSystem* renderer, vec2 position)
 
 	auto& motion = registry.motions.emplace(entity);
 	motion.angle = 0.f;
-	motion.velocity = { PLAYER_SPEED, PLAYER_SPEED };
+	motion.velocity = { 0, 0 };
 	motion.position = position;
-	motion.moving_direction = (int)DIRECTION::DOWN;
 
 	motion.scale = vec2({ PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT });
 

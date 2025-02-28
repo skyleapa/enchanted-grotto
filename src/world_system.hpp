@@ -90,6 +90,9 @@ private:
 	// trees
 	std::vector<Entity> trees;
 
+	// user pressed keys
+	std::unordered_set<int> pressed_keys;
+
 	// music references
 	Mix_Music* background_music;
 	Mix_Chunk* chicken_dead_sound;

@@ -217,7 +217,6 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 				{
 					player_motion.scale = { PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT };
 				}
-				player_motion.velocity = { PLAYER_SPEED, PLAYER_SPEED };
 			}
 			screen.darken_screen_factor -= elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
 			if (screen.darken_screen_factor <= 0)
@@ -229,7 +228,6 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 			screen.darken_screen_factor = 0;
 			screen.is_switching_biome = false;
 			screen.fade_status = 0;
-			screen.pressed_keys = {};
 		}
 		return true; // don't need to do any other steps
 	}
@@ -253,29 +251,22 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		}
 	}
 
-	// move the character
-	if (registry.moving.has(player))
-	{
-		player_motion.previous_position = player_motion.position;
-		float delta = elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
+	// Update velocity based on active keys
+	player_motion.velocity = { 0, 0 }; // Reset velocity before recalculating
 
-		if (player_motion.moving_direction == (int)DIRECTION::UP)
-		{
-			player_motion.position.y -= player_motion.velocity.y * delta;
-		}
-		else if (player_motion.moving_direction == (int)DIRECTION::DOWN)
-		{
-			player_motion.position.y += player_motion.velocity.y * delta;
-		}
-		else if (player_motion.moving_direction == (int)DIRECTION::RIGHT)
-		{
-			player_motion.position.x += player_motion.velocity.x * delta;
-		}
-		else if (player_motion.moving_direction == (int)DIRECTION::LEFT)
-		{
-			player_motion.position.x -= player_motion.velocity.x * delta;
-		}
-	}
+	if (pressed_keys.count(GLFW_KEY_W))
+		player_motion.velocity[1] -= PLAYER_SPEED;
+	if (pressed_keys.count(GLFW_KEY_S))
+		player_motion.velocity[1] += PLAYER_SPEED;
+	if (pressed_keys.count(GLFW_KEY_D))
+		player_motion.velocity[0] += PLAYER_SPEED;
+	if (pressed_keys.count(GLFW_KEY_A))
+		player_motion.velocity[0] -= PLAYER_SPEED;
+
+	// move the character
+	player_motion.previous_position = player_motion.position;
+	float delta = elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
+	player_motion.position += delta * player_motion.velocity;
 
 	update_textbox_visibility();
 	handle_item_respawn(elapsed_ms_since_last_update);
@@ -447,79 +438,25 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		restart_game();
 	}
 
-	// no character movement allowed when switching biomes
-	if (registry.screenStates.components[0].is_switching_biome || (key != GLFW_KEY_W && key != GLFW_KEY_S && key != GLFW_KEY_D && key != GLFW_KEY_A))
-	{
-		return;
-	}
-
 	Entity player = registry.players.entities[0]; // Assume only one player entity
 	if (!registry.motions.has(player))
 	{
 		return;
 	}
 	Motion& player_motion = registry.motions.get(player);
-	std::vector<int>& pressed_keys = registry.screenStates.components[0].pressed_keys;
+	std::unordered_set<int>& pressed_keys = WorldSystem::pressed_keys;
 
-	// Handle character movement
-	if (action == GLFW_PRESS)
+	// // Handle character movement
+	if (key == GLFW_KEY_W || key == GLFW_KEY_S || key == GLFW_KEY_D || key == GLFW_KEY_A || key == GLFW_KEY_F)
+		// even if press happened in different biome should still continue after switching
 	{
-		pressed_keys.push_back(key); // Add key to set
-		if (!registry.moving.has(player))
+		if (action == GLFW_PRESS && key != GLFW_KEY_F)
 		{
-			registry.moving.emplace(player); // Register movement
+			pressed_keys.insert(key);
 		}
-
-		// TODO: map enums with key to direction
-		if (key == GLFW_KEY_W)
+		else if (action == GLFW_RELEASE)
 		{
-			player_motion.moving_direction = (int)DIRECTION::UP;
-		}
-		else if (key == GLFW_KEY_S)
-		{
-			player_motion.moving_direction = (int)DIRECTION::DOWN;
-		}
-		else if (key == GLFW_KEY_D)
-		{
-			player_motion.moving_direction = (int)DIRECTION::RIGHT;
-		}
-		else if (key == GLFW_KEY_A)
-		{
-			player_motion.moving_direction = (int)DIRECTION::LEFT;
-		}
-	}
-	if (action == GLFW_RELEASE)
-	{
-		if (pressed_keys.size() > 0) {
-			pressed_keys.erase(
-				std::remove(pressed_keys.begin(), pressed_keys.end(), key),
-				pressed_keys.end());
-		}
-		if (pressed_keys.empty() && registry.moving.has(player))
-		{
-			registry.moving.remove(player); // Stop movement only when all keys are released
-		}
-		else
-		{
-			if (pressed_keys.size() > 0) {
-				int old_key = pressed_keys[pressed_keys.size() - 1]; // get the last direction
-				if (old_key == GLFW_KEY_W)
-				{
-					player_motion.moving_direction = (int)DIRECTION::UP;
-				}
-				else if (old_key == GLFW_KEY_S)
-				{
-					player_motion.moving_direction = (int)DIRECTION::DOWN;
-				}
-				else if (old_key == GLFW_KEY_D)
-				{
-					player_motion.moving_direction = (int)DIRECTION::RIGHT;
-				}
-				else if (old_key == GLFW_KEY_A)
-				{
-					player_motion.moving_direction = (int)DIRECTION::LEFT;
-				}
-			}
+			if (std::find(pressed_keys.begin(), pressed_keys.end(), key) != pressed_keys.end()) pressed_keys.erase(key);
 		}
 	}
 }

@@ -1,7 +1,7 @@
 #pragma once
 #include "common.hpp"
 #include <vector>
-#include <unordered_map>
+#include <unordered_set>
 #include "../ext/stb_image/stb_image.h"
 
 // Player component
@@ -17,7 +17,6 @@ struct Motion
 	float angle = 0;
 	vec2 velocity = { 0, 0 };
 	vec2 scale = { 10, 10 };
-	int moving_direction = 0;
 	vec2 previous_position = { 0, 0 };
 };
 
@@ -42,7 +41,6 @@ struct ScreenState
 {
 	float darken_screen_factor = 0;
 	GLuint biome = 1; // default to forest
-	std::vector<int> pressed_keys = {};
 	bool is_switching_biome = false;
 	GLuint switching_to_biome = 1; // track biome that is being switched to
 	float fade_status = 0; // 0 - before fade out, 1 after fade out, 2 - after fade in
@@ -156,9 +154,6 @@ struct MortarAndPestle
 	int itemState;
 };
 
-struct Moving
-{
-};
 
 // Obstacles in our environment that the player collides with
 struct Terrain
