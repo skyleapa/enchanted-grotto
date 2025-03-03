@@ -343,10 +343,11 @@ void WorldSystem::create_grotto()
 		create_grotto_static_entities(renderer, position, size, rotation, texture, layer);
 	}
 
-	create_cauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.35, GRID_CELL_HEIGHT_PX * 5.85 }), vec2({ 175, 280 }), 8, "Cauldron");
+	createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.35, GRID_CELL_HEIGHT_PX * 5.85 }), vec2({ 175, 280 }), 8, "Cauldron");
 	createMortarPestle(renderer, vec2({ GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22 }), vec2({ 213, 141 }), 9, "Mortar and Pestle");
 	createRecipeBook(renderer, vec2({ GRID_CELL_WIDTH_PX * 4.15, GRID_CELL_HEIGHT_PX * 5.05 }), vec2({ 108, 160 }), 10, "Recipe Book");
 	createChest(renderer, vec2({ GRID_CELL_WIDTH_PX * 1.35, GRID_CELL_HEIGHT_PX * 5.2 }), vec2({ 100, 150 }), 11, "Chest");
+	createGrottoExit(renderer, vec2(GRID_CELL_WIDTH_PX * 20.5, GRID_CELL_HEIGHT_PX * 13), 12, "Grotto Exit");
 }
 
 void WorldSystem::handle_collisions()
@@ -538,11 +539,15 @@ void WorldSystem::handle_player_interaction()
 bool WorldSystem::handle_entrance_interaction(Entity entrance_entity)
 {
 	Entrance& entrance = registry.entrances.get(entrance_entity);
+	ScreenState& state = registry.screenStates.components[0];
 	if (entrance.target_biome == (GLuint)BIOME::GROTTO)
 	{
-		ScreenState& state = registry.screenStates.components[0];
 		state.is_switching_biome = true;
 		state.switching_to_biome = (GLuint)BIOME::GROTTO;
+	}
+	else if (entrance.target_biome == (GLuint)BIOME::FOREST) {
+		state.is_switching_biome = true;
+		state.switching_to_biome = (GLuint)BIOME::FOREST;
 	}
 	return true;
 }

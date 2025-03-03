@@ -267,8 +267,8 @@ Entity createBush(RenderSystem* renderer, vec2 position)
 	auto entity = Entity();
 	Terrain& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
-	terrain.height_ratio = 0.2f;
-	terrain.width_ratio = 0.45f;
+	terrain.height_ratio = 0.4f;
+	terrain.width_ratio = 0.75f;
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -357,7 +357,7 @@ Entity createCoffeeBean(RenderSystem* renderer, vec2 position, int id, std::stri
 	return entity;
 }
 
-Entity create_cauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name)
+Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name)
 {
 	auto entity = Entity();
 
@@ -489,6 +489,44 @@ Entity createRecipeBook(RenderSystem* renderer, vec2 position, vec2 scale, int i
 			GEOMETRY_BUFFER_ID::SPRITE,
 			RENDER_LAYER::TERRAIN,
 		});
+
+	return entity;
+}
+
+
+Entity createGrottoExit(RenderSystem* renderer, vec2 position, int id, std::string name)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::FOREST;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::GROTTO_EXIT;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2(190, BOUNDARY_LINE_THICKNESS);
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x, position.y - 50 }), entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::BOUNDARY_LINE, // because door is drawn into biome so just have the placement set for rendering
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::STRUCTURE,
+		 0 });
 
 	return entity;
 }

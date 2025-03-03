@@ -110,13 +110,15 @@ enum class ItemType
 	MORTAR_PESTLE = CAULDRON + 1,
 	CHEST = MORTAR_PESTLE + 1,
 	RECIPE_BOOK = CHEST + 1,
+	GROTTO_EXIT = RECIPE_BOOK + 1
 };
 
 const std::unordered_map<ItemType, std::string> ITEM_NAMES = {
 	{ItemType::POTION, "Potion"},
 	{ItemType::COFFEE_BEANS, "Coffee Beans"},
 	{ItemType::MAGICAL_FRUIT, "Magical Fruit"},
-	{ItemType::GROTTO_ENTRANCE, "Grotto Entrance"}
+	{ItemType::GROTTO_ENTRANCE, "Grotto Entrance"},
+	{ItemType::GROTTO_EXIT, "Grotto Exit"},
 };
 
 // Potion Types and names

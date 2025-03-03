@@ -40,7 +40,7 @@ Entity createFruit(RenderSystem *renderer, vec2 position, int id, std::string na
 Entity createCoffeeBean(RenderSystem *renderer, vec2 position, int id, std::string name, int amount);
 
 // cauldron
-Entity create_cauldron(RenderSystem *renderer, vec2 position, vec2 scale, int id, std::string name);
+Entity createCauldron(RenderSystem *renderer, vec2 position, vec2 scale, int id, std::string name);
 
 // mortar and pestle
 Entity createMortarPestle(RenderSystem *renderer, vec2 position, vec2 scale, int id, std::string name);
@@ -50,6 +50,9 @@ Entity createChest(RenderSystem *renderer, vec2 position, vec2 scale, int id, st
 
 // recipe book
 Entity createRecipeBook(RenderSystem *renderer, vec2 position, vec2 scale, int id, std::string name);
+
+// grotto exit
+Entity createGrottoExit(RenderSystem* renderer, vec2 position, int id, std::string name);
 
 // interaction textbox
 Entity createTextbox(RenderSystem *renderer, vec2 position, Entity itemEntity);
