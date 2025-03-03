@@ -26,6 +26,7 @@ int main()
 	PhysicsSystem physics_system;
 	ItemSystem    item_system;
 	PotionSystem  potion_system;
+	BiomeSystem   biome_system;
 
 	// initialize window
 	GLFWwindow* window = world_system.create_window();
@@ -42,8 +43,9 @@ int main()
 
 	// initialize the main systems
 	renderer_system.init(window);
-	world_system.init(&renderer_system);
+	world_system.init(&renderer_system, &biome_system);
 	item_system.init();
+	biome_system.init(&renderer_system);
 
 	// variable timestep loop
 	auto t = Clock::now();
@@ -65,6 +67,7 @@ int main()
 		item_system.step(elapsed_ms);
 		potion_system.updateCauldrons(elapsed_ms);
 		world_system.handle_collisions();
+		biome_system.step(elapsed_ms);
 
 		renderer_system.draw();
 	}

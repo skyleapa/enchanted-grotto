@@ -79,13 +79,9 @@ const float COFFEE_BEAN_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 0.9;
 const float TEXTBOX_WIDTH = (float)GRID_CELL_WIDTH_PX * 4;
 const float TEXTBOX_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 4;
 
-const float ITEM_PICKUP_RADIUS = (float)70;
-const float INTERACTION_RADIUS = (float)70;
-const float TEXTBOX_VISIBILITY_RADIUS = (float)70;
-
-extern const std::map<int, std::vector<std::tuple<vec2, vec2>>> biome_boundaries;
-
-extern const std::vector<std::tuple<vec2, vec2, float, GLuint, int>> grotto_static_entity_pos;
+const float ITEM_PICKUP_RADIUS = (float)100;
+const float INTERACTION_RADIUS = (float)100;
+const float TEXTBOX_VISIBILITY_RADIUS = (float)100;
 
 
 // Item and potion constants. The enums are declared here instead of in components.hpp
@@ -110,13 +106,15 @@ enum class ItemType
 	MORTAR_PESTLE = CAULDRON + 1,
 	CHEST = MORTAR_PESTLE + 1,
 	RECIPE_BOOK = CHEST + 1,
+	GROTTO_EXIT = RECIPE_BOOK + 1
 };
 
 const std::unordered_map<ItemType, std::string> ITEM_NAMES = {
 	{ItemType::POTION, "Potion"},
 	{ItemType::COFFEE_BEANS, "Coffee Beans"},
 	{ItemType::MAGICAL_FRUIT, "Magical Fruit"},
-	{ItemType::GROTTO_ENTRANCE, "Grotto Entrance"}
+	{ItemType::GROTTO_ENTRANCE, "Grotto Entrance"},
+	{ItemType::GROTTO_EXIT, "Grotto Exit"},
 };
 
 // Potion Types and names

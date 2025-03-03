@@ -140,10 +140,11 @@ bool WorldSystem::start_and_load_sounds()
 	return true;
 }
 
-void WorldSystem::init(RenderSystem* renderer_arg)
+void WorldSystem::init(RenderSystem* renderer_arg, BiomeSystem* biome_sys)
 {
 
 	this->renderer = renderer_arg;
+	this->biome_sys = biome_sys;
 
 	// start playing background music indefinitely
 	// std::cout << "Starting music..." << std::endl;
@@ -177,8 +178,6 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	title_ss << inventory_items << " items in inventory: " << fruits << " fruits " << beans << " beans";
 	glfwSetWindowTitle(window, title_ss.str().c_str());
 
-	// handle switching biomes
-	ScreenState& screen = registry.screenStates.components[0];
 	if (registry.players.entities.size() < 1)
 		return true;
 	Entity& player = registry.players.entities[0];
@@ -186,53 +185,6 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		return true;
 	Motion& player_motion = registry.motions.get(player);
 
-	if (screen.is_switching_biome)
-	{
-		if (screen.fade_status == 0)
-		{
-			screen.darken_screen_factor += elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
-			if (screen.darken_screen_factor >= 1)
-				screen.fade_status = 1; // after fade out
-		}
-		else if (screen.fade_status == 1)
-		{
-			if (screen.biome != screen.switching_to_biome)
-			{
-				screen.biome = screen.switching_to_biome;
-
-				// handle serialization
-				ItemSystem item_system;
-				item_system.saveGameState("game_state.json");
-				while (registry.inventories.entities.size() > 0)
-					registry.remove_all_components_of(registry.inventories.entities.back());
-				restart_game();
-				item_system.init();
-				screen.darken_screen_factor = 1;
-				if (screen.biome == (GLuint)BIOME::GROTTO)
-				{
-					player_motion.scale = { PLAYER_BB_WIDTH * PlAYER_BB_GROTTO_SIZE_FACTOR, PLAYER_BB_HEIGHT * PlAYER_BB_GROTTO_SIZE_FACTOR };
-					player_motion.position = vec2({ player_motion.position.x, GRID_CELL_HEIGHT_PX * 11 }); // bring player to front of door
-				}
-				else if (screen.biome == (GLuint)BIOME::FOREST)
-				{
-					player_motion.scale = { PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT };
-				}
-				player_motion.velocity = { PLAYER_SPEED, PLAYER_SPEED };
-			}
-			screen.darken_screen_factor -= elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
-			if (screen.darken_screen_factor <= 0)
-				screen.fade_status = 2; // after fade in
-		}
-		else
-		{
-			// complete biome switch
-			screen.darken_screen_factor = 0;
-			screen.is_switching_biome = false;
-			screen.fade_status = 0;
-			screen.pressed_keys = {};
-		}
-		return true; // don't need to do any other steps
-	}
 	// Remove debug info from the last step
 	while (registry.debugComponents.entities.size() > 0)
 		registry.remove_all_components_of(registry.debugComponents.entities.back());
@@ -253,29 +205,24 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		}
 	}
 
-	// move the character
-	if (registry.moving.has(player))
-	{
-		player_motion.previous_position = player_motion.position;
-		float delta = elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
+	// Update velocity based on active keys
+	player_motion.velocity = { 0, 0 }; // Reset velocity before recalculating
 
-		if (player_motion.moving_direction == (int)DIRECTION::UP)
-		{
-			player_motion.position.y -= player_motion.velocity.y * delta;
-		}
-		else if (player_motion.moving_direction == (int)DIRECTION::DOWN)
-		{
-			player_motion.position.y += player_motion.velocity.y * delta;
-		}
-		else if (player_motion.moving_direction == (int)DIRECTION::RIGHT)
-		{
-			player_motion.position.x += player_motion.velocity.x * delta;
-		}
-		else if (player_motion.moving_direction == (int)DIRECTION::LEFT)
-		{
-			player_motion.position.x -= player_motion.velocity.x * delta;
-		}
-	}
+	if (registry.screenStates.components[0].is_switching_biome) return true; // don't move while switching biomes
+
+	if (pressed_keys.count(GLFW_KEY_W))
+		player_motion.velocity[1] -= PLAYER_SPEED;
+	if (pressed_keys.count(GLFW_KEY_S))
+		player_motion.velocity[1] += PLAYER_SPEED;
+	if (pressed_keys.count(GLFW_KEY_D))
+		player_motion.velocity[0] += PLAYER_SPEED;
+	if (pressed_keys.count(GLFW_KEY_A))
+		player_motion.velocity[0] -= PLAYER_SPEED;
+
+	// move the character
+	player_motion.previous_position = player_motion.position;
+	float delta = elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
+	player_motion.position += delta * player_motion.velocity;
 
 	update_textbox_visibility();
 	handle_item_respawn(elapsed_ms_since_last_update);
@@ -307,76 +254,13 @@ void WorldSystem::restart_game()
 		createPlayer(renderer, vec2(GROTTO_ENTRANCE_X, GROTTO_ENTRANCE_Y + 50));
 	}
 
-	int biome = registry.screenStates.components[0].biome;
-	if (biome == (GLuint)BIOME::FOREST)
-	{
-		trees.clear();
-		create_forest();
-	}
-	else if (biome == (GLuint)BIOME::GROTTO)
-	{
-		create_grotto();
-	}
-}
+	biome_sys->init(renderer);
 
-void WorldSystem::create_forest()
-{
-	// create boundaries
-	for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::FOREST))
-	{
-		create_boundary_line(renderer, position, scale);
-	}
-
-	// create forest bridge
-	createForestBridge(renderer, vec2(307, 485));
-
-	// create forest river
-	createForestRiver(renderer, vec2(307, 0));
-
-	// create trees if they don't exist
-	if (trees.size() == 0)
-	{
-		trees.push_back(createTree(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 3)));
-		trees.push_back(createTree(renderer, vec2(GRID_CELL_WIDTH_PX * 19, GRID_CELL_HEIGHT_PX * 10)));
-		trees.push_back(createTree(renderer, vec2(GRID_CELL_WIDTH_PX * 23, GRID_CELL_HEIGHT_PX * 11)));
-	}
-
-	createGrottoEntrance(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 1), 7, "Grotto Entrance");
-
-	createBush(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5));
-
-	createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 10, GRID_CELL_HEIGHT_PX * 3), 1, "Magical Fruit", 1);
-	createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 19, GRID_CELL_HEIGHT_PX * 10), 2, "Magical Fruit", 1);
-	createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 23, GRID_CELL_HEIGHT_PX * 11), 3, "Magical Fruit", 1);
-
-	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5), 4, "Coffee Bean", 1);
-	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 9.9, GRID_CELL_HEIGHT_PX * 12.1), 5, "Coffee Bean", 1);
-	createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 12, GRID_CELL_HEIGHT_PX * 12.7), 6, "Coffee Bean", 1);
-}
-
-void WorldSystem::create_grotto()
-{
-	// positions are according to sample grotto interior
-	for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::GROTTO))
-	{
-		create_boundary_line(renderer, position, scale);
-	}
-
-	for (const auto& [position, size, rotation, texture, layer] : grotto_static_entity_pos) {
-		create_grotto_static_entities(renderer, position, size, rotation, texture, layer);
-	}
-
-	create_cauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.35, GRID_CELL_HEIGHT_PX * 5.85 }), vec2({ 175, 280 }), 8, "Cauldron");
-	createMortarPestle(renderer, vec2({ GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22 }), vec2({ 213, 141 }), 9, "Mortar and Pestle");
-	createRecipeBook(renderer, vec2({ GRID_CELL_WIDTH_PX * 4.15, GRID_CELL_HEIGHT_PX * 5.05 }), vec2({ 108, 160 }), 10, "Recipe Book");
-	createChest(renderer, vec2({ GRID_CELL_WIDTH_PX * 1.35, GRID_CELL_HEIGHT_PX * 5.2 }), vec2({ 100, 150 }), 11, "Chest");
 }
 
 void WorldSystem::handle_collisions()
 {
-	// Collision Resolution - Ensure player cannot go into bounding box, but can move around it
-
-	// get our player entity
+	// Ensure player exists
 	if (registry.players.entities.empty())
 		return;
 	Entity player_entity = registry.players.entities[0];
@@ -384,6 +268,10 @@ void WorldSystem::handle_collisions()
 		return;
 
 	Motion& player_motion = registry.motions.get(player_entity);
+	vec2 movement = player_motion.position - player_motion.previous_position;
+
+	bool x_blocked = false;
+	bool y_blocked = false;
 
 	for (Entity collision_entity : registry.collisions.entities)
 	{
@@ -392,32 +280,34 @@ void WorldSystem::handle_collisions()
 		Collision& collision = registry.collisions.get(collision_entity);
 
 		Entity terrain_entity = (collision_entity == player_entity) ? collision.other : collision_entity;
-
 		if (!registry.terrains.has(terrain_entity) || !registry.motions.has(terrain_entity))
 			continue;
 
 		Terrain& terrain = registry.terrains.get(terrain_entity);
-		vec2 movement = player_motion.position - player_motion.previous_position;
 
-		if (std::abs(movement.x) > std::abs(movement.y))
-		{
-			// horizontal collision -> stop X movement, allow Y movement
-			player_motion.position.x = player_motion.previous_position.x;
-		}
-		else
-		{
-			// vertical collision -> stop Y movement, allow X movement
-			player_motion.position.y = player_motion.previous_position.y;
-		}
-
-		// when collision_setting == 1, entire area should be unwalkable (rivers)
+		// Full blockage (e.g., rivers)
 		if (terrain.collision_setting == 1.0f)
 		{
 			player_motion.position = player_motion.previous_position;
+			x_blocked = true;
+			y_blocked = true;
+			break; // No need to check further
 		}
+
+		// Determine blocking direction
+		if (std::abs(movement.x) > 0.0f)
+			x_blocked = true;
+		if (std::abs(movement.y) > 0.0f)
+			y_blocked = true;
 	}
 
-	// Clear all collisions after processing this step
+	// Resolve movement based on blockages
+	if (x_blocked)
+		player_motion.position.x = player_motion.previous_position.x;
+	if (y_blocked)
+		player_motion.position.y = player_motion.previous_position.y;
+
+	// Clear collisions after processing
 	registry.collisions.clear();
 }
 
@@ -437,20 +327,9 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		close_window();
 	}
 
-	if (action == GLFW_PRESS && key == GLFW_KEY_F)
-	{
-		handle_player_interaction();
-	}
-
 	if (action == GLFW_PRESS && key == GLFW_KEY_R)
 	{
 		restart_game();
-	}
-
-	// no character movement allowed when switching biomes
-	if (registry.screenStates.components[0].is_switching_biome || (key != GLFW_KEY_W && key != GLFW_KEY_S && key != GLFW_KEY_D && key != GLFW_KEY_A))
-	{
-		return;
 	}
 
 	Entity player = registry.players.entities[0]; // Assume only one player entity
@@ -459,68 +338,27 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		return;
 	}
 	Motion& player_motion = registry.motions.get(player);
-	std::vector<int>& pressed_keys = registry.screenStates.components[0].pressed_keys;
+	std::unordered_set<int>& pressed_keys = WorldSystem::pressed_keys;
 
-	// Handle character movement
-	if (action == GLFW_PRESS)
+	// // Handle character movement
+	if (key == GLFW_KEY_W || key == GLFW_KEY_S || key == GLFW_KEY_D || key == GLFW_KEY_A || key == GLFW_KEY_F)
+		// even if press happened in different biome should still continue after switching
 	{
-		pressed_keys.push_back(key); // Add key to set
-		if (!registry.moving.has(player))
+		if (action == GLFW_PRESS && key != GLFW_KEY_F)
 		{
-			registry.moving.emplace(player); // Register movement
+			pressed_keys.insert(key);
 		}
-
-		// TODO: map enums with key to direction
-		if (key == GLFW_KEY_W)
+		else if (action == GLFW_RELEASE)
 		{
-			player_motion.moving_direction = (int)DIRECTION::UP;
-		}
-		else if (key == GLFW_KEY_S)
-		{
-			player_motion.moving_direction = (int)DIRECTION::DOWN;
-		}
-		else if (key == GLFW_KEY_D)
-		{
-			player_motion.moving_direction = (int)DIRECTION::RIGHT;
-		}
-		else if (key == GLFW_KEY_A)
-		{
-			player_motion.moving_direction = (int)DIRECTION::LEFT;
+			if (std::find(pressed_keys.begin(), pressed_keys.end(), key) != pressed_keys.end()) pressed_keys.erase(key);
 		}
 	}
-	if (action == GLFW_RELEASE)
+
+	ScreenState& screen = registry.screenStates.components[0];
+	if (screen.is_switching_biome) return; // don't handle character movement or interaction if screen is switching
+	if (action == GLFW_PRESS && key == GLFW_KEY_F)
 	{
-		if (pressed_keys.size() > 0) {
-			pressed_keys.erase(
-				std::remove(pressed_keys.begin(), pressed_keys.end(), key),
-				pressed_keys.end());
-		}
-		if (pressed_keys.empty() && registry.moving.has(player))
-		{
-			registry.moving.remove(player); // Stop movement only when all keys are released
-		}
-		else
-		{
-			if (pressed_keys.size() > 0) {
-				int old_key = pressed_keys[pressed_keys.size() - 1]; // get the last direction
-				if (old_key == GLFW_KEY_W)
-				{
-					player_motion.moving_direction = (int)DIRECTION::UP;
-				}
-				else if (old_key == GLFW_KEY_S)
-				{
-					player_motion.moving_direction = (int)DIRECTION::DOWN;
-				}
-				else if (old_key == GLFW_KEY_D)
-				{
-					player_motion.moving_direction = (int)DIRECTION::RIGHT;
-				}
-				else if (old_key == GLFW_KEY_A)
-				{
-					player_motion.moving_direction = (int)DIRECTION::LEFT;
-				}
-			}
-		}
+		handle_player_interaction();
 	}
 }
 
@@ -582,7 +420,7 @@ void WorldSystem::handle_player_interaction()
 		bool handle_textbox = false;
 		if (registry.entrances.has(item))
 		{
-			handle_textbox = handle_entrance_interaction(item);
+			handle_textbox = biome_sys->handleEntranceInteraction(item);
 		}
 		else if (item_info.isCollectable)
 		{
@@ -610,18 +448,6 @@ void WorldSystem::handle_player_interaction()
 		}
 	}
 	return;
-}
-
-bool WorldSystem::handle_entrance_interaction(Entity entrance_entity)
-{
-	Entrance& entrance = registry.entrances.get(entrance_entity);
-	if (entrance.target_biome == (GLuint)BIOME::GROTTO)
-	{
-		ScreenState& state = registry.screenStates.components[0];
-		state.is_switching_biome = true;
-		state.switching_to_biome = (GLuint)BIOME::GROTTO;
-	}
-	return true;
 }
 
 bool WorldSystem::handle_item_pickup(Entity player, Entity item)
@@ -676,6 +502,9 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 
 		if (item_info.respawnTime > 0)
 			return;
+
+		if (registry.screenStates.components[0].biome != (GLuint)BIOME::FOREST) return;
+		// only respawn if in forest biome
 
 		// Respawn item at its original position
 		Motion& motion = registry.motions.emplace(item);
