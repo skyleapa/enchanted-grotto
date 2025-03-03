@@ -79,9 +79,9 @@ const float COFFEE_BEAN_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 0.9;
 const float TEXTBOX_WIDTH = (float)GRID_CELL_WIDTH_PX * 4;
 const float TEXTBOX_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 4;
 
-const float ITEM_PICKUP_RADIUS = (float)70;
-const float INTERACTION_RADIUS = (float)70;
-const float TEXTBOX_VISIBILITY_RADIUS = (float)70;
+const float ITEM_PICKUP_RADIUS = (float)100;
+const float INTERACTION_RADIUS = (float)100;
+const float TEXTBOX_VISIBILITY_RADIUS = (float)100;
 
 extern const std::map<int, std::vector<std::tuple<vec2, vec2>>> biome_boundaries;
 

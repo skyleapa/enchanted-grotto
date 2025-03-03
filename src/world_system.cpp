@@ -352,51 +352,55 @@ void WorldSystem::create_grotto()
 
 void WorldSystem::handle_collisions()
 {
-	// Collision Resolution - Ensure player cannot go into bounding box, but can move around it
+    // Ensure player exists
+    if (registry.players.entities.empty())
+        return;
+    Entity player_entity = registry.players.entities[0];
+    if (!registry.motions.has(player_entity))
+        return;
 
-	// get our player entity
-	if (registry.players.entities.empty())
-		return;
-	Entity player_entity = registry.players.entities[0];
-	if (!registry.motions.has(player_entity))
-		return;
+    Motion& player_motion = registry.motions.get(player_entity);
+    vec2 movement = player_motion.position - player_motion.previous_position;
+    
+    bool x_blocked = false;
+    bool y_blocked = false;
 
-	Motion& player_motion = registry.motions.get(player_entity);
+    for (Entity collision_entity : registry.collisions.entities)
+    {
+        if (!registry.collisions.has(collision_entity))
+            continue;
+        Collision& collision = registry.collisions.get(collision_entity);
 
-	for (Entity collision_entity : registry.collisions.entities)
-	{
-		if (!registry.collisions.has(collision_entity))
-			continue;
-		Collision& collision = registry.collisions.get(collision_entity);
+        Entity terrain_entity = (collision_entity == player_entity) ? collision.other : collision_entity;
+        if (!registry.terrains.has(terrain_entity) || !registry.motions.has(terrain_entity))
+            continue;
 
-		Entity terrain_entity = (collision_entity == player_entity) ? collision.other : collision_entity;
+        Terrain& terrain = registry.terrains.get(terrain_entity);
 
-		if (!registry.terrains.has(terrain_entity) || !registry.motions.has(terrain_entity))
-			continue;
+        // Full blockage (e.g., rivers)
+        if (terrain.collision_setting == 1.0f)
+        {
+            player_motion.position = player_motion.previous_position;
+            x_blocked = true;
+            y_blocked = true;
+            break; // No need to check further
+        }
 
-		Terrain& terrain = registry.terrains.get(terrain_entity);
-		vec2 movement = player_motion.position - player_motion.previous_position;
+        // Determine blocking direction
+        if (std::abs(movement.x) > 0.0f)
+            x_blocked = true;
+        if (std::abs(movement.y) > 0.0f)
+            y_blocked = true;
+    }
 
-		if (std::abs(movement.x) > std::abs(movement.y))
-		{
-			// horizontal collision -> stop X movement, allow Y movement
-			player_motion.position.x = player_motion.previous_position.x;
-		}
-		else
-		{
-			// vertical collision -> stop Y movement, allow X movement
-			player_motion.position.y = player_motion.previous_position.y;
-		}
+    // Resolve movement based on blockages
+    if (x_blocked)
+        player_motion.position.x = player_motion.previous_position.x;
+    if (y_blocked)
+        player_motion.position.y = player_motion.previous_position.y;
 
-		// when collision_setting == 1, entire area should be unwalkable (rivers)
-		if (terrain.collision_setting == 1.0f)
-		{
-			player_motion.position = player_motion.previous_position;
-		}
-	}
-
-	// Clear all collisions after processing this step
-	registry.collisions.clear();
+    // Clear collisions after processing
+    registry.collisions.clear();
 }
 
 // Should the game be over ?
@@ -604,6 +608,9 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 
 		if (item_info.respawnTime > 0)
 			return;
+		
+		if (registry.screenStates.components[0].biome != (GLuint) BIOME::FOREST) return;
+		// only respawn if in forest biome
 
 		// Respawn item at its original position
 		Motion& motion = registry.motions.emplace(item);

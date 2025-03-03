@@ -267,8 +267,8 @@ Entity createBush(RenderSystem* renderer, vec2 position)
 	auto entity = Entity();
 	Terrain& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
-	terrain.height_ratio = 0.4f;
-	terrain.width_ratio = 0.75f;
+	terrain.height_ratio = 0.35f;
+	terrain.width_ratio = 0.55f;
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
