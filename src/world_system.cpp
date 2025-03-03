@@ -199,22 +199,14 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 			if (screen.biome != screen.switching_to_biome)
 			{
 				screen.biome = screen.switching_to_biome;
-
-				// handle serialization
-				ItemSystem item_system;
-				item_system.saveGameState("game_state.json");
-				while (registry.inventories.entities.size() > 0)
-					registry.remove_all_components_of(registry.inventories.entities.back());
-				restart_game();
-				item_system.init();
 				screen.darken_screen_factor = 1;
-				if (screen.biome == (GLuint)BIOME::GROTTO)
-				{
+				switch_biome((int)screen.biome);
+				if (screen.biome == (int)BIOME::GROTTO) {
 					player_motion.scale = { PLAYER_BB_WIDTH * PlAYER_BB_GROTTO_SIZE_FACTOR, PLAYER_BB_HEIGHT * PlAYER_BB_GROTTO_SIZE_FACTOR };
 					player_motion.position = vec2({ player_motion.position.x, GRID_CELL_HEIGHT_PX * 11 }); // bring player to front of door
 				}
-				else if (screen.biome == (GLuint)BIOME::FOREST)
-				{
+				else if (screen.biome == (int)BIOME::FOREST) {
+					player_motion.position = vec2(GROTTO_ENTRANCE_X, GROTTO_ENTRANCE_Y + 50);
 					player_motion.scale = { PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT };
 				}
 			}
@@ -298,16 +290,10 @@ void WorldSystem::restart_game()
 		createPlayer(renderer, vec2(GROTTO_ENTRANCE_X, GROTTO_ENTRANCE_Y + 50));
 	}
 
-	int biome = registry.screenStates.components[0].biome;
-	if (biome == (GLuint)BIOME::FOREST)
-	{
-		trees.clear();
-		create_forest();
-	}
-	else if (biome == (GLuint)BIOME::GROTTO)
-	{
-		create_grotto();
-	}
+	ScreenState& screen = registry.screenStates.components[0];
+	screen.biome = (GLuint) BIOME::FOREST;
+
+	switch_biome(screen.biome);
 }
 
 void WorldSystem::create_forest()
@@ -710,5 +696,29 @@ void WorldSystem::update_textbox_visibility()
 				}
 			}
 		}
+	}
+}
+
+void WorldSystem::switch_biome(int biome) {
+
+	std::vector<Entity> to_remove;
+	for (auto entity : registry.motions.entities) {
+		if (registry.players.has(entity) || registry.inventories.has(entity)) continue;
+		to_remove.push_back(entity);
+	}
+
+	for (auto entity : to_remove) {
+		registry.remove_all_components_of(entity);
+	}
+
+	if (biome == (GLuint)BIOME::FOREST)
+	{
+		trees.clear();
+		create_forest();
+	}
+	else if (biome == (GLuint)BIOME::GROTTO)
+	{
+		trees.clear();
+		create_grotto();
 	}
 }

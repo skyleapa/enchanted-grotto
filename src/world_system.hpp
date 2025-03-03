@@ -63,6 +63,7 @@ public:
 
 	void handle_item_respawn(float elapsed_ms);
 
+	void switch_biome(int biome);
 
 private:
 
