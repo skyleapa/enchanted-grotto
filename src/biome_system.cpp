@@ -139,19 +139,19 @@ void BiomeSystem::createGrotto()
     createGrottoExit(renderer, vec2(GRID_CELL_WIDTH_PX * 20.5, GRID_CELL_HEIGHT_PX * 13), 12, "Grotto Exit");
 }
 
-bool BiomeSystem::handle_entrance_interaction(Entity entrance_entity)
+bool BiomeSystem::handleEntranceInteraction(Entity entrance_entity)
 {
-	Entrance& entrance = registry.entrances.get(entrance_entity);
-	ScreenState& state = registry.screenStates.components[0];
-	state.darken_screen_factor = 0; // reset screen factor to 0
-	if (entrance.target_biome == (GLuint)BIOME::GROTTO)
-	{
-		state.is_switching_biome = true;
-		state.switching_to_biome = (GLuint)BIOME::GROTTO;
-	}
-	else if (entrance.target_biome == (GLuint)BIOME::FOREST) {
-		state.is_switching_biome = true;
-		state.switching_to_biome = (GLuint)BIOME::FOREST;
-	}
-	return true;
+    Entrance& entrance = registry.entrances.get(entrance_entity);
+    ScreenState& state = registry.screenStates.components[0];
+    state.darken_screen_factor = 0; // reset screen factor to 0
+    if (entrance.target_biome == (GLuint)BIOME::GROTTO)
+    {
+        state.is_switching_biome = true;
+        state.switching_to_biome = (GLuint)BIOME::GROTTO;
+    }
+    else if (entrance.target_biome == (GLuint)BIOME::FOREST) {
+        state.is_switching_biome = true;
+        state.switching_to_biome = (GLuint)BIOME::FOREST;
+    }
+    return true;
 }

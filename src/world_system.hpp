@@ -14,9 +14,6 @@
 #include "render_system.hpp"
 #include "biome_system.hpp"
 
-#include <map>
-
-
 // Container for all our entities and game logic.
 // Individual rendering / updates are deferred to the update() methods.
 class WorldSystem
@@ -50,10 +47,8 @@ public:
 
 	void handle_player_interaction();
 
-	bool handle_entrance_interaction(Entity entrance_entity);
-
 	bool handle_item_pickup(Entity player, Entity item);
-	
+
 	void update_textbox_visibility();
 
 	void handle_item_respawn(float elapsed_ms);

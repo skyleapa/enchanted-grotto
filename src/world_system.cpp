@@ -354,7 +354,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		}
 	}
 
-	ScreenState &screen = registry.screenStates.components[0];
+	ScreenState& screen = registry.screenStates.components[0];
 	if (screen.is_switching_biome) return; // don't handle character movement or interaction if screen is switching
 	if (action == GLFW_PRESS && key == GLFW_KEY_F)
 	{
@@ -420,7 +420,7 @@ void WorldSystem::handle_player_interaction()
 		bool handle_textbox = false;
 		if (registry.entrances.has(item))
 		{
-			handle_textbox = biome_sys->handle_entrance_interaction(item);
+			handle_textbox = biome_sys->handleEntranceInteraction(item);
 		}
 		else if (item_info.isCollectable)
 		{

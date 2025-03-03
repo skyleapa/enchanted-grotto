@@ -83,10 +83,6 @@ const float ITEM_PICKUP_RADIUS = (float)100;
 const float INTERACTION_RADIUS = (float)100;
 const float TEXTBOX_VISIBILITY_RADIUS = (float)100;
 
-extern const std::map<int, std::vector<std::tuple<vec2, vec2>>> biome_boundaries;
-
-extern const std::vector<std::tuple<vec2, vec2, float, GLuint, int>> grotto_static_entity_pos;
-
 
 // Item and potion constants. The enums are declared here instead of in components.hpp
 // because this file is included in components, not the other way around - otherwise,
