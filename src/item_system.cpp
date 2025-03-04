@@ -167,6 +167,15 @@ nlohmann::json ItemSystem::serializeInventory(Entity inventory) const {
     data["saved_id"] = inventory.id();  // Store the Entity ID for reference
     data["capacity"] = inv.capacity;
     
+    // Store the inventory owner type based on components
+    if (registry.cauldrons.has(inventory)) {
+        data["owner_type"] = "cauldron";
+    } else if (registry.chests.has(inventory)) {
+        data["owner_type"] = "chest";
+    } else {
+        data["owner_type"] = "player";  // Default to player inventory
+    }
+    
     nlohmann::json items_data = nlohmann::json::array();
     for (Entity item : inv.items) {
         if (registry.items.has(item)) {
@@ -213,6 +222,14 @@ void ItemSystem::deserializeInventory(Entity inventory, const nlohmann::json& da
     
     Inventory& inv = registry.inventories.get(inventory);
     inv.capacity = data["capacity"];
+    
+    // Create appropriate components based on owner type
+    std::string owner_type = data["owner_type"];
+    if (owner_type == "cauldron" && !registry.cauldrons.has(inventory)) {
+        registry.cauldrons.emplace(inventory);
+    } else if (owner_type == "chest" && !registry.chests.has(inventory)) {
+        registry.chests.emplace(inventory);
+    }
     
     // Clear existing items
     for (Entity item : inv.items) {

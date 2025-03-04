@@ -163,19 +163,25 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	int fruits = 0;
 	int beans = 0;
 
-	for (int i = 0; i < registry.inventories.size(); i++) {
-		Inventory& inv = registry.inventories.components[i];
-		inventory_items += inv.items.size();
-		for (int j = 0; j < inv.items.size(); j++) {
-			if (registry.items.has(inv.items[j])) {
-				Item& item = registry.items.get(inv.items[j]);
-				if (item.type == ItemType::MAGICAL_FRUIT) fruits++;
-				else if (item.type == ItemType::COFFEE_BEANS) beans++;
+	// Only count items in the player's inventory
+	if (!registry.players.entities.empty()) {
+		Entity player = registry.players.entities[0];
+		if (registry.inventories.has(player)) {
+			Inventory& player_inv = registry.inventories.get(player);
+			inventory_items = player_inv.items.size();
+			
+			// Count specific item types
+			for (Entity item : player_inv.items) {
+				if (registry.items.has(item)) {
+					Item& item_comp = registry.items.get(item);
+					if (item_comp.type == ItemType::MAGICAL_FRUIT) fruits++;
+					else if (item_comp.type == ItemType::COFFEE_BEANS) beans++;
+				}
 			}
 		}
 	}
 
-	title_ss << inventory_items << " items in inventory: " << fruits << " fruits " << beans << " beans";
+	title_ss << inventory_items << " items in player inventory: " << fruits << " fruits " << beans << " beans";
 	glfwSetWindowTitle(window, title_ss.str().c_str());
 
 	if (registry.players.entities.size() < 1)

@@ -32,6 +32,7 @@ public:
 	ComponentContainer<Terrain> terrains;
 	ComponentContainer<Entrance> entrances;
 	ComponentContainer<Textbox> textboxes;
+	ComponentContainer<Chest> chests;
 
 	// constructor that adds all containers for looping over them
 	ECSRegistry()
@@ -56,6 +57,7 @@ public:
 		registry_list.push_back(&terrains);
 		registry_list.push_back(&entrances);
 		registry_list.push_back(&textboxes);
+		registry_list.push_back(&chests);
 	}
 
 	void clear_all_components() {
