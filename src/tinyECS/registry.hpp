@@ -32,6 +32,7 @@ public:
 	ComponentContainer<Terrain> terrains;
 	ComponentContainer<Entrance> entrances;
 	ComponentContainer<Textbox> textboxes;
+	ComponentContainer<Animation> animations;
 	ComponentContainer<Chest> chests;
 
 	// constructor that adds all containers for looping over them
@@ -57,6 +58,7 @@ public:
 		registry_list.push_back(&terrains);
 		registry_list.push_back(&entrances);
 		registry_list.push_back(&textboxes);
+		registry_list.push_back(&animations);
 		registry_list.push_back(&chests);
 	}
 

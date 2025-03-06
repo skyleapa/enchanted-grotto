@@ -77,6 +77,16 @@ Entity createPlayer(RenderSystem* renderer, vec2 position)
 	inventory.capacity = 10;
 	inventory.isFull = false;
 
+	std::vector<TEXTURE_ASSET_ID> walking_down = {
+		TEXTURE_ASSET_ID::PLAYER_WALKING_S_1, TEXTURE_ASSET_ID::PLAYER_WALKING_S_2,
+		TEXTURE_ASSET_ID::PLAYER_WALKING_S_3, TEXTURE_ASSET_ID::PLAYER_WALKING_S_4
+	};
+
+	// Default to idle animation
+	auto& animation = registry.animations.emplace(entity);
+	animation.frames = walking_down;
+	animation.frame_time = 150.f;
+
 	registry.renderRequests.insert(
 		entity,
 		{ TEXTURE_ASSET_ID::PLAYER,

@@ -211,25 +211,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		}
 	}
 
-	// Update velocity based on active keys
-	player_motion.velocity = { 0, 0 }; // Reset velocity before recalculating
-
-	if (registry.screenStates.components[0].is_switching_biome) return true; // don't move while switching biomes
-
-	if (pressed_keys.count(GLFW_KEY_W))
-		player_motion.velocity[1] -= PLAYER_SPEED;
-	if (pressed_keys.count(GLFW_KEY_S))
-		player_motion.velocity[1] += PLAYER_SPEED;
-	if (pressed_keys.count(GLFW_KEY_D))
-		player_motion.velocity[0] += PLAYER_SPEED;
-	if (pressed_keys.count(GLFW_KEY_A))
-		player_motion.velocity[0] -= PLAYER_SPEED;
-
-	// move the character
-	player_motion.previous_position = player_motion.position;
-	float delta = elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
-	player_motion.position += delta * player_motion.velocity;
-
+	updatePlayerWalkAndAnimation(player, player_motion, elapsed_ms_since_last_update);
 	update_textbox_visibility();
 	handle_item_respawn(elapsed_ms_since_last_update);
 
@@ -359,7 +341,7 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 	{
 		return;
 	}
-	Motion& player_motion = registry.motions.get(player);
+
 	std::unordered_set<int>& pressed_keys = WorldSystem::pressed_keys;
 
 	// // Handle character movement
@@ -625,4 +607,61 @@ void WorldSystem::update_textbox_visibility()
 			}
 		}
 	}
+}
+
+void WorldSystem::updatePlayerWalkAndAnimation(Entity& player, Motion& player_motion, float elapsed_ms_since_last_update) {
+
+	Animation& player_animation = registry.animations.get(player);
+
+	// Update velocity based on active keys
+	player_motion.velocity = { 0, 0 }; // Reset velocity before recalculating
+	bool is_player_moving = false;
+
+	if (registry.screenStates.components[0].is_switching_biome) return; // don't move while switching biomes
+
+	if (pressed_keys.count(GLFW_KEY_W)) {
+		player_motion.velocity[1] -= PLAYER_SPEED;
+		player_animation.frames = { TEXTURE_ASSET_ID::PLAYER_WALKING_W_1, TEXTURE_ASSET_ID::PLAYER_WALKING_W_2,
+									TEXTURE_ASSET_ID::PLAYER_WALKING_W_3, TEXTURE_ASSET_ID::PLAYER_WALKING_W_4 };
+		is_player_moving = true;
+	}
+	if (pressed_keys.count(GLFW_KEY_S))
+	{
+		player_motion.velocity[1] += PLAYER_SPEED;
+		player_animation.frames = { TEXTURE_ASSET_ID::PLAYER_WALKING_S_1, TEXTURE_ASSET_ID::PLAYER_WALKING_S_2,
+									TEXTURE_ASSET_ID::PLAYER_WALKING_S_3, TEXTURE_ASSET_ID::PLAYER_WALKING_S_4 };
+		is_player_moving = true;
+	}
+	if (pressed_keys.count(GLFW_KEY_D)) {
+		player_motion.velocity[0] += PLAYER_SPEED;
+		player_animation.frames = { TEXTURE_ASSET_ID::PLAYER_WALKING_D_1, TEXTURE_ASSET_ID::PLAYER_WALKING_D_2,
+									TEXTURE_ASSET_ID::PLAYER_WALKING_D_3, TEXTURE_ASSET_ID::PLAYER_WALKING_D_4 };
+		is_player_moving = true;
+	}
+	if (pressed_keys.count(GLFW_KEY_A)) {
+		player_motion.velocity[0] -= PLAYER_SPEED;
+		player_animation.frames = { TEXTURE_ASSET_ID::PLAYER_WALKING_A_1, TEXTURE_ASSET_ID::PLAYER_WALKING_A_2,
+									TEXTURE_ASSET_ID::PLAYER_WALKING_A_3, TEXTURE_ASSET_ID::PLAYER_WALKING_A_4 };
+		is_player_moving = true;
+	}
+
+	if (!is_player_moving) {
+		// keep the first frame of the last direction player was moving when they're idle
+		player_animation.current_frame = 1;
+	}
+
+	player_animation.elapsed_time += elapsed_ms_since_last_update;
+
+	RenderRequest& render_request = registry.renderRequests.get(player);
+	// change our frames depending on time passed
+	if (player_animation.elapsed_time >= player_animation.frame_time) {
+		player_animation.elapsed_time = 0;
+		player_animation.current_frame = (player_animation.current_frame + 1) % player_animation.frames.size();
+		render_request.used_texture = player_animation.frames[player_animation.current_frame];
+	}
+
+	// move the character
+	player_motion.previous_position = player_motion.position;
+	float delta = elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
+	player_motion.position += delta * player_motion.velocity;
 }
