@@ -593,7 +593,6 @@ void WorldSystem::updatePlayerWalkAndAnimation(Entity& player, Motion& player_mo
 
 	// Update velocity based on active keys
 	player_motion.velocity = { 0, 0 }; // Reset velocity before recalculating
-	bool is_player_moving = false;
 
 	if (registry.screenStates.components[0].is_switching_biome) return; // don't move while switching biomes
 
@@ -601,29 +600,33 @@ void WorldSystem::updatePlayerWalkAndAnimation(Entity& player, Motion& player_mo
 		player_motion.velocity[1] -= PLAYER_SPEED;
 		player_animation.frames = { TEXTURE_ASSET_ID::PLAYER_WALKING_W_1, TEXTURE_ASSET_ID::PLAYER_WALKING_W_2,
 									TEXTURE_ASSET_ID::PLAYER_WALKING_W_3, TEXTURE_ASSET_ID::PLAYER_WALKING_W_4 };
-		is_player_moving = true;
 	}
 	if (pressed_keys.count(GLFW_KEY_S))
 	{
 		player_motion.velocity[1] += PLAYER_SPEED;
 		player_animation.frames = { TEXTURE_ASSET_ID::PLAYER_WALKING_S_1, TEXTURE_ASSET_ID::PLAYER_WALKING_S_2,
 									TEXTURE_ASSET_ID::PLAYER_WALKING_S_3, TEXTURE_ASSET_ID::PLAYER_WALKING_S_4 };
-		is_player_moving = true;
 	}
 	if (pressed_keys.count(GLFW_KEY_D)) {
 		player_motion.velocity[0] += PLAYER_SPEED;
 		player_animation.frames = { TEXTURE_ASSET_ID::PLAYER_WALKING_D_1, TEXTURE_ASSET_ID::PLAYER_WALKING_D_2,
 									TEXTURE_ASSET_ID::PLAYER_WALKING_D_3, TEXTURE_ASSET_ID::PLAYER_WALKING_D_4 };
-		is_player_moving = true;
 	}
 	if (pressed_keys.count(GLFW_KEY_A)) {
 		player_motion.velocity[0] -= PLAYER_SPEED;
 		player_animation.frames = { TEXTURE_ASSET_ID::PLAYER_WALKING_A_1, TEXTURE_ASSET_ID::PLAYER_WALKING_A_2,
 									TEXTURE_ASSET_ID::PLAYER_WALKING_A_3, TEXTURE_ASSET_ID::PLAYER_WALKING_A_4 };
-		is_player_moving = true;
 	}
 
-	if (!is_player_moving) {
+	// Normalize velocity to avoid increased speed when moving diagonally
+	if (player_motion.velocity[0] != 0.0f || player_motion.velocity[1] != 0.0f) {
+		float magnitude = std::sqrt(player_motion.velocity[0] * player_motion.velocity[0] +
+			player_motion.velocity[1] * player_motion.velocity[1]);
+		player_motion.velocity[0] = (player_motion.velocity[0] / magnitude) * PLAYER_SPEED;
+		player_motion.velocity[1] = (player_motion.velocity[1] / magnitude) * PLAYER_SPEED;
+	}
+
+	if (player_motion.velocity[0] == 0.0f && player_motion.velocity[1] == 0.0f) {
 		// keep the first frame of the last direction player was moving when they're idle
 		player_animation.current_frame = 1;
 	}
