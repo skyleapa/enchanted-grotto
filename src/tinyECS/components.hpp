@@ -264,6 +264,7 @@ struct Animation {
 	float frame_time; // time for each frame
 	float elapsed_time; // time since the last time we switched frames
 	int current_frame;
+	int current_direction; // 0 = w, 1 = a, 2 = s, 3 = d
 };
 
 enum class EFFECT_ASSET_ID

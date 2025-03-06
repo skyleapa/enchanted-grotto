@@ -53,6 +53,7 @@ public:
 
 	void handle_item_respawn(float elapsed_ms);
 
+	void updatePlayerWalkAndAnimation(Entity& player, Motion& player_motion, float elapsed_ms_since_last_update);
 
 private:
 
