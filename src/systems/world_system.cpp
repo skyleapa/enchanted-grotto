@@ -588,7 +588,7 @@ void WorldSystem::update_textbox_visibility()
 }
 
 void WorldSystem::updatePlayerWalkAndAnimation(Entity& player, Motion& player_motion, float elapsed_ms_since_last_update) {
-    
+
 	Animation& player_animation = registry.animations.get(player);
 
 	// Update velocity based on active keys
@@ -628,16 +628,16 @@ void WorldSystem::updatePlayerWalkAndAnimation(Entity& player, Motion& player_mo
 		player_animation.current_frame = 1;
 	}
 
-    player_animation.elapsed_time += elapsed_ms_since_last_update;
+	player_animation.elapsed_time += elapsed_ms_since_last_update;
 
 	RenderRequest& render_request = registry.renderRequests.get(player);
-    // change our frames depending on time passed
-    if (player_animation.elapsed_time >= player_animation.frame_time) {
-        player_animation.elapsed_time = 0;
-        player_animation.current_frame = (player_animation.current_frame + 1) % player_animation.frames.size();
-        render_request.used_texture = player_animation.frames[player_animation.current_frame];
-    }
-		
+	// change our frames depending on time passed
+	if (player_animation.elapsed_time >= player_animation.frame_time) {
+		player_animation.elapsed_time = 0;
+		player_animation.current_frame = (player_animation.current_frame + 1) % player_animation.frames.size();
+		render_request.used_texture = player_animation.frames[player_animation.current_frame];
+	}
+
 	// move the character
 	player_motion.previous_position = player_motion.position;
 	float delta = elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
