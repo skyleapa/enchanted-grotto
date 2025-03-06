@@ -67,8 +67,8 @@ const float BOUNDARY_LINE_THICKNESS = 3;
 const float GROTTO_ENTRANCE_WIDTH = (float)400;
 const float GROTTO_ENTRANCE_HEIGHT = (float)180;
 
-const float BUSH_WIDTH = (float)GRID_CELL_WIDTH_PX * 5.5;
-const float BUSH_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 5.5;
+const float BUSH_WIDTH = (float)220;
+const float BUSH_HEIGHT = (float)130;
 
 const float FRUIT_WIDTH = (float)GRID_CELL_WIDTH_PX * 1.5;
 const float FRUIT_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 1.8;

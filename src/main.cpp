@@ -7,12 +7,12 @@
 #include <iostream>
 
 // internal
-#include "ai_system.hpp"
-#include "physics_system.hpp"
-#include "render_system.hpp"
-#include "world_system.hpp"
-#include "item_system.hpp"
-#include "potion_system.hpp"
+#include "systems/ai_system.hpp"
+#include "systems/physics_system.hpp"
+#include "systems/render_system.hpp"
+#include "systems/world_system.hpp"
+#include "systems/item_system.hpp"
+#include "systems/potion_system.hpp"
 
 using Clock = std::chrono::high_resolution_clock;
 
