@@ -625,22 +625,7 @@ void WorldSystem::updatePlayerWalkAndAnimation(Entity& player, Motion& player_mo
 
 	if (!is_player_moving) {
 		// keep the first frame of the last direction player was moving when they're idle
-		if (player_animation.frames == std::vector<TEXTURE_ASSET_ID>{TEXTURE_ASSET_ID::PLAYER_WALKING_W_1, TEXTURE_ASSET_ID::PLAYER_WALKING_W_2,
-																     TEXTURE_ASSET_ID::PLAYER_WALKING_W_3, TEXTURE_ASSET_ID::PLAYER_WALKING_W_4}) {
-			player_animation.current_frame = 1;
-		}
-		else if (player_animation.frames == std::vector<TEXTURE_ASSET_ID>{TEXTURE_ASSET_ID::PLAYER_WALKING_S_1, TEXTURE_ASSET_ID::PLAYER_WALKING_S_2,
-																	      TEXTURE_ASSET_ID::PLAYER_WALKING_S_3, TEXTURE_ASSET_ID::PLAYER_WALKING_S_4}) {
-			player_animation.current_frame = 1;
-		}
-		else if (player_animation.frames == std::vector<TEXTURE_ASSET_ID>{TEXTURE_ASSET_ID::PLAYER_WALKING_A_1, TEXTURE_ASSET_ID::PLAYER_WALKING_A_2,
-																	   	  TEXTURE_ASSET_ID::PLAYER_WALKING_A_3, TEXTURE_ASSET_ID::PLAYER_WALKING_A_4}) {
-			player_animation.current_frame = 1;
-		}
-		else if (player_animation.frames == std::vector<TEXTURE_ASSET_ID>{TEXTURE_ASSET_ID::PLAYER_WALKING_D_1, TEXTURE_ASSET_ID::PLAYER_WALKING_D_2,
-																	      TEXTURE_ASSET_ID::PLAYER_WALKING_D_3, TEXTURE_ASSET_ID::PLAYER_WALKING_D_4}) {
-			player_animation.current_frame = 1;
-		}
+		player_animation.current_frame = 1;
 	}
 
     player_animation.elapsed_time += elapsed_ms_since_last_update;
