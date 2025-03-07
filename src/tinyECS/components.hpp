@@ -178,6 +178,10 @@ struct Textbox
 	bool isVisible = false; // Visibility of the textbox
 };
 
+struct Chest {
+    // Empty struct, just used to identify chest entities
+};
+
 /**
  * The following enumerators represent global identifiers refering to graphic
  * assets. For example TEXTURE_ASSET_ID are the identifiers of each texture

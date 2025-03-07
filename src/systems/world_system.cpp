@@ -159,23 +159,29 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 {
 	// Updating window title with number of fruits to show serialization
 	std::stringstream title_ss;
-	int inventory_items = 0;
-	int fruits = 0;
-	int beans = 0;
+	int total_items = 0;
+	int total_fruits = 0;
+	int total_beans = 0;
 
-	for (int i = 0; i < registry.inventories.size(); i++) {
-		Inventory& inv = registry.inventories.components[i];
-		inventory_items += inv.items.size();
-		for (int j = 0; j < inv.items.size(); j++) {
-			if (registry.items.has(inv.items[j])) {
-				Item& item = registry.items.get(inv.items[j]);
-				if (item.type == ItemType::MAGICAL_FRUIT) fruits++;
-				else if (item.type == ItemType::COFFEE_BEANS) beans++;
+	// Only count items in the player's inventory
+	if (!registry.players.entities.empty()) {
+		Entity player = registry.players.entities[0];
+		if (registry.inventories.has(player)) {
+			Inventory& player_inv = registry.inventories.get(player);
+			
+			// Count specific item types and their amounts
+			for (Entity item : player_inv.items) {
+				if (registry.items.has(item)) {
+					Item& item_comp = registry.items.get(item);
+					total_items += item_comp.amount;
+					if (item_comp.type == ItemType::MAGICAL_FRUIT) total_fruits += item_comp.amount;
+					else if (item_comp.type == ItemType::COFFEE_BEANS) total_beans += item_comp.amount;
+				}
 			}
 		}
 	}
 
-	title_ss << inventory_items << " items in inventory: " << fruits << " fruits " << beans << " beans";
+	title_ss << total_items << " items in player inventory: " << total_fruits << " fruits " << total_beans << " beans";
 	glfwSetWindowTitle(window, title_ss.str().c_str());
 
 	if (registry.players.entities.size() < 1)
@@ -217,6 +223,16 @@ void WorldSystem::restart_game()
 {
 	std::cout << "Restarting..." << std::endl;
 
+	// Save the player's inventory before clearing if it exists
+	Entity player_entity;
+	nlohmann::json player_inventory_data;
+	if (!registry.players.entities.empty()) {
+		player_entity = registry.players.entities[0];
+		if (registry.inventories.has(player_entity)) {
+			player_inventory_data = ItemSystem::serializeInventory(player_entity);
+		}
+	}
+
 	// Debugging for memory/component leaks
 	registry.list_all_components();
 
@@ -234,6 +250,12 @@ void WorldSystem::restart_game()
 	if (registry.players.components.size() == 0)
 	{
 		createPlayer(renderer, vec2(GROTTO_ENTRANCE_X, GROTTO_ENTRANCE_Y + 50));
+	}
+
+	// Restore player's inventory if we had one
+	if (!player_inventory_data.empty() && !registry.players.entities.empty()) {
+		Entity new_player = registry.players.entities[0];
+		ItemSystem::deserializeInventory(new_player, player_inventory_data);
 	}
 
 	biome_sys->init(renderer);
@@ -434,15 +456,15 @@ void WorldSystem::handle_player_interaction()
 
 bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 {
-	Inventory& player_inventory = registry.inventories.get(player);
-	Item& item_info = registry.items.get(item);
-
-	// If inventory is full, return false
-	if (player_inventory.items.size() >= player_inventory.capacity)
+	if (!registry.inventories.has(player) || !registry.items.has(item))
 		return false;
 
+	Item& item_info = registry.items.get(item);
+	
 	item_info.originalPosition = registry.motions.get(item).position;
-	player_inventory.items.push_back(item);
+	
+	if (!ItemSystem::addItemToInventory(player, item))
+		return false;
 
 	// Set a random respawn time (5-15 seconds)
 	item_info.respawnTime = (rand() % 10000 + 5000);
