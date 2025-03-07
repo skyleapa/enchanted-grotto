@@ -212,6 +212,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	}
 
 	updatePlayerWalkAndAnimation(player, player_motion, elapsed_ms_since_last_update);
+	updateThrownAmmo(elapsed_ms_since_last_update);
 	update_textbox_visibility();
 	handle_item_respawn(elapsed_ms_since_last_update);
 
@@ -669,6 +670,15 @@ void WorldSystem::updatePlayerWalkAndAnimation(Entity& player, Motion& player_mo
 	player_motion.previous_position = player_motion.position;
 	float delta = elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
 	player_motion.position += delta * player_motion.velocity;
+
+	// update player's throwing cooldown
+	Player& player_comp = registry.players.get(player);
+	if (player_comp.cooldown > 0) {
+		player_comp.cooldown -= elapsed_ms_since_last_update;
+		if (player_comp.cooldown <= 0) {
+			player_comp.cooldown = 0;
+		}
+	}
 }
 
 void WorldSystem::throwAmmo(vec2 target) {
@@ -676,6 +686,7 @@ void WorldSystem::throwAmmo(vec2 target) {
 	Entity player_entity = registry.players.entities[0];
 	Player& player = registry.players.get(player_entity);
 
+	if(player.cooldown > 0.f) std::cout << "on cooldown" <<std::endl;
 	if (!registry.inventories.has(player_entity) || player.cooldown > 0.f || !registry.motions.has(player_entity)) return;
 	Inventory& inventory = registry.inventories.get(player_entity);
 	if (inventory.items.size() < inventory.selection + 1) {
@@ -695,8 +706,28 @@ void WorldSystem::throwAmmo(vec2 target) {
 				ItemSystem::removeItemFromInventory(player_entity, item_entity);
 			}
 		}
-		player.cooldown = 0.f; // TODO set to 1000 and update in step
+		player.cooldown = 1000.f;
 		std::cout << "successfully fired ammo" << std::endl;
 	}
 
+}
+
+void WorldSystem::updateThrownAmmo(float elapsed_ms_since_last_update) {
+	for (auto & entity : registry.ammo.entities) {
+		if (!registry.motions.has(entity)) continue;
+
+		Ammo& ammo = registry.ammo.get(entity);
+		if (!ammo.is_fired) continue;
+
+		
+		Motion &ammo_motion = registry.motions.get(entity);
+		ammo_motion.position += ammo_motion.velocity * elapsed_ms_since_last_update * THROW_UPDATE_FACTOR;
+		// std::cout << "updating fired ammo to " << std::endl;
+		float dx = ammo.target.x - ammo_motion.position.x;
+    	float dy = ammo.target.y - ammo_motion.position.y;
+		float distance_squared = dx * dx + dy * dy;
+		if (distance_squared <= AMMO_HIT_TARGET_RADIUS * AMMO_HIT_TARGET_RADIUS) {
+			registry.remove_all_components_of(entity);
+		}
+	}
 }

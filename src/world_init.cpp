@@ -316,7 +316,6 @@ Entity createFruit(RenderSystem* renderer, vec2 position, int id, std::string na
 	registry.meshPtrs.emplace(entity, &mesh);
 
 	Ammo& ammo = registry.ammo.emplace(entity); // TODO remove
-	ammo.is_fired = false;
 
 	// Create motion
 	auto& motion = registry.motions.emplace(entity);
@@ -652,7 +651,7 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 
 	float delta_x = target.x - player_pos.x;
 	float delta_y = target.y - player_pos.y;
-	float distance = sqrt(delta_x * delta_x + delta_y * delta_y); // TODO: optimize
+	float distance = sqrt(delta_x * delta_x + delta_y * delta_y); // TODO: use glm::distance instead
 	float unit_x = delta_x / distance;
 	float unit_y = delta_y / distance;
 
@@ -660,7 +659,7 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 	motion.angle = 0.f;
 	motion.velocity = { unit_x, unit_y };
 	motion.position = player_pos;
-	motion.scale = vec2({ 25, 25 });
+	motion.scale = vec2({ 50, 50 });
 
 	ammo.is_fired = true;
 	ammo.damage = 25;
