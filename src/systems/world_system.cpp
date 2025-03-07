@@ -305,6 +305,7 @@ void WorldSystem::handle_collisions()
 		else if ((registry.players.has(collision_entity) || registry.players.has(collision.other)) && (registry.enemies.has(collision_entity) || registry.enemies.has(collision.other))) {
 			ScreenState& state = registry.screenStates.components[0];
 			state.game_over = true;
+			continue;
 		}
 
 		Entity terrain_entity = (collision_entity == player_entity) ? collision.other : collision_entity;
