@@ -216,6 +216,8 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	update_textbox_visibility();
 	handle_item_respawn(elapsed_ms_since_last_update);
 
+	if (registry.screenStates.components[0].game_over) restart_game();
+
 	return true;
 }
 
@@ -223,6 +225,9 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 void WorldSystem::restart_game()
 {
 	std::cout << "Restarting..." << std::endl;
+
+	ScreenState& state = registry.screenStates.components[0];
+	state.game_over = false;
 
 	// Save the player's inventory before clearing if it exists
 	Entity player_entity;
@@ -283,6 +288,24 @@ void WorldSystem::handle_collisions()
 		if (!registry.collisions.has(collision_entity))
 			continue;
 		Collision& collision = registry.collisions.get(collision_entity);
+
+		// case ammo hits enemy
+		if ((registry.ammo.has(collision_entity) || registry.ammo.has(collision.other)) && (registry.enemies.has(collision_entity) || registry.enemies.has(collision.other))) {
+			Entity ammo_entity = registry.ammo.has(collision_entity) ? collision_entity : collision.other;
+			Entity enemy_entity = registry.enemies.has(collision_entity) ? collision_entity : collision.other;
+
+			Ammo& ammo = registry.ammo.get(ammo_entity);
+			Enemy& enemy = registry.enemies.get(enemy_entity);
+			enemy.health -= ammo.damage;
+			registry.remove_all_components_of(ammo_entity);
+			if (enemy.health <= 0) registry.remove_all_components_of(enemy_entity);
+			continue;
+		}
+		// case where enemy hits player - automatically die and restart game
+		else if ((registry.players.has(collision_entity) || registry.players.has(collision.other)) && (registry.enemies.has(collision_entity) || registry.enemies.has(collision.other))) {
+			ScreenState& state = registry.screenStates.components[0];
+			state.game_over = true;
+		}
 
 		Entity terrain_entity = (collision_entity == player_entity) ? collision.other : collision_entity;
 		if (!registry.terrains.has(terrain_entity) || !registry.motions.has(terrain_entity))
@@ -686,7 +709,7 @@ void WorldSystem::throwAmmo(vec2 target) {
 	Entity player_entity = registry.players.entities[0];
 	Player& player = registry.players.get(player_entity);
 
-	if(player.cooldown > 0.f) std::cout << "on cooldown" <<std::endl;
+	if (player.cooldown > 0.f) std::cout << "on cooldown" << std::endl;
 	if (!registry.inventories.has(player_entity) || player.cooldown > 0.f || !registry.motions.has(player_entity)) return;
 	Inventory& inventory = registry.inventories.get(player_entity);
 	if (inventory.items.size() < inventory.selection + 1) {
@@ -696,7 +719,6 @@ void WorldSystem::throwAmmo(vec2 target) {
 
 	Entity& item_entity = inventory.items[inventory.selection];
 
-	std::cout << "firing ammo" << std::endl;
 	if (createFiredAmmo(renderer, target, item_entity, player_entity)) {
 		if (registry.items.has(item_entity)) {
 			Item& item = registry.items.get(item_entity);
@@ -707,27 +729,25 @@ void WorldSystem::throwAmmo(vec2 target) {
 			}
 		}
 		player.cooldown = 1000.f;
-		std::cout << "successfully fired ammo" << std::endl;
 	}
 
 }
 
 void WorldSystem::updateThrownAmmo(float elapsed_ms_since_last_update) {
-	for (auto & entity : registry.ammo.entities) {
+	for (auto& entity : registry.ammo.entities) {
 		if (!registry.motions.has(entity)) continue;
 
 		Ammo& ammo = registry.ammo.get(entity);
 		if (!ammo.is_fired) continue;
 
-		
-		Motion &ammo_motion = registry.motions.get(entity);
+		Motion& ammo_motion = registry.motions.get(entity);
 		ammo_motion.position += ammo_motion.velocity * elapsed_ms_since_last_update * THROW_UPDATE_FACTOR;
-		// std::cout << "updating fired ammo to " << std::endl;
 		float dx = ammo.target.x - ammo_motion.position.x;
-    	float dy = ammo.target.y - ammo_motion.position.y;
+		float dy = ammo.target.y - ammo_motion.position.y;
 		float distance_squared = dx * dx + dy * dy;
-		if (distance_squared <= AMMO_HIT_TARGET_RADIUS * AMMO_HIT_TARGET_RADIUS) {
+		if (abs(ammo_motion.position.x - ammo.start_pos.x) > abs(ammo.target.x - ammo.start_pos.x)
+			|| abs(ammo_motion.position.y - ammo.start_pos.y) > abs(ammo.target.y - ammo.start_pos.y))
 			registry.remove_all_components_of(entity);
-		}
+
 	}
 }

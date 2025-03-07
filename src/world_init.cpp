@@ -647,7 +647,8 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 	// Ammo& ammo = registry.ammo.get(item_entity);
 	Ammo& ammo = registry.ammo.emplace(entity);
 	Player& player = registry.players.get(player_entity);
-	vec2 player_pos = registry.motions.get(player_entity).position;
+	Motion& player_motion = registry.motions.get(player_entity);
+	vec2 player_pos = player_motion.position;
 
 	float delta_x = target.x - player_pos.x;
 	float delta_y = target.y - player_pos.y;
@@ -662,6 +663,7 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 	motion.scale = vec2({ 50, 50 });
 
 	ammo.is_fired = true;
+	ammo.start_pos = player_motion.position;
 	ammo.damage = 25;
 	ammo.target = { player_pos.x + unit_x * player.throw_distance, player_pos.y + unit_y * player.throw_distance };
 

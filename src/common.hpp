@@ -47,7 +47,7 @@ const float PlAYER_BB_GROTTO_SIZE_FACTOR = 1.8;
 const float PLAYER_SPEED = (float)200;
 
 const float TIME_UPDATE_FACTOR = 0.001f;
-const float THROW_UPDATE_FACTOR = 0.5f;
+const float THROW_UPDATE_FACTOR = 0.3f;
 
 const float TREE_WIDTH = (float)GRID_CELL_WIDTH_PX * 4;
 const float TREE_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 4;
@@ -83,7 +83,6 @@ const float TEXTBOX_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 4;
 const float ITEM_PICKUP_RADIUS = (float)100;
 const float INTERACTION_RADIUS = (float)100;
 const float TEXTBOX_VISIBILITY_RADIUS = (float)100;
-const float AMMO_HIT_TARGET_RADIUS = (float)5;
 
 
 // Item and potion constants. The enums are declared here instead of in components.hpp

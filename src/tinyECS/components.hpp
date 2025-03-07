@@ -46,6 +46,7 @@ struct ScreenState
 	bool is_switching_biome = false;
 	GLuint switching_to_biome = 1; // track biome that is being switched to
 	float fade_status = 0; // 0 - before fade out, 1 after fade out, 2 - after fade in
+	bool game_over = false;
 };
 
 // A struct to refer to debugging graphics in the ECS
@@ -193,6 +194,7 @@ struct Enemy {
 };
 
 struct Ammo {
+	vec2 start_pos;
 	vec2 target; // mouse click direction at max of player's throwable radius
 	bool is_fired = false;
 	int damage = 0;
