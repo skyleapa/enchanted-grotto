@@ -2,7 +2,7 @@
 
 #include "common.hpp"
 #include "tinyECS/tiny_ecs.hpp"
-#include "render_system.hpp"
+#include "systems/render_system.hpp"
 
 // trees
 Entity createTree(RenderSystem *renderer, vec2 position);
