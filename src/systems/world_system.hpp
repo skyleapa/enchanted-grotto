@@ -55,6 +55,7 @@ public:
 
 	void updatePlayerWalkAndAnimation(Entity& player, Motion& player_motion, float elapsed_ms_since_last_update);
 
+	void throwAmmo(vec2 target);
 private:
 
 	float mouse_pos_x = 0.0f;

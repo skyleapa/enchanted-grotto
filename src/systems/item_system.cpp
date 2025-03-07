@@ -75,6 +75,7 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
             if (existing_item.type == item_comp.type) {
                 // Add amounts together
                 existing_item.amount += item_comp.amount;
+                if (registry.ammo.has(item) && !registry.ammo.has(existing)) registry.ammo.emplace(existing); // update ammo in case it didn't previous save component
                 // Don't destroy the original item if it's a collectable (it will respawn)
                 if (!item_comp.isCollectable) {
                     destroyItem(item);
@@ -93,6 +94,7 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
     // If item is collectable, create a copy for the inventory
     if (item_comp.isCollectable) {
         Entity copy = createItem(item_comp.type, item_comp.amount, false);
+        if (registry.ammo.has(item)) registry.ammo.emplace(copy); // ensure ammo component gets copied over
         inv.items.push_back(copy);
     } else {
         inv.items.push_back(item);

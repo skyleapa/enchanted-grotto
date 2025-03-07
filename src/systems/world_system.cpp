@@ -168,7 +168,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		Entity player = registry.players.entities[0];
 		if (registry.inventories.has(player)) {
 			Inventory& player_inv = registry.inventories.get(player);
-			
+
 			// Count specific item types and their amounts
 			for (Entity item : player_inv.items) {
 				if (registry.items.has(item)) {
@@ -384,6 +384,8 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 
 		std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
 		std::cout << "mouse tile position: " << tile_x << ", " << tile_y << std::endl;
+
+		throwAmmo(vec2(mouse_pos_x, mouse_pos_y));
 	}
 }
 
@@ -460,9 +462,9 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 		return false;
 
 	Item& item_info = registry.items.get(item);
-	
+
 	item_info.originalPosition = registry.motions.get(item).position;
-	
+
 	if (!ItemSystem::addItemToInventory(player, item))
 		return false;
 
@@ -667,4 +669,34 @@ void WorldSystem::updatePlayerWalkAndAnimation(Entity& player, Motion& player_mo
 	player_motion.previous_position = player_motion.position;
 	float delta = elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
 	player_motion.position += delta * player_motion.velocity;
+}
+
+void WorldSystem::throwAmmo(vec2 target) {
+	if (registry.players.entities.empty()) return;
+	Entity player_entity = registry.players.entities[0];
+	Player& player = registry.players.get(player_entity);
+
+	if (!registry.inventories.has(player_entity) || player.cooldown > 0.f || !registry.motions.has(player_entity)) return;
+	Inventory& inventory = registry.inventories.get(player_entity);
+	if (inventory.items.size() < inventory.selection + 1) {
+		std::cout << "cannot throw selected item" << std::endl;
+		return;
+	}
+
+	Entity& item_entity = inventory.items[inventory.selection];
+
+	std::cout << "firing ammo" << std::endl;
+	if (createFiredAmmo(renderer, target, item_entity, player_entity)) {
+		if (registry.items.has(item_entity)) {
+			Item& item = registry.items.get(item_entity);
+			item.amount -= 1;
+			if (item.amount == 0) {
+				ItemSystem::destroyItem(item_entity);
+				ItemSystem::removeItemFromInventory(player_entity, item_entity);
+			}
+		}
+		player.cooldown = 0.f; // TODO set to 1000 and update in step
+		std::cout << "successfully fired ammo" << std::endl;
+	}
+
 }

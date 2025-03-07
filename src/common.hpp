@@ -222,6 +222,12 @@ const std::vector<Recipe> RECIPES = {
     }
 };
 
+enum class ENEMY_STATE
+{
+	IDLE = 0,
+	ATTACK = IDLE + 1
+};
+
 // Default time represented by each "WAIT" action, in ms
 const int DEFAULT_WAIT = 5000;
 

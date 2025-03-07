@@ -22,7 +22,7 @@ public:
     
     // Inventory management
     static bool addItemToInventory(Entity inventory, Entity item);
-    bool removeItemFromInventory(Entity inventory, Entity item);
+    static bool removeItemFromInventory(Entity inventory, Entity item);
     bool transferItem(Entity source_inventory, Entity target_inventory, Entity item);
     
     // Serialization

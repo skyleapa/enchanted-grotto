@@ -315,6 +315,9 @@ Entity createFruit(RenderSystem* renderer, vec2 position, int id, std::string na
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
 	registry.meshPtrs.emplace(entity, &mesh);
 
+	Ammo& ammo = registry.ammo.emplace(entity); // TODO remove
+	ammo.is_fired = false;
+
 	// Create motion
 	auto& motion = registry.motions.emplace(entity);
 	motion.angle = 180.f;
@@ -602,4 +605,75 @@ RenderRequest getTextboxRenderRequest(Textbox& textbox)
 		EFFECT_ASSET_ID::TEXTURED,
 		GEOMETRY_BUFFER_ID::SPRITE,
 		RENDER_LAYER::ITEM };
+}
+
+Entity createEnemy(RenderSystem* renderer, vec2 position) {
+	auto entity = Entity();
+
+	Enemy& enemy = registry.enemies.emplace(entity);
+	enemy.attack_radius = 5;
+	enemy.health = 100;
+	enemy.start_pos = position;
+	enemy.state = (int)ENEMY_STATE::IDLE;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+	motion.scale = vec2({ PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::PLAYER,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::TERRAIN,
+		});
+
+	return entity;
+}
+
+bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, Entity& player_entity) {
+
+	auto entity = Entity();
+
+	if (!registry.ammo.has(item_entity)) std::cout << "item isn't in ammo list" << std::endl;
+	if (!registry.motions.has(player_entity) || !registry.ammo.has(item_entity)) return false;
+
+	// Ammo& ammo = registry.ammo.get(item_entity);
+	Ammo& ammo = registry.ammo.emplace(entity);
+	Player& player = registry.players.get(player_entity);
+	vec2 player_pos = registry.motions.get(player_entity).position;
+
+	float delta_x = target.x - player_pos.x;
+	float delta_y = target.y - player_pos.y;
+	float distance = sqrt(delta_x * delta_x + delta_y * delta_y); // TODO: optimize
+	float unit_x = delta_x / distance;
+	float unit_y = delta_y / distance;
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { unit_x, unit_y };
+	motion.position = player_pos;
+	motion.scale = vec2({ 25, 25 });
+
+	ammo.is_fired = true;
+	ammo.damage = 25;
+	ammo.target = { player_pos.x + unit_x * player.throw_distance, player_pos.y + unit_y * player.throw_distance };
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::FRUIT,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::ITEM,
+		});
+
+	return true;
 }

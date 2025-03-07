@@ -8,6 +8,8 @@
 struct Player
 {
 	std::string name;
+	int throw_distance = 250; // pixels
+	float cooldown = 0.f; // defaults to 0, but when ammo is tossed, will have a 1000 ms cooldown
 };
 
 // All data relevant to the shape and motion of entities
@@ -125,6 +127,7 @@ struct Inventory
 	std::vector<Entity> items;
 	int capacity;
 	bool isFull;
+	int selection = 0;
 };
 
 struct Cauldron
@@ -180,6 +183,19 @@ struct Textbox
 
 struct Chest {
     // Empty struct, just used to identify chest entities
+};
+
+struct Enemy {
+	int health;
+	int attack_radius;
+	vec2 start_pos;
+	int state; // uses enum class ENEMY_STATE
+};
+
+struct Ammo {
+	vec2 target; // mouse click direction at max of player's throwable radius
+	bool is_fired = false;
+	int damage = 0;
 };
 
 /**

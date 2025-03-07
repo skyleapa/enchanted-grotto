@@ -59,3 +59,9 @@ Entity createTextbox(RenderSystem *renderer, vec2 position, Entity itemEntity);
 
 // render textbox
 RenderRequest getTextboxRenderRequest(Textbox &textbox);
+
+// enemy
+Entity createEnemy(RenderSystem* renderer, vec2 position);
+
+// render fired ammo
+bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity &item_entity, Entity &player_entity);
