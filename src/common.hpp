@@ -5,6 +5,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <map>
 
 // glfw (OpenGL)
 #define NOMINMAX
@@ -25,10 +26,10 @@ using namespace glm;
 // Get defintion of PROJECT_SOURCE_DIR from:
 #include "../ext/project_path.hpp"
 inline std::string data_path() { return std::string(PROJECT_SOURCE_DIR) + "data"; };
-inline std::string shader_path(const std::string &name) { return std::string(PROJECT_SOURCE_DIR) + "/shaders/" + name; };
-inline std::string textures_path(const std::string &name) { return data_path() + "/textures/" + std::string(name); };
-inline std::string audio_path(const std::string &name) { return data_path() + "/audio/" + std::string(name); };
-inline std::string mesh_path(const std::string &name) { return data_path() + "/meshes/" + std::string(name); };
+inline std::string shader_path(const std::string& name) { return std::string(PROJECT_SOURCE_DIR) + "/shaders/" + name; };
+inline std::string textures_path(const std::string& name) { return data_path() + "/textures/" + std::string(name); };
+inline std::string audio_path(const std::string& name) { return data_path() + "/audio/" + std::string(name); };
+inline std::string mesh_path(const std::string& name) { return data_path() + "/meshes/" + std::string(name); };
 
 //
 // game constants
@@ -42,7 +43,10 @@ const int GRID_LINE_WIDTH_PX = 2;
 
 const float PLAYER_BB_WIDTH = (float)65;
 const float PLAYER_BB_HEIGHT = (float)100;
-const float PLAYER_SPEED = (float)100;
+const float PlAYER_BB_GROTTO_SIZE_FACTOR = 1.8;
+const float PLAYER_SPEED = (float)200;
+
+const float TIME_UPDATE_FACTOR = 0.001f;
 
 const float TREE_WIDTH = (float)GRID_CELL_WIDTH_PX * 4;
 const float TREE_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 4;
@@ -56,11 +60,15 @@ const float FOREST_RIVER_BELOW_HEIGHT = (float)153;
 const float FOREST_BRIDGE_WIDTH = (float)284;
 const float FOREST_BRIDGE_HEIGHT = (float)218;
 
+const float GROTTO_ENTRANCE_X = (float)1000;
+const float GROTTO_ENTRANCE_Y = (float)100;
+
+const float BOUNDARY_LINE_THICKNESS = 3;
 const float GROTTO_ENTRANCE_WIDTH = (float)400;
 const float GROTTO_ENTRANCE_HEIGHT = (float)180;
 
-const float BUSH_WIDTH = (float)GRID_CELL_WIDTH_PX * 5.5;
-const float BUSH_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 5.5;
+const float BUSH_WIDTH = (float)220;
+const float BUSH_HEIGHT = (float)130;
 
 const float FRUIT_WIDTH = (float)GRID_CELL_WIDTH_PX * 1.5;
 const float FRUIT_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 1.8;
@@ -71,8 +79,10 @@ const float COFFEE_BEAN_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 0.9;
 const float TEXTBOX_WIDTH = (float)GRID_CELL_WIDTH_PX * 4;
 const float TEXTBOX_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 4;
 
-const float ITEM_PICKUP_RADIUS = (float)70;
-const float TEXTBOX_VISIBILITY_RADIUS = (float)70;
+const float ITEM_PICKUP_RADIUS = (float)100;
+const float INTERACTION_RADIUS = (float)100;
+const float TEXTBOX_VISIBILITY_RADIUS = (float)100;
+
 
 // Item and potion constants. The enums are declared here instead of in components.hpp
 // because this file is included in components, not the other way around - otherwise,
@@ -91,14 +101,20 @@ enum class ItemType
 	POTION = 0,
 	COFFEE_BEANS = POTION + 1,
 	MAGICAL_FRUIT = COFFEE_BEANS + 1,
-	GROTTO_ENTRANCE = MAGICAL_FRUIT + 1
+	GROTTO_ENTRANCE = MAGICAL_FRUIT + 1,
+	CAULDRON = GROTTO_ENTRANCE + 1,
+	MORTAR_PESTLE = CAULDRON + 1,
+	CHEST = MORTAR_PESTLE + 1,
+	RECIPE_BOOK = CHEST + 1,
+	GROTTO_EXIT = RECIPE_BOOK + 1
 };
 
 const std::unordered_map<ItemType, std::string> ITEM_NAMES = {
 	{ItemType::POTION, "Potion"},
 	{ItemType::COFFEE_BEANS, "Coffee Beans"},
 	{ItemType::MAGICAL_FRUIT, "Magical Fruit"},
-	{ItemType::GROTTO_ENTRANCE, "Grotto Entrance"}
+	{ItemType::GROTTO_ENTRANCE, "Grotto Entrance"},
+	{ItemType::GROTTO_EXIT, "Grotto Exit"},
 };
 
 // Potion Types and names
@@ -165,25 +181,45 @@ struct Recipe
 };
 
 // RECIPE LIST
+// const std::vector<Recipe> RECIPES = {
+// 	{
+// 		.effect = PotionEffect::SPEED,
+// 		.highestQualityEffect = 3.0f,       // 300% faster (4x as fast)
+// 		.highestQualityDuration = 180,
+// 		.finalPotionColor = vec3(255, 157, 35),
+// 		.ingredients = {
+// 			{.type = ItemType::COFFEE_BEANS, .amount = 5, .grindAmount = 1.0f},
+// 			{.type = ItemType::MAGICAL_FRUIT, .amount = 3, .grindAmount = 0.0f},
+// 		},
+// 		.steps = {
+// 			{.type = ActionType::MODIFY_HEAT, .value = 100},
+// 			{.type = ActionType::WAIT, .value = 2},
+// 			{.type = ActionType::ADD_INGREDIENT, .value = 0},
+// 			{.type = ActionType::ADD_INGREDIENT, .value = 1},
+// 			{.type = ActionType::STIR, .value = 3},
+// 			{.type = ActionType::WAIT, .value = 6}
+// 		}
+// 	}
+// };
 const std::vector<Recipe> RECIPES = {
-	{
-		.effect = PotionEffect::SPEED,
-		.highestQualityEffect = 3.0f,       // 300% faster (4x as fast)
-		.highestQualityDuration = 180,
-		.finalPotionColor = vec3(255, 157, 35),
-		.ingredients = {
-			{.type=ItemType::COFFEE_BEANS, .amount=5, .grindAmount=1.0f},
-			{.type=ItemType::MAGICAL_FRUIT, .amount=3, .grindAmount=0.0f},
-		},
-		.steps = {
-			{.type = ActionType::MODIFY_HEAT, .value = 100},
-			{.type = ActionType::WAIT, .value = 2},
-			{.type = ActionType::ADD_INGREDIENT, .value = 0},
-			{.type = ActionType::ADD_INGREDIENT, .value = 1},
-			{.type = ActionType::STIR, .value = 3},
-			{.type = ActionType::WAIT, .value = 6}
-		}
-	}
+    {
+        PotionEffect::SPEED,
+        3.0f,  // highestQualityEffect
+        180,   // highestQualityDuration
+        vec3(255, 157, 35), // finalPotionColor
+        {
+            { ItemType::COFFEE_BEANS, 5, 1.0f }, // ingredients
+            { ItemType::MAGICAL_FRUIT, 3, 0.0f }
+        },
+        {
+            { ActionType::MODIFY_HEAT, 100 }, // steps
+            { ActionType::WAIT, 2 },
+            { ActionType::ADD_INGREDIENT, 0 },
+            { ActionType::ADD_INGREDIENT, 1 },
+            { ActionType::STIR, 3 },
+            { ActionType::WAIT, 6 }
+        }
+    }
 };
 
 // Default time represented by each "WAIT" action, in ms
@@ -218,7 +254,7 @@ const float HEAT_PENALTY = 0.01f; // Heat is measured 1-100
 // We recommend making all components non-copyable by derving from ComponentNonCopyable
 struct Transform
 {
-	mat3 mat = {{1.f, 0.f, 0.f}, {0.f, 1.f, 0.f}, {0.f, 0.f, 1.f}}; // start with the identity
+	mat3 mat = { {1.f, 0.f, 0.f}, {0.f, 1.f, 0.f}, {0.f, 0.f, 1.f} }; // start with the identity
 	void scale(vec2 scale);
 	void rotate(float radians);
 	void translate(vec2 offset);

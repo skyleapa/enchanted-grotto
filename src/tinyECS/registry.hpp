@@ -29,9 +29,11 @@ public:
 	ComponentContainer<Cauldron> cauldrons;
 	ComponentContainer<Menu> menus;
 	ComponentContainer<MortarAndPestle> mortarAndPestles;
-	ComponentContainer<Moving> moving;
 	ComponentContainer<Terrain> terrains;
+	ComponentContainer<Entrance> entrances;
 	ComponentContainer<Textbox> textboxes;
+	ComponentContainer<Animation> animations;
+	ComponentContainer<Chest> chests;
 
 	// constructor that adds all containers for looping over them
 	ECSRegistry()
@@ -53,8 +55,11 @@ public:
 		registry_list.push_back(&cauldrons);
 		registry_list.push_back(&menus);
 		registry_list.push_back(&mortarAndPestles);
-		registry_list.push_back(&moving);
 		registry_list.push_back(&terrains);
+		registry_list.push_back(&entrances);
+		registry_list.push_back(&textboxes);
+		registry_list.push_back(&animations);
+		registry_list.push_back(&chests);
 	}
 
 	void clear_all_components() {

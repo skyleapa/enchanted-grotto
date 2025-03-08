@@ -1,6 +1,7 @@
 #include "potion_system.hpp"
 #include <unordered_set>
 #include <iostream>
+#include <cfloat>
 
 void PotionSystem::updateCauldrons(float elapsed_ms) {
 	for (Entity cauldron : registry.cauldrons.entities) {
@@ -8,7 +9,7 @@ void PotionSystem::updateCauldrons(float elapsed_ms) {
 		if (!cc.filled) {
 			continue;
 		}
-		
+
 		// Don't need to update cauldrons that have no actions
 		if (cc.actions.size() == 0) {
 			continue;
@@ -32,7 +33,7 @@ void PotionSystem::updateCauldrons(float elapsed_ms) {
 		// This process actually isn't linear because the ratio is between
 		// the cauldron's current color and the stored color.
 		cc.colorElapsed += elapsed_ms;
-		float ratio = cc.colorElapsed / (float) COLOR_FADE_DURATION;
+		float ratio = cc.colorElapsed / (float)COLOR_FADE_DURATION;
 		cc.color = interpolateColor(cc.color, getPotion(cauldron).color, ratio);
 	}
 }
@@ -64,7 +65,7 @@ void PotionSystem::addIngredient(Entity cauldron, Entity ingredient) {
 		// Float comparison moment. Return if grindlevels are far enough apart
 		Ingredient& curIng = registry.ingredients.get(ingredient);
 		Ingredient& lastIng = registry.ingredients.get(lastIngredient);
-		if (fabs(lastIng.grindLevel - curIng.grindLevel) >= __FLT_EPSILON__) {
+		if (fabs(lastIng.grindLevel - curIng.grindLevel) >= FLT_EPSILON) {
 			break;
 		}
 
@@ -123,7 +124,7 @@ void PotionSystem::recordAction(Entity cauldron, ActionType action, int value = 
 		if (action == ActionType::ADD_INGREDIENT) {
 			break;
 		}
-		
+
 		Action& lastAction = cc.actions[cc.actions.size() - 1];
 		if (action != lastAction.type) {
 			break;
@@ -131,7 +132,8 @@ void PotionSystem::recordAction(Entity cauldron, ActionType action, int value = 
 
 		if (action == ActionType::MODIFY_HEAT) {
 			lastAction.value = value;
-		} else {
+		}
+		else {
 			lastAction.value += value;
 		}
 
@@ -140,7 +142,7 @@ void PotionSystem::recordAction(Entity cauldron, ActionType action, int value = 
 	} while (false);
 
 	// Otherwise just add the action to the list
-	cc.actions.push_back({.type = action, .value = value});
+	cc.actions.push_back({ action, value });
 	updatePotion(cauldron);
 }
 
@@ -167,7 +169,8 @@ vec3 PotionSystem::interpolateColor(vec3 init, vec3 end, float ratio) {
 		int diff = abs(init[i] - end[i]) * ratio;
 		if (end[i] > init[i]) {
 			res[i] = init[i] + diff;
-		} else {
+		}
+		else {
 			res[i] = init[i] - diff;
 		}
 	}
@@ -177,7 +180,7 @@ vec3 PotionSystem::interpolateColor(vec3 init, vec3 end, float ratio) {
 ///////////// Potion calculation functions ///////////
 
 // Gets levenshtein distance and a penalty
-std::pair<int, float> levDist(Entity cauldron, Recipe& recipe, 
+std::pair<int, float> levDist(Entity cauldron, Recipe& recipe,
 	std::vector<Action> playerActions, std::vector<Action> recipeActions) {
 	// Return other length if respective length is 0
 	if (playerActions.size() == 0) {
@@ -215,43 +218,43 @@ std::pair<int, float> levDist(Entity cauldron, Recipe& recipe,
 	// Check for penalties if actions is same
 	float penalty = 0;
 	int diff = abs(pa.value - ra.value);
-	switch(pa.type) {
-		case ActionType::ADD_INGREDIENT: {
-			RecipeIngredient recipeIng = recipe.ingredients[ra.value];
-			Inventory& ci = registry.inventories.get(cauldron); 
-			Entity& itemEntity = ci.items[pa.value];
-			Item& item = registry.items.get(itemEntity);
-			
-			// Check equality of item type. If item type is not equal
-			// do not apply any other penalties
-			if (recipeIng.type != item.type) {
-				penalty += INGREDIENT_TYPE_PENALTY;
-				break;
-			}
+	switch (pa.type) {
+	case ActionType::ADD_INGREDIENT: {
+		RecipeIngredient recipeIng = recipe.ingredients[ra.value];
+		Inventory& ci = registry.inventories.get(cauldron);
+		Entity& itemEntity = ci.items[pa.value];
+		Item& item = registry.items.get(itemEntity);
 
-			// Check grind level and amount equality
-			penalty += abs(item.amount - recipeIng.amount) * INGREDIENT_AMOUNT_PENALTY;
-			Ingredient& ing = registry.ingredients.get(itemEntity);
-			if (ing.grindLevel != -1) {
-				penalty += abs(ing.grindLevel - recipeIng.grindAmount) * INGREDIENT_GRIND_PENALTY;
-			}
+		// Check equality of item type. If item type is not equal
+		// do not apply any other penalties
+		if (recipeIng.type != item.type) {
+			penalty += INGREDIENT_TYPE_PENALTY;
 			break;
 		}
-		case ActionType::WAIT:
-			penalty += diff * WAIT_PENALTY;
-			break;
-		case ActionType::MODIFY_HEAT:
-			penalty += diff * HEAT_PENALTY;
-			break;
-		case ActionType::STIR:
-			penalty += diff * STIR_PENALTY;
-			break;
+
+		// Check grind level and amount equality
+		penalty += abs(item.amount - recipeIng.amount) * INGREDIENT_AMOUNT_PENALTY;
+		Ingredient& ing = registry.ingredients.get(itemEntity);
+		if (ing.grindLevel != -1) {
+			penalty += abs(ing.grindLevel - recipeIng.grindAmount) * INGREDIENT_GRIND_PENALTY;
+		}
+		break;
 	}
-	
+	case ActionType::WAIT:
+		penalty += diff * WAIT_PENALTY;
+		break;
+	case ActionType::MODIFY_HEAT:
+		penalty += diff * HEAT_PENALTY;
+		break;
+	case ActionType::STIR:
+		penalty += diff * STIR_PENALTY;
+		break;
+	}
+
 	std::pair<int, float> next = levDist(cauldron, recipe, paTail, raTail);
 	next.second += penalty;
 	return next;
-	
+
 }
 
 void PotionSystem::updatePotion(Entity cauldron) {
@@ -272,7 +275,7 @@ void PotionSystem::updatePotion(Entity cauldron) {
 		for (RecipeIngredient ri : r.ingredients) {
 			recipeTypes.insert(ri.type);
 		}
-		
+
 		if (cauldronTypes == recipeTypes) {
 			recipe = r;
 			foundRecipe = true;
@@ -296,7 +299,8 @@ void PotionSystem::updatePotion(Entity cauldron) {
 		potion.effectValue = min_potency + (recipe.highestQualityEffect - min_potency) * potion.quality;
 		potion.duration = min_duration + (recipe.highestQualityDuration - min_duration) * potion.quality;
 		potion.color = interpolateColor(DEFAULT_COLOR, recipe.finalPotionColor, potion.quality);
-	} else if (ci.items.size() > 0) {
+	}
+	else if (ci.items.size() > 0) {
 		// Otherwise, if there are ingredients, then its failed
 		potion.effect = PotionEffect::FAILED;
 	}
