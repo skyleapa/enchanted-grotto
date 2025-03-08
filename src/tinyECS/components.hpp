@@ -192,6 +192,8 @@ struct Enemy {
 	int attack_radius;
 	vec2 start_pos;
 	int state; // uses enum class ENEMY_STATE
+	int can_move;
+	float wander_timer = 10.0f;  // 10-second random movement before returning
 };
 
 struct Ammo {
@@ -199,6 +201,16 @@ struct Ammo {
 	vec2 target; // mouse click direction at max of player's throwable radius
 	bool is_fired = false;
 	int damage = 0;
+};
+
+struct DecisionTreeNode {
+	std::function<bool()> condition;  // Condition to check
+	ENEMY_STATE trueState;            // Next state if condition is true
+	ENEMY_STATE falseState;           // Next state if condition is false
+
+	DecisionTreeNode(std::function<bool()> cond, ENEMY_STATE tState, ENEMY_STATE fState)
+		: condition(cond), trueState(tState), falseState(fState) {
+	}
 };
 
 /**
@@ -278,7 +290,9 @@ enum class TEXTURE_ASSET_ID
 	TEXTBOX_CAULDRON = TEXTBOX_GROTTO_EXIT + 1,
 	TEXTBOX_ENTER_DESERT = TEXTBOX_CAULDRON + 1,
 	TEXTBOX_ENTER_FOREST = TEXTBOX_ENTER_DESERT + 1,
-	TEXTURE_COUNT = TEXTBOX_ENTER_FOREST + 1
+	ENT = TEXTBOX_ENTER_FOREST + 1,
+	MUMMY = ENT + 1,
+	TEXTURE_COUNT = MUMMY + 1,
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 

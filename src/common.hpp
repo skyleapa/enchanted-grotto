@@ -102,6 +102,17 @@ const float DESERT_SKULL_HEIGHT = (float)110 * 0.8;
 const float DESERT_PAGE_WIDTH = (float)54 * 0.8;
 const float DESERT_PAGE_HEIGHT = (float)37 * 0.8;
 
+const float ENT_WIDTH = (float)90;
+const float ENT_HEIGHT = (float)130;
+
+const float MUMMY_WIDTH = (float)45;
+const float MUMMY_HEIGHT = (float)85;
+
+const float DETECTION_RADIUS = (float)200;  // Enemy starts moving & attacking
+const float FOLLOWING_RADIUS = (float)300;  // Enemy stops attacking if outside this
+
+const float ENEMY_SPEED = (float)110;
+
 // Item and potion constants. The enums are declared here instead of in components.hpp
 // because this file is included in components, not the other way around - otherwise,
 // it would result in compilation errors because the name constants would be referring
@@ -247,7 +258,9 @@ const std::vector<Recipe> RECIPES = {
 enum class ENEMY_STATE
 {
 	IDLE = 0,
-	ATTACK = IDLE + 1
+	ATTACK = IDLE + 1,
+	WANDER = ATTACK + 1,
+	RETURN = WANDER + 1
 };
 
 // Default time represented by each "WAIT" action, in ms
