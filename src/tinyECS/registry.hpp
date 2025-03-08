@@ -33,6 +33,9 @@ public:
 	ComponentContainer<Entrance> entrances;
 	ComponentContainer<Textbox> textboxes;
 	ComponentContainer<Animation> animations;
+	ComponentContainer<Chest> chests;
+	ComponentContainer<Enemy> enemies;
+	ComponentContainer<Ammo> ammo;
 
 	// constructor that adds all containers for looping over them
 	ECSRegistry()
@@ -58,6 +61,9 @@ public:
 		registry_list.push_back(&entrances);
 		registry_list.push_back(&textboxes);
 		registry_list.push_back(&animations);
+		registry_list.push_back(&chests);
+		registry_list.push_back(&enemies);
+		registry_list.push_back(&ammo);
 	}
 
 	void clear_all_components() {

@@ -185,6 +185,19 @@ bool collides(const Motion& player_motion, const Motion& terrain_motion, const T
 	return overlap_x && overlap_y;
 }
 
+bool enemyCollides(const Motion& other_motion, const Motion& enemy_motion)
+{
+	// gets our bounding boxes for the player and terrain
+	vec4 other_box = get_bounding_box(other_motion, 1.f, 1.f);
+	vec4 enemy_box = get_bounding_box(enemy_motion, 1.f, 1.f);
+
+	// calculate our AABB overlapping bounding boxes
+	bool overlap_x = (other_box.x < enemy_box.x + enemy_box.z) && (other_box.x + enemy_box.z > enemy_box.x);
+	bool overlap_y = (other_box.y < enemy_box.y + enemy_box.w) && (other_box.y + enemy_box.w > enemy_box.y);
+
+	return overlap_x && overlap_y;
+}
+
 void PhysicsSystem::step(float elapsed_ms)
 {
 	// get our one player
@@ -210,4 +223,28 @@ void PhysicsSystem::step(float elapsed_ms)
 			registry.collisions.emplace_with_duplicates(player_entity, terrain_entity);
 		}
 	}
+
+	// Check enemy collisions
+	for (Entity enemy : registry.enemies.entities) {
+		if (!registry.motions.has(enemy)) continue;
+		Motion& enemy_motion = registry.motions.get(enemy);
+
+		// with enemy
+		for (Entity ammo_entity : registry.ammo.entities) {
+			if (!registry.motions.has(ammo_entity)) continue;
+			Motion& ammo_motion = registry.motions.get(ammo_entity);
+			Ammo &ammo = registry.ammo.get(ammo_entity);
+			if (!ammo.is_fired) continue;
+
+			if (enemyCollides(ammo_motion, enemy_motion)) {
+				registry.collisions.emplace_with_duplicates(ammo_entity, enemy);
+			}
+		}
+
+		// with player
+		if (enemyCollides(player_motion, enemy_motion)) {
+			registry.collisions.emplace_with_duplicates(player_entity, enemy);
+		}
+	}
+
 }

@@ -255,6 +255,9 @@ void RenderSystem::drawToScreen()
 	case ((GLuint)BIOME::GROTTO):
 		glBindTexture(GL_TEXTURE_2D, texture_gl_handles[(GLuint)TEXTURE_ASSET_ID::GROTTO_BG]); // Background texture
 		break;
+	case ((GLuint) BIOME::DESERT):
+		glBindTexture(GL_TEXTURE_2D, texture_gl_handles[(GLuint)TEXTURE_ASSET_ID::DESERT_BG]); // Background texture
+		break;
 	default:
 		glBindTexture(GL_TEXTURE_2D, off_screen_render_buffer_color);
 		break;

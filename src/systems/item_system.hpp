@@ -18,11 +18,11 @@ public:
     
     // Item management
     Entity createItemEntity(ItemType type, int amount = 1);
-    void destroyItem(Entity item);
+    static void destroyItem(Entity item);
     
     // Inventory management
-    bool addItemToInventory(Entity inventory, Entity item);
-    bool removeItemFromInventory(Entity inventory, Entity item);
+    static bool addItemToInventory(Entity inventory, Entity item);
+    static bool removeItemFromInventory(Entity inventory, Entity item);
     bool transferItem(Entity source_inventory, Entity target_inventory, Entity item);
     
     // Serialization
@@ -30,14 +30,16 @@ public:
     bool loadGameState(const std::string& filename);
     
     // Item factory methods
-    static Entity createItem(ItemType type, int amount = 1, bool isCollectable = false);
+    static Entity createItem(ItemType type, int amount = 1, bool isCollectable = false, bool is_ammo = false);
     static Entity createIngredient(ItemType type, int amount = 1);
     static Entity createPotion(PotionEffect effect, int duration, const vec3& color, float quality, float effectValue);
     
+    // Serialization helpers made public and static
+    static nlohmann::json serializeItem(Entity item);
+    static nlohmann::json serializeInventory(Entity inventory);
+    static Entity deserializeItem(const nlohmann::json& data);
+    static void deserializeInventory(Entity inventory, const nlohmann::json& data);
+    
 private:
-    // Helper methods for serialization
-    nlohmann::json serializeItem(Entity item) const;
-    nlohmann::json serializeInventory(Entity inventory) const;
-    Entity deserializeItem(const nlohmann::json& data);
-    void deserializeInventory(Entity inventory, const nlohmann::json& data);
+    // Helper methods for serialization have been moved to public
 }; 

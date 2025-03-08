@@ -194,3 +194,74 @@ TEST_F(ItemSystemTest, EntityIDContinuity) {
     // The new item should have a new unique ID
     EXPECT_NE(item2.id(), first_id);
 }
+
+// Test different inventory types serialization
+TEST_F(ItemSystemTest, DifferentInventoryTypes) {
+    // Create player inventory
+    Entity player_inv = Entity();
+    Inventory& player_inventory = registry.inventories.emplace(player_inv);
+    player_inventory.capacity = 10;
+    Entity player_item = ItemSystem::createItem(ItemType::COFFEE_BEANS, 5);
+    EXPECT_TRUE(item_system.addItemToInventory(player_inv, player_item));
+    
+    // Create cauldron inventory
+    Entity cauldron_inv = Entity();
+    Inventory& cauldron_inventory = registry.inventories.emplace(cauldron_inv);
+    registry.cauldrons.emplace(cauldron_inv);  // Add cauldron component
+    cauldron_inventory.capacity = 5;
+    Entity cauldron_item = ItemSystem::createIngredient(ItemType::MAGICAL_FRUIT, 2);
+    EXPECT_TRUE(item_system.addItemToInventory(cauldron_inv, cauldron_item));
+    
+    // Create chest inventory
+    Entity chest_inv = Entity();
+    Inventory& chest_inventory = registry.inventories.emplace(chest_inv);
+    registry.chests.emplace(chest_inv);  // Add chest component
+    chest_inventory.capacity = 15;
+    Entity chest_item = ItemSystem::createPotion(PotionEffect::SPEED, 30, vec3(1,0,0), 0.8f, 3.0f);
+    EXPECT_TRUE(item_system.addItemToInventory(chest_inv, chest_item));
+    
+    // Save state
+    EXPECT_TRUE(item_system.saveGameState("test_save.json"));
+    
+    // Clear everything
+    registry.clear_all_components();
+    
+    // Load state
+    EXPECT_TRUE(item_system.loadGameState("test_save.json"));
+    
+    // Verify all inventory types were restored correctly
+    bool found_player = false, found_cauldron = false, found_chest = false;
+    
+    for (Entity e : registry.inventories.entities) {
+        Inventory& inv = registry.inventories.get(e);
+        
+        if (!registry.cauldrons.has(e) && !registry.chests.has(e)) {
+            // Player inventory
+            found_player = true;
+            EXPECT_EQ(inv.capacity, 10);
+            EXPECT_EQ(inv.items.size(), 1);
+            EXPECT_TRUE(registry.items.has(inv.items[0]));
+            EXPECT_EQ(registry.items.get(inv.items[0]).type, ItemType::COFFEE_BEANS);
+        } else if (registry.cauldrons.has(e)) {
+            // Cauldron inventory
+            found_cauldron = true;
+            EXPECT_EQ(inv.capacity, 5);
+            EXPECT_EQ(inv.items.size(), 1);
+            EXPECT_TRUE(registry.items.has(inv.items[0]));
+            EXPECT_TRUE(registry.ingredients.has(inv.items[0]));
+            EXPECT_EQ(registry.items.get(inv.items[0]).type, ItemType::MAGICAL_FRUIT);
+        } else if (registry.chests.has(e)) {
+            // Chest inventory
+            found_chest = true;
+            EXPECT_EQ(inv.capacity, 15);
+            EXPECT_EQ(inv.items.size(), 1);
+            EXPECT_TRUE(registry.items.has(inv.items[0]));
+            EXPECT_TRUE(registry.potions.has(inv.items[0]));
+            Potion& pot = registry.potions.get(inv.items[0]);
+            EXPECT_EQ(pot.effect, PotionEffect::SPEED);
+            EXPECT_FLOAT_EQ(pot.quality, 0.8f);
+        }
+    }
+    
+    EXPECT_TRUE(found_player && found_cauldron && found_chest);
+}

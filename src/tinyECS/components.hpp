@@ -8,6 +8,8 @@
 struct Player
 {
 	std::string name;
+	int throw_distance = 250; // pixels
+	float cooldown = 0.f; // defaults to 0, but when ammo is tossed, will have a 1000 ms cooldown
 };
 
 // All data relevant to the shape and motion of entities
@@ -44,6 +46,8 @@ struct ScreenState
 	bool is_switching_biome = false;
 	GLuint switching_to_biome = 1; // track biome that is being switched to
 	float fade_status = 0; // 0 - before fade out, 1 after fade out, 2 - after fade in
+	bool game_over = false;
+	GLuint from_biome = 1;
 };
 
 // A struct to refer to debugging graphics in the ECS
@@ -125,6 +129,7 @@ struct Inventory
 	std::vector<Entity> items;
 	int capacity;
 	bool isFull;
+	int selection = 0;
 };
 
 struct Cauldron
@@ -178,6 +183,24 @@ struct Textbox
 {
 	Entity targetItem;		// The item this textbox belongs to
 	bool isVisible = false; // Visibility of the textbox
+};
+
+struct Chest {
+	// Empty struct, just used to identify chest entities
+};
+
+struct Enemy {
+	int health;
+	int attack_radius;
+	vec2 start_pos;
+	int state; // uses enum class ENEMY_STATE
+};
+
+struct Ammo {
+	vec2 start_pos;
+	vec2 target; // mouse click direction at max of player's throwable radius
+	bool is_fired = false;
+	int damage = 0;
 };
 
 /**
@@ -257,7 +280,9 @@ enum class TEXTURE_ASSET_ID
 	TEXTBOX_ENTER_GROTTO = TEXTBOX_COFFEE_BEAN + 1,
 	TEXTBOX_GROTTO_EXIT = TEXTBOX_ENTER_GROTTO + 1,
 	TEXTBOX_CAULDRON = TEXTBOX_GROTTO_EXIT + 1,
-	TEXTURE_COUNT = TEXTBOX_CAULDRON + 1
+	TEXTBOX_ENTER_DESERT = TEXTBOX_CAULDRON + 1,
+	TEXTBOX_ENTER_FOREST = TEXTBOX_ENTER_DESERT + 1,
+	TEXTURE_COUNT = TEXTBOX_ENTER_FOREST + 1
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 
@@ -318,6 +343,7 @@ enum class BIOME
 	GROTTO = 0,
 	FOREST = GROTTO + 1,
 	BLANK = FOREST + 1,
+	DESERT = BLANK + 1,
 };
 
 enum class DIRECTION

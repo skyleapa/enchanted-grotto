@@ -12,6 +12,7 @@ Entity createPlayer(RenderSystem* renderer, vec2 position);
 
 // forest bridge
 Entity createForestBridge(RenderSystem* renderer, vec2 position);
+
 // these are for the mesh part of the forest bridge
 Entity createForestBridgeTop(RenderSystem* renderer, vec2 position);
 Entity createForestBridgeBottom(RenderSystem* renderer, vec2 position);
@@ -36,7 +37,7 @@ Entity createGrottoEntrance(RenderSystem* renderer, vec2 position, int id, std::
 // bushes
 Entity createBush(RenderSystem* renderer, vec2 position);
 
-// magical fruit
+
 Entity createFruit(RenderSystem* renderer, vec2 position, std::string name, int amount);
 
 // coffee bean
@@ -60,5 +61,34 @@ Entity createGrottoExit(RenderSystem* renderer, vec2 position, int id, std::stri
 // interaction textbox
 Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity);
 
-// render textbox
 RenderRequest getTextboxRenderRequest(Textbox& textbox);
+
+// enemy
+Entity createEnemy(RenderSystem* renderer, vec2 position);
+
+// render fired ammo
+bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, Entity& player_entity);
+
+// desert entrance
+Entity createDesertEntrance(RenderSystem* renderer, vec2 position, int id, std::string name);
+
+// desert exit
+Entity createDesertExit(RenderSystem* renderer, vec2 position, int id, std::string name);
+
+// desert tree
+Entity createDesertTree(RenderSystem* renderer, vec2 position);
+
+// cactus
+Entity createDesertCactus(RenderSystem* renderer, vec2 position);
+
+// cactus
+Entity createDesertRiver(RenderSystem* renderer, vec2 position);
+
+// sandpile at desert entrance
+Entity createDesertSandPile(RenderSystem* renderer, vec2 position);
+
+// hidden recipe in sandpile
+Entity createDesertPage(RenderSystem* renderer, vec2 position);
+
+// desert skull
+Entity createDesertSkull(RenderSystem* renderer, vec2 position);

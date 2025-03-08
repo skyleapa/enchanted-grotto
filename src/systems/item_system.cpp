@@ -2,7 +2,7 @@
 #include <iostream>
 #include <fstream>
 
-Entity ItemSystem::createItem(ItemType type, int amount, bool isCollectable) {
+Entity ItemSystem::createItem(ItemType type, int amount, bool isCollectable, bool is_ammo) {
     Entity entity = Entity();
     
     Item& item = registry.items.emplace(entity);
@@ -10,12 +10,16 @@ Entity ItemSystem::createItem(ItemType type, int amount, bool isCollectable) {
     item.amount = amount;
     item.isCollectable = isCollectable;
     item.name = ITEM_NAMES.at(type);
+
+    if (is_ammo) {
+        registry.ammo.emplace(entity);
+    }
     
     return entity;
 }
 
 Entity ItemSystem::createIngredient(ItemType type, int amount) {
-    Entity entity = createItem(type, amount, false);
+    Entity entity = createItem(type, amount, false, false);
     
     // Add ingredient-specific component
     Ingredient& ingredient = registry.ingredients.emplace(entity);
@@ -25,7 +29,7 @@ Entity ItemSystem::createIngredient(ItemType type, int amount) {
 }
 
 Entity ItemSystem::createPotion(PotionEffect effect, int duration, const vec3& color, float quality, float effectValue) {
-    Entity entity = createItem(ItemType::POTION, 1, false);
+    Entity entity = createItem(ItemType::POTION, 1, false, false);
     
     // Add potion-specific component
     Potion& potion = registry.potions.emplace(entity);
@@ -51,7 +55,7 @@ void ItemSystem::step(float elapsed_ms) {
 }
 
 Entity ItemSystem::createItemEntity(ItemType type, int amount) {
-    return createItem(type, amount, false);
+    return createItem(type, amount, false, false);
 }
 
 void ItemSystem::destroyItem(Entity item) {
@@ -73,8 +77,13 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
         if (registry.items.has(existing)) {
             Item& existing_item = registry.items.get(existing);
             if (existing_item.type == item_comp.type) {
+                // Add amounts together
                 existing_item.amount += item_comp.amount;
-                destroyItem(item);
+                if (registry.ammo.has(item) && !registry.ammo.has(existing)) registry.ammo.emplace(existing); // update ammo in case it didn't previous save component
+                // Don't destroy the original item if it's a collectable (it will respawn)
+                if (!item_comp.isCollectable) {
+                    destroyItem(item);
+                }
                 return true;
             }
         }
@@ -86,7 +95,15 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
         return false;
     }
     
-    inv.items.push_back(item);
+    // If item is collectable, create a copy for the inventory
+    if (item_comp.isCollectable) {
+        Entity copy = createItem(item_comp.type, item_comp.amount, false, registry.ammo.has(item));
+        if (registry.ammo.has(item) && !registry.ammo.has(copy)) registry.ammo.emplace(copy); // ensure ammo component gets copied over
+        inv.items.push_back(copy);
+    } else {
+        inv.items.push_back(item);
+    }
+    
     return true;
 }
 
@@ -119,7 +136,7 @@ bool ItemSystem::transferItem(Entity source_inventory, Entity target_inventory, 
 }
 
 // Serialization
-nlohmann::json ItemSystem::serializeItem(Entity item) const {
+nlohmann::json ItemSystem::serializeItem(Entity item) {
     nlohmann::json data;
     
     if (!registry.items.has(item)) {
@@ -130,6 +147,7 @@ nlohmann::json ItemSystem::serializeItem(Entity item) const {
     data["saved_id"] = item.id();  // Store the Entity ID for reference during deserialization
     data["type_id"] = item_comp.type;
     data["amount"] = item_comp.amount;
+    data["is_ammo"] = registry.ammo.has(item);
     
     // Serialize ingredient data if present
     if (registry.ingredients.has(item)) {
@@ -156,7 +174,7 @@ nlohmann::json ItemSystem::serializeItem(Entity item) const {
     return data;
 }
 
-nlohmann::json ItemSystem::serializeInventory(Entity inventory) const {
+nlohmann::json ItemSystem::serializeInventory(Entity inventory) {
     nlohmann::json data;
     
     if (!registry.inventories.has(inventory)) {
@@ -166,6 +184,15 @@ nlohmann::json ItemSystem::serializeInventory(Entity inventory) const {
     const Inventory& inv = registry.inventories.get(inventory);
     data["saved_id"] = inventory.id();  // Store the Entity ID for reference
     data["capacity"] = inv.capacity;
+    
+    // Store the inventory owner type based on components
+    if (registry.cauldrons.has(inventory)) {
+        data["owner_type"] = "cauldron";
+    } else if (registry.chests.has(inventory)) {
+        data["owner_type"] = "chest";
+    } else {
+        data["owner_type"] = "player";  // Default to player inventory
+    }
     
     nlohmann::json items_data = nlohmann::json::array();
     for (Entity item : inv.items) {
@@ -199,7 +226,7 @@ Entity ItemSystem::deserializeItem(const nlohmann::json& data) {
             pot_data["effectValue"]
         );
     } else {
-        entity = createItem(data["type_id"], data["amount"], false);
+        entity = createItem(data["type_id"], data["amount"], false, data["is_ammo"]);
     }
 
     return entity;
@@ -213,6 +240,14 @@ void ItemSystem::deserializeInventory(Entity inventory, const nlohmann::json& da
     
     Inventory& inv = registry.inventories.get(inventory);
     inv.capacity = data["capacity"];
+    
+    // Create appropriate components based on owner type
+    std::string owner_type = data["owner_type"];
+    if (owner_type == "cauldron" && !registry.cauldrons.has(inventory)) {
+        registry.cauldrons.emplace(inventory);
+    } else if (owner_type == "chest" && !registry.chests.has(inventory)) {
+        registry.chests.emplace(inventory);
+    }
     
     // Clear existing items
     for (Entity item : inv.items) {
@@ -231,10 +266,22 @@ void ItemSystem::deserializeInventory(Entity inventory, const nlohmann::json& da
 
 bool ItemSystem::saveGameState(const std::string& filename) {
     nlohmann::json data;
-    
-    // Save all inventories (TODO: later going to include Cauldron, etc.)
     nlohmann::json inventories = nlohmann::json::array();
+    
+    // First, find and save the player inventory if it exists
+    Entity player_inventory;
+    bool found_player = false;
     for (Entity inventory : registry.inventories.entities) {
+        // Only save player inventory if it belongs to a player entity
+        if (registry.players.has(inventory) || 
+            (!registry.cauldrons.has(inventory) && !registry.chests.has(inventory))) {
+            if (!found_player) {
+                inventories.push_back(serializeInventory(inventory));
+                found_player = true;
+            }
+            // Skip any other player inventories
+            continue;
+        }
         inventories.push_back(serializeInventory(inventory));
     }
     data["inventories"] = inventories;
@@ -260,10 +307,24 @@ bool ItemSystem::loadGameState(const std::string& filename) {
         nlohmann::json data;
         file >> data;
         
+        Entity player;
+        if (!registry.players.entities.empty()) {
+            player = registry.players.entities[0];
+        }
+        
         // Load inventories
         for (const auto& inv_data : data["inventories"]) {
-            Entity inv = Entity();
-            deserializeInventory(inv, inv_data);
+            std::string owner_type = inv_data["owner_type"];
+            
+            if (owner_type == "player") {
+                if (player) {
+                    deserializeInventory(player, inv_data);
+                }
+            } else {
+                // For non-player inventories, create new entities
+                Entity inv = Entity();
+                deserializeInventory(inv, inv_data);
+            }
         }
         
         return true;
