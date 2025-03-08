@@ -13,6 +13,7 @@ Both systems take in a `game|test` argument:
 Note that on some Windows configurations, CMake may place the game executable in the `/build/Debug` folder. If the script fails, the executable is most likely there and can be run directly.
 
 ### Linux/macOS:
+Requires `freetype` to be installed. On macOS, use `brew install freetype`.
 ```bash
 chmod +x run.sh
 ./run.sh [game|test]
