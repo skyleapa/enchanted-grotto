@@ -146,7 +146,7 @@ void BiomeSystem::createForest()
 
     createEnemy(renderer, vec2(GRID_CELL_WIDTH_PX * 2, GRID_CELL_HEIGHT_PX * 5));
 
-    createDesertEntrance(renderer, vec2(GRID_CELL_WIDTH_PX * 2.1, GRID_CELL_HEIGHT_PX * 1.7), 7, "Grotto Entrance");
+    createDesertEntrance(renderer, vec2(GRID_CELL_WIDTH_PX * 2.1, GRID_CELL_HEIGHT_PX * 1.7), 7, "Desert Entrance");
 }
 
 void BiomeSystem::createGrotto()
@@ -197,7 +197,7 @@ void BiomeSystem::createDesert()
         create_boundary_line(renderer, position, scale);
     }
 
-    createDesertExit(renderer, vec2(GRID_CELL_WIDTH_PX * 20.3, GRID_CELL_HEIGHT_PX * 12.9), 8, "Grotto Entrance");
+    createDesertExit(renderer, vec2(GRID_CELL_WIDTH_PX * 20.3, GRID_CELL_HEIGHT_PX * 12.9), 8, "Desert Exit");
     createDesertTree(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 3.9));
     createDesertCactus(renderer, vec2(GRID_CELL_WIDTH_PX * 4.1, GRID_CELL_HEIGHT_PX * 6.2));
     createDesertRiver(renderer, vec2(GRID_CELL_WIDTH_PX * 24, WINDOW_HEIGHT_PX / 2));

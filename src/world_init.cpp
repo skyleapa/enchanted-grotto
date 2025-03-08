@@ -598,6 +598,13 @@ RenderRequest getTextboxRenderRequest(Textbox& textbox)
 	{
 		texture = TEXTURE_ASSET_ID::TEXTBOX_GROTTO_EXIT;
 	}
+	else if (item.name == "Desert Entrance")
+	{
+		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_DESERT;
+	}
+	else if (item.name == "Desert Exit") {
+		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_FOREST;
+	}
 
 	return {
 		texture,
@@ -687,7 +694,7 @@ Entity createDesertEntrance(RenderSystem* renderer, vec2 position, int id, std::
 	entrance.target_biome = (GLuint)BIOME::DESERT;
 
 	Item& item = registry.items.emplace(entity);
-	item.type = ItemType::GROTTO_EXIT;
+	item.type = ItemType::DESERT_ENTRANCE;
 	item.name = name;
 	item.isCollectable = false;
 	item.amount = 1;
@@ -703,7 +710,7 @@ Entity createDesertEntrance(RenderSystem* renderer, vec2 position, int id, std::
 
 	motion.scale = vec2(DESERT_FOREST_TRANSITION_WIDTH, DESERT_FOREST_TRANSITION_HEIGHT);
 
-	Entity textbox = createTextbox(renderer, vec2({ position.x + GRID_CELL_WIDTH_PX * 4, position.y}), entity);
+	Entity textbox = createTextbox(renderer, vec2({ position.x + GRID_CELL_WIDTH_PX * 4, position.y }), entity);
 
 	registry.renderRequests.insert(
 		entity,
@@ -724,7 +731,7 @@ Entity createDesertExit(RenderSystem* renderer, vec2 position, int id, std::stri
 	entrance.target_biome = (GLuint)BIOME::FOREST;
 
 	Item& item = registry.items.emplace(entity);
-	item.type = ItemType::GROTTO_EXIT;
+	item.type = ItemType::FOREST_ENTRANCE;
 	item.name = name;
 	item.isCollectable = false;
 	item.amount = 1;

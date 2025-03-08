@@ -77,7 +77,9 @@ class RenderSystem {
 		textures_path("interactables/textbox_coffee_bean.png"),
 		textures_path("interactables/textbox_enter_grotto.png"),
 		textures_path("interactables/textbox_grotto_exit.png"),
-		textures_path("interactables/textbox_cauldron.png")
+		textures_path("interactables/textbox_cauldron.png"),
+		textures_path("interactables/textbox_enter_desert.png"),
+		textures_path("interactables/textbox_enter_forest.png"),
 	};
 
 	std::array<GLuint, effect_count> effects;
