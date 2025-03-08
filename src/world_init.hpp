@@ -13,6 +13,10 @@ Entity createPlayer(RenderSystem* renderer, vec2 position);
 // forest bridge
 Entity createForestBridge(RenderSystem* renderer, vec2 position);
 
+// these are for the mesh part of the forest bridge
+Entity createForestBridgeTop(RenderSystem* renderer, vec2 position);
+Entity createForestBridgeBottom(RenderSystem* renderer, vec2 position);
+
 // forest river
 Entity createForestRiver(RenderSystem* renderer, vec2 position);
 
@@ -33,11 +37,11 @@ Entity createGrottoEntrance(RenderSystem* renderer, vec2 position, int id, std::
 // bushes
 Entity createBush(RenderSystem* renderer, vec2 position);
 
-// magical fruit
-Entity createFruit(RenderSystem* renderer, vec2 position, int id, std::string name, int amount);
+
+Entity createFruit(RenderSystem* renderer, vec2 position, std::string name, int amount);
 
 // coffee bean
-Entity createCoffeeBean(RenderSystem* renderer, vec2 position, int id, std::string name, int amount);
+Entity createCoffeeBean(RenderSystem* renderer, vec2 position, std::string name, int amount);
 
 // cauldron
 Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name);
@@ -57,7 +61,6 @@ Entity createGrottoExit(RenderSystem* renderer, vec2 position, int id, std::stri
 // interaction textbox
 Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity);
 
-// render textbox
 RenderRequest getTextboxRenderRequest(Textbox& textbox);
 
 // enemy

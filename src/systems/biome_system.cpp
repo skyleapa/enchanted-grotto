@@ -1,5 +1,6 @@
-#include "biome_system.hpp"
 #include "common.hpp"
+#include "biome_system.hpp"
+#include "physics_system.hpp"
 #include "world_init.hpp"
 #include <iostream>
 
@@ -123,6 +124,20 @@ void BiomeSystem::createForest()
 
     // create forest bridge
     createForestBridge(renderer, vec2(307, 485));
+    createForestBridgeTop(renderer, vec2(307, 425));
+    createForestBridgeBottom(renderer, vec2(309, 545));
+
+    // NOTE: leaving this in for debugging vertices of meshes for the future
+    /*
+        Entity terrain_entity = createForestBridgeTop(renderer, vec2(700, 400));
+        Mesh* mesh = registry.meshPtrs.get(terrain_entity);
+        Motion motion = registry.motions.get(terrain_entity);
+        std::vector<vec2> transformed_vertices = PhysicsSystem::get_transformed_vertices(*mesh, motion);
+
+        for (vec2 vertex : transformed_vertices) {
+            createCoffeeBean(renderer, vertex, "vertex bean", 1);
+        }
+    */
 
     // create forest river
     createForestRiver(renderer, vec2(307, 0));
@@ -136,13 +151,13 @@ void BiomeSystem::createForest()
 
     createBush(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 12));
 
-    createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 10, GRID_CELL_HEIGHT_PX * 3), 1, "Magical Fruit", 1);
-    createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 19, GRID_CELL_HEIGHT_PX * 10), 2, "Magical Fruit", 1);
-    createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 23, GRID_CELL_HEIGHT_PX * 11), 3, "Magical Fruit", 1);
+    createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 10, GRID_CELL_HEIGHT_PX * 3), "Magical Fruit", 1);
+    createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 19, GRID_CELL_HEIGHT_PX * 10), "Magical Fruit", 1);
+    createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 23, GRID_CELL_HEIGHT_PX * 11), "Magical Fruit", 1);
 
-    createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5), 4, "Coffee Bean", 1);
-    createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 9.9, GRID_CELL_HEIGHT_PX * 12.1), 5, "Coffee Bean", 1);
-    createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 12, GRID_CELL_HEIGHT_PX * 12.7), 6, "Coffee Bean", 1);
+    createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5), "Coffee Bean", 1);
+    createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 9.9, GRID_CELL_HEIGHT_PX * 12.1), "Coffee Bean", 1);
+    createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 12, GRID_CELL_HEIGHT_PX * 12.7), "Coffee Bean", 1);
 
     createEnemy(renderer, vec2(GRID_CELL_WIDTH_PX * 2, GRID_CELL_HEIGHT_PX * 5));
 

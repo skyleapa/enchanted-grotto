@@ -312,18 +312,6 @@ void WorldSystem::handle_collisions()
 		if (!registry.terrains.has(terrain_entity) || !registry.motions.has(terrain_entity))
 			continue;
 
-		Terrain& terrain = registry.terrains.get(terrain_entity);
-
-		// Full blockage (e.g., rivers)
-		if (terrain.collision_setting == 1.0f)
-		{
-			player_motion.position = player_motion.previous_position;
-			x_blocked = true;
-			y_blocked = true;
-			break; // No need to check further
-		}
-
-		// Determine blocking direction
 		if (std::abs(movement.x) > 0.0f)
 			x_blocked = true;
 		if (std::abs(movement.y) > 0.0f)

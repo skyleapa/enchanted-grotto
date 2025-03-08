@@ -380,12 +380,12 @@ void RenderSystem::draw()
 
 std::vector<Entity> RenderSystem::process_render_requests() {
 	std::vector<Entity> entities = registry.renderRequests.entities;
-	
+
 	// don't render entities with no motion (position)
 	entities.erase(std::remove_if(entities.begin(), entities.end(), [](Entity e) {
 		return !registry.motions.has(e);
 		}), entities.end());
-	
+
 	/*
 		Rendering order is specified in components.hpp where background < terrain < structure < player
 		Note: Terrain and Player is y-position sorted, so that players can go behind and in front of trees ect.
@@ -428,7 +428,7 @@ std::vector<Entity> RenderSystem::process_render_requests() {
 		}
 
 		return false;
-	});
+		});
 
 	return entities;
 }

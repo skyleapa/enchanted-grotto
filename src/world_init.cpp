@@ -101,10 +101,8 @@ Entity createForestBridge(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
 	auto& terrain = registry.terrains.emplace(entity);
-	terrain.collision_setting = 0.0f;
-	terrain.width_ratio = 0.9f;
-	terrain.height_ratio = 0.35f;
-
+	// we're using mesh collisions here, so AABB is not used, see components.cpp for more
+	terrain.collision_setting = 2.0f;
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
 	registry.meshPtrs.emplace(entity, &mesh);
 
@@ -123,6 +121,65 @@ Entity createForestBridge(RenderSystem* renderer, vec2 position)
 			GEOMETRY_BUFFER_ID::SPRITE,
 			RENDER_LAYER::STRUCTURE,
 			0 // this is the render sub layer (bridge should be above river)
+		});
+
+	return entity;
+}
+
+Entity createForestBridgeTop(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+	auto& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 3.0f;
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::BRIDGE_TOP);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0.0f, 0.0f };
+	motion.position = position;
+
+	motion.scale = vec2({ FOREST_BRIDGE_WIDTH - 10, FOREST_BRIDGE_HEIGHT - 135 });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::TEXTURE_COUNT, // texture count, doesn't use mesh
+			EFFECT_ASSET_ID::CHICKEN,
+			GEOMETRY_BUFFER_ID::BRIDGE_TOP,
+			RENDER_LAYER::STRUCTURE,
+			1
+		});
+
+	return entity;
+}
+
+
+Entity createForestBridgeBottom(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+	auto& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 3.0f;
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::BRIDGE_BOTTOM);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0.0f, 0.0f };
+	motion.position = position;
+
+	motion.scale = vec2({ FOREST_BRIDGE_WIDTH - 14, FOREST_BRIDGE_HEIGHT - 135 });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::TEXTURE_COUNT, // texture count, doesn't use mesh
+			EFFECT_ASSET_ID::CHICKEN,
+			GEOMETRY_BUFFER_ID::BRIDGE_BOTTOM,
+			RENDER_LAYER::STRUCTURE,
+			1
 		});
 
 	return entity;
@@ -151,7 +208,7 @@ Entity createForestRiver(RenderSystem* renderer, vec2 position)
 	registry.renderRequests.insert(
 		entity1,
 		{
-			TEXTURE_ASSET_ID::FOREST_RIVER_ABOVE,
+			TEXTURE_ASSET_ID::FOREST_RIVER_TOP,
 			EFFECT_ASSET_ID::TEXTURED,
 			GEOMETRY_BUFFER_ID::SPRITE,
 			RENDER_LAYER::STRUCTURE,
@@ -167,7 +224,7 @@ Entity createForestRiver(RenderSystem* renderer, vec2 position)
 	registry.renderRequests.insert(
 		entity2,
 		{
-			TEXTURE_ASSET_ID::FOREST_RIVER_BELOW,
+			TEXTURE_ASSET_ID::FOREST_RIVER_BOTTOM,
 			EFFECT_ASSET_ID::TEXTURED,
 			GEOMETRY_BUFFER_ID::SPRITE,
 			RENDER_LAYER::STRUCTURE,
@@ -301,7 +358,7 @@ Entity createBush(RenderSystem* renderer, vec2 position)
 	return entity;
 }
 
-Entity createFruit(RenderSystem* renderer, vec2 position, int id, std::string name, int amount)
+Entity createFruit(RenderSystem* renderer, vec2 position, std::string name, int amount)
 {
 	auto entity = Entity();
 
@@ -336,7 +393,7 @@ Entity createFruit(RenderSystem* renderer, vec2 position, int id, std::string na
 	return entity;
 }
 
-Entity createCoffeeBean(RenderSystem* renderer, vec2 position, int id, std::string name, int amount)
+Entity createCoffeeBean(RenderSystem* renderer, vec2 position, std::string name, int amount)
 {
 	auto entity = Entity();
 
