@@ -743,9 +743,6 @@ void WorldSystem::updateThrownAmmo(float elapsed_ms_since_last_update) {
 
 		Motion& ammo_motion = registry.motions.get(entity);
 		ammo_motion.position += ammo_motion.velocity * elapsed_ms_since_last_update * THROW_UPDATE_FACTOR;
-		float dx = ammo.target.x - ammo_motion.position.x;
-		float dy = ammo.target.y - ammo_motion.position.y;
-		float distance_squared = dx * dx + dy * dy;
 		if (abs(ammo_motion.position.x - ammo.start_pos.x) > abs(ammo.target.x - ammo.start_pos.x)
 			|| abs(ammo_motion.position.y - ammo.start_pos.y) > abs(ammo.target.y - ammo.start_pos.y))
 			registry.remove_all_components_of(entity);

@@ -84,6 +84,23 @@ const float ITEM_PICKUP_RADIUS = (float)100;
 const float INTERACTION_RADIUS = (float)100;
 const float TEXTBOX_VISIBILITY_RADIUS = (float)100;
 
+const float DESERT_RIVER_WIDTH = (float)GRID_CELL_WIDTH_PX * 2;
+const float DESERT_RIVER_HEIGHT = (float)WINDOW_HEIGHT_PX;
+
+const float DESERT_TREE_WIDTH = (float)212 * 0.8;
+const float DESERT_TREE_HEIGHT = (float)284 * 0.8;
+
+const float DESERT_CACTUS_WIDTH = (float)164 * 0.8;
+const float DESERT_CACTUS_HEIGHT = (float)196 * 0.8;
+
+const float DESERT_FOREST_TRANSITION_WIDTH = (float)140 * 1.1;
+const float DESERT_FOREST_TRANSITION_HEIGHT = (float)153 * 1.1;
+
+const float DESERT_SKULL_WIDTH = (float)160;
+const float DESERT_SKULL_HEIGHT = (float)110;
+
+const float DESERT_PAGE_WIDTH = (float)54 * 0.8;
+const float DESERT_PAGE_HEIGHT = (float)37 * 0.8;
 
 // Item and potion constants. The enums are declared here instead of in components.hpp
 // because this file is included in components, not the other way around - otherwise,
@@ -203,24 +220,24 @@ struct Recipe
 // 	}
 // };
 const std::vector<Recipe> RECIPES = {
-    {
-        PotionEffect::SPEED,
-        3.0f,  // highestQualityEffect
-        180,   // highestQualityDuration
-        vec3(255, 157, 35), // finalPotionColor
-        {
-            { ItemType::COFFEE_BEANS, 5, 1.0f }, // ingredients
-            { ItemType::MAGICAL_FRUIT, 3, 0.0f }
-        },
-        {
-            { ActionType::MODIFY_HEAT, 100 }, // steps
-            { ActionType::WAIT, 2 },
-            { ActionType::ADD_INGREDIENT, 0 },
-            { ActionType::ADD_INGREDIENT, 1 },
-            { ActionType::STIR, 3 },
-            { ActionType::WAIT, 6 }
-        }
-    }
+	{
+		PotionEffect::SPEED,
+		3.0f,  // highestQualityEffect
+		180,   // highestQualityDuration
+		vec3(255, 157, 35), // finalPotionColor
+		{
+			{ ItemType::COFFEE_BEANS, 5, 1.0f }, // ingredients
+			{ ItemType::MAGICAL_FRUIT, 3, 0.0f }
+		},
+		{
+			{ ActionType::MODIFY_HEAT, 100 }, // steps
+			{ ActionType::WAIT, 2 },
+			{ ActionType::ADD_INGREDIENT, 0 },
+			{ ActionType::ADD_INGREDIENT, 1 },
+			{ ActionType::STIR, 3 },
+			{ ActionType::WAIT, 6 }
+		}
+	}
 };
 
 enum class ENEMY_STATE

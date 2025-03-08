@@ -47,6 +47,7 @@ struct ScreenState
 	GLuint switching_to_biome = 1; // track biome that is being switched to
 	float fade_status = 0; // 0 - before fade out, 1 after fade out, 2 - after fade in
 	bool game_over = false;
+	GLuint from_biome = 1;
 };
 
 // A struct to refer to debugging graphics in the ECS
@@ -183,7 +184,7 @@ struct Textbox
 };
 
 struct Chest {
-    // Empty struct, just used to identify chest entities
+	// Empty struct, just used to identify chest entities
 };
 
 struct Enemy {
@@ -335,6 +336,7 @@ enum class BIOME
 	GROTTO = 0,
 	FOREST = GROTTO + 1,
 	BLANK = FOREST + 1,
+	DESERT = BLANK + 1,
 };
 
 enum class DIRECTION
