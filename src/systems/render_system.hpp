@@ -23,8 +23,10 @@ class RenderSystem {
 	// Make sure these paths remain in sync with the associated enumerators.
 	// Associated id with .obj path
 	const std::vector<std::pair<GEOMETRY_BUFFER_ID, std::string>> mesh_paths = {
-		std::pair<GEOMETRY_BUFFER_ID, std::string>(GEOMETRY_BUFFER_ID::CHICKEN, mesh_path("chicken.obj"))
+		std::pair<GEOMETRY_BUFFER_ID, std::string>(GEOMETRY_BUFFER_ID::CHICKEN, mesh_path("chicken.obj")),
 		// specify meshes of other assets here
+		std::pair<GEOMETRY_BUFFER_ID, std::string>(GEOMETRY_BUFFER_ID::BRIDGE_TOP, mesh_path("bridge_top.obj")),
+		std::pair<GEOMETRY_BUFFER_ID, std::string>(GEOMETRY_BUFFER_ID::BRIDGE_BOTTOM, mesh_path("bridge_bottom.obj")),
 	};
 
 	// Make sure these paths remain in sync with the associated enumerators (see TEXTURE_ASSET_ID).
@@ -47,8 +49,10 @@ class RenderSystem {
 		textures_path("players/walking_w/walking_w_3.png"),
 		textures_path("players/walking_w/walking_w_4.png"),
 		textures_path("terrain/forest/forest_bridge.png"),
-		textures_path("terrain/forest/forest_river_above.png"),
-		textures_path("terrain/forest/forest_river_below.png"),
+		textures_path("terrain/forest/bridge_top.png"),
+		textures_path("terrain/forest/bridge_bottom.png"),
+		textures_path("terrain/forest/forest_river_top.png"),
+		textures_path("terrain/forest/forest_river_bottom.png"),
 		textures_path("backgrounds/forest_bg.png"),
 		textures_path("terrain/forest/forest_to_desert.png"),
 		textures_path("terrain/forest/tree_1.png"),
@@ -77,7 +81,9 @@ class RenderSystem {
 		textures_path("interactables/textbox_coffee_bean.png"),
 		textures_path("interactables/textbox_enter_grotto.png"),
 		textures_path("interactables/textbox_grotto_exit.png"),
-		textures_path("interactables/textbox_cauldron.png")
+		textures_path("interactables/textbox_cauldron.png"),
+		textures_path("interactables/textbox_enter_desert.png"),
+		textures_path("interactables/textbox_enter_forest.png"),
 	};
 
 	std::array<GLuint, effect_count> effects;

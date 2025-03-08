@@ -10,6 +10,7 @@ class PhysicsSystem
 {
 public:
 	void step(float elapsed_ms);
+	static std::vector<vec2> get_transformed_vertices(const Mesh& mesh, const Motion& motion);
 
 	PhysicsSystem()
 	{

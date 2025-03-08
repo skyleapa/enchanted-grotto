@@ -59,6 +59,9 @@ public:
 	// Set reference to UI system
 	void setUISystem(UISystem* ui_system) { m_ui_system = ui_system; }
 
+	void throwAmmo(vec2 target);
+
+	void updateThrownAmmo(float elapsed_ms_since_last_update);
 private:
 
 	float mouse_pos_x = 0.0f;
