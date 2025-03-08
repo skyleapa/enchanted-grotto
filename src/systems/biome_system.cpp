@@ -1,6 +1,8 @@
-#include "biome_system.hpp"
 #include "common.hpp"
+#include "biome_system.hpp"
+#include "physics_system.hpp"
 #include "world_init.hpp"
+#include <iostream>
 
 #include <vector>
 
@@ -11,6 +13,7 @@ void BiomeSystem::init(RenderSystem* renderer_arg) {
     screen.fade_status = 0;
     screen.is_switching_biome = false;
     screen.biome = (GLuint)BIOME::FOREST;
+    screen.from_biome = (GLuint)BIOME::FOREST;
 
     switchBiome(screen.biome);
 }
@@ -39,17 +42,11 @@ void BiomeSystem::step(float elapsed_ms_since_last_update) {
         {
             if (screen.biome != screen.switching_to_biome)
             {
+                screen.from_biome = screen.biome;
                 screen.biome = screen.switching_to_biome;
                 screen.darken_screen_factor = 1;
                 switchBiome((int)screen.biome);
-                if (screen.biome == (int)BIOME::GROTTO) {
-                    player_motion.scale = { PLAYER_BB_WIDTH * PlAYER_BB_GROTTO_SIZE_FACTOR, PLAYER_BB_HEIGHT * PlAYER_BB_GROTTO_SIZE_FACTOR };
-                    player_motion.position = vec2({ player_motion.position.x, GRID_CELL_HEIGHT_PX * 11 }); // bring player to front of door
-                }
-                else if (screen.biome == (int)BIOME::FOREST) {
-                    player_motion.position = vec2(GROTTO_ENTRANCE_X, GROTTO_ENTRANCE_Y + 50);
-                    player_motion.scale = { PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT };
-                }
+                renderPlayerInNewBiome();
             }
             screen.darken_screen_factor -= elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
             if (screen.darken_screen_factor <= 0)
@@ -86,6 +83,35 @@ void BiomeSystem::switchBiome(int biome) {
     {
         createGrotto();
     }
+    else if (biome == (GLuint)BIOME::DESERT) {
+        createDesert();
+    }
+}
+
+void BiomeSystem::renderPlayerInNewBiome() {
+    if (registry.players.entities.size() == 0) return;
+
+    Entity player_entity = registry.players.entities[0];
+    if (!registry.motions.has(player_entity)) return;
+
+    ScreenState screen = registry.screenStates.components[0];
+    Motion& player_motion = registry.motions.get(player_entity);
+
+    player_motion.scale = { PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT };
+
+    if (screen.from_biome == (int)BIOME::FOREST && screen.biome == (int)BIOME::GROTTO) { // through grotto entrance from forest
+        player_motion.scale = { PLAYER_BB_WIDTH * PlAYER_BB_GROTTO_SIZE_FACTOR, PLAYER_BB_HEIGHT * PlAYER_BB_GROTTO_SIZE_FACTOR };
+        player_motion.position = vec2({ player_motion.position.x, GRID_CELL_HEIGHT_PX * 11 }); // bring player to front of door
+    }
+    else if (screen.from_biome == (int)BIOME::GROTTO && screen.biome == (int)BIOME::FOREST) { // through grotto exit into forest
+        player_motion.position = vec2(GROTTO_ENTRANCE_X, GROTTO_ENTRANCE_Y + 50);
+    }
+    else if (screen.from_biome == (int)BIOME::FOREST && screen.biome == (int)BIOME::DESERT) {
+        player_motion.position = vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 12);
+    }
+    else if (screen.from_biome == (int)BIOME::DESERT && screen.biome == (int)BIOME::FOREST) {
+        player_motion.position = vec2(GRID_CELL_WIDTH_PX * 2, GRID_CELL_HEIGHT_PX * 2);
+    }
 }
 
 void BiomeSystem::createForest()
@@ -98,6 +124,20 @@ void BiomeSystem::createForest()
 
     // create forest bridge
     createForestBridge(renderer, vec2(307, 485));
+    createForestBridgeTop(renderer, vec2(307, 425));
+    createForestBridgeBottom(renderer, vec2(309, 545));
+
+    // NOTE: leaving this in for debugging vertices of meshes for the future
+    /*
+        Entity terrain_entity = createForestBridgeTop(renderer, vec2(700, 400));
+        Mesh* mesh = registry.meshPtrs.get(terrain_entity);
+        Motion motion = registry.motions.get(terrain_entity);
+        std::vector<vec2> transformed_vertices = PhysicsSystem::get_transformed_vertices(*mesh, motion);
+
+        for (vec2 vertex : transformed_vertices) {
+            createCoffeeBean(renderer, vertex, "vertex bean", 1);
+        }
+    */
 
     // create forest river
     createForestRiver(renderer, vec2(307, 0));
@@ -111,13 +151,17 @@ void BiomeSystem::createForest()
 
     createBush(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 12));
 
-    createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 10, GRID_CELL_HEIGHT_PX * 3), 1, "Magical Fruit", 1);
-    createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 19, GRID_CELL_HEIGHT_PX * 10), 2, "Magical Fruit", 1);
-    createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 23, GRID_CELL_HEIGHT_PX * 11), 3, "Magical Fruit", 1);
+    createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 10, GRID_CELL_HEIGHT_PX * 3), "Magical Fruit", 1);
+    createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 19, GRID_CELL_HEIGHT_PX * 10), "Magical Fruit", 1);
+    createFruit(renderer, vec2(GRID_CELL_WIDTH_PX * 23, GRID_CELL_HEIGHT_PX * 11), "Magical Fruit", 1);
 
-    createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5), 4, "Coffee Bean", 1);
-    createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 9.9, GRID_CELL_HEIGHT_PX * 12.1), 5, "Coffee Bean", 1);
-    createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 12, GRID_CELL_HEIGHT_PX * 12.7), 6, "Coffee Bean", 1);
+    createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5), "Coffee Bean", 1);
+    createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 9.9, GRID_CELL_HEIGHT_PX * 12.1), "Coffee Bean", 1);
+    createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 12, GRID_CELL_HEIGHT_PX * 12.7), "Coffee Bean", 1);
+
+    createEnemy(renderer, vec2(GRID_CELL_WIDTH_PX * 2, GRID_CELL_HEIGHT_PX * 5));
+
+    createDesertEntrance(renderer, vec2(GRID_CELL_WIDTH_PX * 2.1, GRID_CELL_HEIGHT_PX * 1.7), 7, "Desert Entrance");
 }
 
 void BiomeSystem::createGrotto()
@@ -153,5 +197,25 @@ bool BiomeSystem::handleEntranceInteraction(Entity entrance_entity)
         state.is_switching_biome = true;
         state.switching_to_biome = (GLuint)BIOME::FOREST;
     }
+    else if (entrance.target_biome == (GLuint)BIOME::DESERT) {
+        state.is_switching_biome = true;
+        state.switching_to_biome = (GLuint)BIOME::DESERT;
+    }
     return true;
+}
+
+void BiomeSystem::createDesert()
+{
+    // positions are according to sample desert
+    for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::DESERT)) // desert
+    {
+        create_boundary_line(renderer, position, scale);
+    }
+
+    createDesertExit(renderer, vec2(GRID_CELL_WIDTH_PX * 20.3, GRID_CELL_HEIGHT_PX * 12.9), 8, "Desert Exit");
+    createDesertTree(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 3.9));
+    createDesertCactus(renderer, vec2(GRID_CELL_WIDTH_PX * 4.1, GRID_CELL_HEIGHT_PX * 6.2));
+    createDesertRiver(renderer, vec2(GRID_CELL_WIDTH_PX * 24, WINDOW_HEIGHT_PX / 2));
+    createDesertPage(renderer, vec2(GRID_CELL_WIDTH_PX * 13.5, GRID_CELL_HEIGHT_PX * 3.2));
+    createDesertSkull(renderer, vec2(GRID_CELL_WIDTH_PX * 13.7, GRID_CELL_HEIGHT_PX * 10.9));
 }

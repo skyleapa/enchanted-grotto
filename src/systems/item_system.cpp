@@ -2,7 +2,7 @@
 #include <iostream>
 #include <fstream>
 
-Entity ItemSystem::createItem(ItemType type, int amount, bool isCollectable) {
+Entity ItemSystem::createItem(ItemType type, int amount, bool isCollectable, bool is_ammo) {
     Entity entity = Entity();
     
     Item& item = registry.items.emplace(entity);
@@ -10,12 +10,16 @@ Entity ItemSystem::createItem(ItemType type, int amount, bool isCollectable) {
     item.amount = amount;
     item.isCollectable = isCollectable;
     item.name = ITEM_NAMES.at(type);
+
+    if (is_ammo) {
+        registry.ammo.emplace(entity);
+    }
     
     return entity;
 }
 
 Entity ItemSystem::createIngredient(ItemType type, int amount) {
-    Entity entity = createItem(type, amount, false);
+    Entity entity = createItem(type, amount, false, false);
     
     // Add ingredient-specific component
     Ingredient& ingredient = registry.ingredients.emplace(entity);
@@ -25,7 +29,7 @@ Entity ItemSystem::createIngredient(ItemType type, int amount) {
 }
 
 Entity ItemSystem::createPotion(PotionEffect effect, int duration, const vec3& color, float quality, float effectValue) {
-    Entity entity = createItem(ItemType::POTION, 1, false);
+    Entity entity = createItem(ItemType::POTION, 1, false, false);
     
     // Add potion-specific component
     Potion& potion = registry.potions.emplace(entity);
@@ -51,7 +55,7 @@ void ItemSystem::step(float elapsed_ms) {
 }
 
 Entity ItemSystem::createItemEntity(ItemType type, int amount) {
-    return createItem(type, amount, false);
+    return createItem(type, amount, false, false);
 }
 
 void ItemSystem::destroyItem(Entity item) {
@@ -75,6 +79,7 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
             if (existing_item.type == item_comp.type) {
                 // Add amounts together
                 existing_item.amount += item_comp.amount;
+                if (registry.ammo.has(item) && !registry.ammo.has(existing)) registry.ammo.emplace(existing); // update ammo in case it didn't previous save component
                 // Don't destroy the original item if it's a collectable (it will respawn)
                 if (!item_comp.isCollectable) {
                     destroyItem(item);
@@ -92,7 +97,8 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
     
     // If item is collectable, create a copy for the inventory
     if (item_comp.isCollectable) {
-        Entity copy = createItem(item_comp.type, item_comp.amount, false);
+        Entity copy = createItem(item_comp.type, item_comp.amount, false, registry.ammo.has(item));
+        if (registry.ammo.has(item) && !registry.ammo.has(copy)) registry.ammo.emplace(copy); // ensure ammo component gets copied over
         inv.items.push_back(copy);
     } else {
         inv.items.push_back(item);
@@ -141,6 +147,7 @@ nlohmann::json ItemSystem::serializeItem(Entity item) {
     data["saved_id"] = item.id();  // Store the Entity ID for reference during deserialization
     data["type_id"] = item_comp.type;
     data["amount"] = item_comp.amount;
+    data["is_ammo"] = registry.ammo.has(item);
     
     // Serialize ingredient data if present
     if (registry.ingredients.has(item)) {
@@ -219,7 +226,7 @@ Entity ItemSystem::deserializeItem(const nlohmann::json& data) {
             pot_data["effectValue"]
         );
     } else {
-        entity = createItem(data["type_id"], data["amount"], false);
+        entity = createItem(data["type_id"], data["amount"], false, data["is_ammo"]);
     }
 
     return entity;

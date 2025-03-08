@@ -170,7 +170,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		Entity player = registry.players.entities[0];
 		if (registry.inventories.has(player)) {
 			Inventory& player_inv = registry.inventories.get(player);
-			
+
 			// Count specific item types and their amounts
 			for (Entity item : player_inv.items) {
 				if (registry.items.has(item)) {
@@ -214,8 +214,11 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	}
 
 	updatePlayerWalkAndAnimation(player, player_motion, elapsed_ms_since_last_update);
+	updateThrownAmmo(elapsed_ms_since_last_update);
 	update_textbox_visibility();
 	handle_item_respawn(elapsed_ms_since_last_update);
+
+	if (registry.screenStates.components[0].game_over) restart_game();
 
 	return true;
 }
@@ -224,6 +227,9 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 void WorldSystem::restart_game()
 {
 	std::cout << "Restarting..." << std::endl;
+
+	ScreenState& state = registry.screenStates.components[0];
+	state.game_over = false;
 
 	// Save the player's inventory before clearing if it exists
 	Entity player_entity;
@@ -285,22 +291,29 @@ void WorldSystem::handle_collisions()
 			continue;
 		Collision& collision = registry.collisions.get(collision_entity);
 
+		// case ammo hits enemy
+		if ((registry.ammo.has(collision_entity) || registry.ammo.has(collision.other)) && (registry.enemies.has(collision_entity) || registry.enemies.has(collision.other))) {
+			Entity ammo_entity = registry.ammo.has(collision_entity) ? collision_entity : collision.other;
+			Entity enemy_entity = registry.enemies.has(collision_entity) ? collision_entity : collision.other;
+
+			Ammo& ammo = registry.ammo.get(ammo_entity);
+			Enemy& enemy = registry.enemies.get(enemy_entity);
+			enemy.health -= ammo.damage;
+			registry.remove_all_components_of(ammo_entity);
+			if (enemy.health <= 0) registry.remove_all_components_of(enemy_entity);
+			continue;
+		}
+		// case where enemy hits player - automatically die and restart game
+		else if ((registry.players.has(collision_entity) || registry.players.has(collision.other)) && (registry.enemies.has(collision_entity) || registry.enemies.has(collision.other))) {
+			ScreenState& state = registry.screenStates.components[0];
+			state.game_over = true;
+			continue;
+		}
+
 		Entity terrain_entity = (collision_entity == player_entity) ? collision.other : collision_entity;
 		if (!registry.terrains.has(terrain_entity) || !registry.motions.has(terrain_entity))
 			continue;
 
-		Terrain& terrain = registry.terrains.get(terrain_entity);
-
-		// Full blockage (e.g., rivers)
-		if (terrain.collision_setting == 1.0f)
-		{
-			player_motion.position = player_motion.previous_position;
-			x_blocked = true;
-			y_blocked = true;
-			break; // No need to check further
-		}
-
-		// Determine blocking direction
 		if (std::abs(movement.x) > 0.0f)
 			x_blocked = true;
 		if (std::abs(movement.y) > 0.0f)
@@ -400,6 +413,8 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 
 		std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
 		std::cout << "mouse tile position: " << tile_x << ", " << tile_y << std::endl;
+
+		throwAmmo(vec2(mouse_pos_x, mouse_pos_y));
 	}
 }
 
@@ -476,9 +491,9 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 		return false;
 
 	Item& item_info = registry.items.get(item);
-	
+
 	item_info.originalPosition = registry.motions.get(item).position;
-	
+
 	if (!ItemSystem::addItemToInventory(player, item))
 		return false;
 
@@ -631,7 +646,6 @@ void WorldSystem::updatePlayerWalkAndAnimation(Entity& player, Motion& player_mo
 
 	// Update velocity based on active keys
 	player_motion.velocity = { 0, 0 }; // Reset velocity before recalculating
-	bool is_player_moving = false;
 
 	if (registry.screenStates.components[0].is_switching_biome) return; // don't move while switching biomes
 
@@ -639,29 +653,33 @@ void WorldSystem::updatePlayerWalkAndAnimation(Entity& player, Motion& player_mo
 		player_motion.velocity[1] -= PLAYER_SPEED;
 		player_animation.frames = { TEXTURE_ASSET_ID::PLAYER_WALKING_W_1, TEXTURE_ASSET_ID::PLAYER_WALKING_W_2,
 									TEXTURE_ASSET_ID::PLAYER_WALKING_W_3, TEXTURE_ASSET_ID::PLAYER_WALKING_W_4 };
-		is_player_moving = true;
 	}
 	if (pressed_keys.count(GLFW_KEY_S))
 	{
 		player_motion.velocity[1] += PLAYER_SPEED;
 		player_animation.frames = { TEXTURE_ASSET_ID::PLAYER_WALKING_S_1, TEXTURE_ASSET_ID::PLAYER_WALKING_S_2,
 									TEXTURE_ASSET_ID::PLAYER_WALKING_S_3, TEXTURE_ASSET_ID::PLAYER_WALKING_S_4 };
-		is_player_moving = true;
 	}
 	if (pressed_keys.count(GLFW_KEY_D)) {
 		player_motion.velocity[0] += PLAYER_SPEED;
 		player_animation.frames = { TEXTURE_ASSET_ID::PLAYER_WALKING_D_1, TEXTURE_ASSET_ID::PLAYER_WALKING_D_2,
 									TEXTURE_ASSET_ID::PLAYER_WALKING_D_3, TEXTURE_ASSET_ID::PLAYER_WALKING_D_4 };
-		is_player_moving = true;
 	}
 	if (pressed_keys.count(GLFW_KEY_A)) {
 		player_motion.velocity[0] -= PLAYER_SPEED;
 		player_animation.frames = { TEXTURE_ASSET_ID::PLAYER_WALKING_A_1, TEXTURE_ASSET_ID::PLAYER_WALKING_A_2,
 									TEXTURE_ASSET_ID::PLAYER_WALKING_A_3, TEXTURE_ASSET_ID::PLAYER_WALKING_A_4 };
-		is_player_moving = true;
 	}
 
-	if (!is_player_moving) {
+	// Normalize velocity to avoid increased speed when moving diagonally
+	if (player_motion.velocity[0] != 0.0f || player_motion.velocity[1] != 0.0f) {
+		float magnitude = std::sqrt(player_motion.velocity[0] * player_motion.velocity[0] +
+			player_motion.velocity[1] * player_motion.velocity[1]);
+		player_motion.velocity[0] = (player_motion.velocity[0] / magnitude) * PLAYER_SPEED;
+		player_motion.velocity[1] = (player_motion.velocity[1] / magnitude) * PLAYER_SPEED;
+	}
+
+	if (player_motion.velocity[0] == 0.0f && player_motion.velocity[1] == 0.0f) {
 		// keep the first frame of the last direction player was moving when they're idle
 		player_animation.current_frame = 1;
 	}
@@ -680,4 +698,58 @@ void WorldSystem::updatePlayerWalkAndAnimation(Entity& player, Motion& player_mo
 	player_motion.previous_position = player_motion.position;
 	float delta = elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
 	player_motion.position += delta * player_motion.velocity;
+
+	// update player's throwing cooldown
+	Player& player_comp = registry.players.get(player);
+	if (player_comp.cooldown > 0) {
+		player_comp.cooldown -= elapsed_ms_since_last_update;
+		if (player_comp.cooldown <= 0) {
+			player_comp.cooldown = 0;
+		}
+	}
+}
+
+void WorldSystem::throwAmmo(vec2 target) {
+	if (registry.players.entities.empty()) return;
+	Entity player_entity = registry.players.entities[0];
+	Player& player = registry.players.get(player_entity);
+
+	if (player.cooldown > 0.f) std::cout << "on cooldown" << std::endl;
+	if (!registry.inventories.has(player_entity) || player.cooldown > 0.f || !registry.motions.has(player_entity)) return;
+	Inventory& inventory = registry.inventories.get(player_entity);
+	if (inventory.items.size() < inventory.selection + 1) {
+		std::cout << "cannot throw selected item" << std::endl;
+		return;
+	}
+
+	Entity& item_entity = inventory.items[inventory.selection];
+
+	if (createFiredAmmo(renderer, target, item_entity, player_entity)) {
+		if (registry.items.has(item_entity)) {
+			Item& item = registry.items.get(item_entity);
+			item.amount -= 1;
+			if (item.amount == 0) {
+				ItemSystem::destroyItem(item_entity);
+				ItemSystem::removeItemFromInventory(player_entity, item_entity);
+			}
+		}
+		player.cooldown = 1000.f;
+	}
+
+}
+
+void WorldSystem::updateThrownAmmo(float elapsed_ms_since_last_update) {
+	for (auto& entity : registry.ammo.entities) {
+		if (!registry.motions.has(entity)) continue;
+
+		Ammo& ammo = registry.ammo.get(entity);
+		if (!ammo.is_fired) continue;
+
+		Motion& ammo_motion = registry.motions.get(entity);
+		ammo_motion.position += ammo_motion.velocity * elapsed_ms_since_last_update * THROW_UPDATE_FACTOR;
+		if (abs(ammo_motion.position.x - ammo.start_pos.x) > abs(ammo.target.x - ammo.start_pos.x)
+			|| abs(ammo_motion.position.y - ammo.start_pos.y) > abs(ammo.target.y - ammo.start_pos.y))
+			registry.remove_all_components_of(entity);
+
+	}
 }
