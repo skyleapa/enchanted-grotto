@@ -1,6 +1,7 @@
 #include "./tinyECS/registry.hpp"
 #include "./tinyECS/components.hpp"
 #include "common.hpp"
+#include "physics_system.hpp"
 #include "render_system.hpp"
 #include "world_init.hpp"
 

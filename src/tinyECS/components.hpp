@@ -162,6 +162,8 @@ struct Terrain
 	//     if 0, specify the ratio of the bounding box in proportion to the sprite. Bounding box collision
 	//     logic can be found in physics_system.cpp, boxes are drawn on bottom middle of sprite
 	// 1 - uses full bounding box for collisions, player cannot walk into terrain at all (river)
+	// 2 - no collision box at all (a separate mesh entity is used)
+	// 3 - this is the mesh entity we are using for collision, doesn't use AABB in physics_system
 	float collision_setting;
 	float width_ratio = 1.0f;
 	float height_ratio = 1.0f;
@@ -222,9 +224,11 @@ enum class TEXTURE_ASSET_ID
 	PLAYER_WALKING_W_3 = PLAYER_WALKING_W_2 + 1,
 	PLAYER_WALKING_W_4 = PLAYER_WALKING_W_3 + 1,
 	FOREST_BRIDGE = PLAYER_WALKING_W_4 + 1,
-	FOREST_RIVER_ABOVE = FOREST_BRIDGE + 1,
-	FOREST_RIVER_BELOW = FOREST_RIVER_ABOVE + 1,
-	FOREST_BG = FOREST_RIVER_BELOW + 1,
+	FOREST_BRIDGE_TOP = FOREST_BRIDGE + 1,
+	FOREST_BRIDGE_BOTTOM = FOREST_BRIDGE_TOP + 1,
+	FOREST_RIVER_TOP = FOREST_BRIDGE_BOTTOM + 1,
+	FOREST_RIVER_BOTTOM = FOREST_RIVER_TOP + 1,
+	FOREST_BG = FOREST_RIVER_BOTTOM + 1,
 	FOREST_TO_DESERT = FOREST_BG + 1,
 	TREE = FOREST_TO_DESERT + 1,
 	GROTTO_ENTRANCE = TREE + 1,
@@ -264,7 +268,6 @@ struct Animation {
 	float frame_time; // time for each frame
 	float elapsed_time; // time since the last time we switched frames
 	int current_frame;
-	int current_direction; // 0 = w, 1 = a, 2 = s, 3 = d
 };
 
 enum class EFFECT_ASSET_ID
@@ -286,7 +289,9 @@ enum class GEOMETRY_BUFFER_ID
 	EGG = SPRITE + 1,
 	DEBUG_LINE = EGG + 1,
 	SCREEN_TRIANGLE = DEBUG_LINE + 1,
-	GEOMETRY_COUNT = SCREEN_TRIANGLE + 1
+	BRIDGE_TOP = SCREEN_TRIANGLE + 1,
+	BRIDGE_BOTTOM = BRIDGE_TOP + 1,
+	GEOMETRY_COUNT = BRIDGE_BOTTOM + 1
 };
 const int geometry_count = (int)GEOMETRY_BUFFER_ID::GEOMETRY_COUNT;
 
