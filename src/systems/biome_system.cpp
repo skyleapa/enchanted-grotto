@@ -146,7 +146,7 @@ void BiomeSystem::createForest()
 
     createEnemy(renderer, vec2(GRID_CELL_WIDTH_PX * 2, GRID_CELL_HEIGHT_PX * 5));
 
-    createDesertEntrance(renderer, vec2(GRID_CELL_WIDTH_PX * 2, 0), 7, "Grotto Entrance");
+    createDesertEntrance(renderer, vec2(GRID_CELL_WIDTH_PX * 2.1, GRID_CELL_HEIGHT_PX * 1.7), 7, "Grotto Entrance");
 }
 
 void BiomeSystem::createGrotto()

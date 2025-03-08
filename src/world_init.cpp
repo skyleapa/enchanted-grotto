@@ -697,17 +697,17 @@ Entity createDesertEntrance(RenderSystem* renderer, vec2 position, int id, std::
 	registry.meshPtrs.emplace(entity, &mesh);
 
 	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 180.f;
+	motion.angle = 0.f;
 	motion.velocity = { 0, 0 };
 	motion.position = position;
 
-	motion.scale = vec2(190, BOUNDARY_LINE_THICKNESS);
+	motion.scale = vec2(DESERT_FOREST_TRANSITION_WIDTH, DESERT_FOREST_TRANSITION_HEIGHT);
 
-	Entity textbox = createTextbox(renderer, vec2({ position.x + GRID_CELL_WIDTH_PX * 2, position.y + GRID_CELL_HEIGHT_PX }), entity);
+	Entity textbox = createTextbox(renderer, vec2({ position.x + GRID_CELL_WIDTH_PX * 4, position.y}), entity);
 
 	registry.renderRequests.insert(
 		entity,
-		{ TEXTURE_ASSET_ID::BOUNDARY_LINE, // drawn into biome so just have the placement set for rendering
+		{ TEXTURE_ASSET_ID::DESERT_TO_FOREST, // drawn into biome so just have the placement set for rendering
 		 EFFECT_ASSET_ID::TEXTURED,
 		 GEOMETRY_BUFFER_ID::SPRITE,
 		 RENDER_LAYER::STRUCTURE,
