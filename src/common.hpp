@@ -96,8 +96,8 @@ const float DESERT_CACTUS_HEIGHT = (float)196 * 0.8;
 const float DESERT_FOREST_TRANSITION_WIDTH = (float)140 * 1.1;
 const float DESERT_FOREST_TRANSITION_HEIGHT = (float)153 * 1.1;
 
-const float DESERT_SKULL_WIDTH = (float)160;
-const float DESERT_SKULL_HEIGHT = (float)110;
+const float DESERT_SKULL_WIDTH = (float)160 * 0.8;
+const float DESERT_SKULL_HEIGHT = (float)110 * 0.8;
 
 const float DESERT_PAGE_WIDTH = (float)54 * 0.8;
 const float DESERT_PAGE_HEIGHT = (float)37 * 0.8;
