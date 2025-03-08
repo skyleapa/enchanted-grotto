@@ -1,6 +1,5 @@
 #include "ui_system.hpp"
 #include "render_system.hpp"
-#include "../tinyECS/registry.hpp"
 #include "rmlui_system_interface.hpp"
 #include "rmlui_render_interface.hpp"
 #include <iostream>
@@ -645,6 +644,7 @@ void UISystem::updateInventoryBar()
                 if (registry.items.has(item_entity)) {
                     Item& item = registry.items.get(item_entity);
 
+                    // TODO: Add item type to texture associations
                     // Add item display
                     if (item.type == ItemType::COFFEE_BEANS) {
                         slot_content += "<img src='interactables/coffee_bean.png' style='width: 32px; height: 32px; margin: 4px;' />";
@@ -685,4 +685,61 @@ void UISystem::selectInventorySlot(int slot)
     if (m_inventory_document) {
         updateInventoryBar();
     }
+}
+
+bool UISystem::openCauldron()
+{
+    if (!m_initialized || !m_context) return false;
+    if (m_cauldron_document) {
+        m_cauldron_document->Show();
+        return true;
+    }
+
+    try {
+        std::cout << "UISystem::createCauldronUI - Creating cauldron UI" << std::endl;
+
+        std::string cauldron_rml = R"(
+        <rml>
+        <head>
+            <style>
+                img {
+                    display: block;
+                    margin-left: auto;
+                    margin-right: auto;
+                    margin-top: 25px;
+                    height: 550px;
+                    transform: scaleY(-1);
+                }
+            </style>
+        </head>
+        <body>
+            <img src="interactables/cauldron_background.png"></img>
+        </body>
+        </rml>
+        )";
+
+        m_cauldron_document = m_context->LoadDocumentFromMemory(cauldron_rml.c_str());
+        if (m_cauldron_document) {
+            m_cauldron_document->Show();
+            std::cout << "UISystem::openCauldron - Cauldron created successfully" << std::endl;
+            return true;
+        }
+        else {
+            std::cerr << "UISystem::openCauldron - Failed to open cauldron" << std::endl;
+            return false;
+        }
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Exception in UISystem::openCauldron: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool UISystem::isCauldronOpen() {
+    return m_cauldron_document && m_cauldron_document->IsVisible();
+}
+
+void UISystem::closeCauldron() 
+{
+    m_cauldron_document->Hide();
 }

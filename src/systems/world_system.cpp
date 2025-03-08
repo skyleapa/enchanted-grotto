@@ -428,11 +428,13 @@ void WorldSystem::handle_player_interaction()
 	if (!registry.motions.has(player) || !registry.inventories.has(player))
 		return;
 
-	Motion& player_motion = registry.motions.get(player);
-
-	if (registry.items.entities.empty())
+	// If a cauldron is open just close it
+	if (m_ui_system->isCauldronOpen()) {
+		m_ui_system->closeCauldron();
 		return;
+	}
 
+	Motion& player_motion = registry.motions.get(player);
 	for (Entity item : registry.items.entities)
 	{
 		if (!registry.items.has(item) || !registry.motions.has(item))
@@ -442,14 +444,15 @@ void WorldSystem::handle_player_interaction()
 		Item& item_info = registry.items.get(item);
 
 		// Check if item is collectable or is an interactable entrance
-		if (!item_info.isCollectable && !registry.entrances.has(item))
+		if (!item_info.isCollectable && !registry.entrances.has(item) && !registry.cauldrons.has(item)) {
 			continue;
-
-		float distance = glm::distance(player_motion.position, item_motion.position);
+		}
 
 		// If item is not in pickup range, continue
-		if (distance > ITEM_PICKUP_RADIUS)
+		float distance = glm::distance(player_motion.position, item_motion.position);
+		if (distance > ITEM_PICKUP_RADIUS) {
 			continue;
+		}
 
 		// Handle interaction
 		bool handle_textbox = false;
@@ -460,6 +463,10 @@ void WorldSystem::handle_player_interaction()
 		else if (item_info.isCollectable)
 		{
 			handle_textbox = handle_item_pickup(player, item);
+		}
+		else if (registry.cauldrons.has(item)) {
+			std::cout << "found cauldron" << std::endl;
+			handle_textbox = m_ui_system->openCauldron();
 		}
 
 		if (handle_textbox)
@@ -475,14 +482,17 @@ void WorldSystem::handle_player_interaction()
 			}
 
 			// Remove visual components of the item
-			if (registry.motions.has(item) && !registry.entrances.has(item))
+			if (!item_info.isCollectable)
+				return;
+
+			if (registry.motions.has(item))
 				registry.motions.remove(item);
-			if (registry.renderRequests.has(item) && !registry.entrances.has(item))
+			if (registry.renderRequests.has(item))
 				registry.renderRequests.remove(item);
+
 			return;
 		}
 	}
-	return;
 }
 
 bool WorldSystem::handle_item_pickup(Entity player, Entity item)
@@ -491,9 +501,6 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 		return false;
 
 	Item& item_info = registry.items.get(item);
-
-	item_info.originalPosition = registry.motions.get(item).position;
-
 	if (!ItemSystem::addItemToInventory(player, item))
 		return false;
 

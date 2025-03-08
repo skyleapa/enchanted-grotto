@@ -8,6 +8,9 @@
 // RmlUi include
 #include <RmlUi/Core.h>
 
+// Registry
+#include "../tinyECS/registry.hpp"
+
 // Forward declarations
 class RenderSystem;
 
@@ -46,6 +49,12 @@ public:
     void selectInventorySlot(int slot);
     int getSelectedSlot() const { return m_selected_slot; }
 
+    // Cauldron methods
+    bool openCauldron();
+    void updateCauldronUI(Cauldron& cauldron);
+    void closeCauldron();
+    bool isCauldronOpen();
+
 private:
     GLFWwindow* m_window;
     RenderSystem* m_renderer;
@@ -74,4 +83,7 @@ private:
     Rml::ElementDocument* m_inventory_document = nullptr;
     int m_selected_slot = 0;
     int m_hotbar_size = 8;
+
+    // Cauldron variables
+    Rml::ElementDocument* m_cauldron_document = nullptr;
 };

@@ -445,6 +445,9 @@ Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id,
 	motion.velocity = { 0, 0 };
 	motion.position = position;
 	motion.scale = scale;
+	
+	// Create cauldron
+	auto& cauldron = registry.cauldrons.emplace(entity);
 
 	Entity textbox = createTextbox(renderer, position, entity);
 
@@ -633,6 +636,7 @@ RenderRequest getTextboxRenderRequest(Textbox& textbox)
 
 	Item& item = registry.items.get(textbox.targetItem);
 
+	// TODO: Use ItemType and a map
 	// Find correct texture based on item type
 	TEXTURE_ASSET_ID texture = TEXTURE_ASSET_ID::TEXTBOX_FRUIT; // placeholder
 	if (item.name == "Magical Fruit")

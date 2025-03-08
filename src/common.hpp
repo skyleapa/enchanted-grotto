@@ -204,27 +204,6 @@ struct Recipe
 	std::vector<Action> steps;
 };
 
-// RECIPE LIST
-// const std::vector<Recipe> RECIPES = {
-// 	{
-// 		.effect = PotionEffect::SPEED,
-// 		.highestQualityEffect = 3.0f,       // 300% faster (4x as fast)
-// 		.highestQualityDuration = 180,
-// 		.finalPotionColor = vec3(255, 157, 35),
-// 		.ingredients = {
-// 			{.type = ItemType::COFFEE_BEANS, .amount = 5, .grindAmount = 1.0f},
-// 			{.type = ItemType::MAGICAL_FRUIT, .amount = 3, .grindAmount = 0.0f},
-// 		},
-// 		.steps = {
-// 			{.type = ActionType::MODIFY_HEAT, .value = 100},
-// 			{.type = ActionType::WAIT, .value = 2},
-// 			{.type = ActionType::ADD_INGREDIENT, .value = 0},
-// 			{.type = ActionType::ADD_INGREDIENT, .value = 1},
-// 			{.type = ActionType::STIR, .value = 3},
-// 			{.type = ActionType::WAIT, .value = 6}
-// 		}
-// 	}
-// };
 const std::vector<Recipe> RECIPES = {
 	{
 		PotionEffect::SPEED,
