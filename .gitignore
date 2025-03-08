@@ -6,3 +6,5 @@ data/.DS_Store
 data/textures/.DS_Store
 game_state.json
 .DS_Store
+vcpkg_installed
+ext/dependencies

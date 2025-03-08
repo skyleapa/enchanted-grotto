@@ -122,6 +122,9 @@ public:
 	// Draw all entities
 	void draw();
 
+	// Swap the frame buffers to display rendered content
+	void swap_buffers();
+
 	std::vector<Entity> process_render_requests();
 
 	mat3 createProjectionMatrix();

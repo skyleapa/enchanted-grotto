@@ -140,7 +140,7 @@ bool WorldSystem::start_and_load_sounds()
 	return true;
 }
 
-void WorldSystem::init(RenderSystem* renderer_arg, BiomeSystem* biome_sys)
+bool WorldSystem::init(RenderSystem* renderer_arg, BiomeSystem* biome_sys)
 {
 
 	this->renderer = renderer_arg;
@@ -152,6 +152,8 @@ void WorldSystem::init(RenderSystem* renderer_arg, BiomeSystem* biome_sys)
 
 	// Set all states to default
 	restart_game();
+
+	return true;
 }
 
 // Update our game world
@@ -322,8 +324,12 @@ bool WorldSystem::is_over() const
 }
 
 // on key callback
-void WorldSystem::on_key(int key, int, int action, int mod)
+void WorldSystem::on_key(int key, int scancode, int action, int mod)
 {
+	// First pass the event to the UI system if it's initialized
+	if (m_ui_system != nullptr) {
+		m_ui_system->handleKeyEvent(key, scancode, action, mod);
+	}
 
 	// exit game w/ ESC
 	if (action == GLFW_RELEASE && key == GLFW_KEY_ESCAPE)
@@ -354,7 +360,8 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 		}
 		else if (action == GLFW_RELEASE)
 		{
-			if (std::find(pressed_keys.begin(), pressed_keys.end(), key) != pressed_keys.end()) pressed_keys.erase(key);
+			if (std::find(pressed_keys.begin(), pressed_keys.end(), key) != pressed_keys.end()) 
+				pressed_keys.erase(key);
 		}
 	}
 
@@ -368,6 +375,10 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 
 void WorldSystem::on_mouse_move(vec2 mouse_position)
 {
+	// Pass the event to the UI system if it's initialized
+	if (m_ui_system != nullptr) {
+		m_ui_system->handleMouseMoveEvent(mouse_position.x, mouse_position.y);
+	}
 
 	// record the current mouse position
 	mouse_pos_x = mouse_position.x;
@@ -376,6 +387,11 @@ void WorldSystem::on_mouse_move(vec2 mouse_position)
 
 void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 {
+	// Pass the event to the UI system if it's initialized
+	if (m_ui_system != nullptr) {
+		m_ui_system->handleMouseButtonEvent(button, action, mods);
+	}
+	
 	// on button press
 	if (action == GLFW_PRESS)
 	{

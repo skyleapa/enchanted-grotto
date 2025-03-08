@@ -177,3 +177,54 @@ if(BUILD_TESTING)
     # Add test directory
     add_subdirectory(test)
 endif()
+
+# RmlUI (optional)
+option(USE_RMLUI "Enable RmlUi for game UI" ON)
+
+if(USE_RMLUI)
+  # Try to find RmlUi through vcpkg first
+  find_package(RmlUi CONFIG REQUIRED)
+  
+  if(RmlUi_FOUND)
+    message(STATUS "RmlUI found via vcpkg - UI system will be enabled")
+    target_link_libraries(${PROJECT_NAME} PUBLIC RmlUi::RmlUi)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC USE_RMLUI=1)
+    
+    # Add Windows-specific configuration
+    if(IS_OS_WINDOWS)
+      # When using vcpkg's RmlUi, we need to use dynamic linking
+      target_compile_definitions(${PROJECT_NAME} PUBLIC RMLUI_DYNAMIC_LINKING=1)
+      
+      # Create font directory in build
+      file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/data/fonts)
+      
+      # Copy font file to build directory
+      file(COPY "${CMAKE_SOURCE_DIR}/data/fonts/OpenSans-Regular.ttf" 
+            DESTINATION "${CMAKE_BINARY_DIR}/data/fonts")
+      if(EXISTS "${CMAKE_BINARY_DIR}/Debug")
+        file(COPY "${CMAKE_SOURCE_DIR}/data/fonts/OpenSans-Regular.ttf" 
+              DESTINATION "${CMAKE_BINARY_DIR}/Debug/data/fonts")
+      endif()
+      if(EXISTS "${CMAKE_BINARY_DIR}/Release")
+        file(COPY "${CMAKE_SOURCE_DIR}/data/fonts/OpenSans-Regular.ttf" 
+              DESTINATION "${CMAKE_BINARY_DIR}/Release/data/fonts")
+      endif()
+    endif()
+    
+    # Add Mac-specific configuration
+    if(IS_OS_MAC)
+      # Create font directory in build
+      file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/data/fonts)
+      
+      # Copy fonts from ext directory to build directory
+      file(COPY "${CMAKE_SOURCE_DIR}/data/fonts/OpenSans-Regular.ttf" 
+            DESTINATION "${CMAKE_BINARY_DIR}/data/fonts")
+    endif()
+  else()
+    message(WARNING "RmlUI not found - UI system will be disabled")
+    target_compile_definitions(${PROJECT_NAME} PUBLIC USE_RMLUI=0)
+  endif()
+else()
+  message(STATUS "RmlUI disabled - UI system will not be available")
+  target_compile_definitions(${PROJECT_NAME} PUBLIC USE_RMLUI=0)
+endif()

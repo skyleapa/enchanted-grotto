@@ -371,8 +371,13 @@ void RenderSystem::draw()
 	if (registry.screenStates.components[0].is_switching_biome) fadeScreen();
 
 	// flicker-free display with a double buffer
-	glfwSwapBuffers(window);
 	gl_has_errors();
+}
+
+void RenderSystem::swap_buffers() 
+{
+    glfwSwapBuffers(window);
+    gl_has_errors();
 }
 
 std::vector<Entity> RenderSystem::process_render_requests() {
@@ -394,7 +399,11 @@ std::vector<Entity> RenderSystem::process_render_requests() {
 		RenderRequest& renderA = registry.renderRequests.get(a);
 		RenderRequest& renderB = registry.renderRequests.get(b);
 
-		// ITEM always renders above everything
+		// UI always renders above everything
+		if (renderA.layer == RENDER_LAYER::UI) return false;
+		if (renderB.layer == RENDER_LAYER::UI) return true;
+
+		// ITEM always renders above everything except UI
 		if (renderA.layer == RENDER_LAYER::ITEM) return false;
 		if (renderB.layer == RENDER_LAYER::ITEM) return true;
 

@@ -13,6 +13,7 @@
 
 #include "render_system.hpp"
 #include "biome_system.hpp"
+#include "ui_system.hpp"
 
 // Container for all our entities and game logic.
 // Individual rendering / updates are deferred to the update() methods.
@@ -31,7 +32,7 @@ public:
 	void close_window();
 
 	// starts the game
-	void init(RenderSystem* renderer, BiomeSystem* biome_sys);
+	bool init(RenderSystem* renderer, BiomeSystem* biome_sys);
 
 	// releases all associated resources
 	~WorldSystem();
@@ -54,6 +55,9 @@ public:
 	void handle_item_respawn(float elapsed_ms);
 
 	void updatePlayerWalkAndAnimation(Entity& player, Motion& player_motion, float elapsed_ms_since_last_update);
+
+	// Set reference to UI system
+	void setUISystem(UISystem* ui_system) { m_ui_system = ui_system; }
 
 private:
 
@@ -90,4 +94,7 @@ private:
 	// C++ random number generator
 	std::default_random_engine rng;
 	std::uniform_real_distribution<float> uniform_dist; // number between 0..1
+
+	// Pointer to the UI system for passing input events
+	UISystem* m_ui_system = nullptr;
 };

@@ -13,6 +13,7 @@
 #include "systems/world_system.hpp"
 #include "systems/item_system.hpp"
 #include "systems/potion_system.hpp"
+#include "systems/ui_system.hpp"
 
 using Clock = std::chrono::high_resolution_clock;
 
@@ -27,6 +28,7 @@ int main()
 	ItemSystem    item_system;
 	PotionSystem  potion_system;
 	BiomeSystem   biome_system;
+	UISystem      ui_system;
 
 	// initialize window
 	GLFWwindow* window = world_system.create_window();
@@ -46,6 +48,16 @@ int main()
 	world_system.init(&renderer_system, &biome_system);
 	item_system.init();
 	biome_system.init(&renderer_system);
+
+	// Initialize UI system last (after all other systems) and set reference in world system 
+	bool ui_initialized = ui_system.init(window, &renderer_system); 
+	if (ui_initialized) { 
+		world_system.setUISystem(&ui_system); 
+		glfwSetCharCallback(window, UISystem::charCallback); 
+		std::cout << "UI system initialized successfully" << std::endl; 
+	} else { 
+		std::cerr << "Failed to initialize UI system, continuing without UI" << std::endl; 
+	} 
 
 	// variable timestep loop
 	auto t = Clock::now();
@@ -68,8 +80,11 @@ int main()
 		potion_system.updateCauldrons(elapsed_ms);
 		world_system.handle_collisions();
 		biome_system.step(elapsed_ms);
+		ui_system.step(elapsed_ms);
 
 		renderer_system.draw();
+		ui_system.draw();
+		renderer_system.swap_buffers();
 	}
 
 	// Save game state before exit

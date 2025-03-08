@@ -300,7 +300,8 @@ enum class RENDER_LAYER
 	TERRAIN,
 	STRUCTURE,
 	PLAYER,
-	ITEM
+	ITEM,
+	UI
 };
 
 struct RenderRequest
