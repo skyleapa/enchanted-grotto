@@ -315,6 +315,8 @@ Entity createFruit(RenderSystem* renderer, vec2 position, int id, std::string na
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
 	registry.meshPtrs.emplace(entity, &mesh);
 
+	Ammo& ammo = registry.ammo.emplace(entity); // TODO remove
+
 	// Create motion
 	auto& motion = registry.motions.emplace(entity);
 	motion.angle = 180.f;
@@ -596,10 +598,336 @@ RenderRequest getTextboxRenderRequest(Textbox& textbox)
 	{
 		texture = TEXTURE_ASSET_ID::TEXTBOX_GROTTO_EXIT;
 	}
+	else if (item.name == "Desert Entrance")
+	{
+		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_DESERT;
+	}
+	else if (item.name == "Desert Exit") {
+		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_FOREST;
+	}
 
 	return {
 		texture,
 		EFFECT_ASSET_ID::TEXTURED,
 		GEOMETRY_BUFFER_ID::SPRITE,
 		RENDER_LAYER::ITEM };
+}
+
+Entity createEnemy(RenderSystem* renderer, vec2 position) {
+	auto entity = Entity();
+
+	Enemy& enemy = registry.enemies.emplace(entity);
+	enemy.attack_radius = 5;
+	enemy.health = 100;
+	enemy.start_pos = position;
+	enemy.state = (int)ENEMY_STATE::IDLE;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+	motion.scale = vec2({ PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::PLAYER,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::TERRAIN,
+		});
+
+	return entity;
+}
+
+bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, Entity& player_entity) {
+
+	auto entity = Entity();
+
+	if (!registry.ammo.has(item_entity)) std::cout << "item isn't in ammo list" << std::endl;
+	if (!registry.motions.has(player_entity) || !registry.ammo.has(item_entity)) return false;
+
+	// Ammo& ammo = registry.ammo.get(item_entity);
+	Ammo& ammo = registry.ammo.emplace(entity);
+	Player& player = registry.players.get(player_entity);
+	Motion& player_motion = registry.motions.get(player_entity);
+	vec2 player_pos = player_motion.position;
+
+	float delta_x = target.x - player_pos.x;
+	float delta_y = target.y - player_pos.y;
+	float distance = sqrt(delta_x * delta_x + delta_y * delta_y); // TODO: use glm::distance instead
+	float unit_x = delta_x / distance;
+	float unit_y = delta_y / distance;
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { unit_x, unit_y };
+	motion.position = player_pos;
+	motion.scale = vec2({ 50, 50 });
+
+	ammo.is_fired = true;
+	ammo.start_pos = player_motion.position;
+	ammo.damage = 25;
+	ammo.target = { player_pos.x + unit_x * player.throw_distance, player_pos.y + unit_y * player.throw_distance };
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::FRUIT,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::ITEM,
+		});
+
+	return true;
+}
+
+Entity createDesertEntrance(RenderSystem* renderer, vec2 position, int id, std::string name)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::DESERT;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::DESERT_ENTRANCE;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2(DESERT_FOREST_TRANSITION_WIDTH, DESERT_FOREST_TRANSITION_HEIGHT);
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x + GRID_CELL_WIDTH_PX * 4, position.y }), entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::DESERT_TO_FOREST, // drawn into biome so just have the placement set for rendering
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::STRUCTURE,
+		 0 });
+
+	return entity;
+}
+
+Entity createDesertExit(RenderSystem* renderer, vec2 position, int id, std::string name)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::FOREST;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::FOREST_ENTRANCE;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2(DESERT_FOREST_TRANSITION_WIDTH, DESERT_FOREST_TRANSITION_HEIGHT);
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x , position.y }), entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::FOREST_TO_DESERT, // drawn into biome so just have the placement set for rendering
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::STRUCTURE,
+		 0 });
+
+	return entity;
+}
+
+Entity createDesertTree(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.height_ratio = 0.1f;
+	terrain.width_ratio = 0.2f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ DESERT_TREE_WIDTH, DESERT_TREE_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::DESERT_TREE,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN });
+
+	return entity;
+}
+
+Entity createDesertCactus(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.height_ratio = 0.1f;
+	terrain.width_ratio = 0.2f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ DESERT_CACTUS_WIDTH, DESERT_CACTUS_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::DESERT_CACTUS,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN ,
+		 1 });
+
+	return entity;
+}
+
+Entity createDesertRiver(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+	auto& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 1.0f; // rivers are not walkable
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0.0f, 0.0f };
+	motion.position = position;
+	motion.scale = vec2({ DESERT_RIVER_WIDTH, DESERT_RIVER_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::DESERT_RIVER,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::STRUCTURE,
+			1 // this is the render sub layer (river should be below bridge)
+		});
+
+	return entity;
+}
+
+Entity createDesertSandPile(RenderSystem* renderer, vec2 position) {
+	auto entity = Entity();
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ DESERT_FOREST_TRANSITION_WIDTH, DESERT_FOREST_TRANSITION_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::DESERT_TO_FOREST,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN ,
+		 0 });
+
+	return entity;
+}
+
+Entity createDesertPage(RenderSystem* renderer, vec2 position) {
+	auto entity = Entity();
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.height_ratio = 1.f;
+	terrain.width_ratio = 0.2f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ DESERT_PAGE_WIDTH, DESERT_PAGE_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::DESERT_SAND_PILE_PAGE,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN ,
+		 1 });
+
+	return entity;
+}
+
+Entity createDesertSkull(RenderSystem* renderer, vec2 position) {
+	auto entity = Entity();
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.height_ratio = 0.3f;
+	terrain.width_ratio = 0.8f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ DESERT_SKULL_WIDTH, DESERT_SKULL_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::DESERT_SKULL,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN ,
+		 1 });
+
+	return entity;
 }

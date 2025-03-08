@@ -168,7 +168,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		Entity player = registry.players.entities[0];
 		if (registry.inventories.has(player)) {
 			Inventory& player_inv = registry.inventories.get(player);
-			
+
 			// Count specific item types and their amounts
 			for (Entity item : player_inv.items) {
 				if (registry.items.has(item)) {
@@ -212,8 +212,11 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	}
 
 	updatePlayerWalkAndAnimation(player, player_motion, elapsed_ms_since_last_update);
+	updateThrownAmmo(elapsed_ms_since_last_update);
 	update_textbox_visibility();
 	handle_item_respawn(elapsed_ms_since_last_update);
+
+	if (registry.screenStates.components[0].game_over) restart_game();
 
 	return true;
 }
@@ -222,6 +225,9 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 void WorldSystem::restart_game()
 {
 	std::cout << "Restarting..." << std::endl;
+
+	ScreenState& state = registry.screenStates.components[0];
+	state.game_over = false;
 
 	// Save the player's inventory before clearing if it exists
 	Entity player_entity;
@@ -282,6 +288,25 @@ void WorldSystem::handle_collisions()
 		if (!registry.collisions.has(collision_entity))
 			continue;
 		Collision& collision = registry.collisions.get(collision_entity);
+
+		// case ammo hits enemy
+		if ((registry.ammo.has(collision_entity) || registry.ammo.has(collision.other)) && (registry.enemies.has(collision_entity) || registry.enemies.has(collision.other))) {
+			Entity ammo_entity = registry.ammo.has(collision_entity) ? collision_entity : collision.other;
+			Entity enemy_entity = registry.enemies.has(collision_entity) ? collision_entity : collision.other;
+
+			Ammo& ammo = registry.ammo.get(ammo_entity);
+			Enemy& enemy = registry.enemies.get(enemy_entity);
+			enemy.health -= ammo.damage;
+			registry.remove_all_components_of(ammo_entity);
+			if (enemy.health <= 0) registry.remove_all_components_of(enemy_entity);
+			continue;
+		}
+		// case where enemy hits player - automatically die and restart game
+		else if ((registry.players.has(collision_entity) || registry.players.has(collision.other)) && (registry.enemies.has(collision_entity) || registry.enemies.has(collision.other))) {
+			ScreenState& state = registry.screenStates.components[0];
+			state.game_over = true;
+			continue;
+		}
 
 		Entity terrain_entity = (collision_entity == player_entity) ? collision.other : collision_entity;
 		if (!registry.terrains.has(terrain_entity) || !registry.motions.has(terrain_entity))
@@ -384,6 +409,8 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 
 		std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
 		std::cout << "mouse tile position: " << tile_x << ", " << tile_y << std::endl;
+
+		throwAmmo(vec2(mouse_pos_x, mouse_pos_y));
 	}
 }
 
@@ -460,9 +487,9 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 		return false;
 
 	Item& item_info = registry.items.get(item);
-	
+
 	item_info.originalPosition = registry.motions.get(item).position;
-	
+
 	if (!ItemSystem::addItemToInventory(player, item))
 		return false;
 
@@ -667,4 +694,58 @@ void WorldSystem::updatePlayerWalkAndAnimation(Entity& player, Motion& player_mo
 	player_motion.previous_position = player_motion.position;
 	float delta = elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
 	player_motion.position += delta * player_motion.velocity;
+
+	// update player's throwing cooldown
+	Player& player_comp = registry.players.get(player);
+	if (player_comp.cooldown > 0) {
+		player_comp.cooldown -= elapsed_ms_since_last_update;
+		if (player_comp.cooldown <= 0) {
+			player_comp.cooldown = 0;
+		}
+	}
+}
+
+void WorldSystem::throwAmmo(vec2 target) {
+	if (registry.players.entities.empty()) return;
+	Entity player_entity = registry.players.entities[0];
+	Player& player = registry.players.get(player_entity);
+
+	if (player.cooldown > 0.f) std::cout << "on cooldown" << std::endl;
+	if (!registry.inventories.has(player_entity) || player.cooldown > 0.f || !registry.motions.has(player_entity)) return;
+	Inventory& inventory = registry.inventories.get(player_entity);
+	if (inventory.items.size() < inventory.selection + 1) {
+		std::cout << "cannot throw selected item" << std::endl;
+		return;
+	}
+
+	Entity& item_entity = inventory.items[inventory.selection];
+
+	if (createFiredAmmo(renderer, target, item_entity, player_entity)) {
+		if (registry.items.has(item_entity)) {
+			Item& item = registry.items.get(item_entity);
+			item.amount -= 1;
+			if (item.amount == 0) {
+				ItemSystem::destroyItem(item_entity);
+				ItemSystem::removeItemFromInventory(player_entity, item_entity);
+			}
+		}
+		player.cooldown = 1000.f;
+	}
+
+}
+
+void WorldSystem::updateThrownAmmo(float elapsed_ms_since_last_update) {
+	for (auto& entity : registry.ammo.entities) {
+		if (!registry.motions.has(entity)) continue;
+
+		Ammo& ammo = registry.ammo.get(entity);
+		if (!ammo.is_fired) continue;
+
+		Motion& ammo_motion = registry.motions.get(entity);
+		ammo_motion.position += ammo_motion.velocity * elapsed_ms_since_last_update * THROW_UPDATE_FACTOR;
+		if (abs(ammo_motion.position.x - ammo.start_pos.x) > abs(ammo.target.x - ammo.start_pos.x)
+			|| abs(ammo_motion.position.y - ammo.start_pos.y) > abs(ammo.target.y - ammo.start_pos.y))
+			registry.remove_all_components_of(entity);
+
+	}
 }
