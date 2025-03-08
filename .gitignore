@@ -8,3 +8,4 @@ game_state.json
 .DS_Store
 vcpkg_installed
 ext/dependencies
+ext/RmlUi/Build

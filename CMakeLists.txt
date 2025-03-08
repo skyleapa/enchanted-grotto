@@ -1,5 +1,5 @@
 # CMakeLists.txt for Towers vs. Invaders
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.12)
 
 project(enchanted_grotto)
 
@@ -183,7 +183,9 @@ option(USE_RMLUI "Enable RmlUi for game UI" ON)
 
 if(USE_RMLUI)
   # Try to find RmlUi through vcpkg first
-  find_package(RmlUi CONFIG REQUIRED)
+  set(RmlUi_ROOT "${CMAKE_SOURCE_DIR}/ext/RmlUi/Build")
+  find_package(Freetype REQUIRED)
+  find_package(RmlUi REQUIRED)
   
   if(RmlUi_FOUND)
     message(STATUS "RmlUI found via vcpkg - UI system will be enabled")
