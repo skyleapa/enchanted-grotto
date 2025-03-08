@@ -1,9 +1,12 @@
-if "%~1" == "" goto game
-if "%~1" == "game" goto game
-if "%~1" == "test" goto test
+echo "Building RmlUi..."
+cd ext\RmlUi
+cmake -B Build -S . -DBUILD_SHARED_LIBS=OFF
+cmake --build Build -j
+cd ..
+cd ..
 
-echo "Unrecognized argument, exiting..."
-goto eof
+if "%~1" == "test" goto test
+goto game
 
 :test
 cmake -S . -B build -DBUILD_GAME=OFF -DBUILD_TESTING=ON

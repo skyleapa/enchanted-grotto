@@ -8,7 +8,9 @@
 #include <map>
 
 // glfw (OpenGL)
-#define NOMINMAX
+#ifndef NOMINMAX
+	#define NOMINMAX
+#endif
 #include <gl3w.h>
 #include <GLFW/glfw3.h>
 

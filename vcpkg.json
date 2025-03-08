@@ -1,7 +1,0 @@
-{
-  "name": "enchanted-grotto",
-  "version-string": "1.0",
-  "dependencies": [
-    "rmlui"
-  ]
-}

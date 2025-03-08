@@ -3,8 +3,8 @@ add_library(test_lib STATIC
     registry.cpp
     ../src/tinyECS/tiny_ecs.cpp
     ../src/tinyECS/registry.cpp
-    ../src/item_system.cpp
-    ../src/potion_system.cpp
+    ../src/systems/item_system.cpp
+    ../src/systems/potion_system.cpp
 )
 
 # Add include directories for test library
