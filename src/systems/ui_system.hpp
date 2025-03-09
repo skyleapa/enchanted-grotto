@@ -59,6 +59,7 @@ public:
     bool isCauldronOpen(Entity cauldron);
     Entity getOpenedCauldron();
     void ladleFollowMouse(double x, double y);
+    void bottleFollowMouse(double x, double y);
 
     // tutorial
     void updateTutorial();
@@ -96,6 +97,7 @@ private:
     Rml::ElementDocument* m_cauldron_document = nullptr;
     Entity openedCauldron;
     Rml::Element* heldLadle = nullptr;
+    Rml::Element* heldBottle = nullptr;  // Track held bottle state
 
     // Tutorial variables
     Rml::ElementDocument* m_tutorial_document = nullptr;
