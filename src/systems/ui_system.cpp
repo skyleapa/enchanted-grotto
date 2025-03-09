@@ -435,6 +435,9 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 		float bar_x = (width - bar_width) / 2.0f;
 		float bar_y = height - bar_height - 20.0f; // 20px from bottom
 
+        std::cout << "Click class: " << m_context->GetHoverElement()->GetClassNames() << std::endl;
+        std::cout << "Click id: " << m_context->GetHoverElement()->GetId() << std::endl;
+
 		// Check if click is within the inventory bar area
 		if (x >= bar_x && x <= bar_x + bar_width &&
 			y >= bar_y && y <= bar_y + bar_height) {
@@ -578,7 +581,6 @@ void UISystem::createInventoryBar()
                     border-color: #4E3620;
                     padding: 5px;
                     display: block;
-                    pointer-events: none;
                     z-index: 100;
                     font-family: Open Sans;
                 }
@@ -594,6 +596,7 @@ void UISystem::createInventoryBar()
                     border-width: 2px;
                     border-color: #5D4037;
                     position: relative;
+                    drag: clone;
                 }
                 
                 .inventory-slot.selected {
@@ -681,21 +684,8 @@ void UISystem::updateInventoryBar()
 
 				if (registry.items.has(item_entity)) {
 					Item& item = registry.items.get(item_entity);
-
-					// TODO: Add item type to texture associations
-					// Add item display
-					if (item.type == ItemType::COFFEE_BEANS) {
-						slot_content += "<img src='interactables/coffee_bean.png' style='width: 32px; height: 32px; margin: 4px;' />";
-					}
-					else if (item.type == ItemType::MAGICAL_FRUIT) {
-						slot_content += "<img src='interactables/magical_fruit.png' style='width: 32px; height: 32px; margin: 4px;' />";
-					}
-					else if (item.type == ItemType::POTION) {
-						// TODO potion textures
-					}
-					else {
-						// TODO fallback for unknown items
-					}
+                    std::string tex = ITEM_TEXTURES.count(item.type) ? ITEM_TEXTURES.at(item.type) : "interactables/coffee_bean.png";
+					slot_content += "<img src = '" + tex + "' style='width: 32px; height: 32px; margin: 4px; transform: scaleY(-1);' />";
 
 					// Add item count if more than 1
 					if (item.amount > 1) {
