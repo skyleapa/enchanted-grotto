@@ -55,6 +55,7 @@ public:
     void closeCauldron();
     bool isCauldronOpen();
     bool isCauldronOpen(Entity cauldron);
+    Entity getOpenedCauldron();
 
 private:
     GLFWwindow* m_window;
@@ -88,4 +89,5 @@ private:
     // Cauldron variables
     Rml::ElementDocument* m_cauldron_document = nullptr;
     Entity openedCauldron;
+    bool isHoldingLadle = false;
 };

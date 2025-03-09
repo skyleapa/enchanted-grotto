@@ -472,6 +472,10 @@ Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id,
 	cauldron.water = water;
 	Entity textbox = createTextbox(renderer, position, entity);
 
+	// Give cauldron an inventory
+	auto& inv = registry.inventories.emplace(entity);
+	inv.capacity = 0x7FFFFFFF;
+
 	registry.renderRequests.insert(
 		entity,
 		{

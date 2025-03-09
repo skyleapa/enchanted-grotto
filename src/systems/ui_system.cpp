@@ -1,5 +1,6 @@
 #include "ui_system.hpp"
 #include "render_system.hpp"
+#include "drag_listener.hpp"
 #include "rmlui_system_interface.hpp"
 #include "rmlui_render_interface.hpp"
 #include <iostream>
@@ -63,6 +64,8 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
             std::cerr << "UISystem::init - Failed to initialize RmlUi" << std::endl;
             return false;
         }
+        
+        DragListener::LinkUISystem(this);
 
         std::cout << "UISystem::init - RmlUi initialized successfully" << std::endl;
 
@@ -459,6 +462,17 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
                 std::cout << "Selected inventory slot: " << slot << std::endl;
             }
         }
+
+        // Check for ladle pickup
+        if (isCauldronOpen()) {
+            Rml::Element* ladle = m_context->GetElementAtPoint(Rml::Vector2f(x, y));
+            if (ladle) {
+                std::cout << "Clicked name: " << ladle->GetId() << std::endl;
+                if (ladle->GetId() == "ladle" && !isHoldingLadle) {
+                    ladle->SetProperty("visibility", "hidden"); 
+                }
+            }
+        }
     }
 
     // Pass the event to RmlUi
@@ -715,31 +729,30 @@ bool UISystem::openCauldron(Entity cauldron)
 
                 #heat {
                     position: relative;
-                    height: 75px;
-                    width: 75px;
-                    top: 410px;
-                    left: 132px;
-                    transform: rotate(180deg);
+                    height: 100px;
+                    width: 124px;
+                    top: 365px;
+                    left: 108px;
+                    decorator: image("interactables/heat_arrow.png" flip-vertical scale-none center bottom);
+                    transform-origin: center 95% 0;
+                    transform: scale(0.75) rotate(-60deg);
+                    drag: drag;
                 }
 
                 #ladle {
                     position: relative;
                     height: 246px;
                     width: 132px;
-                    top: 40px;
-                    left: 813px;
-                    transform: rotate(180deg);
+                    top: 45px;
+                    left: 760px;
+                    decorator: image("interactables/spoon_on_table.png" flip-vertical contain);
                 }
             </style>
         </head>
         <body>
             <div id="ui">
-                <div id="heat">
-                    <img src="interactables/heat_arrow.png" style="height: 50px"></img>
-                </div>
-                <div id="ladle">
-                    <img src="interactables/spoon_on_table.png" style="height: 246px"></img>
-                </div>
+                <div id="heat"></div>
+                <div id="ladle"></div>
             </div>
         </body>
         </rml>
@@ -751,6 +764,7 @@ bool UISystem::openCauldron(Entity cauldron)
             return false;
         }
 
+        DragListener::RegisterDraggableElement(m_cauldron_document->GetElementById("heat"));
         m_cauldron_document->Show();
         openedCauldron = cauldron;
         registry.cauldrons.get(cauldron).filled = true;
@@ -776,4 +790,8 @@ void UISystem::closeCauldron()
     if (isCauldronOpen()) {
         m_cauldron_document->Hide();
     }
+}
+
+Entity UISystem::getOpenedCauldron() {
+    return openedCauldron;
 }

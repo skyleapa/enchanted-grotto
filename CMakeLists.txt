@@ -162,6 +162,7 @@ if(BUILD_GAME)
     find_package(Freetype)
     if (NOT Freetype_FOUND)
         set (FREETYPE_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/ext/RmlUi/Dependencies/lib/freetype.lib")
+        set (FREETYPE_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/ext/RmlUi/Dependencies/include")
     endif()
     find_package(Freetype REQUIRED)
 
