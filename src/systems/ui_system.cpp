@@ -450,10 +450,9 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 
         // Check for ladle pickup
         if (isCauldronOpen()) {
-            Rml::Element* ladle = m_context->GetElementAtPoint(Rml::Vector2f(x, y));
-            if (ladle) {
-                std::cout << "Clicked name: " << ladle->GetId() << std::endl;
-                if (ladle->GetId() == "ladle" && !isHoldingLadle) {
+            Rml::Element* ladle = m_context->GetHoverElement();
+            if (ladle && ladle->GetId() == "ladle") {
+                if (!isHoldingLadle) {
                     ladle->SetProperty("visibility", "hidden"); 
                 }
             }
@@ -821,8 +820,7 @@ bool UISystem::openCauldron(Entity cauldron)
                     width: 352px;
                     height: 337px;
                     top: 95px;
-                    left: 150px;
-                    background-color: yellow;
+                    left: 90px;
                 }
             </style>
         </head>

@@ -27,8 +27,12 @@ private:
 
 	// Ladle functions
 
-	// Idea: Have 4 zones around the cauldron. Drag must go through
-	// all 4 zones to count as 1 stir
+	// Idea: Note start pos in polar coords. For each drag movement note down
+	// the polar coords as well and store in a vector. Whenever the mouse passes
+	// the initial angle whether forward or backwards check if we can record
+	// a stir. We need a point in each quadrant who's r is at least some value.
+	// If a stir is recorded, clear the vector and go again
+	// Center coord: 625, 285
 
 	// Need to ref back to UI system to get the cauldron
 	static UISystem* m_ui_system;
