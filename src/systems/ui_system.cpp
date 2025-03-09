@@ -925,7 +925,7 @@ bool UISystem::openCauldron(Entity cauldron)
                     left: 1000px;
                     decorator: image("interactables/potion_bottle.png" contain);
                     drag: drag;
-					transform: rotate(180deg) scale(1.2);
+                    transform: rotate(180deg) scale(1.2);
                     cursor: pointer;
                 }
             </style>
