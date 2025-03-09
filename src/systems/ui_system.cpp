@@ -1,5 +1,6 @@
 #include "ui_system.hpp"
 #include "render_system.hpp"
+#include "potion_system.hpp"
 #include "drag_listener.hpp"
 #include "rmlui_system_interface.hpp"
 #include "rmlui_render_interface.hpp"
@@ -61,7 +62,7 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 
 		// Get content scale for Retina displays
 		float content_scale = 1.0f;
-		
+
 		int frame_buffer_width_px, frame_buffer_height_px;
 		glfwGetFramebufferSize(window, &frame_buffer_width_px, &frame_buffer_height_px);
 		if (frame_buffer_width_px != WINDOW_WIDTH_PX) {
@@ -73,12 +74,12 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 
 		Rml::SetSystemInterface(&system_interface);
 		Rml::SetRenderInterface(&render_interface);
-        if (!Rml::Initialise()) {
-            std::cerr << "UISystem::init - Failed to initialize RmlUi" << std::endl;
-            return false;
-        }
-        
-        DragListener::LinkUISystem(this);
+		if (!Rml::Initialise()) {
+			std::cerr << "UISystem::init - Failed to initialize RmlUi" << std::endl;
+			return false;
+		}
+
+		DragListener::LinkUISystem(this);
 
 		if (!Rml::Initialise()) {
 			std::cerr << "UISystem::init - Failed to initialize RmlUi" << std::endl;
@@ -424,9 +425,9 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 
 	// Check if the click is on the inventory bar
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT) {
-		// Calculate inventory bar position (this is kinda broken rn)
-		int width, height;
-		glfwGetFramebufferSize(m_window, &width, &height);
+		// Calculate inventory bar position
+		int width = WINDOW_WIDTH_PX;
+		int height = WINDOW_HEIGHT_PX;
 
 		// Inventory bar is centered at the bottom
 		float bar_width = 450.0f;
@@ -445,19 +446,39 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 			if (slot >= 0 && slot < m_hotbar_size) {
 				selectInventorySlot(slot);
 				std::cout << "Selected inventory slot: " << slot << std::endl;
+
+				if (isCauldronOpen()) {
+					Entity& player = registry.players.entities[0];
+					Inventory& player_inventory = registry.inventories.get(player);
+
+					Entity cauldron = getOpenedCauldron();
+					Inventory cauldron_inventory = registry.inventories.get(cauldron);
+
+					if (player_inventory.selection >= 0 && player_inventory.selection < player_inventory.items.size()) {
+						Entity selected_item = player_inventory.items[player_inventory.selection];
+						std::cout << "Selected item entity ID: " << selected_item << std::endl;
+
+						if (registry.ingredients.has(selected_item)) {
+							PotionSystem::addIngredient(cauldron, selected_item);
+							registry.inventories.remove(selected_item);
+							std::cout << "removed ingredient" << selected_item << std::endl;
+						}
+					}
+				}
+
 			}
 		}
 
-        // Check for ladle pickup
-        if (isCauldronOpen()) {
-            Rml::Element* ladle = m_context->GetHoverElement();
-            if (ladle && ladle->GetId() == "ladle") {
-                if (!isHoldingLadle) {
-                    ladle->SetProperty("visibility", "hidden"); 
-                }
-            }
-        }
-    }
+		// Check for ladle pickup
+		if (isCauldronOpen()) {
+			Rml::Element* ladle = m_context->GetHoverElement();
+			if (ladle && ladle->GetId() == "ladle") {
+				if (!isHoldingLadle) {
+					ladle->SetProperty("visibility", "hidden");
+				}
+			}
+		}
+	}
 
 	// Pass the event to RmlUi
 	if (action == GLFW_PRESS) {
@@ -642,20 +663,20 @@ void UISystem::updateInventoryBar()
 				if (registry.items.has(item_entity)) {
 					Item& item = registry.items.get(item_entity);
 
-                    // TODO: Add item type to texture associations
-                    // Add item display
-                    if (item.type == ItemType::COFFEE_BEANS) {
-                        slot_content += "<img src='interactables/coffee_bean.png' style='width: 32px; height: 32px; margin: 4px;' />";
-                    }
-                    else if (item.type == ItemType::MAGICAL_FRUIT) {
-                        slot_content += "<img src='interactables/magical_fruit.png' style='width: 32px; height: 32px; margin: 4px;' />";
-                    }
-                    else if (item.type == ItemType::POTION) {
-                        // TODO potion textures
-                    }
-                    else {
-                        // TODO fallback for unknown items
-                    }
+					// TODO: Add item type to texture associations
+					// Add item display
+					if (item.type == ItemType::COFFEE_BEANS) {
+						slot_content += "<img src='interactables/coffee_bean.png' style='width: 32px; height: 32px; margin: 4px;' />";
+					}
+					else if (item.type == ItemType::MAGICAL_FRUIT) {
+						slot_content += "<img src='interactables/magical_fruit.png' style='width: 32px; height: 32px; margin: 4px;' />";
+					}
+					else if (item.type == ItemType::POTION) {
+						// TODO potion textures
+					}
+					else {
+						// TODO fallback for unknown items
+					}
 
 					// Add item count if more than 1
 					if (item.amount > 1) {
@@ -709,7 +730,7 @@ void UISystem::updateTutorial()
 		// Mark tutorial step as incomplete again
 		screen.tutorial_step_complete = false;
 		if (screen.tutorial_state == (int)TUTORIAL::COMPLETE) return;
-		
+
 		// Check if the tutorial state exists in the map
 		auto it = tutorial_steps.find(screen.tutorial_state);
 		if (it == tutorial_steps.end())
@@ -770,16 +791,16 @@ void UISystem::updateTutorial()
 
 bool UISystem::openCauldron(Entity cauldron)
 {
-    if (!m_initialized || !m_context) return false;
-    if (m_cauldron_document) {
-        m_cauldron_document->Show();
-        return true;
-    }
+	if (!m_initialized || !m_context) return false;
+	if (m_cauldron_document) {
+		m_cauldron_document->Show();
+		return true;
+	}
 
-    // TODO: Use shader decorator to apply fluid effects
-    try {
-        std::cout << "UISystem::createCauldronUI - Creating cauldron UI" << std::endl;
-        std::string cauldron_rml = R"(
+	// TODO: Use shader decorator to apply fluid effects
+	try {
+		std::cout << "UISystem::createCauldronUI - Creating cauldron UI" << std::endl;
+		std::string cauldron_rml = R"(
         <rml>
         <head>
             <style>
@@ -834,40 +855,40 @@ bool UISystem::openCauldron(Entity cauldron)
         </rml>
         )";
 
-        m_cauldron_document = m_context->LoadDocumentFromMemory(cauldron_rml.c_str());
-        if (!m_cauldron_document) {
-            std::cerr << "UISystem::openCauldron - Failed to open cauldron" << std::endl;
-            return false;
-        }
+		m_cauldron_document = m_context->LoadDocumentFromMemory(cauldron_rml.c_str());
+		if (!m_cauldron_document) {
+			std::cerr << "UISystem::openCauldron - Failed to open cauldron" << std::endl;
+			return false;
+		}
 
-        DragListener::RegisterDraggableElement(m_cauldron_document->GetElementById("heat"));
-        m_cauldron_document->Show();
-        openedCauldron = cauldron;
-        registry.cauldrons.get(cauldron).filled = true;
-        std::cout << "UISystem::openCauldron - Cauldron created successfully" << std::endl;
-        return true;
-    }
-    catch (const std::exception& e) {
-        std::cerr << "Exception in UISystem::openCauldron: " << e.what() << std::endl;
-        return false;
-    }
+		DragListener::RegisterDraggableElement(m_cauldron_document->GetElementById("heat"));
+		m_cauldron_document->Show();
+		openedCauldron = cauldron;
+		registry.cauldrons.get(cauldron).filled = true;
+		std::cout << "UISystem::openCauldron - Cauldron created successfully" << std::endl;
+		return true;
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::openCauldron: " << e.what() << std::endl;
+		return false;
+	}
 }
 
 bool UISystem::isCauldronOpen() {
-    return m_cauldron_document && m_cauldron_document->IsVisible();
+	return m_cauldron_document && m_cauldron_document->IsVisible();
 }
 
 bool UISystem::isCauldronOpen(Entity cauldron) {
-    return isCauldronOpen() && cauldron == openedCauldron;
+	return isCauldronOpen() && cauldron == openedCauldron;
 }
 
-void UISystem::closeCauldron() 
+void UISystem::closeCauldron()
 {
-    if (isCauldronOpen()) {
-        m_cauldron_document->Hide();
-    }
+	if (isCauldronOpen()) {
+		m_cauldron_document->Hide();
+	}
 }
 
 Entity UISystem::getOpenedCauldron() {
-    return openedCauldron;
+	return openedCauldron;
 }

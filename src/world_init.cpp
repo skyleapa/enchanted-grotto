@@ -362,6 +362,8 @@ Entity createFruit(RenderSystem* renderer, vec2 position, std::string name, int 
 {
 	auto entity = Entity();
 
+	Ingredient& ingredient = registry.ingredients.emplace(entity);
+
 	Item& item = registry.items.emplace(entity);
 	item.type = ItemType::MAGICAL_FRUIT;
 	item.name = name;
@@ -397,6 +399,8 @@ Entity createCoffeeBean(RenderSystem* renderer, vec2 position, std::string name,
 {
 	auto entity = Entity();
 
+	Ingredient& ingredient = registry.ingredients.emplace(entity);
+
 	Item& item = registry.items.emplace(entity);
 	item.type = ItemType::COFFEE_BEANS;
 	item.name = name;
@@ -431,7 +435,7 @@ Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id,
 	// First create cauldron water 
 	auto water = Entity();
 	registry.cauldronWater.emplace(water);
-	
+
 	vec3 color = vec3(1.f, 1.f, 1.f); //DEFAULT_COLOR;
 	registry.colors.emplace(water, color);
 	auto& waterMotion = registry.motions.emplace(water);
@@ -466,7 +470,7 @@ Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id,
 	motion.velocity = { 0, 0 };
 	motion.position = position;
 	motion.scale = scale;
-	
+
 	// Create cauldron
 	auto& cauldron = registry.cauldrons.emplace(entity);
 	cauldron.water = water;

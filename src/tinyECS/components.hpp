@@ -131,7 +131,7 @@ struct Inventory
 	std::vector<Entity> items;
 	int capacity;
 	bool isFull;
-	int selection = 0;
+	int selection = 0; // index that corresponds to the selected item indexed in items
 };
 
 struct Cauldron
