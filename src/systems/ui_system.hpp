@@ -97,7 +97,7 @@ private:
     Rml::ElementDocument* m_cauldron_document = nullptr;
     Entity openedCauldron;
     Rml::Element* heldLadle = nullptr;
-    Rml::Element* heldBottle = nullptr;  // Track held bottle state
+    Rml::Element* heldBottle = nullptr;
 
     // Tutorial variables
     Rml::ElementDocument* m_tutorial_document = nullptr;
