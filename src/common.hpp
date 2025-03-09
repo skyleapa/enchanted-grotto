@@ -108,6 +108,17 @@ const float CAULDRON_WATER_WIDTH = (float)354 * 0.9;
 const float CAULDRON_WATER_HEIGHT = (float)337 * 0.9;
 const vec2 CAULDRON_WATER_POS = vec2(622, 289);
 
+const float ENT_WIDTH = (float)90;
+const float ENT_HEIGHT = (float)130;
+
+const float MUMMY_WIDTH = (float)45;
+const float MUMMY_HEIGHT = (float)85;
+
+const float DETECTION_RADIUS = (float)200;  // Enemy starts moving & attacking
+const float FOLLOWING_RADIUS = (float)300;  // Enemy stops attacking if outside this
+
+const float ENEMY_SPEED = (float)110;
+
 // Item and potion constants. The enums are declared here instead of in components.hpp
 // because this file is included in components, not the other way around - otherwise,
 // it would result in compilation errors because the name constants would be referring
@@ -232,7 +243,9 @@ const std::vector<Recipe> RECIPES = {
 enum class ENEMY_STATE
 {
 	IDLE = 0,
-	ATTACK = IDLE + 1
+	ATTACK = IDLE + 1,
+	WANDER = ATTACK + 1,
+	RETURN = WANDER + 1
 };
 
 // Default time represented by each "WAIT" action, in ms
@@ -257,6 +270,15 @@ const float INGREDIENT_GRIND_PENALTY = 1.0f;
 const float STIR_PENALTY = 0.3f;
 const float WAIT_PENALTY = 0.2f;
 const float HEAT_PENALTY = 0.01f; // Heat is measured 1-100
+
+enum class TUTORIAL {
+	MOVEMENT = 0,
+	COLLECT_FRUITS = MOVEMENT + 1,
+	ATTACK_ENEMY = COLLECT_FRUITS + 1,
+	ENTER_GROTTO = ATTACK_ENEMY + 1,
+	// other potion stuff to go here
+	COMPLETE = ENTER_GROTTO + 1
+};
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f

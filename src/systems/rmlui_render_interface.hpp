@@ -40,11 +40,16 @@ public:
     // Called by RmlUi when a loaded texture is no longer required.
     void ReleaseTexture(Rml::TextureHandle texture_handle) override;
 
+    // Set the content scale for Retina displays
+    void SetContentScale(float scale) { m_content_scale = scale; }
+    float GetContentScale() const { return m_content_scale; }
+
 private:
     GLuint m_vao;
     GLuint m_vbo;
     GLuint m_ibo;
     GLuint m_shader_program;
+    float m_content_scale;
 
     Rml::Matrix4f m_transform;
     bool m_transform_dirty;

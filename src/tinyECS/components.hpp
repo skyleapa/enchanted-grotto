@@ -8,7 +8,7 @@
 struct Player
 {
 	std::string name;
-	int throw_distance = 250; // pixels
+	int throw_distance = 150; // pixels
 	float cooldown = 0.f; // defaults to 0, but when ammo is tossed, will have a 1000 ms cooldown
 };
 
@@ -48,6 +48,8 @@ struct ScreenState
 	float fade_status = 0; // 0 - before fade out, 1 after fade out, 2 - after fade in
 	bool game_over = false;
 	GLuint from_biome = 1;
+	int tutorial_state = 0;
+	bool tutorial_step_complete = true;
 };
 
 // A struct to refer to debugging graphics in the ECS
@@ -199,6 +201,8 @@ struct Enemy {
 	int attack_radius;
 	vec2 start_pos;
 	int state; // uses enum class ENEMY_STATE
+	int can_move;
+	float wander_timer = 10.0f;  // 10-second random movement before returning
 };
 
 struct Ammo {
@@ -206,6 +210,16 @@ struct Ammo {
 	vec2 target; // mouse click direction at max of player's throwable radius
 	bool is_fired = false;
 	int damage = 0;
+};
+
+struct DecisionTreeNode {
+	std::function<bool()> condition;  // Condition to check
+	ENEMY_STATE trueState;            // Next state if condition is true
+	ENEMY_STATE falseState;           // Next state if condition is false
+
+	DecisionTreeNode(std::function<bool()> cond, ENEMY_STATE tState, ENEMY_STATE fState)
+		: condition(cond), trueState(tState), falseState(fState) {
+	}
 };
 
 /**
@@ -288,7 +302,9 @@ enum class TEXTURE_ASSET_ID
 	TEXTBOX_ENTER_DESERT = TEXTBOX_CAULDRON + 1,
 	TEXTBOX_ENTER_FOREST = TEXTBOX_ENTER_DESERT + 1,
 	CAULDRON_WATER = TEXTBOX_ENTER_FOREST + 1,
-	TEXTURE_COUNT = CAULDRON_WATER + 1
+	ENT = CAULDRON_WATER + 1,
+	MUMMY = ENT + 1,
+	TEXTURE_COUNT = MUMMY + 1,
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 

@@ -94,7 +94,7 @@ void BiomeSystem::renderPlayerInNewBiome() {
     Entity player_entity = registry.players.entities[0];
     if (!registry.motions.has(player_entity)) return;
 
-    ScreenState screen = registry.screenStates.components[0];
+    ScreenState& screen = registry.screenStates.components[0];
     Motion& player_motion = registry.motions.get(player_entity);
 
     player_motion.scale = { PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT };
@@ -102,6 +102,10 @@ void BiomeSystem::renderPlayerInNewBiome() {
     if (screen.from_biome == (int)BIOME::FOREST && screen.biome == (int)BIOME::GROTTO) { // through grotto entrance from forest
         player_motion.scale = { PLAYER_BB_WIDTH * PlAYER_BB_GROTTO_SIZE_FACTOR, PLAYER_BB_HEIGHT * PlAYER_BB_GROTTO_SIZE_FACTOR };
         player_motion.position = vec2({ player_motion.position.x, GRID_CELL_HEIGHT_PX * 11 }); // bring player to front of door
+        if (screen.tutorial_state == (int)TUTORIAL::ENTER_GROTTO) {
+            screen.tutorial_step_complete = true;
+            screen.tutorial_state += 1;
+        }
     }
     else if (screen.from_biome == (int)BIOME::GROTTO && screen.biome == (int)BIOME::FOREST) { // through grotto exit into forest
         player_motion.position = vec2(GROTTO_ENTRANCE_X, GROTTO_ENTRANCE_Y + 50);
@@ -159,7 +163,7 @@ void BiomeSystem::createForest()
     createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 9.9, GRID_CELL_HEIGHT_PX * 12.1), "Coffee Bean", 1);
     createCoffeeBean(renderer, vec2(GRID_CELL_WIDTH_PX * 12, GRID_CELL_HEIGHT_PX * 12.7), "Coffee Bean", 1);
 
-    createEnemy(renderer, vec2(GRID_CELL_WIDTH_PX * 2, GRID_CELL_HEIGHT_PX * 5));
+    createEnt(renderer, vec2(GRID_CELL_WIDTH_PX * 1.7, GRID_CELL_HEIGHT_PX * 5), 0);
 
     createDesertEntrance(renderer, vec2(GRID_CELL_WIDTH_PX * 2.1, GRID_CELL_HEIGHT_PX * 1.7), 7, "Desert Entrance");
 }
@@ -218,4 +222,7 @@ void BiomeSystem::createDesert()
     createDesertRiver(renderer, vec2(GRID_CELL_WIDTH_PX * 24, WINDOW_HEIGHT_PX / 2));
     createDesertPage(renderer, vec2(GRID_CELL_WIDTH_PX * 13.5, GRID_CELL_HEIGHT_PX * 3.2));
     createDesertSkull(renderer, vec2(GRID_CELL_WIDTH_PX * 13.7, GRID_CELL_HEIGHT_PX * 10.9));
+
+    createMummy(renderer, vec2(GRID_CELL_WIDTH_PX * 15, GRID_CELL_HEIGHT_PX * 5), 1);
+    createMummy(renderer, vec2(GRID_CELL_WIDTH_PX * 4, GRID_CELL_HEIGHT_PX * 8), 1);
 }

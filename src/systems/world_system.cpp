@@ -287,6 +287,8 @@ void WorldSystem::handle_collisions()
 
 	for (Entity collision_entity : registry.collisions.entities)
 	{
+		ScreenState& screen = registry.screenStates.components[0];
+
 		if (!registry.collisions.has(collision_entity))
 			continue;
 		Collision& collision = registry.collisions.get(collision_entity);
@@ -300,13 +302,18 @@ void WorldSystem::handle_collisions()
 			Enemy& enemy = registry.enemies.get(enemy_entity);
 			enemy.health -= ammo.damage;
 			registry.remove_all_components_of(ammo_entity);
-			if (enemy.health <= 0) registry.remove_all_components_of(enemy_entity);
+			if (enemy.health <= 0) {
+				registry.remove_all_components_of(enemy_entity);
+				if (screen.tutorial_state == (int)TUTORIAL::ATTACK_ENEMY) {
+					screen.tutorial_step_complete = true;
+					screen.tutorial_state += 1;
+				}
+			}
 			continue;
 		}
 		// case where enemy hits player - automatically die and restart game
 		else if ((registry.players.has(collision_entity) || registry.players.has(collision.other)) && (registry.enemies.has(collision_entity) || registry.enemies.has(collision.other))) {
-			ScreenState& state = registry.screenStates.components[0];
-			state.game_over = true;
+			screen.game_over = true;
 			continue;
 		}
 
@@ -363,22 +370,35 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 
 	std::unordered_set<int>& pressed_keys = WorldSystem::pressed_keys;
 
-	// // Handle character movement
-	if (key == GLFW_KEY_W || key == GLFW_KEY_S || key == GLFW_KEY_D || key == GLFW_KEY_A || key == GLFW_KEY_F)
+	ScreenState& screen = registry.screenStates.components[0];
+
+	// toggle tutorial
+	if (action == GLFW_PRESS && key == GLFW_KEY_T) {
+		screen.tutorial_step_complete = true;
+		screen.tutorial_state = (screen.tutorial_state == (int) TUTORIAL::COMPLETE) ? (int) TUTORIAL::MOVEMENT : (int) TUTORIAL::COMPLETE;
+	}
+
+	// Handle character movement
+	if (key == GLFW_KEY_W || key == GLFW_KEY_S || key == GLFW_KEY_D || key == GLFW_KEY_A)
 		// even if press happened in different biome should still continue after switching
 	{
-		if (action == GLFW_PRESS && key != GLFW_KEY_F)
+		// handle tutorial movement
+		if (screen.tutorial_state == (int)TUTORIAL::MOVEMENT) {
+			screen.tutorial_step_complete = true;
+			screen.tutorial_state += 1;
+		}
+
+		if (action == GLFW_PRESS)
 		{
 			pressed_keys.insert(key);
 		}
 		else if (action == GLFW_RELEASE)
 		{
-			if (std::find(pressed_keys.begin(), pressed_keys.end(), key) != pressed_keys.end()) 
+			if (std::find(pressed_keys.begin(), pressed_keys.end(), key) != pressed_keys.end())
 				pressed_keys.erase(key);
 		}
 	}
 
-	ScreenState& screen = registry.screenStates.components[0];
 	if (screen.is_switching_biome) return; // don't handle character movement or interaction if screen is switching
 	if (action == GLFW_PRESS && key == GLFW_KEY_F)
 	{
@@ -404,7 +424,7 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 	if (m_ui_system != nullptr) {
 		m_ui_system->handleMouseButtonEvent(button, action, mods);
 	}
-	
+
 	// on button press
 	if (action == GLFW_PRESS)
 	{
@@ -503,6 +523,25 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 	Item& item_info = registry.items.get(item);
 	if (!ItemSystem::addItemToInventory(player, item))
 		return false;
+
+	// handle fruit collection
+	if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::COLLECT_FRUITS) {
+		Inventory& inventory = registry.inventories.get(player);
+		for (Entity& entity : inventory.items) {
+			if (!registry.items.has(entity)) continue;
+			Item& item = registry.items.get(entity);
+			if (item.type == ItemType::MAGICAL_FRUIT) {
+				if (item.amount >= 3) {
+					ScreenState& screen = registry.screenStates.components[0];
+					screen.tutorial_step_complete = true;
+					screen.tutorial_state += 1;
+				}
+				else {
+					break;
+				}
+			}
+		}
+	}
 
 	// Set a random respawn time (5-15 seconds)
 	item_info.respawnTime = (rand() % 10000 + 5000);

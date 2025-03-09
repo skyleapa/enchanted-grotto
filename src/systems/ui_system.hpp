@@ -7,6 +7,7 @@
 
 // RmlUi include
 #include <RmlUi/Core.h>
+#include "../tinyECS/components.hpp"
 
 // Registry
 #include "../tinyECS/registry.hpp"
@@ -57,24 +58,27 @@ public:
     bool isCauldronOpen(Entity cauldron);
     Entity getOpenedCauldron();
 
+    // tutorial
+    void updateTutorial();
+
 private:
     GLFWwindow* m_window;
     RenderSystem* m_renderer;
-    
+
     Rml::Context* m_context;
-    
+
     // UI document
     Rml::ElementDocument* m_document;
-    
+
     // State tracking
     bool m_initialized;
-    
+
     // Convert GLFW key to RmlUi key
     Rml::Input::KeyIdentifier convertKey(int key);
     int getKeyModifiers();
 
     // FPS counter variables
-    float m_frame_times[60] = {0}; // Store last 60 frame times
+    float m_frame_times[60] = { 0 }; // Store last 60 frame times
     int m_frame_time_index = 0;
     float m_frame_time_sum = 0;
     float m_current_fps = 0;
@@ -90,4 +94,23 @@ private:
     Rml::ElementDocument* m_cauldron_document = nullptr;
     Entity openedCauldron;
     bool isHoldingLadle = false;
+
+    // Tutorial variables
+    Rml::ElementDocument* m_tutorial_document = nullptr;
+
+    const std::unordered_map<int, std::tuple<std::string, std::string, std::string>> tutorial_steps = {
+        { (int)TUTORIAL::MOVEMENT, {
+            "20%", "55%", "Welcome to Enchanted Grotto! Move around with the WASD keys. Press T to toggle the tutorial at any time."
+        }},
+        { (int)TUTORIAL::COLLECT_FRUITS, {
+            "80%", "55%", "Collect 3 Magical Fruits by pressing F when near fruit trees."
+        }},
+        { (int)TUTORIAL::ATTACK_ENEMY, {
+            "30%", "15%", "Select the fruits by clicking the corresponding number in your inventory. Defeat the enemy by left-clicking to throw fruits from your inventory. If you touch the enemy you will die!"
+        }},
+        { (int)TUTORIAL::ENTER_GROTTO, {
+            "15%", "50%", "Nice work! Now enter the grotto by pressing F at the entrance."
+        }}
+    };
+
 };
