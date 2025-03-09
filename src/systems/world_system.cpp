@@ -466,7 +466,7 @@ void WorldSystem::handle_player_interaction()
 		}
 		else if (registry.cauldrons.has(item)) {
 			std::cout << "found cauldron" << std::endl;
-			handle_textbox = m_ui_system->openCauldron();
+			handle_textbox = m_ui_system->openCauldron(item);
 		}
 
 		if (handle_textbox)

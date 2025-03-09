@@ -320,7 +320,7 @@ void RenderSystem::fadeScreen()
 
 // Render our game world
 // http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
-void RenderSystem::draw()
+void RenderSystem::draw(UISystem* ui_system)
 {
 	// Getting size of window
 	int w, h;
@@ -357,6 +357,11 @@ void RenderSystem::draw()
 	// draw all entities with a render request to the frame buffer
 	for (Entity entity : entities)
 	{
+		// Always draw cauldron water last
+		if (registry.cauldronWater.has(entity)) {
+			continue;
+		}
+
 		// filter to entities that have a motion component
 		if (registry.motions.has(entity))
 		{
@@ -368,6 +373,15 @@ void RenderSystem::draw()
 		else if (registry.gridLines.has(entity))
 		{
 			drawGridLine(entity, projection_2D);
+		}
+	}
+
+	// Render ui system first, then check if we should draw water texture
+	ui_system->draw();
+	for (Entity cauldron : registry.cauldrons.entities) {
+		if (ui_system->isCauldronOpen(cauldron) && registry.cauldrons.get(cauldron).filled) {
+			drawTexturedMesh(registry.cauldrons.get(cauldron).water, projection_2D);
+			break;
 		}
 	}
 

@@ -34,7 +34,8 @@ void PotionSystem::updateCauldrons(float elapsed_ms) {
 		// the cauldron's current color and the stored color.
 		cc.colorElapsed += elapsed_ms;
 		float ratio = cc.colorElapsed / (float)COLOR_FADE_DURATION;
-		cc.color = interpolateColor(cc.color, getPotion(cauldron).color, ratio);
+		vec3& water = registry.colors.get(cc.water);
+		water = interpolateColor(water, getPotion(cauldron).color, ratio);
 	}
 }
 
@@ -95,8 +96,9 @@ void PotionSystem::stirCauldron(Entity cauldron, int stirs) {
 Potion PotionSystem::bottlePotion(Entity cauldron) {
 	Potion potion = getPotion(cauldron);
 	Cauldron& cc = registry.cauldrons.get(cauldron);
+	vec3& water = registry.colors.get(cc.water);
+	water = DEFAULT_COLOR;
 	cc.filled = false;
-	cc.color = DEFAULT_COLOR;
 	cc.colorElapsed = 0;
 	cc.heatLevel = 0;
 	cc.timeElapsed = 0;

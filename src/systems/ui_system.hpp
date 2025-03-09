@@ -50,10 +50,11 @@ public:
     int getSelectedSlot() const { return m_selected_slot; }
 
     // Cauldron methods
-    bool openCauldron();
+    bool openCauldron(Entity cauldron);
     void updateCauldronUI(Cauldron& cauldron);
     void closeCauldron();
     bool isCauldronOpen();
+    bool isCauldronOpen(Entity cauldron);
 
 private:
     GLFWwindow* m_window;
@@ -86,4 +87,5 @@ private:
 
     // Cauldron variables
     Rml::ElementDocument* m_cauldron_document = nullptr;
+    Entity openedCauldron;
 };

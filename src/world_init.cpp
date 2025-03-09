@@ -428,6 +428,27 @@ Entity createCoffeeBean(RenderSystem* renderer, vec2 position, std::string name,
 
 Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name)
 {
+	// First create cauldron water 
+	auto water = Entity();
+	registry.cauldronWater.emplace(water);
+	
+	vec3 color = vec3(1.f, 1.f, 1.f); //DEFAULT_COLOR;
+	registry.colors.emplace(water, color);
+	auto& waterMotion = registry.motions.emplace(water);
+	waterMotion.angle = 180.f;
+	waterMotion.velocity = { 0, 0 };
+	waterMotion.position = CAULDRON_WATER_POS;
+	waterMotion.scale = { CAULDRON_WATER_WIDTH, CAULDRON_WATER_HEIGHT };
+	registry.renderRequests.insert(
+		water,
+		{
+			TEXTURE_ASSET_ID::CAULDRON_WATER,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::UI,
+		});
+
+	// Then create the actual cauldron
 	auto entity = Entity();
 
 	Item& item = registry.items.emplace(entity);
@@ -448,7 +469,7 @@ Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id,
 	
 	// Create cauldron
 	auto& cauldron = registry.cauldrons.emplace(entity);
-
+	cauldron.water = water;
 	Entity textbox = createTextbox(renderer, position, entity);
 
 	registry.renderRequests.insert(

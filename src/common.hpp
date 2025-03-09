@@ -104,6 +104,10 @@ const float DESERT_SKULL_HEIGHT = (float)110 * 0.8;
 const float DESERT_PAGE_WIDTH = (float)54 * 0.8;
 const float DESERT_PAGE_HEIGHT = (float)37 * 0.8;
 
+const float CAULDRON_WATER_WIDTH = (float)354 * 0.9;
+const float CAULDRON_WATER_HEIGHT = (float)337 * 0.9;
+const vec2 CAULDRON_WATER_POS = vec2(622, 289);
+
 // Item and potion constants. The enums are declared here instead of in components.hpp
 // because this file is included in components, not the other way around - otherwise,
 // it would result in compilation errors because the name constants would be referring
@@ -209,7 +213,7 @@ const std::vector<Recipe> RECIPES = {
 		PotionEffect::SPEED,
 		3.0f,  // highestQualityEffect
 		180,   // highestQualityDuration
-		vec3(255, 157, 35), // finalPotionColor
+		vec3(1.0f, 0.616f, 0.137f), // finalPotionColor
 		{
 			{ ItemType::COFFEE_BEANS, 5, 1.0f }, // ingredients
 			{ ItemType::MAGICAL_FRUIT, 3, 0.0f }
@@ -235,7 +239,7 @@ enum class ENEMY_STATE
 const int DEFAULT_WAIT = 5000;
 
 // Potion settings
-const vec3 DEFAULT_COLOR = vec3(116, 204, 244);
+const vec3 DEFAULT_COLOR = vec3(0.455f, 0.8f, 0.957f);
 const float MIN_POTENCY_PERCENTAGE = 0.1;
 const float MIN_DURATION_PERCENTAGE = 0.05;
 

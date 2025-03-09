@@ -687,7 +687,7 @@ void UISystem::selectInventorySlot(int slot)
     }
 }
 
-bool UISystem::openCauldron()
+bool UISystem::openCauldron(Entity cauldron)
 {
     if (!m_initialized || !m_context) return false;
     if (m_cauldron_document) {
@@ -695,39 +695,67 @@ bool UISystem::openCauldron()
         return true;
     }
 
+    // TODO: Use shader decorator to apply fluid effects
     try {
         std::cout << "UISystem::createCauldronUI - Creating cauldron UI" << std::endl;
-
         std::string cauldron_rml = R"(
         <rml>
         <head>
             <style>
-                img {
-                    display: block;
+                #ui {
+                    display: flex;
+                    margin-top: 25px;
                     margin-left: auto;
                     margin-right: auto;
-                    margin-top: 25px;
                     height: 550px;
-                    transform: scaleY(-1);
+                    width: 1057px;
+                    text-align: center;
+                    decorator: image("interactables/cauldron_background.png" flip-vertical fill);
+                }
+
+                #heat {
+                    position: relative;
+                    height: 75px;
+                    width: 75px;
+                    top: 410px;
+                    left: 132px;
+                    transform: rotate(180deg);
+                }
+
+                #ladle {
+                    position: relative;
+                    height: 246px;
+                    width: 132px;
+                    top: 40px;
+                    left: 813px;
+                    transform: rotate(180deg);
                 }
             </style>
         </head>
         <body>
-            <img src="interactables/cauldron_background.png"></img>
+            <div id="ui">
+                <div id="heat">
+                    <img src="interactables/heat_arrow.png" style="height: 50px"></img>
+                </div>
+                <div id="ladle">
+                    <img src="interactables/spoon_on_table.png" style="height: 246px"></img>
+                </div>
+            </div>
         </body>
         </rml>
         )";
 
         m_cauldron_document = m_context->LoadDocumentFromMemory(cauldron_rml.c_str());
-        if (m_cauldron_document) {
-            m_cauldron_document->Show();
-            std::cout << "UISystem::openCauldron - Cauldron created successfully" << std::endl;
-            return true;
-        }
-        else {
+        if (!m_cauldron_document) {
             std::cerr << "UISystem::openCauldron - Failed to open cauldron" << std::endl;
             return false;
         }
+
+        m_cauldron_document->Show();
+        openedCauldron = cauldron;
+        registry.cauldrons.get(cauldron).filled = true;
+        std::cout << "UISystem::openCauldron - Cauldron created successfully" << std::endl;
+        return true;
     }
     catch (const std::exception& e) {
         std::cerr << "Exception in UISystem::openCauldron: " << e.what() << std::endl;
@@ -739,7 +767,13 @@ bool UISystem::isCauldronOpen() {
     return m_cauldron_document && m_cauldron_document->IsVisible();
 }
 
+bool UISystem::isCauldronOpen(Entity cauldron) {
+    return isCauldronOpen() && cauldron == openedCauldron;
+}
+
 void UISystem::closeCauldron() 
 {
-    m_cauldron_document->Hide();
+    if (isCauldronOpen()) {
+        m_cauldron_document->Hide();
+    }
 }
