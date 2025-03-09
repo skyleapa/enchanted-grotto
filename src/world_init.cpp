@@ -363,6 +363,7 @@ Entity createFruit(RenderSystem* renderer, vec2 position, std::string name, int 
 	auto entity = Entity();
 
 	Ingredient& ingredient = registry.ingredients.emplace(entity);
+	ingredient.grindLevel = 0;
 
 	Item& item = registry.items.emplace(entity);
 	item.type = ItemType::MAGICAL_FRUIT;
@@ -401,6 +402,7 @@ Entity createCoffeeBean(RenderSystem* renderer, vec2 position, std::string name,
 	auto entity = Entity();
 
 	Ingredient& ingredient = registry.ingredients.emplace(entity);
+	ingredient.grindLevel = 0;
 
 	Item& item = registry.items.emplace(entity);
 	item.type = ItemType::COFFEE_BEANS;

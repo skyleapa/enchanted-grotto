@@ -468,6 +468,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 							registry.inventories.remove(selected_item);
 							std::cout << "removed ingredient" << selected_item << std::endl;
 						}
+						std::cout << "doesnt have the ingredient" << selected_item << std::endl;
 					}
 				}
 
