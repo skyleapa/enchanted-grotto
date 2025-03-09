@@ -356,7 +356,10 @@ void RenderSystem::draw(UISystem* ui_system)
 
 	// draw all entities with a render request to the frame buffer
 	for (Entity entity : entities)
-	{
+	{ 
+		// skip invisble entities
+		if (registry.renderRequests.has(entity) && !registry.renderRequests.get(entity).is_visible) continue;
+
 		// filter to entities that have a motion component
 		if (registry.motions.has(entity))
 		{

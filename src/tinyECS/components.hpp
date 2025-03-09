@@ -117,6 +117,7 @@ struct Item
 	int amount;
 	float respawnTime = 0.0f;
 	vec2 originalPosition;
+	bool is_ammo = false;
 };
 
 // an item that can be added to potions
@@ -353,6 +354,7 @@ struct RenderRequest
 	GEOMETRY_BUFFER_ID used_geometry = GEOMETRY_BUFFER_ID::GEOMETRY_COUNT;
 	RENDER_LAYER layer = RENDER_LAYER::BACKGROUND;
 	int render_sub_layer = 0; // lower values are rendered above
+	bool is_visible = true;
 };
 
 enum class BIOME

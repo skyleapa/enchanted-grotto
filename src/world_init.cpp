@@ -373,6 +373,7 @@ Entity createFruit(RenderSystem* renderer, vec2 position, std::string name, int 
 	registry.meshPtrs.emplace(entity, &mesh);
 
 	Ammo& ammo = registry.ammo.emplace(entity); // TODO remove
+	item.is_ammo = true;
 
 	// Create motion
 	auto& motion = registry.motions.emplace(entity);
