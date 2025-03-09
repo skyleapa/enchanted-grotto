@@ -8,11 +8,11 @@
 
 if(RMLUI_FONT_ENGINE STREQUAL "freetype")
 	find_package("Freetype")
-	if (NOT Freetype_FOUND)
-        set (FREETYPE_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/lib/freetype.lib")
-        set (FREETYPE_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/include")
-    endif()
-    find_package("Freetype")
+	# if (NOT Freetype_FOUND)
+    #     set (FREETYPE_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/lib/freetype.lib")
+    #     set (FREETYPE_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/include")
+    # endif()
+    # find_package("Freetype")
 
 	if(FREETYPE_VERSION_STRING)
 		if(FREETYPE_VERSION_STRING VERSION_EQUAL "2.11.0" AND CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")

@@ -125,8 +125,8 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 				return;
 			}
 
+			cur->SetProperty("decorator", "image(\"interactables/spoon_in_hand.png\" flip-vertical contain)");
 			stirCoords.push_back(getPolarCoordinates(mouseCoords));
-			std::cout << "Started a ladle stir" << std::endl;
 			return;
 		}
 	}
@@ -157,6 +157,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 		}	
 
 		if (cur->GetId() == "ladle") {
+			cur->SetProperty("decorator", "image(\"interactables/spoon_on_table.png\" flip-vertical contain)");
 			stirCoords.clear();
 			return;
 		}
