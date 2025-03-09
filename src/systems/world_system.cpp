@@ -375,7 +375,7 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 	// toggle tutorial
 	if (action == GLFW_PRESS && key == GLFW_KEY_T) {
 		screen.tutorial_step_complete = true;
-		screen.tutorial_state = (screen.tutorial_state == (int) TUTORIAL::COMPLETE) ? (int) TUTORIAL::MOVEMENT : (int) TUTORIAL::COMPLETE;
+		screen.tutorial_state = (screen.tutorial_state == (int)TUTORIAL::COMPLETE) ? (int)TUTORIAL::MOVEMENT : (int)TUTORIAL::COMPLETE;
 	}
 
 	// Handle character movement
@@ -420,7 +420,7 @@ void WorldSystem::on_mouse_move(vec2 mouse_position)
 
 void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 {
-	// Pass the event to the UI system if it's initialized
+	// Pass the event to the UI system if it's initialized 
 	if (m_ui_system != nullptr) {
 		m_ui_system->handleMouseButtonEvent(button, action, mods);
 	}
@@ -434,6 +434,8 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 		std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
 		std::cout << "mouse tile position: " << tile_x << ", " << tile_y << std::endl;
 
+		if (m_ui_system != nullptr && m_ui_system->isCauldronOpen()) return;
+		// don't throw ammo if in potion making menu
 		throwAmmo(vec2(mouse_pos_x, mouse_pos_y));
 	}
 }
@@ -687,6 +689,8 @@ void WorldSystem::update_textbox_visibility()
 }
 
 void WorldSystem::updatePlayerWalkAndAnimation(Entity& player, Motion& player_motion, float elapsed_ms_since_last_update) {
+
+	if (m_ui_system != nullptr && m_ui_system->isCauldronOpen()) return; // no movement while menu is open
 
 	Animation& player_animation = registry.animations.get(player);
 

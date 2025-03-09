@@ -10,6 +10,7 @@ Entity ItemSystem::createItem(ItemType type, int amount, bool isCollectable, boo
     item.amount = amount;
     item.isCollectable = isCollectable;
     item.name = ITEM_NAMES.at(type);
+    item.is_ammo = is_ammo;
 
     if (is_ammo) {
         registry.ammo.emplace(entity);
@@ -234,7 +235,6 @@ Entity ItemSystem::deserializeItem(const nlohmann::json& data) {
 
 void ItemSystem::deserializeInventory(Entity inventory, const nlohmann::json& data) {
     if (!registry.inventories.has(inventory)) {
-        inventory = Entity();
         registry.inventories.emplace(inventory);
     }
     

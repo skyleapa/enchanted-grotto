@@ -357,7 +357,9 @@ void RenderSystem::draw(UISystem* ui_system)
 	// draw all entities with a render request to the frame buffer
 	for (Entity entity : entities)
 	{
-		// Always draw cauldron water last
+		if (registry.renderRequests.has(entity) && !registry.renderRequests.get(entity).is_visible) continue; // skip invisble entities
+		
+		// Always draw cauldron and cauldron water last
 		if (registry.cauldronWater.has(entity)) {
 			continue;
 		}
