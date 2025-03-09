@@ -60,9 +60,16 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 		static RmlUiRenderInterface render_interface;
 
 		// Get content scale for Retina displays
-		float content_scale_x, content_scale_y;
-		glfwGetWindowContentScale(window, &content_scale_x, &content_scale_y);
-		render_interface.SetContentScale(content_scale_x);
+		float content_scale = 1.0f;
+		
+		int frame_buffer_width_px, frame_buffer_height_px;
+		glfwGetFramebufferSize(window, &frame_buffer_width_px, &frame_buffer_height_px);
+		if (frame_buffer_width_px != WINDOW_WIDTH_PX) {
+			// Retina display, scale up to 2x
+			content_scale = 2.0f;
+		}
+
+		render_interface.SetContentScale(content_scale);
 
 		Rml::SetSystemInterface(&system_interface);
 		Rml::SetRenderInterface(&render_interface);
