@@ -670,7 +670,7 @@ RenderRequest getTextboxRenderRequest(Textbox& textbox)
 		RENDER_LAYER::ITEM };
 }
 
-Entity createEnemy(RenderSystem* renderer, vec2 position) {
+Entity createEnt(RenderSystem* renderer, vec2 position, int movable) {
 	auto entity = Entity();
 
 	Enemy& enemy = registry.enemies.emplace(entity);
@@ -678,21 +678,54 @@ Entity createEnemy(RenderSystem* renderer, vec2 position) {
 	enemy.health = 100;
 	enemy.start_pos = position;
 	enemy.state = (int)ENEMY_STATE::IDLE;
+	enemy.can_move = movable;
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
 	registry.meshPtrs.emplace(entity, &mesh);
 
 	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 0.f;
+	motion.angle = 180.f;
 	motion.velocity = { 0, 0 };
 	motion.position = position;
-	motion.scale = vec2({ PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT });
+	motion.scale = vec2({ ENT_WIDTH, ENT_HEIGHT });
 
 	registry.renderRequests.insert(
 		entity,
 		{
-			TEXTURE_ASSET_ID::PLAYER,
+			TEXTURE_ASSET_ID::ENT,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::TERRAIN,
+		});
+
+	return entity;
+}
+
+Entity createMummy(RenderSystem* renderer, vec2 position, int movable) {
+	auto entity = Entity();
+
+	Enemy& enemy = registry.enemies.emplace(entity);
+	enemy.attack_radius = 5;
+	enemy.health = 100;
+	enemy.start_pos = position;
+	enemy.state = (int)ENEMY_STATE::IDLE;
+	enemy.can_move = movable;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+	motion.scale = vec2({ MUMMY_WIDTH, MUMMY_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::MUMMY,
 			EFFECT_ASSET_ID::TEXTURED,
 			GEOMETRY_BUFFER_ID::SPRITE,
 			RENDER_LAYER::TERRAIN,
