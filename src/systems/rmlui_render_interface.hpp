@@ -26,8 +26,8 @@ public:
     // Called by RmlUi when it wants to change the scissor region.
     void SetScissorRegion(Rml::Rectanglei region) override;
 
-    // TODO: Called by RmlUi when it wants the renderer to use a new transform matrix.
-    // void SetTransform(const Rml::Matrix4f* transform) override;
+    // Called by RmlUi when it wants the renderer to use a new transform matrix.
+    void SetTransform(const Rml::Matrix4f* transform) override;
 
     // Called by RmlUi when a texture is required by the library.
     Rml::TextureHandle LoadTexture(Rml::Vector2i& texture_dimensions,
@@ -45,6 +45,9 @@ private:
     GLuint m_vbo;
     GLuint m_ibo;
     GLuint m_shader_program;
+
+    Rml::Matrix4f m_transform;
+    bool m_transform_dirty;
 
     // Helper method to render geometry
     void RenderGeometryInternal(Rml::Span<const Rml::Vertex> vertices, 

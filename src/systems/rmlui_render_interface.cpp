@@ -12,15 +12,18 @@ layout(location = 2) in vec2 texcoord;
 uniform vec2 translation;
 uniform vec2 scale;
 uniform vec2 offset;
+uniform mat4 transform;
 out vec4 v_color;
 out vec2 v_texcoord;
 void main() {
     // Apply translation in pixel space
     vec2 pos = position + translation;
     
+    // Transform position by the transform matrix if provided
+    vec4 transformed_pos = transform * vec4(pos, 0.0, 1.0);
+    
     // Transform to NDC coordinates (simplified projection)
-    // Converts from [0, viewport_size] to [-1, 1] range
-    vec2 ndc = pos * scale + offset;
+    vec2 ndc = transformed_pos.xy * scale + offset;
     
     // Output final position
     gl_Position = vec4(ndc.x, ndc.y, 0.0, 1.0);
@@ -67,7 +70,7 @@ static void check_gl_error(const char* location) {
 }
 
 RmlUiRenderInterface::RmlUiRenderInterface()
-    : m_vao(0), m_vbo(0), m_ibo(0), m_shader_program(0)
+    : m_vao(0), m_vbo(0), m_ibo(0), m_shader_program(0), m_transform(Rml::Matrix4f::Identity()), m_transform_dirty(true)
 {
     // Create shaders
     GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
@@ -237,6 +240,7 @@ void RmlUiRenderInterface::RenderGeometry(Rml::CompiledGeometryHandle geometry,
     GLint loc_offset = glGetUniformLocation(m_shader_program, "offset");
     GLint loc_has_texture = glGetUniformLocation(m_shader_program, "has_texture");
     GLint loc_tex = glGetUniformLocation(m_shader_program, "tex");
+    GLint loc_transform = glGetUniformLocation(m_shader_program, "transform");
     
     // Set uniforms (checking for -1 to avoid OpenGL errors)
     if (loc_translation != -1) {
@@ -249,6 +253,12 @@ void RmlUiRenderInterface::RenderGeometry(Rml::CompiledGeometryHandle geometry,
     
     if (loc_offset != -1) {
         glUniform2f(loc_offset, x_offset, y_offset);
+    }
+
+    // Set transform matrix if dirty
+    if (loc_transform != -1 && m_transform_dirty) {
+        glUniformMatrix4fv(loc_transform, 1, GL_FALSE, m_transform.data());
+        m_transform_dirty = false;
     }
     
     // Handle texture
@@ -407,4 +417,14 @@ void RmlUiRenderInterface::RenderGeometryInternal(Rml::Span<const Rml::Vertex> v
     if (texture) {
         glBindTexture(GL_TEXTURE_2D, 0);
     }
+}
+
+void RmlUiRenderInterface::SetTransform(const Rml::Matrix4f* transform)
+{
+    if (transform) {
+        m_transform = *transform;
+    } else {
+        m_transform = Rml::Matrix4f::Identity();
+    }
+    m_transform_dirty = true;
 } 
