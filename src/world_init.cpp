@@ -426,6 +426,75 @@ Entity createCoffeeBean(RenderSystem* renderer, vec2 position, std::string name,
 	return entity;
 }
 
+Entity createSap(RenderSystem* renderer, vec2 position, std::string name, int amount)
+{
+	auto entity = Entity();
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::SAP;
+	item.name = name;
+	item.isCollectable = true; // Make sure the item can be collected
+	item.amount = amount;
+	item.originalPosition = position;
+	item.canRespawn = false;
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	// Create motion
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+	motion.scale = vec2({ FRUIT_WIDTH, FRUIT_HEIGHT });
+
+	vec2 textbox_position = { position.x + (motion.scale.x * 0.6f), position.y };
+	Entity textbox = createTextbox(renderer, textbox_position, entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::SAP,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::ITEM });
+
+	return entity;
+}
+
+Entity createMagicalDust(RenderSystem* renderer, vec2 position, std::string name, int amount)
+{
+	auto entity = Entity();
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::MAGICAL_DUST;
+	item.name = name;
+	item.isCollectable = true; // Make sure the item can be collected
+	item.amount = amount;
+	item.originalPosition = position;
+	item.canRespawn = false;
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	// Create motion
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+	motion.scale = vec2({ COFFEE_BEAN_WIDTH, COFFEE_BEAN_HEIGHT });
+
+	Entity textbox = createTextbox(renderer, position, entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::MAGICAL_DUST,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::ITEM });
+
+	return entity;
+}
+
 Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name)
 {
 	auto entity = Entity();
@@ -661,6 +730,12 @@ RenderRequest getTextboxRenderRequest(Textbox& textbox)
 	}
 	else if (item.name == "Desert Exit") {
 		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_FOREST;
+	}
+	else if (item.name == "Sap") {
+		texture = TEXTURE_ASSET_ID::TEXTBOX_SAP;
+	}
+	else if (item.name == "Magical Dust") {
+		texture = TEXTURE_ASSET_ID::TEXTBOX_MAGICAL_DUST;
 	}
 
 	return {

@@ -298,7 +298,15 @@ void WorldSystem::handle_collisions()
 			Enemy& enemy = registry.enemies.get(enemy_entity);
 			enemy.health -= ammo.damage;
 			registry.remove_all_components_of(ammo_entity);
-			if (enemy.health <= 0) registry.remove_all_components_of(enemy_entity);
+			if (enemy.health <= 0) {
+				// using can_move for now since ent cannot move, but mummy can
+				if (enemy.can_move == 0) { 
+					createSap(renderer, registry.motions.get(enemy_entity).position, "Sap", 1);
+				} else if (enemy.can_move == 1) {
+					createMagicalDust(renderer, registry.motions.get(enemy_entity).position, "Magical Dust", 1);
+				}
+				registry.remove_all_components_of(enemy_entity);
+			}
 			continue;
 		}
 		// case where enemy hits player - automatically die and restart game
@@ -514,6 +522,9 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 	{
 		Item& item_info = registry.items.get(item);
 
+		if (item_info.canRespawn == false) 
+			return;
+
 		if (item_info.respawnTime <= 0)
 			continue;
 
@@ -552,7 +563,7 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 				continue;
 
 			Textbox& textboxComp = registry.textboxes.get(textbox);
-			textboxComp.isVisible = true;
+			textboxComp.isVisible = false;
 
 			RenderRequest renderRequest = getTextboxRenderRequest(textboxComp);
 			registry.renderRequests.insert(textbox, renderRequest);

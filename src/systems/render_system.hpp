@@ -77,6 +77,8 @@ class RenderSystem {
 		textures_path("terrain/forest/bush.png"),
 		textures_path("interactables/magical_fruit.png"),
 		textures_path("interactables/coffee_bean.png"),
+		textures_path("interactables/sap.png"),
+		textures_path("interactables/magical_dust.png"),
 		textures_path("interactables/textbox_magical_fruit.png"),
 		textures_path("interactables/textbox_coffee_bean.png"),
 		textures_path("interactables/textbox_enter_grotto.png"),
@@ -84,6 +86,8 @@ class RenderSystem {
 		textures_path("interactables/textbox_cauldron.png"),
 		textures_path("interactables/textbox_enter_desert.png"),
 		textures_path("interactables/textbox_enter_forest.png"),
+		textures_path("interactables/textbox_sap.png"),
+		textures_path("interactables/textbox_magical_dust.png"),
 		textures_path("enemies/ent.png"),
 		textures_path("enemies/mummy.png"),
 	};
