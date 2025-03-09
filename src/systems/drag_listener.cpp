@@ -84,13 +84,13 @@ void DragListener::checkCompletedStir() {
 		}
 
 		float angle = polar.second;
-		if (!a && angle > 0 && angle < M_PI_2) {
+		if (!a && angle > 0 && angle < M_PI/2) {
 			a = true;
-		} else if (!b && angle > M_PI_2 && angle < M_PI) {
+		} else if (!b && angle > M_PI/2 && angle < M_PI) {
 			b = true;
-		} else if (!c && angle > -M_PI && angle < -M_PI_2) {
+		} else if (!c && angle > -M_PI && angle < -M_PI/2) {
 			c = true;
-		} else if (!d && angle < 0 && angle > -M_PI_2) {
+		} else if (!d && angle < 0 && angle > -M_PI/2) {
 			d = true;
 		}
 
