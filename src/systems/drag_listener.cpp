@@ -54,8 +54,20 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 		if (cur->GetId() == "heat") {
 			heatElement = cur;
 			lastCoords = event.GetUnprojectedMouseScreenPos();
+			return;
 		}
-		return;
+
+		if (cur->GetId() == "ladle") {
+			Rml::Context* context = cur->GetContext();
+            Rml::Element* possibleCauldron = context->GetElementAtPoint(event.GetUnprojectedMouseScreenPos(), cur);
+			if (!possibleCauldron || possibleCauldron->GetId() != "cauldron") {
+				event.StopImmediatePropagation();
+				return;
+			}
+
+			std::cout << "Dragstart ladle" << std::endl;
+			return;
+		}
 	}
 
 	if (event == "drag") {
@@ -64,8 +76,13 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			float newDegree = getHeatDegree(event.GetUnprojectedMouseScreenPos(), curDegree);
 			setHeatDegree(cur, newDegree);
 			lastCoords = event.GetUnprojectedMouseScreenPos();
+			return;
 		}
-		return;
+
+		if (cur->GetId() == "ladle") {
+			std::cout << "Drag ladle" << std::endl;
+			return;
+		}
 	}
 
 	if (event == "dragend") {
@@ -73,7 +90,12 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			float curDegree = getCurrentDegree(cur);
 			int heatLevel = getHeatLevel(curDegree);
 			PotionSystem::changeHeat(m_ui_system->getOpenedCauldron(), heatLevel);
+			return;
 		}	
-		return;
+
+		if (cur->GetId() == "ladle") {
+			std::cout << "Dragend ladle" << std::endl;
+			return;
+		}
 	}
 }

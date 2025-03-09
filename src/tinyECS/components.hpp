@@ -136,7 +136,7 @@ struct Inventory
 
 struct Cauldron
 {
-	Entity water;                     // The water entity to send the color to
+	vec3 color = DEFAULT_COLOR;       // The water entity to send the color to
 	int heatLevel = 0;                // 0-100
 	bool filled = false;              // Whether the cauldron has water
 	int timeElapsed = 0;              // Time elapsed since water filled and heat knob turned, in ms
@@ -145,11 +145,6 @@ struct Cauldron
 	std::vector<Action> actions;      // Records player actions
 	// If stir quality ever gets added, a penalty can be recorded here
 };
-
-struct CauldronWater {
-	// Mark as cauldron water to render on top of everything else
-};
-
 
 // a menu of our game (recipe book menu, potion making menu, grinding menu...)
 struct Menu
@@ -301,8 +296,7 @@ enum class TEXTURE_ASSET_ID
 	TEXTBOX_CAULDRON = TEXTBOX_GROTTO_EXIT + 1,
 	TEXTBOX_ENTER_DESERT = TEXTBOX_CAULDRON + 1,
 	TEXTBOX_ENTER_FOREST = TEXTBOX_ENTER_DESERT + 1,
-	CAULDRON_WATER = TEXTBOX_ENTER_FOREST + 1,
-	ENT = CAULDRON_WATER + 1,
+	ENT = TEXTBOX_ENTER_FOREST + 1,
 	MUMMY = ENT + 1,
 	TEXTURE_COUNT = MUMMY + 1,
 };

@@ -357,11 +357,6 @@ void RenderSystem::draw(UISystem* ui_system)
 	// draw all entities with a render request to the frame buffer
 	for (Entity entity : entities)
 	{
-		// Always draw cauldron water last
-		if (registry.cauldronWater.has(entity)) {
-			continue;
-		}
-
 		// filter to entities that have a motion component
 		if (registry.motions.has(entity))
 		{
@@ -376,15 +371,10 @@ void RenderSystem::draw(UISystem* ui_system)
 		}
 	}
 
-	// Render ui system first, then check if we should draw water texture
+	// Render ui system first, so it can be faded out
 	ui_system->draw();
-	for (Entity cauldron : registry.cauldrons.entities) {
-		if (ui_system->isCauldronOpen(cauldron) && registry.cauldrons.get(cauldron).filled) {
-			drawTexturedMesh(registry.cauldrons.get(cauldron).water, projection_2D);
-			break;
-		}
-	}
 
+	// Fade screen
 	if (registry.screenStates.components[0].is_switching_biome) fadeScreen();
 
 	// flicker-free display with a double buffer

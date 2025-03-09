@@ -8,6 +8,8 @@
 #include <string>
 #include <unordered_map>
 #include <tuple>
+#include <sstream>
+
 // Global flag to indicate when UI rendering is in progress
 // Used to prevent OpenGL error checking during RmlUi rendering
 bool g_ui_rendering_in_progress = false;
@@ -206,6 +208,9 @@ void UISystem::step(float elapsed_ms)
 		// Display inventory
 		updateTutorial();
 
+        // Update cauldron color
+        updateCauldronUI();
+
 		// Update RmlUi
 		m_context->Update();
 	}
@@ -394,7 +399,7 @@ void UISystem::handleTextInput(unsigned int codepoint)
 void UISystem::handleMouseMoveEvent(double x, double y)
 {
 	if (!m_initialized || !m_context) return;
-
+    ladleFollowMouse(x, y);
 	m_context->ProcessMouseMove((int)x, (int)y, getKeyModifiers());
 }
 
@@ -449,14 +454,31 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 		}
 
         // Check for ladle pickup
-        if (isCauldronOpen()) {
-            Rml::Element* ladle = m_context->GetHoverElement();
-            if (ladle && ladle->GetId() == "ladle") {
-                if (!isHoldingLadle) {
-                    ladle->SetProperty("visibility", "hidden"); 
-                }
+        do {
+            if (!isCauldronOpen()) {
+                break;
             }
-        }
+
+            Rml::Element* ladle = m_context->GetHoverElement();
+            if (!ladle || ladle->GetId() != "ladle") {
+                break;
+            }
+
+            // If we click cauldron don't drop ladle
+            Rml::Element* possibleCauldron = m_context->GetElementAtPoint(Rml::Vector2f(x, y), ladle);
+            if (possibleCauldron && possibleCauldron->GetId() == "cauldron") {
+                break;
+            }
+
+            if (heldLadle) {
+                ladle->SetProperty("top", "70px"); 
+                ladle->SetProperty("left", "962px");
+                heldLadle = nullptr;
+            } else {
+                heldLadle = ladle;
+                ladleFollowMouse(x, y);
+            }
+        } while (false);
     }
 
 	// Pass the event to RmlUi
@@ -784,10 +806,10 @@ bool UISystem::openCauldron(Entity cauldron)
         <head>
             <style>
                 #ui {
+                    position: absolute;
                     display: flex;
-                    margin-top: 25px;
-                    margin-left: auto;
-                    margin-right: auto;
+                    top: 25px;
+                    left: 96px;
                     width: 1057px;
                     height: 550px;
                     text-align: center;
@@ -806,30 +828,32 @@ bool UISystem::openCauldron(Entity cauldron)
                     drag: drag;
                 }
 
-                #ladle {
-                    position: relative;
-                    width: 132px;
-                    height: 246px;
-                    top: 45px;
-                    left: 760px;
-                    decorator: image("interactables/spoon_on_table.png" flip-vertical contain);
-                }
-
                 #cauldron {
                     position: relative;
-                    width: 352px;
-                    height: 337px;
-                    top: 95px;
-                    left: 90px;
+                    width: 319px;
+                    height: 303px;
+                    top: 112px;
+                    left: 243px;
+                    decorator: image("interactables/cauldron_water.png" fill);
+                }
+
+                #ladle {
+                    position: absolute;
+                    width: 132px;
+                    height: 246px;
+                    top: 70px;
+                    left: 962px;
+                    decorator: image("interactables/spoon_on_table.png" flip-vertical contain);
+                    drag: drag;
                 }
             </style>
         </head>
         <body>
             <div id="ui">
                 <div id="heat"></div>
-                <div id="ladle"></div>
                 <div id="cauldron"></div>
             </div>
+            <div id="ladle"></div>
         </body>
         </rml>
         )";
@@ -841,6 +865,7 @@ bool UISystem::openCauldron(Entity cauldron)
         }
 
         DragListener::RegisterDraggableElement(m_cauldron_document->GetElementById("heat"));
+        DragListener::RegisterDraggableElement(m_cauldron_document->GetElementById("cauldron"));
         m_cauldron_document->Show();
         openedCauldron = cauldron;
         registry.cauldrons.get(cauldron).filled = true;
@@ -851,6 +876,20 @@ bool UISystem::openCauldron(Entity cauldron)
         std::cerr << "Exception in UISystem::openCauldron: " << e.what() << std::endl;
         return false;
     }
+}
+
+void UISystem::updateCauldronUI() {
+    if (!m_cauldron_document || !isCauldronOpen()) {
+        return;
+    }
+
+    // Update color of cauldron
+    Rml::Element* cauldronElement = m_cauldron_document->GetElementById("cauldron");
+    vec3& color = registry.cauldrons.get(openedCauldron).color;
+    float alpha = 255;
+    std::stringstream s;
+    s << "rgba(" << color.x << "," << color.y << "," << color.z << "," << alpha << ")";
+    cauldronElement->SetProperty("image-color", s.str());
 }
 
 bool UISystem::isCauldronOpen() {
@@ -870,4 +909,18 @@ void UISystem::closeCauldron()
 
 Entity UISystem::getOpenedCauldron() {
     return openedCauldron;
+}
+
+void UISystem::ladleFollowMouse(double x, double y)
+{
+    if (!heldLadle) {
+        return;
+    }
+
+    int wl = heldLadle->GetProperty("width")->GetNumericValue().number;
+    int hl = heldLadle->GetProperty("height")->GetNumericValue().number;
+    int ix = (int) x - wl / 2;
+    int iy = (int) y - hl / 2;
+    heldLadle->SetProperty("left", std::to_string(ix) + "px");
+    heldLadle->SetProperty("top", std::to_string(iy) + "px");
 }
