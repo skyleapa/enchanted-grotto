@@ -426,22 +426,14 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 	// Check if the click is on the inventory bar
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT) {
 		// Calculate inventory bar position
-		int width = WINDOW_WIDTH_PX;
-		int height = WINDOW_HEIGHT_PX;
-
-		// Inventory bar is centered at the bottom
-		float bar_width = 450.0f;
-		float bar_height = 60.0f;
-		float bar_x = (width - bar_width) / 2.0f;
-		float bar_y = height - bar_height - 20.0f; // 20px from bottom
 
 		// Check if click is within the inventory bar area
-		if (x >= bar_x && x <= bar_x + bar_width &&
-			y >= bar_y && y <= bar_y + bar_height) {
+		if (x >= BAR_X && x <= BAR_X + BAR_WIDTH &&
+			y >= BAR_Y && y <= BAR_Y + BAR_HEIGHT) {
 
 			// Calculate which slot was clicked
-			float slot_width = bar_width / m_hotbar_size;
-			int slot = (int)((x - bar_x) / slot_width);
+			float slot_width = BAR_WIDTH / m_hotbar_size;
+			int slot = (int)((x - BAR_X) / slot_width);
 
 			if (slot >= 0 && slot < m_hotbar_size) {
 				selectInventorySlot(slot);
@@ -756,8 +748,8 @@ void UISystem::updateTutorial()
 			return; // No tutorial for this state
 
 		// Extract positions and text
-		std::string top_position = std::get<0>(it->second);
-		std::string left_position = std::get<1>(it->second);
+		std::string left_position = std::get<0>(it->second);
+		std::string top_position = std::get<1>(it->second);
 		std::string tutorial_text = std::get<2>(it->second);
 		std::cout << "UISystem::showTutorial - Creating tutorial step " << screen.tutorial_state << std::endl;
 

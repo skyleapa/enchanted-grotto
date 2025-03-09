@@ -119,6 +119,13 @@ const float FOLLOWING_RADIUS = (float)300;  // Enemy stops attacking if outside 
 
 const float ENEMY_SPEED = (float)110;
 
+// Inventory bar 
+const float BAR_WIDTH = (float)450.0f;
+const float BAR_HEIGHT = (float)60.0f;
+const float BAR_X = (float)((WINDOW_WIDTH_PX - BAR_WIDTH) / 2.0f);
+const float BAR_Y = (float)(WINDOW_HEIGHT_PX - BAR_HEIGHT - 20.0f); // 20px from bottom
+
+
 // Item and potion constants. The enums are declared here instead of in components.hpp
 // because this file is included in components, not the other way around - otherwise,
 // it would result in compilation errors because the name constants would be referring
@@ -276,10 +283,11 @@ enum class TUTORIAL {
 	COLLECT_FRUITS = MOVEMENT + 1,
 	ATTACK_ENEMY = COLLECT_FRUITS + 1,
 	ENTER_GROTTO = ATTACK_ENEMY + 1,
+	INTERACT_CAULDRON = ENTER_GROTTO + 1,
+	STIR = INTERACT_CAULDRON + 1,
 	// other potion stuff to go here
-	COMPLETE = ENTER_GROTTO + 1
+	COMPLETE = STIR + 1
 };
-
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
 #endif

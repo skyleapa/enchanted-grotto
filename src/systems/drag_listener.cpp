@@ -96,6 +96,11 @@ void DragListener::checkCompletedStir() {
 
 		if (a && b && c && d) {
 			PotionSystem::stirCauldron(m_ui_system->getOpenedCauldron());
+			if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::STIR) {
+				ScreenState& screen = registry.screenStates.components[0];
+				screen.tutorial_step_complete = true;
+				screen.tutorial_state += 1;
+			}
 			std::cout << "Recorded a successful ladle stir" << std::endl;
 			break;
 		}

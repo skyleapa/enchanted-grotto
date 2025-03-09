@@ -377,6 +377,13 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 		screen.tutorial_step_complete = true;
 		screen.tutorial_state = (screen.tutorial_state == (int)TUTORIAL::COMPLETE) ? (int)TUTORIAL::MOVEMENT : (int)TUTORIAL::COMPLETE;
 	}
+	
+	// skip tutorial step
+	if (action == GLFW_PRESS && key == GLFW_KEY_N) {
+		screen.tutorial_step_complete = true;
+		if (screen.tutorial_state != (int)TUTORIAL::COMPLETE) screen.tutorial_state += 1;
+	}
+
 
 	// Handle character movement
 	if (key == GLFW_KEY_W || key == GLFW_KEY_S || key == GLFW_KEY_D || key == GLFW_KEY_A)
@@ -435,7 +442,8 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 		std::cout << "mouse tile position: " << tile_x << ", " << tile_y << std::endl;
 
 		if (m_ui_system != nullptr && m_ui_system->isCauldronOpen()) return;
-		// don't throw ammo if in potion making menu
+		if (mouse_pos_x >= BAR_X && mouse_pos_x <= BAR_X + BAR_WIDTH && mouse_pos_y >= BAR_Y && mouse_pos_y <= BAR_Y + BAR_HEIGHT) return;
+		// don't throw ammo if in potion making menu or clicking on inventory
 		throwAmmo(vec2(mouse_pos_x, mouse_pos_y));
 	}
 }
@@ -489,6 +497,11 @@ void WorldSystem::handle_player_interaction()
 		else if (registry.cauldrons.has(item)) {
 			std::cout << "found cauldron" << std::endl;
 			handle_textbox = m_ui_system->openCauldron(item);
+			if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::INTERACT_CAULDRON) {
+				ScreenState& screen = registry.screenStates.components[0];
+				screen.tutorial_step_complete = true;
+				screen.tutorial_state += 1;
+			}
 		}
 
 		if (handle_textbox)
