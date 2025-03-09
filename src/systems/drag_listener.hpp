@@ -25,6 +25,11 @@ private:
 	float getCurrentDegree(Rml::Element* heatknob);
 	void setHeatDegree(Rml::Element* heatknob, float degree);
 
+	// Ladle functions
+
+	// Idea: Have 4 zones around the cauldron. Drag must go through
+	// all 4 zones to count as 1 stir
+
 	// Need to ref back to UI system to get the cauldron
 	static UISystem* m_ui_system;
 

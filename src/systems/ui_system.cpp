@@ -782,16 +782,16 @@ bool UISystem::openCauldron(Entity cauldron)
                     margin-top: 25px;
                     margin-left: auto;
                     margin-right: auto;
-                    height: 550px;
                     width: 1057px;
+                    height: 550px;
                     text-align: center;
                     decorator: image("interactables/cauldron_background.png" flip-vertical fill);
                 }
 
                 #heat {
                     position: relative;
-                    height: 100px;
                     width: 124px;
+                    height: 100px;
                     top: 365px;
                     left: 108px;
                     decorator: image("interactables/heat_arrow.png" flip-vertical scale-none center bottom);
@@ -802,11 +802,20 @@ bool UISystem::openCauldron(Entity cauldron)
 
                 #ladle {
                     position: relative;
-                    height: 246px;
                     width: 132px;
+                    height: 246px;
                     top: 45px;
                     left: 760px;
                     decorator: image("interactables/spoon_on_table.png" flip-vertical contain);
+                }
+
+                #cauldron {
+                    position: relative;
+                    width: 352px;
+                    height: 337px;
+                    top: 95px;
+                    left: 150px;
+                    background-color: yellow;
                 }
             </style>
         </head>
@@ -814,6 +823,7 @@ bool UISystem::openCauldron(Entity cauldron)
             <div id="ui">
                 <div id="heat"></div>
                 <div id="ladle"></div>
+                <div id="cauldron"></div>
             </div>
         </body>
         </rml>
