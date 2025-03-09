@@ -94,17 +94,18 @@ void DragListener::checkCompletedStir() {
 			d = true;
 		}
 
-		if (!(a && b && c && d)) {
-			continue;
+		if (a && b && c && d) {
+			PotionSystem::stirCauldron(m_ui_system->getOpenedCauldron());
+			std::cout << "Recorded a successful ladle stir" << std::endl;
+			break;
 		}
-
-		std::pair<float, float> last = stirCoords[size - 1];
-		stirCoords.clear();
-		stirCoords.push_back(last);
-		PotionSystem::stirCauldron(m_ui_system->getOpenedCauldron());
-		std::cout << "Recorded a successful ladle stir" << std::endl;
-		return;
 	}
+
+	// Reset stircoords no matter if a good stir was recorded or not, so player
+	// can't get 1 stir through multiple circles
+	std::pair<float, float> last = stirCoords[size - 1];
+	stirCoords.clear();
+	stirCoords.push_back(last);
 }
 
 void DragListener::ProcessEvent(Rml::Event& event) {
