@@ -84,12 +84,12 @@ void PotionSystem::changeHeat(Entity cauldron, int value) {
 	recordAction(cauldron, ActionType::MODIFY_HEAT, value);
 }
 
-void PotionSystem::stirCauldron(Entity cauldron, int stirs) {
+void PotionSystem::stirCauldron(Entity cauldron) {
 	Inventory& ci = registry.inventories.get(cauldron);
 	if (ci.items.size() == 0) {
 		return;
 	}
-	recordAction(cauldron, ActionType::STIR, stirs);
+	recordAction(cauldron, ActionType::STIR, 1);
 }
 
 Potion PotionSystem::bottlePotion(Entity cauldron) {

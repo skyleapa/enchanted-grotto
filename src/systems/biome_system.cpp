@@ -68,7 +68,7 @@ void BiomeSystem::switchBiome(int biome) {
 
 	std::vector<Entity> to_remove;
 	for (auto entity : registry.motions.entities) {
-		if (registry.players.has(entity) || registry.inventories.has(entity) || registry.cauldronWater.has(entity)) continue;
+		if (registry.players.has(entity) || registry.inventories.has(entity)) continue;
 
 		// don't delete any render requests marked as invisible
 		if (registry.renderRequests.has(entity)) {
@@ -127,14 +127,6 @@ void BiomeSystem::renderPlayerInNewBiome() {
 			}
 
 		}
-
-		// do the same for cauldron water
-		for (Entity cauldron_water : registry.cauldronWater.entities) {
-			if (registry.renderRequests.has(cauldron_water)) {
-				RenderRequest& rr = registry.renderRequests.get(cauldron_water);
-				rr.is_visible = true;
-			}
-		}
 	}
 	else if (screen.from_biome == (int)BIOME::GROTTO && screen.biome == (int)BIOME::FOREST) { // through grotto exit into forest
 		player_motion.position = vec2(GROTTO_ENTRANCE_X, GROTTO_ENTRANCE_Y + 50);
@@ -143,14 +135,6 @@ void BiomeSystem::renderPlayerInNewBiome() {
 		for (Entity cauldron : registry.cauldrons.entities) {
 			if (registry.renderRequests.has(cauldron)) {
 				RenderRequest& rr = registry.renderRequests.get(cauldron);
-				rr.is_visible = false;
-			}
-		}
-
-		// do the same for cauldron water
-		for (Entity cauldron_water : registry.cauldronWater.entities) {
-			if (registry.renderRequests.has(cauldron_water)) {
-				RenderRequest& rr = registry.renderRequests.get(cauldron_water);
 				rr.is_visible = false;
 			}
 		}

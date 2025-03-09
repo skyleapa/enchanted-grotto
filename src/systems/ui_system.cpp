@@ -833,7 +833,7 @@ bool UISystem::openCauldron(Entity cauldron)
                     width: 319px;
                     height: 303px;
                     top: 112px;
-                    left: 243px;
+                    left: 241px;
                     decorator: image("interactables/cauldron_water.png" fill);
                 }
 
@@ -865,7 +865,7 @@ bool UISystem::openCauldron(Entity cauldron)
         }
 
         DragListener::RegisterDraggableElement(m_cauldron_document->GetElementById("heat"));
-        DragListener::RegisterDraggableElement(m_cauldron_document->GetElementById("cauldron"));
+        DragListener::RegisterDraggableElement(m_cauldron_document->GetElementById("ladle"));
         m_cauldron_document->Show();
         openedCauldron = cauldron;
         registry.cauldrons.get(cauldron).filled = true;
