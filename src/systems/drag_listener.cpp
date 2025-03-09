@@ -77,7 +77,7 @@ void DragListener::checkCompletedStir() {
 
 	// Check vector locations, see if they have been in all the quadrants
 	// a = quad 1, b = quad 2, c = quad 3, d = quad 4
-	bool a, b, c, d = false;
+	bool a = false, b = false, c = false, d = false;
 	for (auto& polar : stirCoords) {
 		if (polar.first > MAX_STIR_RADIUS || polar.first < MIN_STIR_RADIUS) {
 			continue;
@@ -157,7 +157,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 		}	
 
 		if (cur->GetId() == "ladle") {
-			cur->SetProperty("decorator", "image(\"interactables/spoon_on_table.png\" flip-vertical contain)");
+			cur->SetProperty("decorator", "image(\"interactables/spoon_on_table.png\" contain)");
 			stirCoords.clear();
 			return;
 		}

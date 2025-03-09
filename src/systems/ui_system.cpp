@@ -83,11 +83,6 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 
 		DragListener::LinkUISystem(this);
 
-		if (!Rml::Initialise()) {
-			std::cerr << "UISystem::init - Failed to initialize RmlUi" << std::endl;
-			return false;
-		}
-
 		std::cout << "UISystem::init - RmlUi initialized successfully" << std::endl;
 
 		// Load font (definitely not excessive)
@@ -851,7 +846,7 @@ bool UISystem::openCauldron(Entity cauldron)
                     drag: drag;
                 }
 
-                #cauldron {
+                #cauldron-water {
                     position: relative;
                     width: 319px;
                     height: 303px;
@@ -860,13 +855,21 @@ bool UISystem::openCauldron(Entity cauldron)
                     decorator: image("interactables/cauldron_water.png" fill);
                 }
 
+                #cauldron {
+                    position: absolute;
+                    width: 319px;
+                    height: 303px;
+                    top: 82px;
+                    left: 500px;
+                }
+
                 #ladle {
                     position: absolute;
                     width: 132px;
                     height: 246px;
                     top: 70px;
                     left: 962px;
-                    decorator: image("interactables/spoon_on_table.png" flip-vertical contain);
+                    decorator: image("interactables/spoon_on_table.png" contain);
                     drag: drag;
                 }
             </style>
@@ -874,8 +877,9 @@ bool UISystem::openCauldron(Entity cauldron)
         <body>
             <div id="ui">
                 <div id="heat"></div>
-                <div id="cauldron"></div>
+                <div id="cauldron-water"></div>
             </div>
+            <div id="cauldron"></div>
             <div id="ladle"></div>
         </body>
         </rml>

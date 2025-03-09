@@ -44,13 +44,14 @@ private:
 	std::vector<std::pair<float, float>> stirCoords;
 	
 	// The last heat knob coords
-	Rml::Vector2f lastCoords = Rml::Vector2f(0, 0) - Rml::Vector2f(0, 0);
+	Rml::Vector2f lastCoords = Rml::Vector2f(0, 0);
 
 	// The maximum degree change (both pos and neg) of the heat knob
 	const int MAX_DEGREE = 60;
 
 	// The center to calculate polar coords from
-	const Rml::Vector2f CAULDRON_CENTER = Rml::Vector2f(625, 285);
+	// = center cauldron coords + an offset to account for the ladle size
+	const Rml::Vector2f CAULDRON_CENTER = Rml::Vector2f(625, 285) + Rml::Vector2f(25, -55);
 
 	// The min and max squared magnitudes to consider for stir coords
 	const float MIN_STIR_RADIUS = 50 * 50;
