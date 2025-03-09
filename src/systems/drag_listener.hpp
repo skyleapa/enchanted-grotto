@@ -33,16 +33,28 @@ private:
 	// a stir. We need a point in each quadrant who's r is at least some value.
 	// If a stir is recorded, clear the vector and go again
 	// Center coord: 625, 285
+	std::pair<float, float> getPolarCoordinates(Rml::Vector2f input);
+	void checkCompletedStir();
+
 
 	// Need to ref back to UI system to get the cauldron
 	static UISystem* m_ui_system;
 
-	// Only one drag element should be active at a time
-	Rml::Element* heatElement = nullptr;
-	Rml::Element* stirElement = nullptr;
-	Rml::Vector2f lastCoords = Rml::Vector2f(0, 0);
+	// Stir coords, in terms of SQUARED magnitude and angle in RADIANS
+	std::vector<std::pair<float, float>> stirCoords;
+	
+	// The last heat knob coords
+	Rml::Vector2f lastCoords = Rml::Vector2f(0, 0) - Rml::Vector2f(0, 0);
 
-	const int max_degree = 60;
+	// The maximum degree change (both pos and neg) of the heat knob
+	const int MAX_DEGREE = 60;
+
+	// The center to calculate polar coords from
+	const Rml::Vector2f CAULDRON_CENTER = Rml::Vector2f(625, 285);
+
+	// The min and max squared magnitudes to consider for stir coords
+	const float MIN_STIR_RADIUS = 50 * 50;
+	const float MAX_STIR_RADIUS = 150 * 150;
 };
 
 #endif

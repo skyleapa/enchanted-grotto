@@ -26,12 +26,12 @@ float DragListener::getHeatDegree(Rml::Vector2f coords, float curDegree) {
 		ydiff *= -1;
 	}
 	int res = abs(xdiff) > abs(ydiff) ? curDegree + xdiff : curDegree + ydiff;
-	int clippedLow = max(res, -max_degree);
-	return min(clippedLow, max_degree);
+	int clippedLow = max(res, -MAX_DEGREE);
+	return min(clippedLow, MAX_DEGREE);
 }
 
 int DragListener::getHeatLevel(float degree) {
-	return (int) ((degree + max_degree) / 1.2f);
+	return (int) ((degree + MAX_DEGREE) / 1.2f);
 }
 
 float DragListener::getCurrentDegree(Rml::Element* heatknob) {
@@ -48,24 +48,104 @@ void DragListener::setHeatDegree(Rml::Element* heatknob, float degree) {
 	heatknob->SetProperty("transform", s.str());
 }
 
+std::pair<float, float> DragListener::getPolarCoordinates(Rml::Vector2f input) {
+	Rml::Vector2f cartesian = input - CAULDRON_CENTER;
+	cartesian.y *= -1; // Since y starts from top-down we need to flip this
+	float mag = cartesian.SquaredMagnitude();
+	float angle = atan2f(cartesian.y, cartesian.x);
+	return std::pair<float, float>(mag, angle);
+}
+
+void DragListener::checkCompletedStir() {
+	// We know that stir has at least 2 elements
+	int size = stirCoords.size();
+	float curAngle = stirCoords[size - 1].second;
+	float prevAngle = stirCoords[size - 2].second;
+	float initialAngle = stirCoords[0].second;
+
+	// Ignore crossings from -pi to positive pi (i.e. a large difference
+	// between the two angles)
+	if (abs(curAngle - prevAngle) > M_PI) {
+		return;
+	}
+
+	// Check if initialAngle btwn cur and prev angle
+	if (!((curAngle < initialAngle && initialAngle < prevAngle) ||
+	      (prevAngle < initialAngle && initialAngle < curAngle))) {
+		return;
+	}
+
+	// Check vector locations, see if they have been in all the quadrants
+	// a = quad 1, b = quad 2, c = quad 3, d = quad 4
+	bool a, b, c, d = false;
+	for (auto& polar : stirCoords) {
+		if (polar.first > MAX_STIR_RADIUS || polar.first < MIN_STIR_RADIUS) {
+			continue;
+		}
+
+		float angle = polar.second;
+		if (!a && angle > 0 && angle < M_PI_2) {
+			a = true;
+		} else if (!b && angle > M_PI_2 && angle < M_PI) {
+			b = true;
+		} else if (!c && angle > -M_PI && angle < -M_PI_2) {
+			c = true;
+		} else if (!d && angle < 0 && angle > -M_PI_2) {
+			d = true;
+		}
+
+		if (a && b && c && d) {
+			PotionSystem::stirCauldron(m_ui_system->getOpenedCauldron());
+			std::cout << "Recorded a successful ladle stir" << std::endl;
+			break;
+		}
+	}
+
+	// Reset stircoords no matter if a good stir was recorded or not, so player
+	// can't get 1 stir through multiple circles
+	std::pair<float, float> last = stirCoords[size - 1];
+	stirCoords.clear();
+	stirCoords.push_back(last);
+}
+
 void DragListener::ProcessEvent(Rml::Event& event) {
 	Rml::Element* cur = event.GetCurrentElement();
+	Rml::Vector2f mouseCoords = event.GetUnprojectedMouseScreenPos();
 	if (event == "dragstart") {
 		if (cur->GetId() == "heat") {
-			heatElement = cur;
-			lastCoords = event.GetUnprojectedMouseScreenPos();
+			lastCoords = mouseCoords;
+			return;
 		}
-		return;
+
+		if (cur->GetId() == "ladle") {
+			Rml::Context* context = cur->GetContext();
+            Rml::Element* possibleCauldron = context->GetElementAtPoint(mouseCoords, cur);
+			if (!possibleCauldron || possibleCauldron->GetId() != "cauldron") {
+				event.StopImmediatePropagation();
+				return;
+			}
+
+			stirCoords.push_back(getPolarCoordinates(mouseCoords));
+			std::cout << "Started a ladle stir" << std::endl;
+			return;
+		}
 	}
 
 	if (event == "drag") {
 		if (cur->GetId() == "heat") {
 			float curDegree = getCurrentDegree(cur);
-			float newDegree = getHeatDegree(event.GetUnprojectedMouseScreenPos(), curDegree);
+			float newDegree = getHeatDegree(mouseCoords, curDegree);
 			setHeatDegree(cur, newDegree);
-			lastCoords = event.GetUnprojectedMouseScreenPos();
+			lastCoords = mouseCoords;
+			return;
 		}
-		return;
+
+		// Where all the magic happens
+		if (cur->GetId() == "ladle" && stirCoords.size()) {
+			stirCoords.push_back(getPolarCoordinates(mouseCoords));
+			checkCompletedStir();
+			return;
+		}
 	}
 
 	if (event == "dragend") {
@@ -73,7 +153,12 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			float curDegree = getCurrentDegree(cur);
 			int heatLevel = getHeatLevel(curDegree);
 			PotionSystem::changeHeat(m_ui_system->getOpenedCauldron(), heatLevel);
+			return;
 		}	
-		return;
+
+		if (cur->GetId() == "ladle") {
+			stirCoords.clear();
+			return;
+		}
 	}
 }

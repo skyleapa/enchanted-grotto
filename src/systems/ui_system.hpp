@@ -53,11 +53,12 @@ public:
 
     // Cauldron methods
     bool openCauldron(Entity cauldron);
-    void updateCauldronUI(Cauldron& cauldron);
+    void updateCauldronUI();
     void closeCauldron();
     bool isCauldronOpen();
     bool isCauldronOpen(Entity cauldron);
     Entity getOpenedCauldron();
+    void ladleFollowMouse(double x, double y);
 
     // tutorial
     void updateTutorial();
@@ -94,7 +95,7 @@ private:
     // Cauldron variables
     Rml::ElementDocument* m_cauldron_document = nullptr;
     Entity openedCauldron;
-    bool isHoldingLadle = false;
+    Rml::Element* heldLadle = nullptr;
 
     // Tutorial variables
     Rml::ElementDocument* m_tutorial_document = nullptr;

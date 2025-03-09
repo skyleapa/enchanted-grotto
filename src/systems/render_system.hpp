@@ -85,7 +85,6 @@ class RenderSystem {
 		textures_path("interactables/textbox_cauldron.png"),
 		textures_path("interactables/textbox_enter_desert.png"),
 		textures_path("interactables/textbox_enter_forest.png"),
-		textures_path("interactables/cauldron_water.png"),
 		textures_path("enemies/ent.png"),
 		textures_path("enemies/mummy.png"),
 	};

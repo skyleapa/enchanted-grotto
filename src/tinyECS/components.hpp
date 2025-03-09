@@ -117,6 +117,7 @@ struct Item
 	int amount;
 	float respawnTime = 0.0f;
 	vec2 originalPosition;
+	bool is_ammo = false;
 };
 
 // an item that can be added to potions
@@ -136,7 +137,7 @@ struct Inventory
 
 struct Cauldron
 {
-	Entity water;                     // The water entity to send the color to
+	vec3 color = DEFAULT_COLOR;       // The water entity to send the color to
 	int heatLevel = 0;                // 0-100
 	bool filled = false;              // Whether the cauldron has water
 	int timeElapsed = 0;              // Time elapsed since water filled and heat knob turned, in ms
@@ -145,11 +146,6 @@ struct Cauldron
 	std::vector<Action> actions;      // Records player actions
 	// If stir quality ever gets added, a penalty can be recorded here
 };
-
-struct CauldronWater {
-	// Mark as cauldron water to render on top of everything else
-};
-
 
 // a menu of our game (recipe book menu, potion making menu, grinding menu...)
 struct Menu
@@ -301,8 +297,7 @@ enum class TEXTURE_ASSET_ID
 	TEXTBOX_CAULDRON = TEXTBOX_GROTTO_EXIT + 1,
 	TEXTBOX_ENTER_DESERT = TEXTBOX_CAULDRON + 1,
 	TEXTBOX_ENTER_FOREST = TEXTBOX_ENTER_DESERT + 1,
-	CAULDRON_WATER = TEXTBOX_ENTER_FOREST + 1,
-	ENT = CAULDRON_WATER + 1,
+	ENT = TEXTBOX_ENTER_FOREST + 1,
 	MUMMY = ENT + 1,
 	TEXTURE_COUNT = MUMMY + 1,
 };
@@ -359,6 +354,7 @@ struct RenderRequest
 	GEOMETRY_BUFFER_ID used_geometry = GEOMETRY_BUFFER_ID::GEOMETRY_COUNT;
 	RENDER_LAYER layer = RENDER_LAYER::BACKGROUND;
 	int render_sub_layer = 0; // lower values are rendered above
+	bool is_visible = true;
 };
 
 enum class BIOME

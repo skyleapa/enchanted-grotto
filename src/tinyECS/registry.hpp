@@ -36,7 +36,6 @@ public:
 	ComponentContainer<Chest> chests;
 	ComponentContainer<Enemy> enemies;
 	ComponentContainer<Ammo> ammo;
-	ComponentContainer<CauldronWater> cauldronWater;
 
 	// constructor that adds all containers for looping over them
 	ECSRegistry()
@@ -65,7 +64,6 @@ public:
 		registry_list.push_back(&chests);
 		registry_list.push_back(&enemies);
 		registry_list.push_back(&ammo);
-		registry_list.push_back(&cauldronWater);
 	}
 
 	void clear_all_components() {
