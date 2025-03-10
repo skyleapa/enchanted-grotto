@@ -793,6 +793,7 @@ void UISystem::updateTutorial()
 						padding: 5px;
 						width: 250px;
 						white-space: normal;
+						color: #000000;
 					}
 				</style>
 			</head>
