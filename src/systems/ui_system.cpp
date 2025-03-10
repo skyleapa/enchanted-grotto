@@ -485,11 +485,12 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
                         potion.effectValue
                     );
 
-                    if (potion.effect != PotionEffect::WATER) {
-                        registry.items.get(potionItem).is_ammo = true;
-                        auto& ammo = registry.ammo.emplace(potionItem);
-                        ammo.damage = 1000;
-                    }
+                    // TODOOO
+                    // if (potion.effect != PotionEffect::WATER) {
+                    //     registry.items.get(potionItem).is_ammo = true;
+                    //     auto& ammo = registry.ammo.emplace(potionItem);
+                    //     ammo.damage = 1000;
+                    // }
                     
                     ItemSystem::addItemToInventory(player, potionItem);
                 }
