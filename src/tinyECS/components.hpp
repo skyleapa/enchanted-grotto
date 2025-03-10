@@ -219,6 +219,10 @@ struct DecisionTreeNode {
 	}
 };
 
+struct WelcomeScreen {
+
+};
+
 /**
  * The following enumerators represent global identifiers refering to graphic
  * assets. For example TEXTURE_ASSET_ID are the identifiers of each texture
@@ -304,7 +308,8 @@ enum class TEXTURE_ASSET_ID
 	TEXTBOX_MAGICAL_DUST = TEXTBOX_SAP + 1,
 	ENT = TEXTBOX_MAGICAL_DUST + 1,
 	MUMMY = ENT + 1,
-	POTION = MUMMY + 1,
+	WELCOME_TO_GROTTO = MUMMY + 1,
+	POTION = WELCOME_TO_GROTTO + 1,
 	TEXTURE_COUNT = POTION + 1,
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
@@ -391,37 +396,37 @@ struct ItemInfo {
 const std::unordered_map<ItemType, ItemInfo> ITEM_INFO = {
 	{
 		ItemType::POTION, {
-			"Potion", 
-			vec2(0, 0), 
-			TEXTURE_ASSET_ID::POTION, 
-			"interactables/potion_item.png", 
+			"Potion",
+			vec2(0, 0),
+			TEXTURE_ASSET_ID::POTION,
+			"interactables/potion_item.png",
 			false}},
 	{
 		ItemType::COFFEE_BEANS, {
-			"Coffee Beans", 
+			"Coffee Beans",
 			vec2((float)GRID_CELL_HEIGHT_PX * 0.9, (float)GRID_CELL_HEIGHT_PX * 0.9),
-			TEXTURE_ASSET_ID::COFFEE_BEAN, 
-			"interactables/coffee_bean.png", 
+			TEXTURE_ASSET_ID::COFFEE_BEAN,
+			"interactables/coffee_bean.png",
 			true}},
 	{
 		ItemType::MAGICAL_FRUIT, {
-			"Magical Fruit", 
+			"Magical Fruit",
 			vec2((float)GRID_CELL_WIDTH_PX * 1.5, (float)GRID_CELL_HEIGHT_PX * 1.8),
-			TEXTURE_ASSET_ID::FRUIT, 
-			"interactables/magical_fruit.png", 
+			TEXTURE_ASSET_ID::FRUIT,
+			"interactables/magical_fruit.png",
 			false}},
 	{
 		ItemType::SAP, {
-			"Sap", 
+			"Sap",
 			vec2((float)GRID_CELL_WIDTH_PX * 1.5, (float)GRID_CELL_HEIGHT_PX * 1.8),
-			TEXTURE_ASSET_ID::SAP, 
-			"interactables/sap.png", 
+			TEXTURE_ASSET_ID::SAP,
+			"interactables/sap.png",
 			true}},
 	{
 		ItemType::MAGICAL_DUST, {
-			"Magical Dust", 
+			"Magical Dust",
 			vec2((float)GRID_CELL_WIDTH_PX * 0.9, (float)GRID_CELL_HEIGHT_PX * 0.9),
-			TEXTURE_ASSET_ID::MAGICAL_DUST, 
-			"interactables/magical_dust.png", 
+			TEXTURE_ASSET_ID::MAGICAL_DUST,
+			"interactables/magical_dust.png",
 			true}},
 };

@@ -4,6 +4,9 @@
 #include "tinyECS/tiny_ecs.hpp"
 #include "systems/render_system.hpp"
 
+// welcome to the grotto screen
+Entity createWelcomeScreen(RenderSystem* renderer, vec2 position);
+
 // trees
 Entity createTree(RenderSystem* renderer, vec2 position);
 

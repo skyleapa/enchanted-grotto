@@ -161,19 +161,20 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 {
 	// Updating window title with number of fruits to show serialization
 	std::stringstream title_ss;
-	
+
 	updateFPS(elapsed_ms_since_last_update);
 	// visually update counter every 500 ms
 	if (m_fps_update_timer >= 500.0f) {
 		m_fps_update_timer = 0.0f;
 		m_last_fps = m_current_fps;
 		title_ss << "FPS: " << m_current_fps;
-	} else {
+	}
+	else {
 		title_ss << "FPS: " << m_last_fps;
 	}
 
 	// title_ss << total_items << " items in player inventory: " << total_fruits << " fruits " << total_beans << " beans";
-	
+
 	glfwSetWindowTitle(window, title_ss.str().c_str());
 
 	if (registry.players.entities.size() < 1)
@@ -231,10 +232,6 @@ void WorldSystem::restart_game()
 		}
 	}
 
-	// re-open tutorial
-	state.tutorial_state = (int) TUTORIAL::MOVEMENT;
-	state.tutorial_step_complete = true;
-
 	// Debugging for memory/component leaks
 	registry.list_all_components();
 
@@ -253,6 +250,10 @@ void WorldSystem::restart_game()
 	{
 		createPlayer(renderer, vec2(GROTTO_ENTRANCE_X, GROTTO_ENTRANCE_Y + 50));
 	}
+
+	// re-open tutorial
+	ScreenState& screen = registry.screenStates.components[0];
+	state.tutorial_state = (int)TUTORIAL::WELCOME_SCREEN;
 
 	// Restore player's inventory if we had one
 	if (!player_inventory_data.empty() && !registry.players.entities.empty()) {
@@ -298,9 +299,10 @@ void WorldSystem::handle_collisions()
 			registry.remove_all_components_of(ammo_entity);
 			if (enemy.health <= 0) {
 				// using can_move for now since ent cannot move, but mummy can
-				if (enemy.can_move == 0) { 
+				if (enemy.can_move == 0) {
 					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::SAP, 1);
-				} else if (enemy.can_move == 1) {
+				}
+				else if (enemy.can_move == 1) {
 					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MAGICAL_DUST, 1);
 				}
 				if (screen.tutorial_state == (int)TUTORIAL::ATTACK_ENEMY) {
@@ -375,9 +377,9 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 	// toggle tutorial
 	if (action == GLFW_PRESS && key == GLFW_KEY_T) {
 		screen.tutorial_step_complete = true;
-		screen.tutorial_state = (screen.tutorial_state == (int)TUTORIAL::COMPLETE) ? (int)TUTORIAL::MOVEMENT : (int)TUTORIAL::COMPLETE;
+		screen.tutorial_state = (screen.tutorial_state == (int)TUTORIAL::COMPLETE) ? (int)TUTORIAL::WELCOME_SCREEN : (int)TUTORIAL::COMPLETE;
 	}
-	
+
 	// skip tutorial step
 	if (action == GLFW_PRESS && key == GLFW_KEY_N) {
 		screen.tutorial_step_complete = true;
@@ -591,7 +593,7 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 	{
 		Item& item_info = registry.items.get(item);
 
-		if (item_info.canRespawn == false) 
+		if (item_info.canRespawn == false)
 			return;
 
 		if (item_info.respawnTime <= 0)

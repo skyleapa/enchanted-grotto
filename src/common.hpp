@@ -9,7 +9,7 @@
 
 // glfw (OpenGL)
 #ifndef NOMINMAX
-	#define NOMINMAX
+#define NOMINMAX
 #endif
 #include <gl3w.h>
 #include <GLFW/glfw3.h>
@@ -265,7 +265,8 @@ const float WAIT_PENALTY = 0.2f;
 const float HEAT_PENALTY = 0.01f; // Heat is measured 1-100
 
 enum class TUTORIAL {
-	MOVEMENT = 0,
+	WELCOME_SCREEN = 0,
+	MOVEMENT = WELCOME_SCREEN + 1,
 	COLLECT_FRUITS = MOVEMENT + 1,
 	ATTACK_ENEMY = COLLECT_FRUITS + 1,
 	ENTER_GROTTO = ATTACK_ENEMY + 1,

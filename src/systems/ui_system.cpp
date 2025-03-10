@@ -427,14 +427,14 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 
 	// Check clicks for inventory bar and cauldron
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT) {
-        Rml::Element* hovered = m_context->GetHoverElement();
-        std::string id = hovered->GetId();
-        int slotId = getSlotFromId(id);
+		Rml::Element* hovered = m_context->GetHoverElement();
+		std::string id = hovered->GetId();
+		int slotId = getSlotFromId(id);
 
-        // Check for an inventory click
-        if (slotId != -1) {
-            selectInventorySlot(slotId);
-        }
+		// Check for an inventory click
+		if (slotId != -1) {
+			selectInventorySlot(slotId);
+		}
 
 		// Check for ladle/bottle pickup
 		do {
@@ -458,15 +458,15 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 					updateFollowMouse(x, y);
 				}
 
-                break;
+				break;
 			}
 
 			if (id == "bottle") {
 				if (!heldBottle) {
 					heldBottle = hovered;
 					updateFollowMouse(x, y);
-                    break;
-                }
+					break;
+				}
 
                 // Check if clicking on cauldron water to bottle potion
                 Rml::Element* possibleCauldron = m_context->GetElementAtPoint(Rml::Vector2f(x, y), hovered);
@@ -494,11 +494,11 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
                     ItemSystem::addItemToInventory(player, potionItem);
                 }
 
-                // Reset bottle position
-                hovered->SetProperty("top", "420px");
-                hovered->SetProperty("left", "1000px");
-                heldBottle = nullptr;
-            }
+				// Reset bottle position
+				hovered->SetProperty("top", "420px");
+				hovered->SetProperty("left", "1000px");
+				heldBottle = nullptr;
+			}
 		} while (false);
 	}
 
@@ -628,15 +628,16 @@ void UISystem::createInventoryBar()
 		if (m_inventory_document) {
 			m_inventory_document->Show();
 			std::cout << "UISystem::createInventoryBar - Inventory bar created successfully" << std::endl;
-		} else {
+		}
+		else {
 			std::cerr << "UISystem::createInventoryBar - Failed to create inventory document" << std::endl;
 		}
-        
-        Rml::ElementList draggableSlots;
-        m_inventory_document->GetElementsByClassName(draggableSlots, "inventory-slot");
-        for (auto* el : draggableSlots) {
-            DragListener::RegisterDragDropElement(el);
-        }
+
+		Rml::ElementList draggableSlots;
+		m_inventory_document->GetElementsByClassName(draggableSlots, "inventory-slot");
+		for (auto* el : draggableSlots) {
+			DragListener::RegisterDragDropElement(el);
+		}
 	}
 	catch (const std::exception& e) {
 		std::cerr << "Exception in UISystem::createInventoryBar: " << e.what() << std::endl;
@@ -676,24 +677,24 @@ void UISystem::updateInventoryBar()
 			// Add item display
 			if (i < inventory.items.size()) {
 				Entity item_entity = inventory.items[i];
-                if (!registry.items.has(item_entity)) {
-                    continue;
-                }
+				if (!registry.items.has(item_entity)) {
+					continue;
+				}
 
-                Item& item = registry.items.get(item_entity);
-                std::string tex = ITEM_INFO.count(item.type) ? ITEM_INFO.at(item.type).texture_path : "interactables/coffee_bean.png";
-                slot_content += "<img src = '" + tex + "' style='width: 32px; height: 32px; margin: 4px; transform: scaleY(-1); ";
-                if (item.type == ItemType::POTION) {
-                    vec3 color = registry.potions.get(item_entity).color;
-                    slot_content += "image-color: " + getImageColorProperty(color, 255) + ";";
-                }
-                slot_content += "' />";
+				Item& item = registry.items.get(item_entity);
+				std::string tex = ITEM_INFO.count(item.type) ? ITEM_INFO.at(item.type).texture_path : "interactables/coffee_bean.png";
+				slot_content += "<img src = '" + tex + "' style='width: 32px; height: 32px; margin: 4px; transform: scaleY(-1); ";
+				if (item.type == ItemType::POTION) {
+					vec3 color = registry.potions.get(item_entity).color;
+					slot_content += "image-color: " + getImageColorProperty(color, 255) + ";";
+				}
+				slot_content += "' />";
 
-                // Add item count if more than 1
-                if (item.amount > 1) {
-                    slot_content += "<div style='position: absolute; bottom: 0; right: 2px; color: #FFFFFF; font-size: 14px; font-weight: bold;'>" +
-                        std::to_string(item.amount) + "</div>";
-                }
+				// Add item count if more than 1
+				if (item.amount > 1) {
+					slot_content += "<div style='position: absolute; bottom: 0; right: 2px; color: #FFFFFF; font-size: 14px; font-weight: bold;'>" +
+						std::to_string(item.amount) + "</div>";
+				}
 			}
 
 			slot_element->SetInnerRML(slot_content);
@@ -724,12 +725,12 @@ void UISystem::selectInventorySlot(int slot)
 
 int UISystem::getSlotFromId(std::string id)
 {
-    
-    if (id.find("slot-") == std::string::npos) {
-        return -1;
-    }
 
-    return std::stoi(id.substr(5));
+	if (id.find("slot-") == std::string::npos) {
+		return -1;
+	}
+
+	return std::stoi(id.substr(5));
 }
 
 void UISystem::updateTutorial()
@@ -745,6 +746,11 @@ void UISystem::updateTutorial()
 		{
 			m_tutorial_document->Close();
 			m_tutorial_document = nullptr;
+		}
+
+		if (screen.tutorial_state != (int)TUTORIAL::WELCOME_SCREEN) {
+			Entity& welcome_screen = registry.welcomeScreens.entities[0];
+			registry.remove_all_components_of(welcome_screen);
 		}
 
 		// Mark tutorial step as incomplete again
@@ -957,7 +963,7 @@ Entity UISystem::getOpenedCauldron() {
 }
 
 void followMouse(Rml::Element* e, double x, double y) {
-    int wl = e->GetProperty("width")->GetNumericValue().number;
+	int wl = e->GetProperty("width")->GetNumericValue().number;
 	int hl = e->GetProperty("height")->GetNumericValue().number;
 	int ix = (int)x - wl / 2;
 	int iy = (int)y - hl / 2;
@@ -967,12 +973,12 @@ void followMouse(Rml::Element* e, double x, double y) {
 
 void UISystem::updateFollowMouse(double x, double y) {
 	if (heldLadle) {
-        followMouse(heldLadle, x, y);
+		followMouse(heldLadle, x, y);
 		return;
 	}
 
-    if (heldBottle) {
-        followMouse(heldBottle, x, y);
-        return;
-    }
+	if (heldBottle) {
+		followMouse(heldBottle, x, y);
+		return;
+	}
 }

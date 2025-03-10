@@ -92,6 +92,7 @@ class RenderSystem {
 		textures_path("enemies/ent.png"),
 		textures_path("enemies/mummy.png"),
 		textures_path("interactables/potion_item.png"),
+		textures_path("welcome_to_grotto.png")
 	};
 
 	std::array<GLuint, effect_count> effects;
