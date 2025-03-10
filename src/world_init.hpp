@@ -37,11 +37,8 @@ Entity createGrottoEntrance(RenderSystem* renderer, vec2 position, int id, std::
 // bushes
 Entity createBush(RenderSystem* renderer, vec2 position);
 
-
-Entity createFruit(RenderSystem* renderer, vec2 position, std::string name, int amount);
-
-// coffee bean
-Entity createCoffeeBean(RenderSystem* renderer, vec2 position, std::string name, int amount);
+// Collectable items
+Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemType type, int amount);
 
 // cauldron
 Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name);

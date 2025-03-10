@@ -50,6 +50,7 @@ public:
     void updateInventoryBar();
     void selectInventorySlot(int slot);
     int getSelectedSlot() const { return m_selected_slot; }
+    int getSlotFromId(std::string id);
 
     // Cauldron methods
     bool openCauldron(Entity cauldron);
@@ -104,16 +105,22 @@ private:
 
     const std::unordered_map<int, std::tuple<std::string, std::string, std::string>> tutorial_steps = {
         { (int)TUTORIAL::MOVEMENT, {
-            "20%", "55%", "Welcome to Enchanted Grotto! Move around with the WASD keys. Press T to toggle the tutorial at any time."
+            "60%", "40%", "Welcome to Enchanted Grotto! Move around with the WASD keys. Press T to toggle the tutorial at any time or N to skip the tutorial step."
         }},
         { (int)TUTORIAL::COLLECT_FRUITS, {
-            "80%", "55%", "Collect 3 Magical Fruits by pressing F when near fruit trees."
+            "80%", "85%", "Collect 3 Magical Fruits by pressing F when near fruit trees."
         }},
         { (int)TUTORIAL::ATTACK_ENEMY, {
-            "30%", "15%", "Select the fruits by clicking the corresponding number in your inventory. Defeat the enemy by left-clicking to throw fruits from your inventory. If you touch the enemy you will die!"
+            "25%", "35%", "Select the fruits by clicking on the corresponding inventory slot. Defeat the enemy by left-clicking to throw fruits from your inventory. If you touch the enemy you will die!"
         }},
         { (int)TUTORIAL::ENTER_GROTTO, {
-            "15%", "50%", "Nice work! Now enter the grotto by pressing F at the entrance."
+            "55%", "10%", "Nice work! Now enter the grotto by pressing F at the entrance."
+        }},
+        { (int)TUTORIAL::INTERACT_CAULDRON, {
+            "70%", "45%", "Open the potion-making menu by pressing F in front of the cauldron."
+        }},
+        { (int)TUTORIAL::STIR, {
+            "85%", "90%", "Click on the ladle and bring it to the cauldron. Click and drag to make a circle in the cauldron to stir."
         }}
     };
 

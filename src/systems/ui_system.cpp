@@ -142,58 +142,60 @@ void UISystem::step(float elapsed_ms)
 	if (!m_initialized || !m_context) return;
 
 	try {
-		// Update FPS counter
-		updateFPS(elapsed_ms);
+		// Moved FPS to title but leave code here in case we bring it back to on screen
 
-		// Create FPS counter UI if it doesn't exist
-		if (!m_fps_document) {
-			const char* fps_rml =
-				"<rml>\n"
-				"<head>\n"
-				"    <style>\n"
-				"        body {\n"
-				"            position: absolute;\n"
-				"            top: 10px;\n"
-				"            right: 10px;\n"
-				"            font-family: Open Sans;\n"
-				"            font-size: 18px;\n"
-				"            font-weight: bold;\n"
-				"            color: white;\n"
-				"            background-color: rgba(0, 0, 0, 0.7);\n"
-				"            padding: 8px 12px;\n"
-				"            border-radius: 8px;\n"
-				"            width: auto;\n"
-				"            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);\n"
-				"        }\n"
-				"    </style>\n"
-				"</head>\n"
-				"<body id=\"fps_counter\">FPS: 0</body>\n"
-				"</rml>";
+		// // Update FPS counter
+		// updateFPS(elapsed_ms);
 
-			m_fps_document = m_context->LoadDocumentFromMemory(fps_rml);
-			if (m_fps_document) {
-				m_fps_document->Show();
-			}
-		}
+		// // Create FPS counter UI if it doesn't exist
+		// if (!m_fps_document) {
+		// 	const char* fps_rml =
+		// 		"<rml>\n"
+		// 		"<head>\n"
+		// 		"    <style>\n"
+		// 		"        body {\n"
+		// 		"            position: absolute;\n"
+		// 		"            top: 10px;\n"
+		// 		"            right: 10px;\n"
+		// 		"            font-family: Open Sans;\n"
+		// 		"            font-size: 18px;\n"
+		// 		"            font-weight: bold;\n"
+		// 		"            color: white;\n"
+		// 		"            background-color: rgba(0, 0, 0, 0.7);\n"
+		// 		"            padding: 8px 12px;\n"
+		// 		"            border-radius: 8px;\n"
+		// 		"            width: auto;\n"
+		// 		"            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);\n"
+		// 		"        }\n"
+		// 		"    </style>\n"
+		// 		"</head>\n"
+		// 		"<body id=\"fps_counter\">FPS: 0</body>\n"
+		// 		"</rml>";
 
-		// Update FPS display every 250ms to avoid too frequent updates
-		if (m_fps_document && m_fps_update_timer >= 250.0f) {
-			m_fps_update_timer = 0.0f;
+		// 	m_fps_document = m_context->LoadDocumentFromMemory(fps_rml);
+		// 	if (m_fps_document) {
+		// 		m_fps_document->Show();
+		// 	}
+		// }
 
-			// Determine color based on FPS (green for good, yellow for ok, red for poor)
-			const char* color = "#00FF00"; // Green by default (good performance)
-			if (m_current_fps < 30.0f) {
-				color = "#FF0000"; // Red (poor performance)
-			}
-			else if (m_current_fps < 55.0f) {
-				color = "#FFFF00"; // Yellow (ok performance)
-			}
+		// // Update FPS display every 250ms to avoid too frequent updates
+		// if (m_fps_document && m_fps_update_timer >= 250.0f) {
+		// 	m_fps_update_timer = 0.0f;
 
-			char fps_text[64];
-			snprintf(fps_text, sizeof(fps_text), "FPS: <span style=\"color: %s;\">%.1f</span>",
-				color, m_current_fps);
-			m_fps_document->SetInnerRML(fps_text);
-		}
+		// 	// Determine color based on FPS (green for good, yellow for ok, red for poor)
+		// 	const char* color = "#00FF00"; // Green by default (good performance)
+		// 	if (m_current_fps < 30.0f) {
+		// 		color = "#FF0000"; // Red (poor performance)
+		// 	}
+		// 	else if (m_current_fps < 55.0f) {
+		// 		color = "#FFFF00"; // Yellow (ok performance)
+		// 	}
+
+		// 	char fps_text[64];
+		// 	snprintf(fps_text, sizeof(fps_text), "FPS: <span style=\"color: %s;\">%.1f</span>",
+		// 		color, m_current_fps);
+		// 	m_fps_document->SetInnerRML(fps_text);
+		// }
 
 		if (!m_inventory_document) {
 			createInventoryBar();
@@ -425,51 +427,16 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 	double x, y;
 	glfwGetCursorPos(m_window, &x, &y);
 
-	// Check if the click is on the inventory bar
+	// Check clicks for inventory bar and cauldron
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT) {
-		// Calculate inventory bar position
-		int width = WINDOW_WIDTH_PX;
-		int height = WINDOW_HEIGHT_PX;
+        Rml::Element* hovered = m_context->GetHoverElement();
+        std::string id = hovered->GetId();
+        int slotId = getSlotFromId(id);
 
-		// Inventory bar is centered at the bottom
-		float bar_width = 450.0f;
-		float bar_height = 60.0f;
-		float bar_x = (width - bar_width) / 2.0f;
-		float bar_y = height - bar_height - 20.0f; // 20px from bottom
-
-		// Check if click is within the inventory bar area
-		if (x >= bar_x && x <= bar_x + bar_width &&
-			y >= bar_y && y <= bar_y + bar_height) {
-
-			// Calculate which slot was clicked
-			float slot_width = bar_width / m_hotbar_size;
-			int slot = (int)((x - bar_x) / slot_width);
-
-			if (slot >= 0 && slot < m_hotbar_size) {
-				selectInventorySlot(slot);
-				std::cout << "Selected inventory slot: " << slot << std::endl;
-
-				if (isCauldronOpen()) {
-					Entity& player = registry.players.entities[0];
-					Inventory& player_inventory = registry.inventories.get(player);
-
-					Entity cauldron = getOpenedCauldron();
-					Inventory cauldron_inventory = registry.inventories.get(cauldron);
-
-					if (player_inventory.selection >= 0 && player_inventory.selection < player_inventory.items.size()) {
-						Entity selected_item = player_inventory.items[player_inventory.selection];
-						std::cout << "Selected item entity ID: " << selected_item << std::endl;
-
-						if (registry.ingredients.has(selected_item)) {
-							PotionSystem::addIngredient(cauldron, selected_item);
-							registry.inventories.remove(selected_item);
-							std::cout << "removed ingredient" << selected_item << std::endl;
-						}
-						std::cout << "doesnt have the ingredient" << selected_item << std::endl;
-					}
-				}
-			}
-		}
+        // Check for an inventory click
+        if (slotId != -1) {
+            selectInventorySlot(slotId);
+        }
 
 		// Check for ladle/bottle pickup
 		do {
@@ -489,7 +456,6 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 				if (possibleCauldron && possibleCauldron->GetId() == "cauldron") {
 					break;
 				}
-
 				if (heldLadle) {
 					clickedElement->SetProperty("top", "70px");
 					clickedElement->SetProperty("left", "962px");
@@ -622,7 +588,6 @@ void UISystem::createInventoryBar()
                     border-color: #4E3620;
                     padding: 5px;
                     display: block;
-                    pointer-events: none;
                     z-index: 100;
                     font-family: Open Sans;
                 }
@@ -638,22 +603,14 @@ void UISystem::createInventoryBar()
                     border-width: 2px;
                     border-color: #5D4037;
                     position: relative;
+                    z-index: 150;
+                    drag: clone;
                 }
                 
                 .inventory-slot.selected {
                     background-color: rgba(120, 80, 40, 0.8);
                     border-width: 2px;
                     border-color: #FFD700;
-                }
-                
-                .inventory-slot .item-count {
-                    position: absolute;
-                    bottom: 2px;
-                    right: 5px;
-                    color: #FFFFFF;
-                    font-family: Open Sans;
-                    font-size: 14px;
-                    font-weight: bold;
                 }
             </style>
         </head>
@@ -674,15 +631,19 @@ void UISystem::createInventoryBar()
 		}
 
 		inventory_rml += "</body></rml>";
-
 		m_inventory_document = m_context->LoadDocumentFromMemory(inventory_rml.c_str());
 		if (m_inventory_document) {
 			m_inventory_document->Show();
 			std::cout << "UISystem::createInventoryBar - Inventory bar created successfully" << std::endl;
-		}
-		else {
+		} else {
 			std::cerr << "UISystem::createInventoryBar - Failed to create inventory document" << std::endl;
 		}
+        
+        Rml::ElementList draggableSlots;
+        m_inventory_document->GetElementsByClassName(draggableSlots, "inventory-slot");
+        for (auto* el : draggableSlots) {
+            DragListener::RegisterDragDropElement(el);
+        }
 	}
 	catch (const std::exception& e) {
 		std::cerr << "Exception in UISystem::createInventoryBar: " << e.what() << std::endl;
@@ -725,21 +686,8 @@ void UISystem::updateInventoryBar()
 
 				if (registry.items.has(item_entity)) {
 					Item& item = registry.items.get(item_entity);
-
-					// TODO: Add item type to texture associations
-					// Add item display
-					if (item.type == ItemType::COFFEE_BEANS) {
-						slot_content += "<img src='interactables/coffee_bean.png' style='width: 32px; height: 32px; margin: 4px;' />";
-					}
-					else if (item.type == ItemType::MAGICAL_FRUIT) {
-						slot_content += "<img src='interactables/magical_fruit.png' style='width: 32px; height: 32px; margin: 4px;' />";
-					}
-					else if (item.type == ItemType::POTION) {
-						// TODO potion textures
-					}
-					else {
-						// TODO fallback for unknown items
-					}
+                    std::string tex = ITEM_INFO.count(item.type) ? ITEM_INFO.at(item.type).texture_path : "interactables/coffee_bean.png";
+					slot_content += "<img src = '" + tex + "' style='width: 32px; height: 32px; margin: 4px; transform: scaleY(-1);' />";
 
 					// Add item count if more than 1
 					if (item.amount > 1) {
@@ -775,6 +723,16 @@ void UISystem::selectInventorySlot(int slot)
 	}
 }
 
+int UISystem::getSlotFromId(std::string id)
+{
+    
+    if (id.find("slot-") == std::string::npos) {
+        return -1;
+    }
+
+    return std::stoi(id.substr(5));
+}
+
 void UISystem::updateTutorial()
 {
 	if (!m_initialized || !m_context || !registry.screenStates.components[0].tutorial_step_complete)
@@ -800,8 +758,8 @@ void UISystem::updateTutorial()
 			return; // No tutorial for this state
 
 		// Extract positions and text
-		std::string top_position = std::get<0>(it->second);
-		std::string left_position = std::get<1>(it->second);
+		std::string left_position = std::get<0>(it->second);
+		std::string top_position = std::get<1>(it->second);
 		std::string tutorial_text = std::get<2>(it->second);
 		std::cout << "UISystem::showTutorial - Creating tutorial step " << screen.tutorial_state << std::endl;
 
@@ -951,6 +909,8 @@ bool UISystem::openCauldron(Entity cauldron)
 		DragListener::RegisterDraggableElement(m_cauldron_document->GetElementById("heat"));
 		DragListener::RegisterDraggableElement(m_cauldron_document->GetElementById("ladle"));
 		DragListener::RegisterDraggableElement(m_cauldron_document->GetElementById("bottle"));
+		DragListener::RegisterDragDropElement(m_cauldron_document->GetElementById("cauldron-water"));
+		DragListener::RegisterDragDropElement(m_cauldron_document->GetElementById("cauldron"));
 		m_cauldron_document->Show();
 		openedCauldron = cauldron;
 		registry.cauldrons.get(cauldron).filled = true;

@@ -1,5 +1,6 @@
 #include "drag_listener.hpp"
 #include "potion_system.hpp"
+#include "item_system.hpp"
 #include <iostream>
 #include <sstream>
 #include <RmlUi/Core/Element.h>
@@ -7,11 +8,14 @@
 static DragListener drag_listener;
 UISystem* DragListener::m_ui_system;
 
-// Registers an element as being a container of draggable elements.
 void DragListener::RegisterDraggableElement(Rml::Element* element) {
 	element->AddEventListener("dragstart", &drag_listener);
 	element->AddEventListener("drag", &drag_listener);
 	element->AddEventListener("dragend", &drag_listener);
+}
+
+void DragListener::RegisterDragDropElement(Rml::Element* element) {
+	element->AddEventListener("dragdrop", &drag_listener);
 }
 
 float DragListener::getHeatDegree(Rml::Vector2f coords, float curDegree) {
@@ -96,6 +100,11 @@ void DragListener::checkCompletedStir() {
 
 		if (a && b && c && d) {
 			PotionSystem::stirCauldron(m_ui_system->getOpenedCauldron());
+			if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::STIR) {
+				ScreenState& screen = registry.screenStates.components[0];
+				screen.tutorial_step_complete = true;
+				screen.tutorial_state += 1;
+			}
 			std::cout << "Recorded a successful ladle stir" << std::endl;
 			break;
 		}
@@ -174,6 +183,36 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 
 		if (cur->GetId() == "bottle") {
 			event.StopImmediatePropagation();
+			return;
+		}
+	}
+
+	if (event == "dragdrop") {
+		// If item is dragged on a slot, swap items
+		int slot = m_ui_system->getSlotFromId(cur->GetId());
+		int selected = m_ui_system->getSelectedSlot();
+		Entity player = registry.players.entities[0];
+		if (slot != -1) {
+			ItemSystem::swapItems(player, slot, selected);
+			m_ui_system->updateInventoryBar();
+			return;
+		}
+
+		if (!m_ui_system->isCauldronOpen()) {
+			return;
+		}
+
+		// If item is dragged onto cauldron, insert 1 of that ingredient
+		if (cur->GetId() == "cauldron" || cur->GetId() == "cauldron-water") {
+			Entity item = registry.inventories.get(player).items[selected];
+			Item& invItem = registry.items.get(item);
+			Entity copy = ItemSystem::copyItem(item);
+			invItem.amount -= 1;
+			if (invItem.amount <= 0) {
+				ItemSystem::removeItemFromInventory(player, item);
+			}
+			registry.items.get(copy).amount = 1;
+			PotionSystem::addIngredient(m_ui_system->getOpenedCauldron(), copy);
 			return;
 		}
 	}

@@ -62,6 +62,8 @@ public:
 	void throwAmmo(vec2 target);
 
 	void updateThrownAmmo(float elapsed_ms_since_last_update);
+
+	void updateFPS(float elapsed_ms);
 private:
 
 	float mouse_pos_x = 0.0f;
@@ -100,4 +102,12 @@ private:
 
 	// Pointer to the UI system for passing input events
 	UISystem* m_ui_system = nullptr;
+
+	// FPS counter variables
+	float m_frame_times[60] = { 0 }; // Store last 60 frame times
+	int m_frame_time_index = 0;
+	float m_frame_time_sum = 0;
+	float m_current_fps = 0;
+	float m_fps_update_timer = 0;
+	float m_last_fps = 0;
 };

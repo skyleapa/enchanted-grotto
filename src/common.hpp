@@ -73,12 +73,6 @@ const float GROTTO_ENTRANCE_HEIGHT = (float)180;
 const float BUSH_WIDTH = (float)220;
 const float BUSH_HEIGHT = (float)130;
 
-const float FRUIT_WIDTH = (float)GRID_CELL_WIDTH_PX * 1.5;
-const float FRUIT_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 1.8;
-
-const float COFFEE_BEAN_WIDTH = (float)GRID_CELL_WIDTH_PX * 0.9;
-const float COFFEE_BEAN_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 0.9;
-
 const float TEXTBOX_WIDTH = (float)GRID_CELL_WIDTH_PX * 4;
 const float TEXTBOX_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 4;
 
@@ -119,6 +113,13 @@ const float FOLLOWING_RADIUS = (float)300;  // Enemy stops attacking if outside 
 
 const float ENEMY_SPEED = (float)110;
 
+// Inventory bar 
+const float BAR_WIDTH = (float)450.0f;
+const float BAR_HEIGHT = (float)60.0f;
+const float BAR_X = (float)((WINDOW_WIDTH_PX - BAR_WIDTH) / 2.0f);
+const float BAR_Y = (float)(WINDOW_HEIGHT_PX - BAR_HEIGHT - 20.0f); // 20px from bottom
+
+
 // Item and potion constants. The enums are declared here instead of in components.hpp
 // because this file is included in components, not the other way around - otherwise,
 // it would result in compilation errors because the name constants would be referring
@@ -130,7 +131,7 @@ const float ENEMY_SPEED = (float)110;
 
 // Item Types and names
 // IMPORTANT: Add new types to the end of the list to not break serialization!
-// IMPORTANT: Add the displayname for each ItemType to ITEM_NAME
+// IMPORTANT: Add information for each ItemType to ITEM_INFO in common.cpp
 enum class ItemType
 {
 	POTION = 0,
@@ -143,17 +144,9 @@ enum class ItemType
 	RECIPE_BOOK = CHEST + 1,
 	GROTTO_EXIT = RECIPE_BOOK + 1,
 	DESERT_ENTRANCE = GROTTO_EXIT + 1,
-	FOREST_ENTRANCE = DESERT_ENTRANCE + 1
-};
-
-const std::unordered_map<ItemType, std::string> ITEM_NAMES = {
-	{ItemType::POTION, "Potion"},
-	{ItemType::COFFEE_BEANS, "Coffee Beans"},
-	{ItemType::MAGICAL_FRUIT, "Magical Fruit"},
-	{ItemType::GROTTO_ENTRANCE, "Grotto Entrance"},
-	{ItemType::GROTTO_EXIT, "Grotto Exit"},
-	{ItemType::DESERT_ENTRANCE, "Desert Entrance"},
-	{ItemType::FOREST_ENTRANCE, "Desert Exit"},
+	FOREST_ENTRANCE = DESERT_ENTRANCE + 1,
+	SAP = FOREST_ENTRANCE + 1,
+	MAGICAL_DUST = SAP + 1
 };
 
 // Potion Types and names
@@ -276,10 +269,11 @@ enum class TUTORIAL {
 	COLLECT_FRUITS = MOVEMENT + 1,
 	ATTACK_ENEMY = COLLECT_FRUITS + 1,
 	ENTER_GROTTO = ATTACK_ENEMY + 1,
+	INTERACT_CAULDRON = ENTER_GROTTO + 1,
+	STIR = INTERACT_CAULDRON + 1,
 	// other potion stuff to go here
-	COMPLETE = ENTER_GROTTO + 1
+	COMPLETE = STIR + 1
 };
-
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
 #endif

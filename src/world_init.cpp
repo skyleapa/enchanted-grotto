@@ -1,5 +1,6 @@
 #include "world_init.hpp"
 #include "tinyECS/registry.hpp"
+#include "systems/item_system.hpp"
 #include <iostream>
 
 Entity createTree(RenderSystem* renderer, vec2 position)
@@ -358,59 +359,13 @@ Entity createBush(RenderSystem* renderer, vec2 position)
 	return entity;
 }
 
-Entity createFruit(RenderSystem* renderer, vec2 position, std::string name, int amount)
+Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemType type, int amount)
 {
-	auto entity = Entity();
+	assert(ITEM_INFO.count(type) && "Tried to create an item that has no info!");
+	ItemInfo info = ITEM_INFO.at(type);
+	auto entity = ItemSystem::createCollectableIngredient(position, type, amount);
 
-	Ingredient& ingredient = registry.ingredients.emplace(entity);
-	ingredient.grindLevel = 0;
-
-	Item& item = registry.items.emplace(entity);
-	item.type = ItemType::MAGICAL_FRUIT;
-	item.name = name;
-	item.isCollectable = true; // Make sure the item can be collected
-	item.amount = amount;
-	item.originalPosition = position;
-
-	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
-	registry.meshPtrs.emplace(entity, &mesh);
-
-	Ammo& ammo = registry.ammo.emplace(entity); // TODO remove
-	item.is_ammo = true;
-
-	// Create motion
-	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 180.f;
-	motion.velocity = { 0, 0 };
-	motion.position = position;
-	motion.scale = vec2({ FRUIT_WIDTH, FRUIT_HEIGHT });
-
-	Entity textbox = createTextbox(renderer, position, entity);
-
-	registry.renderRequests.insert(
-		entity,
-		{ TEXTURE_ASSET_ID::FRUIT,
-		 EFFECT_ASSET_ID::TEXTURED,
-		 GEOMETRY_BUFFER_ID::SPRITE,
-		 RENDER_LAYER::ITEM });
-
-	return entity;
-}
-
-Entity createCoffeeBean(RenderSystem* renderer, vec2 position, std::string name, int amount)
-{
-	auto entity = Entity();
-
-	Ingredient& ingredient = registry.ingredients.emplace(entity);
-	ingredient.grindLevel = 0;
-
-	Item& item = registry.items.emplace(entity);
-	item.type = ItemType::COFFEE_BEANS;
-	item.name = name;
-	item.isCollectable = true; // Make sure the item can be collected
-	item.amount = amount;
-	item.originalPosition = position;
-
+	// Mesh
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
 	registry.meshPtrs.emplace(entity, &mesh);
 
@@ -419,13 +374,13 @@ Entity createCoffeeBean(RenderSystem* renderer, vec2 position, std::string name,
 	motion.angle = 180.f;
 	motion.velocity = { 0, 0 };
 	motion.position = position;
-	motion.scale = vec2({ COFFEE_BEAN_WIDTH, COFFEE_BEAN_HEIGHT });
+	motion.scale = info.size;
 
 	Entity textbox = createTextbox(renderer, position, entity);
 
 	registry.renderRequests.insert(
 		entity,
-		{ TEXTURE_ASSET_ID::COFFEE_BEAN,
+		{ info.texture,
 		 EFFECT_ASSET_ID::TEXTURED,
 		 GEOMETRY_BUFFER_ID::SPRITE,
 		 RENDER_LAYER::ITEM });
@@ -675,6 +630,12 @@ RenderRequest getTextboxRenderRequest(Textbox& textbox)
 	}
 	else if (item.name == "Desert Exit") {
 		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_FOREST;
+	}
+	else if (item.name == "Sap") {
+		texture = TEXTURE_ASSET_ID::TEXTBOX_SAP;
+	}
+	else if (item.name == "Magical Dust") {
+		texture = TEXTURE_ASSET_ID::TEXTBOX_MAGICAL_DUST;
 	}
 
 	return {

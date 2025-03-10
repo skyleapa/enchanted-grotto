@@ -55,12 +55,16 @@ void PotionSystem::addIngredient(Entity cauldron, Entity ingredient) {
 			break;
 		}
 
+		std::cout << "ingredient add detected" << std::endl;
+
 		Entity lastIngredient = ci.items[lastAction.value];
 		Item& curItem = registry.items.get(ingredient);
 		Item& lastItem = registry.items.get(lastIngredient);
 		if (lastItem.type != curItem.type) {
 			break;
 		}
+
+		std::cout << "adding same ing type" << std::endl;
 
 		// Float comparison moment. Return if grindlevels are far enough apart
 		Ingredient& curIng = registry.ingredients.get(ingredient);
@@ -69,6 +73,7 @@ void PotionSystem::addIngredient(Entity cauldron, Entity ingredient) {
 			break;
 		}
 
+		std::cout << "adding same ing grind" << std::endl;
 		lastItem.amount += curItem.amount;
 		updatePotion(cauldron);
 		return;
@@ -264,7 +269,7 @@ void PotionSystem::updatePotion(Entity cauldron) {
 
 	// Step 1: Get recipe
 	Recipe recipe;
-	bool foundRecipe;
+	bool foundRecipe = false;
 	std::unordered_set<ItemType> cauldronTypes;
 	for (Entity e : ci.items) {
 		cauldronTypes.insert(registry.items.get(e).type);
@@ -299,6 +304,8 @@ void PotionSystem::updatePotion(Entity cauldron) {
 		potion.effectValue = min_potency + (recipe.highestQualityEffect - min_potency) * potion.quality;
 		potion.duration = min_duration + (recipe.highestQualityDuration - min_duration) * potion.quality;
 		potion.color = interpolateColor(DEFAULT_COLOR, recipe.finalPotionColor, potion.quality);
+		std::cout << "Found recipe!" << std::endl;
+		std::cout << "Color should be " << potion.color.x << " " << potion.color.y << " " << potion.color.z << std::endl;
 	}
 	else if (ci.items.size() > 0) {
 		// Otherwise, if there are ingredients, then its failed

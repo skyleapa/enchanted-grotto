@@ -118,6 +118,7 @@ struct Item
 	float respawnTime = 0.0f;
 	vec2 originalPosition;
 	bool is_ammo = false;
+	bool canRespawn = true;
 };
 
 // an item that can be added to potions
@@ -290,14 +291,18 @@ enum class TEXTURE_ASSET_ID
 	BUSH = BOUNDARY_LINE + 1,
 	FRUIT = BUSH + 1,
 	COFFEE_BEAN = FRUIT + 1,
-	TEXTBOX_FRUIT = COFFEE_BEAN + 1,
+	SAP = COFFEE_BEAN + 1,
+	MAGICAL_DUST = SAP + 1,
+	TEXTBOX_FRUIT = MAGICAL_DUST + 1,
 	TEXTBOX_COFFEE_BEAN = TEXTBOX_FRUIT + 1,
 	TEXTBOX_ENTER_GROTTO = TEXTBOX_COFFEE_BEAN + 1,
 	TEXTBOX_GROTTO_EXIT = TEXTBOX_ENTER_GROTTO + 1,
 	TEXTBOX_CAULDRON = TEXTBOX_GROTTO_EXIT + 1,
 	TEXTBOX_ENTER_DESERT = TEXTBOX_CAULDRON + 1,
 	TEXTBOX_ENTER_FOREST = TEXTBOX_ENTER_DESERT + 1,
-	ENT = TEXTBOX_ENTER_FOREST + 1,
+	TEXTBOX_SAP = TEXTBOX_ENTER_FOREST + 1,
+	TEXTBOX_MAGICAL_DUST = TEXTBOX_SAP + 1,
+	ENT = TEXTBOX_MAGICAL_DUST + 1,
 	MUMMY = ENT + 1,
 	TEXTURE_COUNT = MUMMY + 1,
 };
@@ -371,4 +376,51 @@ enum class DIRECTION
 	DOWN = 1,
 	RIGHT = 2,
 	LEFT = 3
+};
+
+// STORES ALL INFO ABOUT COLLECTABLE ITEMS
+struct ItemInfo {
+	std::string name;
+	vec2 size;
+	TEXTURE_ASSET_ID texture;
+	std::string texture_path;
+	bool grindable;
+};
+
+const std::unordered_map<ItemType, ItemInfo> ITEM_INFO = {
+	{
+		ItemType::POTION, {
+			"Potion", 
+			vec2(0, 0), 
+			TEXTURE_ASSET_ID::TEXTURE_COUNT, 
+			"", 
+			false}},
+	{
+		ItemType::COFFEE_BEANS, {
+			"Coffee Beans", 
+			vec2((float)GRID_CELL_HEIGHT_PX * 0.9, (float)GRID_CELL_HEIGHT_PX * 0.9),
+			TEXTURE_ASSET_ID::COFFEE_BEAN, 
+			"interactables/coffee_bean.png", 
+			true}},
+	{
+		ItemType::MAGICAL_FRUIT, {
+			"Magical Fruit", 
+			vec2((float)GRID_CELL_WIDTH_PX * 1.5, (float)GRID_CELL_HEIGHT_PX * 1.8),
+			TEXTURE_ASSET_ID::FRUIT, 
+			"interactables/magical_fruit.png", 
+			false}},
+	{
+		ItemType::SAP, {
+			"Sap", 
+			vec2((float)GRID_CELL_WIDTH_PX * 1.5, (float)GRID_CELL_HEIGHT_PX * 1.8),
+			TEXTURE_ASSET_ID::FRUIT, 
+			"interactables/sap.png", 
+			true}},
+	{
+		ItemType::MAGICAL_DUST, {
+			"Magical Dust", 
+			vec2((float)GRID_CELL_WIDTH_PX * 0.9, (float)GRID_CELL_HEIGHT_PX * 0.9),
+			TEXTURE_ASSET_ID::MAGICAL_DUST, 
+			"interactables/magical_dust.png", 
+			true}},
 };

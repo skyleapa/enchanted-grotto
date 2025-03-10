@@ -161,29 +161,19 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 {
 	// Updating window title with number of fruits to show serialization
 	std::stringstream title_ss;
-	int total_items = 0;
-	int total_fruits = 0;
-	int total_beans = 0;
-
-	// Only count items in the player's inventory
-	if (!registry.players.entities.empty()) {
-		Entity player = registry.players.entities[0];
-		if (registry.inventories.has(player)) {
-			Inventory& player_inv = registry.inventories.get(player);
-
-			// Count specific item types and their amounts
-			for (Entity item : player_inv.items) {
-				if (registry.items.has(item)) {
-					Item& item_comp = registry.items.get(item);
-					total_items += item_comp.amount;
-					if (item_comp.type == ItemType::MAGICAL_FRUIT) total_fruits += item_comp.amount;
-					else if (item_comp.type == ItemType::COFFEE_BEANS) total_beans += item_comp.amount;
-				}
-			}
-		}
+	
+	updateFPS(elapsed_ms_since_last_update);
+	// visually update counter every 500 ms
+	if (m_fps_update_timer >= 500.0f) {
+		m_fps_update_timer = 0.0f;
+		m_last_fps = m_current_fps;
+		title_ss << "FPS: " << m_current_fps;
+	} else {
+		title_ss << "FPS: " << m_last_fps;
 	}
 
-	title_ss << total_items << " items in player inventory: " << total_fruits << " fruits " << total_beans << " beans";
+	// title_ss << total_items << " items in player inventory: " << total_fruits << " fruits " << total_beans << " beans";
+	
 	glfwSetWindowTitle(window, title_ss.str().c_str());
 
 	if (registry.players.entities.size() < 1)
@@ -240,6 +230,10 @@ void WorldSystem::restart_game()
 			player_inventory_data = ItemSystem::serializeInventory(player_entity);
 		}
 	}
+
+	// re-open tutorial
+	state.tutorial_state = (int) TUTORIAL::MOVEMENT;
+	state.tutorial_step_complete = true;
 
 	// Debugging for memory/component leaks
 	registry.list_all_components();
@@ -303,11 +297,17 @@ void WorldSystem::handle_collisions()
 			enemy.health -= ammo.damage;
 			registry.remove_all_components_of(ammo_entity);
 			if (enemy.health <= 0) {
-				registry.remove_all_components_of(enemy_entity);
+				// using can_move for now since ent cannot move, but mummy can
+				if (enemy.can_move == 0) { 
+					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::SAP, 1);
+				} else if (enemy.can_move == 1) {
+					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MAGICAL_DUST, 1);
+				}
 				if (screen.tutorial_state == (int)TUTORIAL::ATTACK_ENEMY) {
 					screen.tutorial_step_complete = true;
 					screen.tutorial_state += 1;
 				}
+				registry.remove_all_components_of(enemy_entity);
 			}
 			continue;
 		}
@@ -377,6 +377,13 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 		screen.tutorial_step_complete = true;
 		screen.tutorial_state = (screen.tutorial_state == (int)TUTORIAL::COMPLETE) ? (int)TUTORIAL::MOVEMENT : (int)TUTORIAL::COMPLETE;
 	}
+	
+	// skip tutorial step
+	if (action == GLFW_PRESS && key == GLFW_KEY_N) {
+		screen.tutorial_step_complete = true;
+		if (screen.tutorial_state != (int)TUTORIAL::COMPLETE) screen.tutorial_state += 1;
+	}
+
 
 	// Handle character movement
 	if (key == GLFW_KEY_W || key == GLFW_KEY_S || key == GLFW_KEY_D || key == GLFW_KEY_A)
@@ -431,11 +438,12 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 		int tile_x = (int)(mouse_pos_x / GRID_CELL_WIDTH_PX);
 		int tile_y = (int)(mouse_pos_y / GRID_CELL_HEIGHT_PX);
 
-		std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
-		std::cout << "mouse tile position: " << tile_x << ", " << tile_y << std::endl;
+		// std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
+		// std::cout << "mouse tile position: " << tile_x << ", " << tile_y << std::endl;
 
 		if (m_ui_system != nullptr && m_ui_system->isCauldronOpen()) return;
-		// don't throw ammo if in potion making menu
+		if (mouse_pos_x >= BAR_X && mouse_pos_x <= BAR_X + BAR_WIDTH && mouse_pos_y >= BAR_Y && mouse_pos_y <= BAR_Y + BAR_HEIGHT) return;
+		// don't throw ammo if in potion making menu or clicking on inventory
 		throwAmmo(vec2(mouse_pos_x, mouse_pos_y));
 	}
 }
@@ -489,6 +497,11 @@ void WorldSystem::handle_player_interaction()
 		else if (registry.cauldrons.has(item)) {
 			std::cout << "found cauldron" << std::endl;
 			handle_textbox = m_ui_system->openCauldron(item);
+			if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::INTERACT_CAULDRON) {
+				ScreenState& screen = registry.screenStates.components[0];
+				screen.tutorial_step_complete = true;
+				screen.tutorial_state += 1;
+			}
 		}
 
 		if (handle_textbox)
@@ -578,6 +591,9 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 	{
 		Item& item_info = registry.items.get(item);
 
+		if (item_info.canRespawn == false) 
+			return;
+
 		if (item_info.respawnTime <= 0)
 			continue;
 
@@ -594,15 +610,13 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 		motion.position = item_info.originalPosition;
 		motion.angle = 180.f;
 		motion.velocity = { 0, 0 };
-		motion.scale = (item_info.name == "Magical Fruit")
-			? vec2(FRUIT_WIDTH, FRUIT_HEIGHT)
-			: vec2(COFFEE_BEAN_WIDTH, COFFEE_BEAN_HEIGHT);
+		motion.scale = ITEM_INFO.at(item_info.type).size;
 
 		// Restore render request
 		registry.renderRequests.insert(
 			item,
 			{
-				(item_info.name == "Magical Fruit") ? TEXTURE_ASSET_ID::FRUIT : TEXTURE_ASSET_ID::COFFEE_BEAN,
+				ITEM_INFO.at(item_info.type).texture,
 				EFFECT_ASSET_ID::TEXTURED,
 				GEOMETRY_BUFFER_ID::SPRITE,
 				RENDER_LAYER::ITEM
@@ -616,7 +630,7 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 				continue;
 
 			Textbox& textboxComp = registry.textboxes.get(textbox);
-			textboxComp.isVisible = true;
+			textboxComp.isVisible = false;
 
 			RenderRequest renderRequest = getTextboxRenderRequest(textboxComp);
 			registry.renderRequests.insert(textbox, renderRequest);
@@ -802,4 +816,22 @@ void WorldSystem::updateThrownAmmo(float elapsed_ms_since_last_update) {
 			registry.remove_all_components_of(entity);
 
 	}
+}
+
+void WorldSystem::updateFPS(float elapsed_ms)
+{
+	m_frame_time_sum -= m_frame_times[m_frame_time_index];
+	m_frame_times[m_frame_time_index] = elapsed_ms;
+	m_frame_time_sum += elapsed_ms;
+
+	m_frame_time_index = (m_frame_time_index + 1) % 60;
+
+	// Calculate average FPS over the last 60 frames
+	float avg_frame_time = m_frame_time_sum / 60.0f;
+	if (avg_frame_time > 0) {
+		m_current_fps = 1000.0f / avg_frame_time;
+	}
+
+	// Update timer for display refresh
+	m_fps_update_timer += elapsed_ms;
 }
