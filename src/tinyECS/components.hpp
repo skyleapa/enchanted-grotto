@@ -377,3 +377,50 @@ enum class DIRECTION
 	RIGHT = 2,
 	LEFT = 3
 };
+
+// STORES ALL INFO ABOUT COLLECTABLE ITEMS
+struct ItemInfo {
+	std::string name;
+	vec2 size;
+	TEXTURE_ASSET_ID texture;
+	std::string texture_path;
+	bool grindable;
+};
+
+const std::unordered_map<ItemType, ItemInfo> ITEM_INFO = {
+	{
+		ItemType::POTION, {
+			"Potion", 
+			vec2(0, 0), 
+			TEXTURE_ASSET_ID::TEXTURE_COUNT, 
+			"", 
+			false}},
+	{
+		ItemType::COFFEE_BEANS, {
+			"Coffee Beans", 
+			vec2((float)GRID_CELL_HEIGHT_PX * 0.9, (float)GRID_CELL_HEIGHT_PX * 0.9),
+			TEXTURE_ASSET_ID::COFFEE_BEAN, 
+			"interactables/coffee_bean.png", 
+			true}},
+	{
+		ItemType::MAGICAL_FRUIT, {
+			"Magical Fruit", 
+			vec2((float)GRID_CELL_WIDTH_PX * 1.5, (float)GRID_CELL_HEIGHT_PX * 1.8),
+			TEXTURE_ASSET_ID::FRUIT, 
+			"interactables/magical_fruit.png", 
+			false}},
+	{
+		ItemType::SAP, {
+			"Sap", 
+			vec2((float)GRID_CELL_WIDTH_PX * 1.5, (float)GRID_CELL_HEIGHT_PX * 1.8),
+			TEXTURE_ASSET_ID::FRUIT, 
+			"interactables/sap.png", 
+			true}},
+	{
+		ItemType::MAGICAL_DUST, {
+			"Magical Dust", 
+			vec2((float)GRID_CELL_WIDTH_PX * 0.9, (float)GRID_CELL_HEIGHT_PX * 0.9),
+			TEXTURE_ASSET_ID::MAGICAL_DUST, 
+			"interactables/magical_dust.png", 
+			true}},
+};

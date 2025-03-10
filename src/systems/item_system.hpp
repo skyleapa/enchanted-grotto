@@ -25,6 +25,9 @@ public:
     static bool removeItemFromInventory(Entity inventory, Entity item);
     bool transferItem(Entity source_inventory, Entity target_inventory, Entity item);
     static void swapItems(Entity inventory, int slot1, int slot2);
+
+    // Creates an exact copy of an item thats stored in a new entity
+    static Entity copyItem(Entity toCopy);
     
     // Serialization
     bool saveGameState(const std::string& filename);
@@ -34,6 +37,7 @@ public:
     static Entity createItem(ItemType type, int amount = 1, bool isCollectable = false, bool is_ammo = false);
     static Entity createIngredient(ItemType type, int amount = 1);
     static Entity createPotion(PotionEffect effect, int duration, const vec3& color, float quality, float effectValue);
+    static Entity createCollectableIngredient(vec2 position, ItemType type, int amount);
     
     // Serialization helpers made public and static
     static nlohmann::json serializeItem(Entity item);

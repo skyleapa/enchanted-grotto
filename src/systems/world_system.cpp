@@ -299,9 +299,9 @@ void WorldSystem::handle_collisions()
 			if (enemy.health <= 0) {
 				// using can_move for now since ent cannot move, but mummy can
 				if (enemy.can_move == 0) { 
-					createSap(renderer, registry.motions.get(enemy_entity).position, "Sap", 1);
+					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::SAP, 1);
 				} else if (enemy.can_move == 1) {
-					createMagicalDust(renderer, registry.motions.get(enemy_entity).position, "Magical Dust", 1);
+					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MAGICAL_DUST, 1);
 				}
 				if (screen.tutorial_state == (int)TUTORIAL::ATTACK_ENEMY) {
 					screen.tutorial_step_complete = true;
@@ -438,8 +438,8 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 		int tile_x = (int)(mouse_pos_x / GRID_CELL_WIDTH_PX);
 		int tile_y = (int)(mouse_pos_y / GRID_CELL_HEIGHT_PX);
 
-		std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
-		std::cout << "mouse tile position: " << tile_x << ", " << tile_y << std::endl;
+		// std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
+		// std::cout << "mouse tile position: " << tile_x << ", " << tile_y << std::endl;
 
 		if (m_ui_system != nullptr && m_ui_system->isCauldronOpen()) return;
 		if (mouse_pos_x >= BAR_X && mouse_pos_x <= BAR_X + BAR_WIDTH && mouse_pos_y >= BAR_Y && mouse_pos_y <= BAR_Y + BAR_HEIGHT) return;
@@ -610,15 +610,13 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 		motion.position = item_info.originalPosition;
 		motion.angle = 180.f;
 		motion.velocity = { 0, 0 };
-		motion.scale = (item_info.name == "Magical Fruit")
-			? vec2(FRUIT_WIDTH, FRUIT_HEIGHT)
-			: vec2(COFFEE_BEAN_WIDTH, COFFEE_BEAN_HEIGHT);
+		motion.scale = ITEM_INFO.at(item_info.type).size;
 
 		// Restore render request
 		registry.renderRequests.insert(
 			item,
 			{
-				(item_info.name == "Magical Fruit") ? TEXTURE_ASSET_ID::FRUIT : TEXTURE_ASSET_ID::COFFEE_BEAN,
+				ITEM_INFO.at(item_info.type).texture,
 				EFFECT_ASSET_ID::TEXTURED,
 				GEOMETRY_BUFFER_ID::SPRITE,
 				RENDER_LAYER::ITEM

@@ -98,14 +98,6 @@ private:
     Entity openedCauldron;
     Rml::Element* heldLadle = nullptr;
 
-    // Base texture folder is data/textures
-    const std::unordered_map<ItemType, std::string> ITEM_TEXTURES = {
-        {ItemType::COFFEE_BEANS, "interactables/coffee_bean.png"},
-        {ItemType::MAGICAL_FRUIT, "interactables/magical_fruit.png"},
-        {ItemType::SAP, "interactables/sap.png"},
-        {ItemType::MAGICAL_DUST, "interactables/magical_dust.png"},
-    };
-
     // Tutorial variables
     Rml::ElementDocument* m_tutorial_document = nullptr;
 

@@ -657,7 +657,7 @@ void UISystem::updateInventoryBar()
 
 				if (registry.items.has(item_entity)) {
 					Item& item = registry.items.get(item_entity);
-                    std::string tex = ITEM_TEXTURES.count(item.type) ? ITEM_TEXTURES.at(item.type) : "interactables/coffee_bean.png";
+                    std::string tex = ITEM_INFO.count(item.type) ? ITEM_INFO.at(item.type).texture_path : "interactables/coffee_bean.png";
 					slot_content += "<img src = '" + tex + "' style='width: 32px; height: 32px; margin: 4px; transform: scaleY(-1);' />";
 
 					// Add item count if more than 1

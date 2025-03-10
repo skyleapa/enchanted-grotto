@@ -73,12 +73,6 @@ const float GROTTO_ENTRANCE_HEIGHT = (float)180;
 const float BUSH_WIDTH = (float)220;
 const float BUSH_HEIGHT = (float)130;
 
-const float FRUIT_WIDTH = (float)GRID_CELL_WIDTH_PX * 1.5;
-const float FRUIT_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 1.8;
-
-const float COFFEE_BEAN_WIDTH = (float)GRID_CELL_WIDTH_PX * 0.9;
-const float COFFEE_BEAN_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 0.9;
-
 const float TEXTBOX_WIDTH = (float)GRID_CELL_WIDTH_PX * 4;
 const float TEXTBOX_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 4;
 
@@ -137,7 +131,7 @@ const float BAR_Y = (float)(WINDOW_HEIGHT_PX - BAR_HEIGHT - 20.0f); // 20px from
 
 // Item Types and names
 // IMPORTANT: Add new types to the end of the list to not break serialization!
-// IMPORTANT: Add the displayname for each ItemType to ITEM_NAME
+// IMPORTANT: Add information for each ItemType to ITEM_INFO in common.cpp
 enum class ItemType
 {
 	POTION = 0,
@@ -153,18 +147,6 @@ enum class ItemType
 	FOREST_ENTRANCE = DESERT_ENTRANCE + 1,
 	SAP = FOREST_ENTRANCE + 1,
 	MAGICAL_DUST = SAP + 1
-};
-
-const std::unordered_map<ItemType, std::string> ITEM_NAMES = {
-	{ItemType::POTION, "Potion"},
-	{ItemType::COFFEE_BEANS, "Coffee Beans"},
-	{ItemType::MAGICAL_FRUIT, "Magical Fruit"},
-	{ItemType::GROTTO_ENTRANCE, "Grotto Entrance"},
-	{ItemType::GROTTO_EXIT, "Grotto Exit"},
-	{ItemType::DESERT_ENTRANCE, "Desert Entrance"},
-	{ItemType::FOREST_ENTRANCE, "Desert Exit"},
-	{ItemType::SAP, "Sap"},
-	{ItemType::MAGICAL_DUST, "Magical Dust"},
 };
 
 // Potion Types and names

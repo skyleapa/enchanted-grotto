@@ -173,17 +173,32 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 	}
 
 	if (event == "dragdrop") {
-		// If item is dragged onto cauldron, insert that ingredient
-		if (cur->GetId() == "cauldron" || cur->GetId() == "cauldron-water") {
-
-		}
-
 		// If item is dragged on a slot, swap items
 		int slot = m_ui_system->getSlotFromId(cur->GetId());
+		int selected = m_ui_system->getSelectedSlot();
+		Entity player = registry.players.entities[0];
 		if (slot != -1) {
-			int selected = m_ui_system->getSelectedSlot();
-			ItemSystem::swapItems(registry.players.entities[0], slot, selected);
+			ItemSystem::swapItems(player, slot, selected);
 			m_ui_system->updateInventoryBar();
+			return;
+		}
+
+		if (!m_ui_system->isCauldronOpen()) {
+			return;
+		}
+
+		// If item is dragged onto cauldron, insert 1 of that ingredient
+		if (cur->GetId() == "cauldron" || cur->GetId() == "cauldron-water") {
+			Entity item = registry.inventories.get(player).items[selected];
+			Item& invItem = registry.items.get(item);
+			Entity copy = ItemSystem::copyItem(item);
+			invItem.amount -= 1;
+			if (invItem.amount <= 0) {
+				ItemSystem::removeItemFromInventory(player, item);
+			}
+			registry.items.get(copy).amount = 1;
+			PotionSystem::addIngredient(m_ui_system->getOpenedCauldron(), copy);
+			return;
 		}
 	}
 }
