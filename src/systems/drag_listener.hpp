@@ -10,6 +10,7 @@ class DragListener : public Rml::EventListener
 public:
 	// Registers an elemenet as being a container of draggable elements.
 	static void RegisterDraggableElement(Rml::Element* element);
+	static void RegisterDragDropElement(Rml::Element* element);
 	static void LinkUISystem(UISystem* ui_system) { m_ui_system = ui_system; }
 
 protected:

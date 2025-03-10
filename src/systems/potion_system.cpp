@@ -264,7 +264,7 @@ void PotionSystem::updatePotion(Entity cauldron) {
 
 	// Step 1: Get recipe
 	Recipe recipe;
-	bool foundRecipe;
+	bool foundRecipe = false;
 	std::unordered_set<ItemType> cauldronTypes;
 	for (Entity e : ci.items) {
 		cauldronTypes.insert(registry.items.get(e).type);

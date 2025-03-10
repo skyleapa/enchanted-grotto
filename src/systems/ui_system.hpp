@@ -50,6 +50,7 @@ public:
     void updateInventoryBar();
     void selectInventorySlot(int slot);
     int getSelectedSlot() const { return m_selected_slot; }
+    int getSlotFromId(std::string id);
 
     // Cauldron methods
     bool openCauldron(Entity cauldron);
@@ -101,6 +102,8 @@ private:
     const std::unordered_map<ItemType, std::string> ITEM_TEXTURES = {
         {ItemType::COFFEE_BEANS, "interactables/coffee_bean.png"},
         {ItemType::MAGICAL_FRUIT, "interactables/magical_fruit.png"},
+        {ItemType::SAP, "interactables/sap.png"},
+        {ItemType::MAGICAL_DUST, "interactables/magical_dust.png"},
     };
 
     // Tutorial variables

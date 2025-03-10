@@ -136,6 +136,11 @@ bool ItemSystem::transferItem(Entity source_inventory, Entity target_inventory, 
     return false;
 }
 
+void ItemSystem::swapItems(Entity inventory, int slot1, int slot2) {
+    std::vector<Entity>& items = registry.inventories.get(inventory).items;
+    std::iter_swap(items.begin() + slot1, items.begin() + slot2);
+}
+
 // Serialization
 nlohmann::json ItemSystem::serializeItem(Entity item) {
     nlohmann::json data;

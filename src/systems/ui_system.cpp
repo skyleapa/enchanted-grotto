@@ -423,60 +423,44 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 	double x, y;
 	glfwGetCursorPos(m_window, &x, &y);
 
-	// Check if the click is on the inventory bar
+	// Check clicks for inventory bar and cauldron
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT) {
-		// Calculate inventory bar position
+        Rml::Element* hovered = m_context->GetHoverElement();
+        std::string id = hovered->GetId();
+        int slotId = getSlotFromId(id);
 
-        std::cout << "Click class: " << m_context->GetHoverElement()->GetClassNames() << std::endl;
-        std::cout << "Click id: " << m_context->GetHoverElement()->GetId() << std::endl;
+        // Check for an inventory click
+        if (slotId != -1) {
+            selectInventorySlot(slotId);
+            // if (isCauldronOpen()) {
+            //     Entity& player = registry.players.entities[0];
+            //     Inventory& player_inventory = registry.inventories.get(player);
 
-		// Check if click is within the inventory bar area
-		if (x >= BAR_X && x <= BAR_X + BAR_WIDTH &&
-			y >= BAR_Y && y <= BAR_Y + BAR_HEIGHT) {
+            //     Entity cauldron = getOpenedCauldron();
+            //     Inventory cauldron_inventory = registry.inventories.get(cauldron);
 
-			// Calculate which slot was clicked
-			float slot_width = BAR_WIDTH / m_hotbar_size;
-			int slot = (int)((x - BAR_X) / slot_width);
+            //     if (player_inventory.selection >= 0 && player_inventory.selection < player_inventory.items.size()) {
+            //         Entity selected_item = player_inventory.items[player_inventory.selection];
+            //         std::cout << "Selected item entity ID: " << selected_item << std::endl;
 
-			if (slot >= 0 && slot < m_hotbar_size) {
-				selectInventorySlot(slot);
-				std::cout << "Selected inventory slot: " << slot << std::endl;
-
-				if (isCauldronOpen()) {
-					Entity& player = registry.players.entities[0];
-					Inventory& player_inventory = registry.inventories.get(player);
-
-					Entity cauldron = getOpenedCauldron();
-					Inventory cauldron_inventory = registry.inventories.get(cauldron);
-
-					if (player_inventory.selection >= 0 && player_inventory.selection < player_inventory.items.size()) {
-						Entity selected_item = player_inventory.items[player_inventory.selection];
-						std::cout << "Selected item entity ID: " << selected_item << std::endl;
-
-						if (registry.ingredients.has(selected_item)) {
-							PotionSystem::addIngredient(cauldron, selected_item);
-							registry.inventories.remove(selected_item);
-							std::cout << "removed ingredient" << selected_item << std::endl;
-						}
-						std::cout << "doesnt have the ingredient" << selected_item << std::endl;
-					}
-				}
-
-			}
-		}
+            //         if (registry.ingredients.has(selected_item)) {
+            //             PotionSystem::addIngredient(cauldron, selected_item);
+            //             registry.inventories.remove(selected_item);
+            //             std::cout << "removed ingredient" << selected_item << std::endl;
+            //         }
+            //         std::cout << "doesnt have the ingredient" << selected_item << std::endl;
+            //     }
+            // }
+        }
 
 		// Check for ladle pickup
 		do {
-			if (!isCauldronOpen()) {
-				break;
-			}
-
-			Rml::Element* ladle = m_context->GetHoverElement();
-			if (!ladle || ladle->GetId() != "ladle") {
+			if (!isCauldronOpen() || hovered->GetId() != "ladle") {
 				break;
 			}
 
 			// If we click cauldron don't drop ladle
+			Rml::Element* ladle = hovered;
 			Rml::Element* possibleCauldron = m_context->GetElementAtPoint(Rml::Vector2f(x, y), ladle);
 			if (possibleCauldron && possibleCauldron->GetId() == "cauldron") {
 				break;
@@ -588,6 +572,7 @@ void UISystem::createInventoryBar()
                     border-width: 2px;
                     border-color: #5D4037;
                     position: relative;
+                    z-index: 150;
                     drag: clone;
                 }
                 
@@ -595,16 +580,6 @@ void UISystem::createInventoryBar()
                     background-color: rgba(120, 80, 40, 0.8);
                     border-width: 2px;
                     border-color: #FFD700;
-                }
-                
-                .inventory-slot .item-count {
-                    position: absolute;
-                    bottom: 2px;
-                    right: 5px;
-                    color: #FFFFFF;
-                    font-family: Open Sans;
-                    font-size: 14px;
-                    font-weight: bold;
                 }
             </style>
         </head>
@@ -625,15 +600,19 @@ void UISystem::createInventoryBar()
 		}
 
 		inventory_rml += "</body></rml>";
-
 		m_inventory_document = m_context->LoadDocumentFromMemory(inventory_rml.c_str());
 		if (m_inventory_document) {
 			m_inventory_document->Show();
 			std::cout << "UISystem::createInventoryBar - Inventory bar created successfully" << std::endl;
-		}
-		else {
+		} else {
 			std::cerr << "UISystem::createInventoryBar - Failed to create inventory document" << std::endl;
 		}
+        
+        Rml::ElementList draggableSlots;
+        m_inventory_document->GetElementsByClassName(draggableSlots, "inventory-slot");
+        for (auto* el : draggableSlots) {
+            DragListener::RegisterDragDropElement(el);
+        }
 	}
 	catch (const std::exception& e) {
 		std::cerr << "Exception in UISystem::createInventoryBar: " << e.what() << std::endl;
@@ -711,6 +690,16 @@ void UISystem::selectInventorySlot(int slot)
 	if (m_inventory_document) {
 		updateInventoryBar();
 	}
+}
+
+int UISystem::getSlotFromId(std::string id)
+{
+    
+    if (id.find("slot-") == std::string::npos) {
+        return -1;
+    }
+
+    return std::stoi(id.substr(5));
 }
 
 void UISystem::updateTutorial()
@@ -875,6 +864,8 @@ bool UISystem::openCauldron(Entity cauldron)
 
 		DragListener::RegisterDraggableElement(m_cauldron_document->GetElementById("heat"));
 		DragListener::RegisterDraggableElement(m_cauldron_document->GetElementById("ladle"));
+		DragListener::RegisterDragDropElement(m_cauldron_document->GetElementById("cauldron-water"));
+		DragListener::RegisterDragDropElement(m_cauldron_document->GetElementById("cauldron"));
 		m_cauldron_document->Show();
 		openedCauldron = cauldron;
 		registry.cauldrons.get(cauldron).filled = true;

@@ -24,6 +24,7 @@ public:
     static bool addItemToInventory(Entity inventory, Entity item);
     static bool removeItemFromInventory(Entity inventory, Entity item);
     bool transferItem(Entity source_inventory, Entity target_inventory, Entity item);
+    static void swapItems(Entity inventory, int slot1, int slot2);
     
     // Serialization
     bool saveGameState(const std::string& filename);

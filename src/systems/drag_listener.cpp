@@ -1,5 +1,6 @@
 #include "drag_listener.hpp"
 #include "potion_system.hpp"
+#include "item_system.hpp"
 #include <iostream>
 #include <sstream>
 #include <RmlUi/Core/Element.h>
@@ -7,11 +8,14 @@
 static DragListener drag_listener;
 UISystem* DragListener::m_ui_system;
 
-// Registers an element as being a container of draggable elements.
 void DragListener::RegisterDraggableElement(Rml::Element* element) {
 	element->AddEventListener("dragstart", &drag_listener);
 	element->AddEventListener("drag", &drag_listener);
 	element->AddEventListener("dragend", &drag_listener);
+}
+
+void DragListener::RegisterDragDropElement(Rml::Element* element) {
+	element->AddEventListener("dragdrop", &drag_listener);
 }
 
 float DragListener::getHeatDegree(Rml::Vector2f coords, float curDegree) {
@@ -165,6 +169,21 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			cur->SetProperty("decorator", "image(\"interactables/spoon_on_table.png\" contain)");
 			stirCoords.clear();
 			return;
+		}
+	}
+
+	if (event == "dragdrop") {
+		// If item is dragged onto cauldron, insert that ingredient
+		if (cur->GetId() == "cauldron" || cur->GetId() == "cauldron-water") {
+
+		}
+
+		// If item is dragged on a slot, swap items
+		int slot = m_ui_system->getSlotFromId(cur->GetId());
+		if (slot != -1) {
+			int selected = m_ui_system->getSelectedSlot();
+			ItemSystem::swapItems(registry.players.entities[0], slot, selected);
+			m_ui_system->updateInventoryBar();
 		}
 	}
 }
