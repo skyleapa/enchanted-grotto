@@ -92,6 +92,14 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
             continue;
         }
 
+        if (existing_item.type == ItemType::POTION) {
+            PotionEffect first = registry.potions.get(existing).effect;
+            PotionEffect second = registry.potions.get(item).effect;
+            if (first != second) {
+                continue;
+            }
+        }
+
         // Add amounts together
         existing_item.amount += item_comp.amount;
         if (registry.ammo.has(item) && !registry.ammo.has(existing)) {
@@ -165,7 +173,6 @@ Entity ItemSystem::copyItem(Entity toCopy) {
     if (registry.ingredients.has(toCopy)) {
         auto& oldIng = registry.ingredients.get(toCopy);
         registry.ingredients.emplace(res, Ingredient(oldIng));
-        std::cout << "old one has ing" << std::endl;
     }
     if (registry.potions.has(toCopy)) {
         auto& oldPot = registry.potions.get(toCopy);

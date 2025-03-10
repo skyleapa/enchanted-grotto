@@ -91,6 +91,7 @@ class RenderSystem {
 		textures_path("interactables/textbox_magical_dust.png"),
 		textures_path("enemies/ent.png"),
 		textures_path("enemies/mummy.png"),
+		textures_path("interactables/potion_item.png"),
 		textures_path("welcome_to_grotto.png")
 	};
 

@@ -60,9 +60,6 @@ public:
     bool isCauldronOpen(Entity cauldron);
     Entity getOpenedCauldron();
 
-    // Update items that should follow the mouse
-    void updateFollowMouse(double x, double y);
-
     // tutorial
     void updateTutorial();
 
@@ -81,6 +78,12 @@ private:
     // Convert GLFW key to RmlUi key
     Rml::Input::KeyIdentifier convertKey(int key);
     int getKeyModifiers();
+
+    // Get color property string from vec3 color
+    std::string getImageColorProperty(vec3 color, float alpha);
+
+    // Update items that should follow the mouse
+    void updateFollowMouse(double x, double y);
 
     // FPS counter variables
     float m_frame_times[60] = { 0 }; // Store last 60 frame times

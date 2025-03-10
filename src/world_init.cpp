@@ -402,7 +402,12 @@ Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemTy
 	motion.position = position;
 	motion.scale = info.size;
 
-	Entity textbox = createTextbox(renderer, position, entity);
+	if (type == ItemType::SAP) {
+		vec2 textbox_position = { position.x + 160.0f, position.y };
+		Entity textbox = createTextbox(renderer, textbox_position, entity);
+	} else {
+		Entity textbox = createTextbox(renderer, position, entity);
+	}
 
 	registry.renderRequests.insert(
 		entity,
@@ -630,37 +635,37 @@ RenderRequest getTextboxRenderRequest(Textbox& textbox)
 	// TODO: Use ItemType and a map
 	// Find correct texture based on item type
 	TEXTURE_ASSET_ID texture = TEXTURE_ASSET_ID::TEXTBOX_FRUIT; // placeholder
-	if (item.name == "Magical Fruit")
+	if (item.type == ItemType::MAGICAL_FRUIT)
 	{
 		texture = TEXTURE_ASSET_ID::TEXTBOX_FRUIT;
 	}
-	else if (item.name == "Coffee Bean")
+	else if (item.type == ItemType::COFFEE_BEANS)
 	{
 		texture = TEXTURE_ASSET_ID::TEXTBOX_COFFEE_BEAN;
 	}
-	else if (item.name == "Grotto Entrance")
+	else if (item.type == ItemType::GROTTO_ENTRANCE)
 	{
 		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_GROTTO;
 	}
-	else if (item.name == "Cauldron")
+	else if (item.type == ItemType::CAULDRON)
 	{
 		texture = TEXTURE_ASSET_ID::TEXTBOX_CAULDRON;
 	}
-	else if (item.name == "Grotto Exit")
+	else if (item.type == ItemType::GROTTO_EXIT)
 	{
 		texture = TEXTURE_ASSET_ID::TEXTBOX_GROTTO_EXIT;
 	}
-	else if (item.name == "Desert Entrance")
+	else if (item.type == ItemType::DESERT_ENTRANCE)
 	{
 		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_DESERT;
 	}
-	else if (item.name == "Desert Exit") {
+	else if (item.type == ItemType::FOREST_ENTRANCE) {
 		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_FOREST;
 	}
-	else if (item.name == "Sap") {
+	else if (item.type == ItemType::SAP) {
 		texture = TEXTURE_ASSET_ID::TEXTBOX_SAP;
 	}
-	else if (item.name == "Magical Dust") {
+	else if (item.type == ItemType::MAGICAL_DUST) {
 		texture = TEXTURE_ASSET_ID::TEXTBOX_MAGICAL_DUST;
 	}
 

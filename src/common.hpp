@@ -250,7 +250,7 @@ const float MIN_POTENCY_PERCENTAGE = 0.1;
 const float MIN_DURATION_PERCENTAGE = 0.05;
 
 // Cauldron color settings
-const int COLOR_FADE_DURATION = 2000;
+const int COLOR_FADE_DURATION = 5000;
 
 // Recipe penalty settings
 // If potion difficulty > 1, potions are harder to make good quality and vice versa

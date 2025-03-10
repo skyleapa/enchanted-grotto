@@ -1,4 +1,5 @@
 #include "potion_system.hpp"
+#include "item_system.hpp"
 #include <unordered_set>
 #include <iostream>
 #include <cfloat>
@@ -113,7 +114,7 @@ Potion PotionSystem::bottlePotion(Entity cauldron) {
 	// Clear cauldron items
 	Inventory& cinv = registry.inventories.get(cauldron);
 	for (Entity item : cinv.items) {
-		registry.remove_all_components_of(item);
+		ItemSystem::destroyItem(item);
 	}
 	cinv.items.clear();
 	return potion;
@@ -316,8 +317,6 @@ void PotionSystem::updatePotion(Entity cauldron) {
 		potion.effectValue = min_potency + (recipe.highestQualityEffect - min_potency) * potion.quality;
 		potion.duration = min_duration + (recipe.highestQualityDuration - min_duration) * potion.quality;
 		potion.color = interpolateColor(DEFAULT_COLOR, recipe.finalPotionColor, potion.quality);
-		std::cout << "Color should be: " << potion.color.x << " " << potion.color.y << " " << potion.color.z << std::endl;
-		std::cout << "Potion quality: " << potion.quality << std::endl;
 	}
 	else if (ci.items.size() > 0) {
 		// Otherwise, if there are ingredients, then its failed
