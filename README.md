@@ -140,7 +140,7 @@ Uploaded to `/doc/test-plan.docx`
 10. Updated bug list
 Uploaded to `/doc/bug-report.xlsx`
 11. Demo video
-TODO: include YouTube link
+https://youtu.be/Qz-uyPb_oww
 
 ## Creative Elements: 
 ### Software Engineering: External Integration (20) - RmlUi
