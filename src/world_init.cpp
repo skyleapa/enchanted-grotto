@@ -376,7 +376,12 @@ Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemTy
 	motion.position = position;
 	motion.scale = info.size;
 
-	Entity textbox = createTextbox(renderer, position, entity);
+	if (type == ItemType::SAP) {
+		vec2 textbox_position = { position.x + 160.0f, position.y };
+		Entity textbox = createTextbox(renderer, textbox_position, entity);
+	} else {
+		Entity textbox = createTextbox(renderer, position, entity);
+	}
 
 	registry.renderRequests.insert(
 		entity,
