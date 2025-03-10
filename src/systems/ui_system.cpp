@@ -484,7 +484,13 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
                         potion.quality,
                         potion.effectValue
                     );
-                    // TODO - Looks like potions are broken with inventory persistence rn
+
+                    if (potion.effect != PotionEffect::WATER) {
+                        registry.items.get(potionItem).is_ammo = true;
+                        auto& ammo = registry.ammo.emplace(potionItem);
+                        ammo.damage = 1000;
+                    }
+                    
                     ItemSystem::addItemToInventory(player, potionItem);
                 }
 

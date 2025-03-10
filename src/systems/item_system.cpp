@@ -20,7 +20,7 @@ Entity ItemSystem::createItem(ItemType type, int amount, bool isCollectable, boo
 }
 
 Entity ItemSystem::createIngredient(ItemType type, int amount) {
-    Entity entity = createItem(type, amount, false, false);
+    Entity entity = createItem(type, amount, false, true);
     
     // Add ingredient-specific component
     Ingredient& ingredient = registry.ingredients.emplace(entity);
@@ -197,7 +197,7 @@ nlohmann::json ItemSystem::serializeItem(Entity item) {
     data["saved_id"] = item.id();  // Store the Entity ID for reference during deserialization
     data["type_id"] = item_comp.type;
     data["amount"] = item_comp.amount;
-    data["is_ammo"] = registry.ammo.has(item);
+    data["is_ammo"] = item_comp.is_ammo;
     
     // Serialize ingredient data if present
     if (registry.ingredients.has(item)) {

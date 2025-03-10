@@ -736,13 +736,15 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 
 	ammo.is_fired = true;
 	ammo.start_pos = player_motion.position;
-	ammo.damage = 25;
+	if (ammo.damage == 0) {
+		ammo.damage = 25;
+	}
 	ammo.target = { player_pos.x + unit_x * player.throw_distance, player_pos.y + unit_y * player.throw_distance };
 
 	registry.renderRequests.insert(
 		entity,
 		{
-			TEXTURE_ASSET_ID::FRUIT,
+			ITEM_INFO.at(registry.items.get(item_entity).type).texture,
 			EFFECT_ASSET_ID::TEXTURED,
 			GEOMETRY_BUFFER_ID::SPRITE,
 			RENDER_LAYER::ITEM,
