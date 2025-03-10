@@ -2,6 +2,7 @@
 #include "render_system.hpp"
 #include "potion_system.hpp"
 #include "drag_listener.hpp"
+#include "item_system.hpp"
 #include "rmlui_system_interface.hpp"
 #include "rmlui_render_interface.hpp"
 #include <iostream>
@@ -398,6 +399,7 @@ void UISystem::handleMouseMoveEvent(double x, double y)
 {
 	if (!m_initialized || !m_context) return;
 	ladleFollowMouse(x, y);
+	bottleFollowMouse(x, y);
 	m_context->ProcessMouseMove((int)x, (int)y, getKeyModifiers());
 }
 
@@ -434,48 +436,75 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
         // Check for an inventory click
         if (slotId != -1) {
             selectInventorySlot(slotId);
-            // if (isCauldronOpen()) {
-            //     Entity& player = registry.players.entities[0];
-            //     Inventory& player_inventory = registry.inventories.get(player);
-
-            //     Entity cauldron = getOpenedCauldron();
-            //     Inventory cauldron_inventory = registry.inventories.get(cauldron);
-
-            //     if (player_inventory.selection >= 0 && player_inventory.selection < player_inventory.items.size()) {
-            //         Entity selected_item = player_inventory.items[player_inventory.selection];
-            //         std::cout << "Selected item entity ID: " << selected_item << std::endl;
-
-            //         if (registry.ingredients.has(selected_item)) {
-            //             PotionSystem::addIngredient(cauldron, selected_item);
-            //             registry.inventories.remove(selected_item);
-            //             std::cout << "removed ingredient" << selected_item << std::endl;
-            //         }
-            //         std::cout << "doesnt have the ingredient" << selected_item << std::endl;
-            //     }
-            // }
         }
 
-		// Check for ladle pickup
+		// Check for ladle/bottle pickup
 		do {
-			if (!isCauldronOpen() || hovered->GetId() != "ladle") {
+			if (!isCauldronOpen()) {
 				break;
 			}
 
-			// If we click cauldron don't drop ladle
-			Rml::Element* ladle = hovered;
-			Rml::Element* possibleCauldron = m_context->GetElementAtPoint(Rml::Vector2f(x, y), ladle);
-			if (possibleCauldron && possibleCauldron->GetId() == "cauldron") {
+			Rml::Element* clickedElement = m_context->GetHoverElement();
+			if (!clickedElement) {
 				break;
 			}
 
-			if (heldLadle) {
-				ladle->SetProperty("top", "70px");
-				ladle->SetProperty("left", "962px");
-				heldLadle = nullptr;
+			std::string elementId = clickedElement->GetId();
+			if (elementId == "ladle") {
+				// If we click cauldron don't drop ladle
+				Rml::Element* possibleCauldron = m_context->GetElementAtPoint(Rml::Vector2f(x, y), clickedElement);
+				if (possibleCauldron && possibleCauldron->GetId() == "cauldron") {
+					break;
+				}
+				if (heldLadle) {
+					clickedElement->SetProperty("top", "70px");
+					clickedElement->SetProperty("left", "962px");
+					heldLadle = nullptr;
+				}
+				else {
+					heldLadle = clickedElement;
+					ladleFollowMouse(x, y);
+				}
 			}
-			else {
-				heldLadle = ladle;
-				ladleFollowMouse(x, y);
+			else if (elementId == "bottle") {
+				if (heldBottle) {
+					printf("bottle clicked\n");
+					// Check if clicking on cauldron water to bottle potion
+					Rml::Element* possibleCauldron = m_context->GetElementAtPoint(Rml::Vector2f(x, y), clickedElement);
+					printf("possibleCauldron: %s\n", possibleCauldron->GetId().c_str());
+					if (possibleCauldron && (possibleCauldron->GetId() == "cauldron-water" || possibleCauldron->GetId() == "cauldron")) {
+						printf("bottle clicked on cauldron water\n");
+						// Create potion and add to player inventory
+						Entity cauldron = getOpenedCauldron();
+						Potion potion = PotionSystem::bottlePotion(cauldron);
+						
+						// Create potion item and add to player inventory
+						Entity player = registry.players.entities[0];
+						Entity potionItem = ItemSystem::createPotion(
+							potion.effect,
+							potion.duration,
+							potion.color,
+							potion.quality,
+							potion.effectValue
+						);
+						// TODO - Looks like potions are broken with inventory persistence rn
+						ItemSystem::addItemToInventory(player, potionItem);
+
+						// Reset bottle position
+						clickedElement->SetProperty("top", "420px");
+						clickedElement->SetProperty("left", "1000px");
+						heldBottle = nullptr;
+					} else {
+						// If we didn't click on the cauldron water, reset the bottle position
+						clickedElement->SetProperty("top", "420px");
+						clickedElement->SetProperty("left", "1000px");
+						heldBottle = nullptr;
+					}
+				}
+				else {
+					heldBottle = clickedElement;
+					bottleFollowMouse(x, y);
+				}
 			}
 		} while (false);
 	}
@@ -845,6 +874,18 @@ bool UISystem::openCauldron(Entity cauldron)
                     decorator: image("interactables/spoon_on_table.png" contain);
                     drag: drag;
                 }
+
+                #bottle {
+                    position: absolute;
+                    width: 60px;
+                    height: 100px;
+                    top: 420px;
+                    left: 1000px;
+                    decorator: image("interactables/potion_bottle.png" contain);
+                    drag: drag;
+                    transform: rotate(180deg) scale(1.2);
+                    cursor: pointer;
+                }
             </style>
         </head>
         <body>
@@ -854,6 +895,7 @@ bool UISystem::openCauldron(Entity cauldron)
             </div>
             <div id="cauldron"></div>
             <div id="ladle"></div>
+            <div id="bottle"></div>
         </body>
         </rml>
         )";
@@ -866,6 +908,7 @@ bool UISystem::openCauldron(Entity cauldron)
 
 		DragListener::RegisterDraggableElement(m_cauldron_document->GetElementById("heat"));
 		DragListener::RegisterDraggableElement(m_cauldron_document->GetElementById("ladle"));
+		DragListener::RegisterDraggableElement(m_cauldron_document->GetElementById("bottle"));
 		DragListener::RegisterDragDropElement(m_cauldron_document->GetElementById("cauldron-water"));
 		DragListener::RegisterDragDropElement(m_cauldron_document->GetElementById("cauldron"));
 		m_cauldron_document->Show();
@@ -925,4 +968,18 @@ void UISystem::ladleFollowMouse(double x, double y)
 	int iy = (int)y - hl / 2;
 	heldLadle->SetProperty("left", std::to_string(ix) + "px");
 	heldLadle->SetProperty("top", std::to_string(iy) + "px");
+}
+
+void UISystem::bottleFollowMouse(double x, double y)
+{
+	if (!heldBottle) {
+		return;
+	}
+
+	int wb = heldBottle->GetProperty("width")->GetNumericValue().number;
+	int hb = heldBottle->GetProperty("height")->GetNumericValue().number;
+	int ix = (int)x - wb / 2;
+	int iy = (int)y - hb / 2;
+	heldBottle->SetProperty("left", std::to_string(ix) + "px");
+	heldBottle->SetProperty("top", std::to_string(iy) + "px");
 }
