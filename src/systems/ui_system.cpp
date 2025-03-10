@@ -398,8 +398,7 @@ void UISystem::handleTextInput(unsigned int codepoint)
 void UISystem::handleMouseMoveEvent(double x, double y)
 {
 	if (!m_initialized || !m_context) return;
-	ladleFollowMouse(x, y);
-	bottleFollowMouse(x, y);
+	updateFollowMouse(x, y);
 	m_context->ProcessMouseMove((int)x, (int)y, getKeyModifiers());
 }
 
@@ -444,68 +443,57 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 				break;
 			}
 
-			Rml::Element* clickedElement = m_context->GetHoverElement();
-			if (!clickedElement) {
-				break;
-			}
-
-			std::string elementId = clickedElement->GetId();
-			if (elementId == "ladle") {
+			if (id == "ladle") {
 				// If we click cauldron don't drop ladle
-				Rml::Element* possibleCauldron = m_context->GetElementAtPoint(Rml::Vector2f(x, y), clickedElement);
+				Rml::Element* possibleCauldron = m_context->GetElementAtPoint(Rml::Vector2f(x, y), hovered);
 				if (possibleCauldron && possibleCauldron->GetId() == "cauldron") {
 					break;
 				}
 				if (heldLadle) {
-					clickedElement->SetProperty("top", "70px");
-					clickedElement->SetProperty("left", "962px");
+					hovered->SetProperty("top", "70px");
+					hovered->SetProperty("left", "962px");
 					heldLadle = nullptr;
 				}
 				else {
-					heldLadle = clickedElement;
-					ladleFollowMouse(x, y);
+					heldLadle = hovered;
+					updateFollowMouse(x, y);
 				}
-			}
-			else if (elementId == "bottle") {
-				if (heldBottle) {
-					printf("bottle clicked\n");
-					// Check if clicking on cauldron water to bottle potion
-					Rml::Element* possibleCauldron = m_context->GetElementAtPoint(Rml::Vector2f(x, y), clickedElement);
-					printf("possibleCauldron: %s\n", possibleCauldron->GetId().c_str());
-					if (possibleCauldron && (possibleCauldron->GetId() == "cauldron-water" || possibleCauldron->GetId() == "cauldron")) {
-						printf("bottle clicked on cauldron water\n");
-						// Create potion and add to player inventory
-						Entity cauldron = getOpenedCauldron();
-						Potion potion = PotionSystem::bottlePotion(cauldron);
-						
-						// Create potion item and add to player inventory
-						Entity player = registry.players.entities[0];
-						Entity potionItem = ItemSystem::createPotion(
-							potion.effect,
-							potion.duration,
-							potion.color,
-							potion.quality,
-							potion.effectValue
-						);
-						// TODO - Looks like potions are broken with inventory persistence rn
-						ItemSystem::addItemToInventory(player, potionItem);
 
-						// Reset bottle position
-						clickedElement->SetProperty("top", "420px");
-						clickedElement->SetProperty("left", "1000px");
-						heldBottle = nullptr;
-					} else {
-						// If we didn't click on the cauldron water, reset the bottle position
-						clickedElement->SetProperty("top", "420px");
-						clickedElement->SetProperty("left", "1000px");
-						heldBottle = nullptr;
-					}
-				}
-				else {
-					heldBottle = clickedElement;
-					bottleFollowMouse(x, y);
-				}
+                break;
 			}
+
+			if (id == "bottle") {
+				if (!heldBottle) {
+					heldBottle = hovered;
+					updateFollowMouse(x, y);
+                    break;
+                }
+
+                // Check if clicking on cauldron water to bottle potion
+                Rml::Element* possibleCauldron = m_context->GetElementAtPoint(Rml::Vector2f(x, y), hovered);
+                if (possibleCauldron && (possibleCauldron->GetId() == "cauldron-water" || possibleCauldron->GetId() == "cauldron")) {
+                    // Create potion and add to player inventory
+                    Entity cauldron = getOpenedCauldron();
+                    Potion potion = PotionSystem::bottlePotion(cauldron);
+                    
+                    // Create potion item and add to player inventory
+                    Entity player = registry.players.entities[0];
+                    Entity potionItem = ItemSystem::createPotion(
+                        potion.effect,
+                        potion.duration,
+                        potion.color,
+                        potion.quality,
+                        potion.effectValue
+                    );
+                    // TODO - Looks like potions are broken with inventory persistence rn
+                    ItemSystem::addItemToInventory(player, potionItem);
+                }
+
+                // Reset bottle position
+                hovered->SetProperty("top", "420px");
+                hovered->SetProperty("left", "1000px");
+                heldBottle = nullptr;
+            }
 		} while (false);
 	}
 
@@ -882,7 +870,6 @@ bool UISystem::openCauldron(Entity cauldron)
                     top: 420px;
                     left: 1000px;
                     decorator: image("interactables/potion_bottle.png" contain);
-                    drag: drag;
                     transform: rotate(180deg) scale(1.2);
                     cursor: pointer;
                 }
@@ -908,7 +895,6 @@ bool UISystem::openCauldron(Entity cauldron)
 
 		DragListener::RegisterDraggableElement(m_cauldron_document->GetElementById("heat"));
 		DragListener::RegisterDraggableElement(m_cauldron_document->GetElementById("ladle"));
-		DragListener::RegisterDraggableElement(m_cauldron_document->GetElementById("bottle"));
 		DragListener::RegisterDragDropElement(m_cauldron_document->GetElementById("cauldron-water"));
 		DragListener::RegisterDragDropElement(m_cauldron_document->GetElementById("cauldron"));
 		m_cauldron_document->Show();
@@ -956,30 +942,23 @@ Entity UISystem::getOpenedCauldron() {
 	return openedCauldron;
 }
 
-void UISystem::ladleFollowMouse(double x, double y)
-{
-	if (!heldLadle) {
-		return;
-	}
-
-	int wl = heldLadle->GetProperty("width")->GetNumericValue().number;
-	int hl = heldLadle->GetProperty("height")->GetNumericValue().number;
+void followMouse(Rml::Element* e, double x, double y) {
+    int wl = e->GetProperty("width")->GetNumericValue().number;
+	int hl = e->GetProperty("height")->GetNumericValue().number;
 	int ix = (int)x - wl / 2;
 	int iy = (int)y - hl / 2;
-	heldLadle->SetProperty("left", std::to_string(ix) + "px");
-	heldLadle->SetProperty("top", std::to_string(iy) + "px");
+	e->SetProperty("left", std::to_string(ix) + "px");
+	e->SetProperty("top", std::to_string(iy) + "px");
 }
 
-void UISystem::bottleFollowMouse(double x, double y)
-{
-	if (!heldBottle) {
+void UISystem::updateFollowMouse(double x, double y) {
+	if (heldLadle) {
+        followMouse(heldLadle, x, y);
 		return;
 	}
 
-	int wb = heldBottle->GetProperty("width")->GetNumericValue().number;
-	int hb = heldBottle->GetProperty("height")->GetNumericValue().number;
-	int ix = (int)x - wb / 2;
-	int iy = (int)y - hb / 2;
-	heldBottle->SetProperty("left", std::to_string(ix) + "px");
-	heldBottle->SetProperty("top", std::to_string(iy) + "px");
+    if (heldBottle) {
+        followMouse(heldBottle, x, y);
+        return;
+    }
 }

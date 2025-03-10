@@ -59,8 +59,9 @@ public:
     bool isCauldronOpen();
     bool isCauldronOpen(Entity cauldron);
     Entity getOpenedCauldron();
-    void ladleFollowMouse(double x, double y);
-    void bottleFollowMouse(double x, double y);
+
+    // Update items that should follow the mouse
+    void updateFollowMouse(double x, double y);
 
     // tutorial
     void updateTutorial();

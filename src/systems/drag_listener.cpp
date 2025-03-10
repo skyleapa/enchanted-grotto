@@ -138,11 +138,6 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			stirCoords.push_back(getPolarCoordinates(mouseCoords));
 			return;
 		}
-
-		if (cur->GetId() == "bottle") {
-			event.StopImmediatePropagation();
-			return;
-		}
 	}
 
 	if (event == "drag") {
@@ -160,11 +155,6 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			checkCompletedStir();
 			return;
 		}
-
-		if (cur->GetId() == "bottle") {
-			event.StopImmediatePropagation();
-			return;
-		}
 	}
 
 	if (event == "dragend") {
@@ -178,11 +168,6 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 		if (cur->GetId() == "ladle") {
 			cur->SetProperty("decorator", "image(\"interactables/spoon_on_table.png\" contain)");
 			stirCoords.clear();
-			return;
-		}
-
-		if (cur->GetId() == "bottle") {
-			event.StopImmediatePropagation();
 			return;
 		}
 	}

@@ -413,7 +413,7 @@ const std::unordered_map<ItemType, ItemInfo> ITEM_INFO = {
 		ItemType::SAP, {
 			"Sap", 
 			vec2((float)GRID_CELL_WIDTH_PX * 1.5, (float)GRID_CELL_HEIGHT_PX * 1.8),
-			TEXTURE_ASSET_ID::FRUIT, 
+			TEXTURE_ASSET_ID::SAP, 
 			"interactables/sap.png", 
 			true}},
 	{
