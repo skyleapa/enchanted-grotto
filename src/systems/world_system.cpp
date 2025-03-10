@@ -140,7 +140,7 @@ bool WorldSystem::start_and_load_sounds()
 	return true;
 }
 
-void WorldSystem::init(RenderSystem* renderer_arg, BiomeSystem* biome_sys)
+bool WorldSystem::init(RenderSystem* renderer_arg, BiomeSystem* biome_sys)
 {
 
 	this->renderer = renderer_arg;
@@ -152,6 +152,8 @@ void WorldSystem::init(RenderSystem* renderer_arg, BiomeSystem* biome_sys)
 
 	// Set all states to default
 	restart_game();
+
+	return true;
 }
 
 // Update our game world
@@ -159,29 +161,20 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 {
 	// Updating window title with number of fruits to show serialization
 	std::stringstream title_ss;
-	int total_items = 0;
-	int total_fruits = 0;
-	int total_beans = 0;
 
-	// Only count items in the player's inventory
-	if (!registry.players.entities.empty()) {
-		Entity player = registry.players.entities[0];
-		if (registry.inventories.has(player)) {
-			Inventory& player_inv = registry.inventories.get(player);
-
-			// Count specific item types and their amounts
-			for (Entity item : player_inv.items) {
-				if (registry.items.has(item)) {
-					Item& item_comp = registry.items.get(item);
-					total_items += item_comp.amount;
-					if (item_comp.type == ItemType::MAGICAL_FRUIT) total_fruits += item_comp.amount;
-					else if (item_comp.type == ItemType::COFFEE_BEANS) total_beans += item_comp.amount;
-				}
-			}
-		}
+	updateFPS(elapsed_ms_since_last_update);
+	// visually update counter every 500 ms
+	if (m_fps_update_timer >= 500.0f) {
+		m_fps_update_timer = 0.0f;
+		m_last_fps = m_current_fps;
+		title_ss << "FPS: " << m_current_fps;
+	}
+	else {
+		title_ss << "FPS: " << m_last_fps;
 	}
 
-	title_ss << total_items << " items in player inventory: " << total_fruits << " fruits " << total_beans << " beans";
+	// title_ss << total_items << " items in player inventory: " << total_fruits << " fruits " << total_beans << " beans";
+
 	glfwSetWindowTitle(window, title_ss.str().c_str());
 
 	if (registry.players.entities.size() < 1)
@@ -258,6 +251,10 @@ void WorldSystem::restart_game()
 		createPlayer(renderer, vec2(GROTTO_ENTRANCE_X, GROTTO_ENTRANCE_Y + 50));
 	}
 
+	// re-open tutorial
+	ScreenState& screen = registry.screenStates.components[0];
+	state.tutorial_state = (int)TUTORIAL::WELCOME_SCREEN;
+
 	// Restore player's inventory if we had one
 	if (!player_inventory_data.empty() && !registry.players.entities.empty()) {
 		Entity new_player = registry.players.entities[0];
@@ -285,6 +282,8 @@ void WorldSystem::handle_collisions()
 
 	for (Entity collision_entity : registry.collisions.entities)
 	{
+		ScreenState& screen = registry.screenStates.components[0];
+
 		if (!registry.collisions.has(collision_entity))
 			continue;
 		Collision& collision = registry.collisions.get(collision_entity);
@@ -300,10 +299,15 @@ void WorldSystem::handle_collisions()
 			registry.remove_all_components_of(ammo_entity);
 			if (enemy.health <= 0) {
 				// using can_move for now since ent cannot move, but mummy can
-				if (enemy.can_move == 0) { 
-					createSap(renderer, registry.motions.get(enemy_entity).position, "Sap", 1);
-				} else if (enemy.can_move == 1) {
-					createMagicalDust(renderer, registry.motions.get(enemy_entity).position, "Magical Dust", 1);
+				if (enemy.can_move == 0) {
+					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::SAP, 1);
+				}
+				else if (enemy.can_move == 1) {
+					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MAGICAL_DUST, 1);
+				}
+				if (screen.tutorial_state == (int)TUTORIAL::ATTACK_ENEMY) {
+					screen.tutorial_step_complete = true;
+					screen.tutorial_state += 1;
 				}
 				registry.remove_all_components_of(enemy_entity);
 			}
@@ -311,8 +315,7 @@ void WorldSystem::handle_collisions()
 		}
 		// case where enemy hits player - automatically die and restart game
 		else if ((registry.players.has(collision_entity) || registry.players.has(collision.other)) && (registry.enemies.has(collision_entity) || registry.enemies.has(collision.other))) {
-			ScreenState& state = registry.screenStates.components[0];
-			state.game_over = true;
+			screen.game_over = true;
 			continue;
 		}
 
@@ -343,8 +346,12 @@ bool WorldSystem::is_over() const
 }
 
 // on key callback
-void WorldSystem::on_key(int key, int, int action, int mod)
+void WorldSystem::on_key(int key, int scancode, int action, int mod)
 {
+	// First pass the event to the UI system if it's initialized
+	if (m_ui_system != nullptr) {
+		m_ui_system->handleKeyEvent(key, scancode, action, mod);
+	}
 
 	// exit game w/ ESC
 	if (action == GLFW_RELEASE && key == GLFW_KEY_ESCAPE)
@@ -365,21 +372,42 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 
 	std::unordered_set<int>& pressed_keys = WorldSystem::pressed_keys;
 
-	// // Handle character movement
-	if (key == GLFW_KEY_W || key == GLFW_KEY_S || key == GLFW_KEY_D || key == GLFW_KEY_A || key == GLFW_KEY_F)
+	ScreenState& screen = registry.screenStates.components[0];
+
+	// toggle tutorial
+	if (action == GLFW_PRESS && key == GLFW_KEY_T) {
+		screen.tutorial_step_complete = true;
+		screen.tutorial_state = (screen.tutorial_state == (int)TUTORIAL::COMPLETE) ? (int)TUTORIAL::WELCOME_SCREEN : (int)TUTORIAL::COMPLETE;
+	}
+
+	// skip tutorial step
+	if (action == GLFW_PRESS && key == GLFW_KEY_N) {
+		screen.tutorial_step_complete = true;
+		if (screen.tutorial_state != (int)TUTORIAL::COMPLETE) screen.tutorial_state += 1;
+	}
+
+
+	// Handle character movement
+	if (key == GLFW_KEY_W || key == GLFW_KEY_S || key == GLFW_KEY_D || key == GLFW_KEY_A)
 		// even if press happened in different biome should still continue after switching
 	{
-		if (action == GLFW_PRESS && key != GLFW_KEY_F)
+		// handle tutorial movement
+		if (screen.tutorial_state == (int)TUTORIAL::MOVEMENT) {
+			screen.tutorial_step_complete = true;
+			screen.tutorial_state += 1;
+		}
+
+		if (action == GLFW_PRESS)
 		{
 			pressed_keys.insert(key);
 		}
 		else if (action == GLFW_RELEASE)
 		{
-			if (std::find(pressed_keys.begin(), pressed_keys.end(), key) != pressed_keys.end()) pressed_keys.erase(key);
+			if (std::find(pressed_keys.begin(), pressed_keys.end(), key) != pressed_keys.end())
+				pressed_keys.erase(key);
 		}
 	}
 
-	ScreenState& screen = registry.screenStates.components[0];
 	if (screen.is_switching_biome) return; // don't handle character movement or interaction if screen is switching
 	if (action == GLFW_PRESS && key == GLFW_KEY_F)
 	{
@@ -389,6 +417,10 @@ void WorldSystem::on_key(int key, int, int action, int mod)
 
 void WorldSystem::on_mouse_move(vec2 mouse_position)
 {
+	// Pass the event to the UI system if it's initialized
+	if (m_ui_system != nullptr) {
+		m_ui_system->handleMouseMoveEvent(mouse_position.x, mouse_position.y);
+	}
 
 	// record the current mouse position
 	mouse_pos_x = mouse_position.x;
@@ -397,15 +429,23 @@ void WorldSystem::on_mouse_move(vec2 mouse_position)
 
 void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 {
+	// Pass the event to the UI system if it's initialized 
+	if (m_ui_system != nullptr) {
+		m_ui_system->handleMouseButtonEvent(button, action, mods);
+	}
+
 	// on button press
 	if (action == GLFW_PRESS)
 	{
 		int tile_x = (int)(mouse_pos_x / GRID_CELL_WIDTH_PX);
 		int tile_y = (int)(mouse_pos_y / GRID_CELL_HEIGHT_PX);
 
-		std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
-		std::cout << "mouse tile position: " << tile_x << ", " << tile_y << std::endl;
+		// std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
+		// std::cout << "mouse tile position: " << tile_x << ", " << tile_y << std::endl;
 
+		if (m_ui_system != nullptr && m_ui_system->isCauldronOpen()) return;
+		if (mouse_pos_x >= BAR_X && mouse_pos_x <= BAR_X + BAR_WIDTH && mouse_pos_y >= BAR_Y && mouse_pos_y <= BAR_Y + BAR_HEIGHT) return;
+		// don't throw ammo if in potion making menu or clicking on inventory
 		throwAmmo(vec2(mouse_pos_x, mouse_pos_y));
 	}
 }
@@ -420,11 +460,13 @@ void WorldSystem::handle_player_interaction()
 	if (!registry.motions.has(player) || !registry.inventories.has(player))
 		return;
 
-	Motion& player_motion = registry.motions.get(player);
-
-	if (registry.items.entities.empty())
+	// If a cauldron is open just close it
+	if (m_ui_system->isCauldronOpen()) {
+		m_ui_system->closeCauldron();
 		return;
+	}
 
+	Motion& player_motion = registry.motions.get(player);
 	for (Entity item : registry.items.entities)
 	{
 		if (!registry.items.has(item) || !registry.motions.has(item))
@@ -434,14 +476,15 @@ void WorldSystem::handle_player_interaction()
 		Item& item_info = registry.items.get(item);
 
 		// Check if item is collectable or is an interactable entrance
-		if (!item_info.isCollectable && !registry.entrances.has(item))
+		if (!item_info.isCollectable && !registry.entrances.has(item) && !registry.cauldrons.has(item)) {
 			continue;
-
-		float distance = glm::distance(player_motion.position, item_motion.position);
+		}
 
 		// If item is not in pickup range, continue
-		if (distance > ITEM_PICKUP_RADIUS)
+		float distance = glm::distance(player_motion.position, item_motion.position);
+		if (distance > ITEM_PICKUP_RADIUS) {
 			continue;
+		}
 
 		// Handle interaction
 		bool handle_textbox = false;
@@ -452,6 +495,15 @@ void WorldSystem::handle_player_interaction()
 		else if (item_info.isCollectable)
 		{
 			handle_textbox = handle_item_pickup(player, item);
+		}
+		else if (registry.cauldrons.has(item)) {
+			std::cout << "found cauldron" << std::endl;
+			handle_textbox = m_ui_system->openCauldron(item);
+			if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::INTERACT_CAULDRON) {
+				ScreenState& screen = registry.screenStates.components[0];
+				screen.tutorial_step_complete = true;
+				screen.tutorial_state += 1;
+			}
 		}
 
 		if (handle_textbox)
@@ -467,14 +519,17 @@ void WorldSystem::handle_player_interaction()
 			}
 
 			// Remove visual components of the item
-			if (registry.motions.has(item) && !registry.entrances.has(item))
+			if (!item_info.isCollectable)
+				return;
+
+			if (registry.motions.has(item))
 				registry.motions.remove(item);
-			if (registry.renderRequests.has(item) && !registry.entrances.has(item))
+			if (registry.renderRequests.has(item))
 				registry.renderRequests.remove(item);
+
 			return;
 		}
 	}
-	return;
 }
 
 bool WorldSystem::handle_item_pickup(Entity player, Entity item)
@@ -483,14 +538,38 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 		return false;
 
 	Item& item_info = registry.items.get(item);
-
-	item_info.originalPosition = registry.motions.get(item).position;
-
 	if (!ItemSystem::addItemToInventory(player, item))
 		return false;
 
-	// Set a random respawn time (5-15 seconds)
-	item_info.respawnTime = (rand() % 10000 + 5000);
+	// handle fruit collection
+	if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::COLLECT_ITEMS) {
+		Inventory& inventory = registry.inventories.get(player);
+		bool collected_fruits = false;
+		bool collected_beans = false;
+		for (Entity& entity : inventory.items) {
+			if (!registry.items.has(entity)) continue;
+			Item& item = registry.items.get(entity);
+			if (item.type == ItemType::MAGICAL_FRUIT) {
+				if (item.amount >= 6) {
+					collected_fruits = true;
+				}
+			}
+			if (item.type == ItemType::COFFEE_BEANS) {
+				if (item.amount >= 5) {
+					collected_beans = true;
+				}
+			}
+		}
+		if (collected_fruits && collected_beans) {
+			ScreenState& screen = registry.screenStates.components[0];
+			screen.tutorial_step_complete = true;
+			screen.tutorial_state += 1;
+		}
+	}
+
+	// Set a random respawn time (1-5 seconds)
+	item_info.respawnTime = (rand() % 4000 + 1000);
+
 
 	// Hide item by removing motion & render components
 	if (registry.motions.has(item))
@@ -522,7 +601,7 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 	{
 		Item& item_info = registry.items.get(item);
 
-		if (item_info.canRespawn == false) 
+		if (item_info.canRespawn == false)
 			return;
 
 		if (item_info.respawnTime <= 0)
@@ -541,15 +620,13 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 		motion.position = item_info.originalPosition;
 		motion.angle = 180.f;
 		motion.velocity = { 0, 0 };
-		motion.scale = (item_info.name == "Magical Fruit")
-			? vec2(FRUIT_WIDTH, FRUIT_HEIGHT)
-			: vec2(COFFEE_BEAN_WIDTH, COFFEE_BEAN_HEIGHT);
+		motion.scale = ITEM_INFO.at(item_info.type).size;
 
 		// Restore render request
 		registry.renderRequests.insert(
 			item,
 			{
-				(item_info.name == "Magical Fruit") ? TEXTURE_ASSET_ID::FRUIT : TEXTURE_ASSET_ID::COFFEE_BEAN,
+				ITEM_INFO.at(item_info.type).texture,
 				EFFECT_ASSET_ID::TEXTURED,
 				GEOMETRY_BUFFER_ID::SPRITE,
 				RENDER_LAYER::ITEM
@@ -636,6 +713,8 @@ void WorldSystem::update_textbox_visibility()
 }
 
 void WorldSystem::updatePlayerWalkAndAnimation(Entity& player, Motion& player_motion, float elapsed_ms_since_last_update) {
+
+	if (m_ui_system != nullptr && m_ui_system->isCauldronOpen()) return; // no movement while menu is open
 
 	Animation& player_animation = registry.animations.get(player);
 
@@ -747,4 +826,22 @@ void WorldSystem::updateThrownAmmo(float elapsed_ms_since_last_update) {
 			registry.remove_all_components_of(entity);
 
 	}
+}
+
+void WorldSystem::updateFPS(float elapsed_ms)
+{
+	m_frame_time_sum -= m_frame_times[m_frame_time_index];
+	m_frame_times[m_frame_time_index] = elapsed_ms;
+	m_frame_time_sum += elapsed_ms;
+
+	m_frame_time_index = (m_frame_time_index + 1) % 60;
+
+	// Calculate average FPS over the last 60 frames
+	float avg_frame_time = m_frame_time_sum / 60.0f;
+	if (avg_frame_time > 0) {
+		m_current_fps = 1000.0f / avg_frame_time;
+	}
+
+	// Update timer for display refresh
+	m_fps_update_timer += elapsed_ms;
 }

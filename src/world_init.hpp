@@ -4,6 +4,9 @@
 #include "tinyECS/tiny_ecs.hpp"
 #include "systems/render_system.hpp"
 
+// welcome to the grotto screen
+Entity createWelcomeScreen(RenderSystem* renderer, vec2 position);
+
 // trees
 Entity createTree(RenderSystem* renderer, vec2 position);
 
@@ -37,17 +40,8 @@ Entity createGrottoEntrance(RenderSystem* renderer, vec2 position, int id, std::
 // bushes
 Entity createBush(RenderSystem* renderer, vec2 position);
 
-
-Entity createFruit(RenderSystem* renderer, vec2 position, std::string name, int amount);
-
-// coffee bean
-Entity createCoffeeBean(RenderSystem* renderer, vec2 position, std::string name, int amount);
-
-// sap
-Entity createSap(RenderSystem* renderer, vec2 position, std::string name, int amount);
-
-// magical dust
-Entity createMagicalDust(RenderSystem* renderer, vec2 position, std::string name, int amount);
+// Collectable items
+Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemType type, int amount);
 
 // cauldron
 Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name);

@@ -13,6 +13,7 @@
 
 #include "render_system.hpp"
 #include "biome_system.hpp"
+#include "ui_system.hpp"
 
 // Container for all our entities and game logic.
 // Individual rendering / updates are deferred to the update() methods.
@@ -31,7 +32,7 @@ public:
 	void close_window();
 
 	// starts the game
-	void init(RenderSystem* renderer, BiomeSystem* biome_sys);
+	bool init(RenderSystem* renderer, BiomeSystem* biome_sys);
 
 	// releases all associated resources
 	~WorldSystem();
@@ -55,9 +56,14 @@ public:
 
 	void updatePlayerWalkAndAnimation(Entity& player, Motion& player_motion, float elapsed_ms_since_last_update);
 
+	// Set reference to UI system
+	void setUISystem(UISystem* ui_system) { m_ui_system = ui_system; }
+
 	void throwAmmo(vec2 target);
 
 	void updateThrownAmmo(float elapsed_ms_since_last_update);
+
+	void updateFPS(float elapsed_ms);
 private:
 
 	float mouse_pos_x = 0.0f;
@@ -76,8 +82,8 @@ private:
 
 	// Game state
 	RenderSystem* renderer;
-	float current_speed;
 	BiomeSystem* biome_sys;
+	float current_speed;
 
 	// grid
 	std::vector<Entity> grid_lines;
@@ -93,4 +99,15 @@ private:
 	// C++ random number generator
 	std::default_random_engine rng;
 	std::uniform_real_distribution<float> uniform_dist; // number between 0..1
+
+	// Pointer to the UI system for passing input events
+	UISystem* m_ui_system = nullptr;
+
+	// FPS counter variables
+	float m_frame_times[60] = { 0 }; // Store last 60 frame times
+	int m_frame_time_index = 0;
+	float m_frame_time_sum = 0;
+	float m_current_fps = 0;
+	float m_fps_update_timer = 0;
+	float m_last_fps = 0;
 };

@@ -1,4 +1,6 @@
 #include "potion_system.hpp"
+#include "item_system.hpp"
+#include "tinyECS/registry.hpp"
 #include <unordered_set>
 #include <iostream>
 #include <cfloat>
@@ -20,6 +22,7 @@ void PotionSystem::updateCauldrons(float elapsed_ms) {
 
 		// Add wait action if threshold exceeded
 		if (cc.timeSinceLastAction >= DEFAULT_WAIT) {
+			std::cout << "WAIT action recorded!" << std::endl;
 			recordAction(cauldron, ActionType::WAIT, cc.timeSinceLastAction / DEFAULT_WAIT);
 			cc.timeSinceLastAction = 0;
 		}
@@ -70,38 +73,86 @@ void PotionSystem::addIngredient(Entity cauldron, Entity ingredient) {
 		}
 
 		lastItem.amount += curItem.amount;
+
+		// handle tutorial adding 5 coffee beans and 3 magical fruits
+		if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::ADD_INGREDIENT) {
+
+			// this is buggy so just add 8 items
+			bool added_fruits = false;
+			bool added_beans = false;
+			for (Entity& entity : ci.items) {
+				if (!registry.items.has(entity)) continue;
+				Item& item = registry.items.get(entity);
+				if (item.type == ItemType::MAGICAL_FRUIT) {
+					if (item.amount >= 3) {
+						added_fruits = true;
+					}
+				}
+				if (item.type == ItemType::COFFEE_BEANS) {
+					if (item.amount >= 1) { // TODO CHANGE
+						added_beans = true;
+					}
+				}
+			}
+			if (added_beans && added_fruits) {
+				ScreenState& screen = registry.screenStates.components[0];
+				screen.tutorial_step_complete = true;
+				screen.tutorial_state += 1;
+			}
+		}
 		updatePotion(cauldron);
 		return;
 	} while (false);
 
 	ci.items.push_back(ingredient);
 	recordAction(cauldron, ActionType::ADD_INGREDIENT, ci.items.size() - 1);
+
 }
 
 void PotionSystem::changeHeat(Entity cauldron, int value) {
 	Cauldron& cc = registry.cauldrons.get(cauldron);
+	if (cc.actions.size() == 0 && value == 0) {
+		return;
+	}
+
 	cc.heatLevel = value;
 	recordAction(cauldron, ActionType::MODIFY_HEAT, value);
 }
 
-void PotionSystem::stirCauldron(Entity cauldron, int stirs) {
+void PotionSystem::stirCauldron(Entity cauldron) {
 	Inventory& ci = registry.inventories.get(cauldron);
 	if (ci.items.size() == 0) {
 		return;
 	}
-	recordAction(cauldron, ActionType::STIR, stirs);
+	recordAction(cauldron, ActionType::STIR, 1);
 }
 
 Potion PotionSystem::bottlePotion(Entity cauldron) {
 	Potion potion = getPotion(cauldron);
+
+	// Clear cauldron
 	Cauldron& cc = registry.cauldrons.get(cauldron);
-	cc.filled = false;
 	cc.color = DEFAULT_COLOR;
+	// cc.filled = false; FOR NOW CAULDRON IS ALWAYS FILLED
 	cc.colorElapsed = 0;
 	cc.heatLevel = 0;
 	cc.timeElapsed = 0;
 	cc.timeSinceLastAction = 0;
 	cc.actions.clear();
+
+	// Clear cauldron items
+	Inventory& cinv = registry.inventories.get(cauldron);
+	for (Entity item : cinv.items) {
+		ItemSystem::destroyItem(item);
+	}
+	cinv.items.clear();
+
+	// handle bottling tutorial
+	if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::BOTTLE) {
+		ScreenState& screen = registry.screenStates.components[0];
+		screen.tutorial_step_complete = true;
+		screen.tutorial_state += 1;
+	}
 	return potion;
 }
 
@@ -166,12 +217,12 @@ Potion PotionSystem::getDefaultPotion() {
 vec3 PotionSystem::interpolateColor(vec3 init, vec3 end, float ratio) {
 	vec3 res(0, 0, 0);
 	for (int i = 0; i < 3; i++) {
-		int diff = abs(init[i] - end[i]) * ratio;
+		float diff = abs(init[i] - end[i]) * ratio;
 		if (end[i] > init[i]) {
-			res[i] = init[i] + diff;
+			res[i] = init[i] + (int)diff;
 		}
 		else {
-			res[i] = init[i] - diff;
+			res[i] = init[i] - (int)diff;
 		}
 	}
 	return res;
@@ -262,9 +313,12 @@ void PotionSystem::updatePotion(Entity cauldron) {
 	Inventory& ci = registry.inventories.get(cauldron);
 	Potion potion = getDefaultPotion();
 
+	// Reset last action time, since every action triggers an update
+	cc.timeSinceLastAction = 0;
+
 	// Step 1: Get recipe
 	Recipe recipe;
-	bool foundRecipe;
+	bool foundRecipe = false;
 	std::unordered_set<ItemType> cauldronTypes;
 	for (Entity e : ci.items) {
 		cauldronTypes.insert(registry.items.get(e).type);

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "../src/common.hpp"
-#include "../src/item_system.hpp"
+#include "../src/systems/item_system.hpp"
 #include "../src/tinyECS/registry.hpp"
 
 // Based on googletest docs: http://google.github.io/googletest/reference/testing.html

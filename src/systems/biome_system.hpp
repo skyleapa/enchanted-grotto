@@ -1,3 +1,5 @@
+#pragma once
+
 #include "./tinyECS/registry.hpp"
 #include "./tinyECS/components.hpp"
 #include "common.hpp"

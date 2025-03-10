@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <climits>
 #include "../src/common.hpp"
-#include "../src/potion_system.hpp"
+#include "../src/systems/potion_system.hpp"
 #include "../src/tinyECS/registry.hpp"
 
 class PotionSystemTest : public ::testing::Test {
@@ -144,8 +144,8 @@ TEST_F(PotionSystemTest, PotionMissOneStep) {
 // Test bottling potion that screwed up ingredient order
 TEST_F(PotionSystemTest, PotionIncorrectIngredientOrder) {
     Entity fruit = createIngredient(ItemType::MAGICAL_FRUIT, 3, 0.0f);
-
     Entity coffee = createIngredient(ItemType::COFFEE_BEANS, 5, 1.0f);
+    
     PotionSystem::changeHeat(cauldron, 100);
     potion_system.updateCauldrons(DEFAULT_WAIT * 2);
     PotionSystem::addIngredient(cauldron, fruit);      // <- Swapped!
@@ -154,7 +154,7 @@ TEST_F(PotionSystemTest, PotionIncorrectIngredientOrder) {
     potion_system.updateCauldrons(DEFAULT_WAIT * 6);
     
     Potion potion = PotionSystem::bottlePotion(cauldron);
-    EXPECT_FLOAT_EQ(potion.quality, (6.0f - 2 * INGREDIENT_TYPE_PENALTY) / 6.0f);
+    EXPECT_FLOAT_EQ(potion.quality, (6.0f - 2 * INGREDIENT_TYPE_PENALTY * POTION_DIFFICULTY) / 6.0f);
 }
 
 // Test bottling potion that screwed up a stir amount
@@ -170,5 +170,5 @@ TEST_F(PotionSystemTest, PotionIncorrectStirAmount) {
     potion_system.updateCauldrons(DEFAULT_WAIT * 6);
     
     Potion potion = PotionSystem::bottlePotion(cauldron);
-    EXPECT_FLOAT_EQ(potion.quality, (6.0f - STIR_PENALTY) / 6.0f);
+    EXPECT_FLOAT_EQ(potion.quality, (6.0f - STIR_PENALTY * POTION_DIFFICULTY) / 6.0f);
 }

@@ -1,5 +1,5 @@
 # CMakeLists.txt for Towers vs. Invaders
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.12)
 
 project(enchanted_grotto)
 
@@ -155,6 +155,53 @@ if(BUILD_GAME)
     # needed to add this for Linux
     if(IS_OS_LINUX)
         target_link_libraries(${PROJECT_NAME} PUBLIC glfw ${CMAKE_DL_LIBS})
+    endif()
+
+    # Setup RmlUi
+    # First we need to make sure freetype exists on windows
+    find_package(Freetype)
+    if (NOT Freetype_FOUND)
+        set (FREETYPE_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/ext/RmlUi/Dependencies/lib/freetype.lib")
+        set (FREETYPE_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/ext/RmlUi/Dependencies/include")
+    endif()
+    find_package(Freetype REQUIRED)
+
+    # From SimpleGL-3 cmake code
+    if(TARGET Freetype AND NOT TARGET Freetype::Freetype)
+        add_library(Freetype::Freetype ALIAS freetype)
+    endif()
+
+    # Get RmlUi root build folder to find package
+    set(RmlUi_ROOT "${CMAKE_SOURCE_DIR}/ext/RmlUi/Build")
+    find_package(RmlUi REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PUBLIC RmlUi::RmlUi)
+
+    # Add Windows-specific configuration
+    if(IS_OS_WINDOWS)
+        # Create font directory in build
+        file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/data/fonts)
+        
+        # Copy font file to build directory
+        file(COPY "${CMAKE_SOURCE_DIR}/data/fonts/OpenSans-Regular.ttf" 
+            DESTINATION "${CMAKE_BINARY_DIR}/data/fonts")
+        if(EXISTS "${CMAKE_BINARY_DIR}/Debug")
+        file(COPY "${CMAKE_SOURCE_DIR}/data/fonts/OpenSans-Regular.ttf" 
+                DESTINATION "${CMAKE_BINARY_DIR}/Debug/data/fonts")
+        endif()
+        if(EXISTS "${CMAKE_BINARY_DIR}/Release")
+        file(COPY "${CMAKE_SOURCE_DIR}/data/fonts/OpenSans-Regular.ttf" 
+                DESTINATION "${CMAKE_BINARY_DIR}/Release/data/fonts")
+        endif()
+    endif()
+
+    # Add Mac-specific configuration
+    if(IS_OS_MAC)
+        # Create font directory in build
+        file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/data/fonts)
+        
+        # Copy fonts from ext directory to build directory
+        file(COPY "${CMAKE_SOURCE_DIR}/data/fonts/OpenSans-Regular.ttf" 
+            DESTINATION "${CMAKE_BINARY_DIR}/data/fonts")
     endif()
 endif()
 

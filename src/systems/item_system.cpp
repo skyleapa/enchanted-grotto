@@ -9,7 +9,8 @@ Entity ItemSystem::createItem(ItemType type, int amount, bool isCollectable, boo
     item.type = type;
     item.amount = amount;
     item.isCollectable = isCollectable;
-    item.name = ITEM_NAMES.at(type);
+    item.name = ITEM_INFO.at(type).name;
+    item.is_ammo = is_ammo;
 
     if (is_ammo) {
         registry.ammo.emplace(entity);
@@ -19,7 +20,7 @@ Entity ItemSystem::createItem(ItemType type, int amount, bool isCollectable, boo
 }
 
 Entity ItemSystem::createIngredient(ItemType type, int amount) {
-    Entity entity = createItem(type, amount, false, false);
+    Entity entity = createItem(type, amount, false, true);
     
     // Add ingredient-specific component
     Ingredient& ingredient = registry.ingredients.emplace(entity);
@@ -42,6 +43,14 @@ Entity ItemSystem::createPotion(PotionEffect effect, int duration, const vec3& c
     // Get potion name
     registry.items.get(entity).name = EFFECT_NAMES.at(effect) + " Potion";
     return entity;
+}
+
+Entity ItemSystem::createCollectableIngredient(vec2 position, ItemType type, int amount) {
+    Entity item = createItem(type, amount, true, true);
+    registry.items.get(item).originalPosition = position;
+    Ingredient& ing = registry.ingredients.emplace(item);
+    ing.grindLevel = ITEM_INFO.at(type).grindable ? 0.f : -1.f;
+	return item;
 }
 
 void ItemSystem::init() {
@@ -74,19 +83,34 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
     
     // Try to stack if possible
     for (Entity existing : inv.items) {
-        if (registry.items.has(existing)) {
-            Item& existing_item = registry.items.get(existing);
-            if (existing_item.type == item_comp.type) {
-                // Add amounts together
-                existing_item.amount += item_comp.amount;
-                if (registry.ammo.has(item) && !registry.ammo.has(existing)) registry.ammo.emplace(existing); // update ammo in case it didn't previous save component
-                // Don't destroy the original item if it's a collectable (it will respawn)
-                if (!item_comp.isCollectable) {
-                    destroyItem(item);
-                }
-                return true;
+        if (!registry.items.has(existing)) {
+            continue;
+        }
+
+        Item& existing_item = registry.items.get(existing);
+        if (existing_item.type != item_comp.type) {
+            continue;
+        }
+
+        if (existing_item.type == ItemType::POTION) {
+            PotionEffect first = registry.potions.get(existing).effect;
+            PotionEffect second = registry.potions.get(item).effect;
+            if (first != second) {
+                continue;
             }
         }
+
+        // Add amounts together
+        existing_item.amount += item_comp.amount;
+        if (registry.ammo.has(item) && !registry.ammo.has(existing)) {
+            registry.ammo.emplace(existing); // update ammo in case it didn't previous save component
+        }
+
+        // Don't destroy the original item if it's a collectable (it will respawn)
+        if (!item_comp.isCollectable) {
+            destroyItem(item);
+        }
+        return true;
     }
     
     // If we couldn't stack, check capacity
@@ -97,8 +121,7 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
     
     // If item is collectable, create a copy for the inventory
     if (item_comp.isCollectable) {
-        Entity copy = createItem(item_comp.type, item_comp.amount, false, registry.ammo.has(item));
-        if (registry.ammo.has(item) && !registry.ammo.has(copy)) registry.ammo.emplace(copy); // ensure ammo component gets copied over
+        Entity copy = copyItem(item);
         inv.items.push_back(copy);
     } else {
         inv.items.push_back(item);
@@ -135,6 +158,33 @@ bool ItemSystem::transferItem(Entity source_inventory, Entity target_inventory, 
     return false;
 }
 
+void ItemSystem::swapItems(Entity inventory, int slot1, int slot2) {
+    std::vector<Entity>& items = registry.inventories.get(inventory).items;
+    if (items.size() <= slot1 || items.size() <= slot2) {
+        return;
+    }
+    std::iter_swap(items.begin() + slot1, items.begin() + slot2);
+}
+
+Entity ItemSystem::copyItem(Entity toCopy) {
+    Item& item = registry.items.get(toCopy);
+    Entity res = Entity();
+    registry.items.emplace(res, Item(item));
+    if (registry.ingredients.has(toCopy)) {
+        auto& oldIng = registry.ingredients.get(toCopy);
+        registry.ingredients.emplace(res, Ingredient(oldIng));
+    }
+    if (registry.potions.has(toCopy)) {
+        auto& oldPot = registry.potions.get(toCopy);
+        registry.potions.emplace(res, Potion(oldPot));
+    }
+    if (registry.ammo.has(toCopy)) {
+        auto& oldAmmo = registry.ammo.get(toCopy);
+        registry.ammo.emplace(res, Ammo(oldAmmo));
+    }
+	return res;
+}
+
 // Serialization
 nlohmann::json ItemSystem::serializeItem(Entity item) {
     nlohmann::json data;
@@ -147,7 +197,7 @@ nlohmann::json ItemSystem::serializeItem(Entity item) {
     data["saved_id"] = item.id();  // Store the Entity ID for reference during deserialization
     data["type_id"] = item_comp.type;
     data["amount"] = item_comp.amount;
-    data["is_ammo"] = registry.ammo.has(item);
+    data["is_ammo"] = item_comp.is_ammo;
     
     // Serialize ingredient data if present
     if (registry.ingredients.has(item)) {
@@ -234,7 +284,6 @@ Entity ItemSystem::deserializeItem(const nlohmann::json& data) {
 
 void ItemSystem::deserializeInventory(Entity inventory, const nlohmann::json& data) {
     if (!registry.inventories.has(inventory)) {
-        inventory = Entity();
         registry.inventories.emplace(inventory);
     }
     

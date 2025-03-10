@@ -1,6 +1,33 @@
 #include "world_init.hpp"
 #include "tinyECS/registry.hpp"
+#include "systems/item_system.hpp"
 #include <iostream>
+
+Entity createWelcomeScreen(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+	WelcomeScreen& screen = registry.welcomeScreens.emplace(entity);
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.velocity = { 0, 0 };
+	motion.angle = 180.f;
+	motion.position = position;
+
+	motion.scale = vec2({ WINDOW_WIDTH_PX - 230, WINDOW_HEIGHT_PX - 170 });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::WELCOME_TO_GROTTO,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::UI });
+
+	return entity;
+}
 
 Entity createTree(RenderSystem* renderer, vec2 position)
 {
@@ -358,52 +385,13 @@ Entity createBush(RenderSystem* renderer, vec2 position)
 	return entity;
 }
 
-Entity createFruit(RenderSystem* renderer, vec2 position, std::string name, int amount)
+Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemType type, int amount)
 {
-	auto entity = Entity();
+	assert(ITEM_INFO.count(type) && "Tried to create an item that has no info!");
+	ItemInfo info = ITEM_INFO.at(type);
+	auto entity = ItemSystem::createCollectableIngredient(position, type, amount);
 
-	Item& item = registry.items.emplace(entity);
-	item.type = ItemType::MAGICAL_FRUIT;
-	item.name = name;
-	item.isCollectable = true; // Make sure the item can be collected
-	item.amount = amount;
-	item.originalPosition = position;
-
-	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
-	registry.meshPtrs.emplace(entity, &mesh);
-
-	Ammo& ammo = registry.ammo.emplace(entity); // TODO remove
-
-	// Create motion
-	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 180.f;
-	motion.velocity = { 0, 0 };
-	motion.position = position;
-	motion.scale = vec2({ FRUIT_WIDTH, FRUIT_HEIGHT });
-
-	Entity textbox = createTextbox(renderer, position, entity);
-
-	registry.renderRequests.insert(
-		entity,
-		{ TEXTURE_ASSET_ID::FRUIT,
-		 EFFECT_ASSET_ID::TEXTURED,
-		 GEOMETRY_BUFFER_ID::SPRITE,
-		 RENDER_LAYER::ITEM });
-
-	return entity;
-}
-
-Entity createCoffeeBean(RenderSystem* renderer, vec2 position, std::string name, int amount)
-{
-	auto entity = Entity();
-
-	Item& item = registry.items.emplace(entity);
-	item.type = ItemType::COFFEE_BEANS;
-	item.name = name;
-	item.isCollectable = true; // Make sure the item can be collected
-	item.amount = amount;
-	item.originalPosition = position;
-
+	// Mesh
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
 	registry.meshPtrs.emplace(entity, &mesh);
 
@@ -412,82 +400,19 @@ Entity createCoffeeBean(RenderSystem* renderer, vec2 position, std::string name,
 	motion.angle = 180.f;
 	motion.velocity = { 0, 0 };
 	motion.position = position;
-	motion.scale = vec2({ COFFEE_BEAN_WIDTH, COFFEE_BEAN_HEIGHT });
+	motion.scale = info.size;
 
-	Entity textbox = createTextbox(renderer, position, entity);
-
-	registry.renderRequests.insert(
-		entity,
-		{ TEXTURE_ASSET_ID::COFFEE_BEAN,
-		 EFFECT_ASSET_ID::TEXTURED,
-		 GEOMETRY_BUFFER_ID::SPRITE,
-		 RENDER_LAYER::ITEM });
-
-	return entity;
-}
-
-Entity createSap(RenderSystem* renderer, vec2 position, std::string name, int amount)
-{
-	auto entity = Entity();
-
-	Item& item = registry.items.emplace(entity);
-	item.type = ItemType::SAP;
-	item.name = name;
-	item.isCollectable = true; // Make sure the item can be collected
-	item.amount = amount;
-	item.originalPosition = position;
-	item.canRespawn = false;
-
-	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
-	registry.meshPtrs.emplace(entity, &mesh);
-
-	// Create motion
-	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 180.f;
-	motion.velocity = { 0, 0 };
-	motion.position = position;
-	motion.scale = vec2({ FRUIT_WIDTH, FRUIT_HEIGHT });
-
-	vec2 textbox_position = { position.x + (motion.scale.x * 0.6f), position.y };
-	Entity textbox = createTextbox(renderer, textbox_position, entity);
+	if (type == ItemType::SAP) {
+		vec2 textbox_position = { position.x + 160.0f, position.y };
+		Entity textbox = createTextbox(renderer, textbox_position, entity);
+	}
+	else {
+		Entity textbox = createTextbox(renderer, position, entity);
+	}
 
 	registry.renderRequests.insert(
 		entity,
-		{ TEXTURE_ASSET_ID::SAP,
-		 EFFECT_ASSET_ID::TEXTURED,
-		 GEOMETRY_BUFFER_ID::SPRITE,
-		 RENDER_LAYER::ITEM });
-
-	return entity;
-}
-
-Entity createMagicalDust(RenderSystem* renderer, vec2 position, std::string name, int amount)
-{
-	auto entity = Entity();
-
-	Item& item = registry.items.emplace(entity);
-	item.type = ItemType::MAGICAL_DUST;
-	item.name = name;
-	item.isCollectable = true; // Make sure the item can be collected
-	item.amount = amount;
-	item.originalPosition = position;
-	item.canRespawn = false;
-
-	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
-	registry.meshPtrs.emplace(entity, &mesh);
-
-	// Create motion
-	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 180.f;
-	motion.velocity = { 0, 0 };
-	motion.position = position;
-	motion.scale = vec2({ COFFEE_BEAN_WIDTH, COFFEE_BEAN_HEIGHT });
-
-	Entity textbox = createTextbox(renderer, position, entity);
-
-	registry.renderRequests.insert(
-		entity,
-		{ TEXTURE_ASSET_ID::MAGICAL_DUST,
+		{ info.texture,
 		 EFFECT_ASSET_ID::TEXTURED,
 		 GEOMETRY_BUFFER_ID::SPRITE,
 		 RENDER_LAYER::ITEM });
@@ -515,7 +440,13 @@ Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id,
 	motion.position = position;
 	motion.scale = scale;
 
+	// Create cauldron
+	auto& cauldron = registry.cauldrons.emplace(entity);
 	Entity textbox = createTextbox(renderer, position, entity);
+
+	// Give cauldron an inventory
+	auto& inv = registry.inventories.emplace(entity);
+	inv.capacity = 0x7FFFFFFF;
 
 	registry.renderRequests.insert(
 		entity,
@@ -702,39 +633,40 @@ RenderRequest getTextboxRenderRequest(Textbox& textbox)
 
 	Item& item = registry.items.get(textbox.targetItem);
 
+	// TODO: Use ItemType and a map
 	// Find correct texture based on item type
 	TEXTURE_ASSET_ID texture = TEXTURE_ASSET_ID::TEXTBOX_FRUIT; // placeholder
-	if (item.name == "Magical Fruit")
+	if (item.type == ItemType::MAGICAL_FRUIT)
 	{
 		texture = TEXTURE_ASSET_ID::TEXTBOX_FRUIT;
 	}
-	else if (item.name == "Coffee Bean")
+	else if (item.type == ItemType::COFFEE_BEANS)
 	{
 		texture = TEXTURE_ASSET_ID::TEXTBOX_COFFEE_BEAN;
 	}
-	else if (item.name == "Grotto Entrance")
+	else if (item.type == ItemType::GROTTO_ENTRANCE)
 	{
 		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_GROTTO;
 	}
-	else if (item.name == "Cauldron")
+	else if (item.type == ItemType::CAULDRON)
 	{
 		texture = TEXTURE_ASSET_ID::TEXTBOX_CAULDRON;
 	}
-	else if (item.name == "Grotto Exit")
+	else if (item.type == ItemType::GROTTO_EXIT)
 	{
 		texture = TEXTURE_ASSET_ID::TEXTBOX_GROTTO_EXIT;
 	}
-	else if (item.name == "Desert Entrance")
+	else if (item.type == ItemType::DESERT_ENTRANCE)
 	{
 		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_DESERT;
 	}
-	else if (item.name == "Desert Exit") {
+	else if (item.type == ItemType::FOREST_ENTRANCE) {
 		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_FOREST;
 	}
-	else if (item.name == "Sap") {
+	else if (item.type == ItemType::SAP) {
 		texture = TEXTURE_ASSET_ID::TEXTBOX_SAP;
 	}
-	else if (item.name == "Magical Dust") {
+	else if (item.type == ItemType::MAGICAL_DUST) {
 		texture = TEXTURE_ASSET_ID::TEXTBOX_MAGICAL_DUST;
 	}
 
@@ -750,7 +682,7 @@ Entity createEnt(RenderSystem* renderer, vec2 position, int movable) {
 
 	Enemy& enemy = registry.enemies.emplace(entity);
 	enemy.attack_radius = 5;
-	enemy.health = 100;
+	enemy.health = 75;
 	enemy.start_pos = position;
 	enemy.state = (int)ENEMY_STATE::IDLE;
 	enemy.can_move = movable;
@@ -836,13 +768,15 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 
 	ammo.is_fired = true;
 	ammo.start_pos = player_motion.position;
-	ammo.damage = 25;
+	if (ammo.damage == 0) {
+		ammo.damage = 25;
+	}
 	ammo.target = { player_pos.x + unit_x * player.throw_distance, player_pos.y + unit_y * player.throw_distance };
 
 	registry.renderRequests.insert(
 		entity,
 		{
-			TEXTURE_ASSET_ID::FRUIT,
+			ITEM_INFO.at(registry.items.get(item_entity).type).texture,
 			EFFECT_ASSET_ID::TEXTURED,
 			GEOMETRY_BUFFER_ID::SPRITE,
 			RENDER_LAYER::ITEM,

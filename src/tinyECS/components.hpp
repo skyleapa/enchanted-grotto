@@ -8,7 +8,7 @@
 struct Player
 {
 	std::string name;
-	int throw_distance = 250; // pixels
+	int throw_distance = 150; // pixels
 	float cooldown = 0.f; // defaults to 0, but when ammo is tossed, will have a 1000 ms cooldown
 };
 
@@ -48,6 +48,8 @@ struct ScreenState
 	float fade_status = 0; // 0 - before fade out, 1 after fade out, 2 - after fade in
 	bool game_over = false;
 	GLuint from_biome = 1;
+	int tutorial_state = 0;
+	bool tutorial_step_complete = true;
 };
 
 // A struct to refer to debugging graphics in the ECS
@@ -115,6 +117,7 @@ struct Item
 	int amount;
 	float respawnTime = 0.0f;
 	vec2 originalPosition;
+	bool is_ammo = false;
 	bool canRespawn = true;
 };
 
@@ -130,13 +133,13 @@ struct Inventory
 	std::vector<Entity> items;
 	int capacity;
 	bool isFull;
-	int selection = 0;
+	int selection = 0; // index that corresponds to the selected item indexed in items
 };
 
 struct Cauldron
 {
+	vec3 color = DEFAULT_COLOR;       // The water entity to send the color to
 	int heatLevel = 0;                // 0-100
-	vec3 color = DEFAULT_COLOR;       // RGB color
 	bool filled = false;              // Whether the cauldron has water
 	int timeElapsed = 0;              // Time elapsed since water filled and heat knob turned, in ms
 	int timeSinceLastAction = 0;      // Time elapsed since the last action, in ms. -1 means
@@ -214,6 +217,10 @@ struct DecisionTreeNode {
 	DecisionTreeNode(std::function<bool()> cond, ENEMY_STATE tState, ENEMY_STATE fState)
 		: condition(cond), trueState(tState), falseState(fState) {
 	}
+};
+
+struct WelcomeScreen {
+
 };
 
 /**
@@ -301,7 +308,9 @@ enum class TEXTURE_ASSET_ID
 	TEXTBOX_MAGICAL_DUST = TEXTBOX_SAP + 1,
 	ENT = TEXTBOX_MAGICAL_DUST + 1,
 	MUMMY = ENT + 1,
-	TEXTURE_COUNT = MUMMY + 1,
+	POTION = MUMMY + 1,
+	WELCOME_TO_GROTTO = POTION + 1,
+	TEXTURE_COUNT = WELCOME_TO_GROTTO + 1,
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 
@@ -345,7 +354,8 @@ enum class RENDER_LAYER
 	TERRAIN,
 	STRUCTURE,
 	PLAYER,
-	ITEM
+	ITEM,
+	UI
 };
 
 struct RenderRequest
@@ -355,6 +365,7 @@ struct RenderRequest
 	GEOMETRY_BUFFER_ID used_geometry = GEOMETRY_BUFFER_ID::GEOMETRY_COUNT;
 	RENDER_LAYER layer = RENDER_LAYER::BACKGROUND;
 	int render_sub_layer = 0; // lower values are rendered above
+	bool is_visible = true;
 };
 
 enum class BIOME
@@ -371,4 +382,51 @@ enum class DIRECTION
 	DOWN = 1,
 	RIGHT = 2,
 	LEFT = 3
+};
+
+// STORES ALL INFO ABOUT COLLECTABLE ITEMS
+struct ItemInfo {
+	std::string name;
+	vec2 size;
+	TEXTURE_ASSET_ID texture;
+	std::string texture_path;
+	bool grindable;
+};
+
+const std::unordered_map<ItemType, ItemInfo> ITEM_INFO = {
+	{
+		ItemType::POTION, {
+			"Potion",
+			vec2(0, 0),
+			TEXTURE_ASSET_ID::POTION,
+			"interactables/potion_item.png",
+			false}},
+	{
+		ItemType::COFFEE_BEANS, {
+			"Coffee Beans",
+			vec2((float)GRID_CELL_HEIGHT_PX * 0.9, (float)GRID_CELL_HEIGHT_PX * 0.9),
+			TEXTURE_ASSET_ID::COFFEE_BEAN,
+			"interactables/coffee_bean.png",
+			true}},
+	{
+		ItemType::MAGICAL_FRUIT, {
+			"Magical Fruit",
+			vec2((float)GRID_CELL_WIDTH_PX * 1.5, (float)GRID_CELL_HEIGHT_PX * 1.8),
+			TEXTURE_ASSET_ID::FRUIT,
+			"interactables/magical_fruit.png",
+			false}},
+	{
+		ItemType::SAP, {
+			"Sap",
+			vec2((float)GRID_CELL_WIDTH_PX * 1.5, (float)GRID_CELL_HEIGHT_PX * 1.8),
+			TEXTURE_ASSET_ID::SAP,
+			"interactables/sap.png",
+			true}},
+	{
+		ItemType::MAGICAL_DUST, {
+			"Magical Dust",
+			vec2((float)GRID_CELL_WIDTH_PX * 0.9, (float)GRID_CELL_HEIGHT_PX * 0.9),
+			TEXTURE_ASSET_ID::MAGICAL_DUST,
+			"interactables/magical_dust.png",
+			true}},
 };

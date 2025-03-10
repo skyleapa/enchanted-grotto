@@ -255,7 +255,7 @@ void RenderSystem::drawToScreen()
 	case ((GLuint)BIOME::GROTTO):
 		glBindTexture(GL_TEXTURE_2D, texture_gl_handles[(GLuint)TEXTURE_ASSET_ID::GROTTO_BG]); // Background texture
 		break;
-	case ((GLuint) BIOME::DESERT):
+	case ((GLuint)BIOME::DESERT):
 		glBindTexture(GL_TEXTURE_2D, texture_gl_handles[(GLuint)TEXTURE_ASSET_ID::DESERT_BG]); // Background texture
 		break;
 	default:
@@ -320,7 +320,7 @@ void RenderSystem::fadeScreen()
 
 // Render our game world
 // http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
-void RenderSystem::draw()
+void RenderSystem::draw(UISystem* ui_system)
 {
 	// Getting size of window
 	int w, h;
@@ -357,6 +357,9 @@ void RenderSystem::draw()
 	// draw all entities with a render request to the frame buffer
 	for (Entity entity : entities)
 	{
+		// skip invisble entities
+		if (registry.renderRequests.has(entity) && !registry.renderRequests.get(entity).is_visible) continue;
+
 		// filter to entities that have a motion component
 		if (registry.motions.has(entity))
 		{
@@ -371,9 +374,18 @@ void RenderSystem::draw()
 		}
 	}
 
+	// Render ui system first, so it can be faded out
+	ui_system->draw();
+
+	// Fade screen
 	if (registry.screenStates.components[0].is_switching_biome) fadeScreen();
 
 	// flicker-free display with a double buffer
+	gl_has_errors();
+}
+
+void RenderSystem::swap_buffers()
+{
 	glfwSwapBuffers(window);
 	gl_has_errors();
 }
@@ -397,7 +409,11 @@ std::vector<Entity> RenderSystem::process_render_requests() {
 		RenderRequest& renderA = registry.renderRequests.get(a);
 		RenderRequest& renderB = registry.renderRequests.get(b);
 
-		// ITEM always renders above everything
+		// UI always renders above everything
+		if (renderA.layer == RENDER_LAYER::UI) return false;
+		if (renderB.layer == RENDER_LAYER::UI) return true;
+
+		// ITEM always renders above everything except UI
 		if (renderA.layer == RENDER_LAYER::ITEM) return false;
 		if (renderB.layer == RENDER_LAYER::ITEM) return true;
 

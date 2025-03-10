@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "common.hpp"
+#include "ui_system.hpp"
 #include "tinyECS/components.hpp"
 #include "tinyECS/tiny_ecs.hpp"
 
@@ -90,6 +91,8 @@ class RenderSystem {
 		textures_path("interactables/textbox_magical_dust.png"),
 		textures_path("enemies/ent.png"),
 		textures_path("enemies/mummy.png"),
+		textures_path("interactables/potion_item.png"),
+		textures_path("welcome_to_grotto.png")
 	};
 
 	std::array<GLuint, effect_count> effects;
@@ -132,7 +135,11 @@ public:
 	~RenderSystem();
 
 	// Draw all entities
-	void draw();
+	// Include UI system so we can specify order
+	void draw(UISystem* ui_system);
+
+	// Swap the frame buffers to display rendered content
+	void swap_buffers();
 
 	std::vector<Entity> process_render_requests();
 
