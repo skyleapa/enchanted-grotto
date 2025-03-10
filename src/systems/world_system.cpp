@@ -252,8 +252,8 @@ void WorldSystem::restart_game()
 	}
 
 	// re-open tutorial
-	ScreenState& screen = registry.screenStates.components[0];
 	state.tutorial_state = (int)TUTORIAL::WELCOME_SCREEN;
+	state.tutorial_step_complete = true;
 
 	// Restore player's inventory if we had one
 	if (!player_inventory_data.empty() && !registry.players.entities.empty()) {
@@ -377,7 +377,7 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 	// toggle tutorial
 	if (action == GLFW_PRESS && key == GLFW_KEY_T) {
 		screen.tutorial_step_complete = true;
-		screen.tutorial_state = (screen.tutorial_state == (int)TUTORIAL::COMPLETE) ? (int)TUTORIAL::WELCOME_SCREEN : (int)TUTORIAL::COMPLETE;
+		screen.tutorial_state = (screen.tutorial_state == (int)TUTORIAL::COMPLETE) ? (int)TUTORIAL::MOVEMENT : (int)TUTORIAL::COMPLETE;
 	}
 
 	// skip tutorial step

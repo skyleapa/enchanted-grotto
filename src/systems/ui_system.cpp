@@ -468,32 +468,32 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 					break;
 				}
 
-                // Check if clicking on cauldron water to bottle potion
-                Rml::Element* possibleCauldron = m_context->GetElementAtPoint(Rml::Vector2f(x, y), hovered);
-                if (possibleCauldron && (possibleCauldron->GetId() == "cauldron-water" || possibleCauldron->GetId() == "cauldron")) {
-                    // Create potion and add to player inventory
-                    Entity cauldron = getOpenedCauldron();
-                    Potion potion = PotionSystem::bottlePotion(cauldron);
-                    
-                    // Create potion item and add to player inventory
-                    Entity player = registry.players.entities[0];
-                    Entity potionItem = ItemSystem::createPotion(
-                        potion.effect,
-                        potion.duration,
-                        potion.color,
-                        potion.quality,
-                        potion.effectValue
-                    );
+				// Check if clicking on cauldron water to bottle potion
+				Rml::Element* possibleCauldron = m_context->GetElementAtPoint(Rml::Vector2f(x, y), hovered);
+				if (possibleCauldron && (possibleCauldron->GetId() == "cauldron-water" || possibleCauldron->GetId() == "cauldron")) {
+					// Create potion and add to player inventory
+					Entity cauldron = getOpenedCauldron();
+					Potion potion = PotionSystem::bottlePotion(cauldron);
 
-                    // TODOOO
-                    // if (potion.effect != PotionEffect::WATER) {
-                    //     registry.items.get(potionItem).is_ammo = true;
-                    //     auto& ammo = registry.ammo.emplace(potionItem);
-                    //     ammo.damage = 1000;
-                    // }
-                    
-                    ItemSystem::addItemToInventory(player, potionItem);
-                }
+					// Create potion item and add to player inventory
+					Entity player = registry.players.entities[0];
+					Entity potionItem = ItemSystem::createPotion(
+						potion.effect,
+						potion.duration,
+						potion.color,
+						potion.quality,
+						potion.effectValue
+					);
+
+					// TODOOO
+					// if (potion.effect != PotionEffect::WATER) {
+					//     registry.items.get(potionItem).is_ammo = true;
+					//     auto& ammo = registry.ammo.emplace(potionItem);
+					//     ammo.damage = 1000;
+					// }
+
+					ItemSystem::addItemToInventory(player, potionItem);
+				}
 
 				// Reset bottle position
 				hovered->SetProperty("top", "420px");
@@ -750,8 +750,10 @@ void UISystem::updateTutorial()
 		}
 
 		if (screen.tutorial_state != (int)TUTORIAL::WELCOME_SCREEN) {
-			Entity& welcome_screen = registry.welcomeScreens.entities[0];
-			registry.remove_all_components_of(welcome_screen);
+			if (registry.welcomeScreens.entities.size() > 0) {
+				Entity& welcome_screen = registry.welcomeScreens.entities[0];
+				registry.remove_all_components_of(welcome_screen);
+			}
 		}
 
 		// Mark tutorial step as incomplete again
