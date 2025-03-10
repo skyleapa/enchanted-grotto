@@ -141,58 +141,60 @@ void UISystem::step(float elapsed_ms)
 	if (!m_initialized || !m_context) return;
 
 	try {
-		// Update FPS counter
-		updateFPS(elapsed_ms);
+		// Moved FPS to title but leave code here in case we bring it back to on screen
 
-		// Create FPS counter UI if it doesn't exist
-		if (!m_fps_document) {
-			const char* fps_rml =
-				"<rml>\n"
-				"<head>\n"
-				"    <style>\n"
-				"        body {\n"
-				"            position: absolute;\n"
-				"            top: 10px;\n"
-				"            right: 10px;\n"
-				"            font-family: Open Sans;\n"
-				"            font-size: 18px;\n"
-				"            font-weight: bold;\n"
-				"            color: white;\n"
-				"            background-color: rgba(0, 0, 0, 0.7);\n"
-				"            padding: 8px 12px;\n"
-				"            border-radius: 8px;\n"
-				"            width: auto;\n"
-				"            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);\n"
-				"        }\n"
-				"    </style>\n"
-				"</head>\n"
-				"<body id=\"fps_counter\">FPS: 0</body>\n"
-				"</rml>";
+		// // Update FPS counter
+		// updateFPS(elapsed_ms);
 
-			m_fps_document = m_context->LoadDocumentFromMemory(fps_rml);
-			if (m_fps_document) {
-				m_fps_document->Show();
-			}
-		}
+		// // Create FPS counter UI if it doesn't exist
+		// if (!m_fps_document) {
+		// 	const char* fps_rml =
+		// 		"<rml>\n"
+		// 		"<head>\n"
+		// 		"    <style>\n"
+		// 		"        body {\n"
+		// 		"            position: absolute;\n"
+		// 		"            top: 10px;\n"
+		// 		"            right: 10px;\n"
+		// 		"            font-family: Open Sans;\n"
+		// 		"            font-size: 18px;\n"
+		// 		"            font-weight: bold;\n"
+		// 		"            color: white;\n"
+		// 		"            background-color: rgba(0, 0, 0, 0.7);\n"
+		// 		"            padding: 8px 12px;\n"
+		// 		"            border-radius: 8px;\n"
+		// 		"            width: auto;\n"
+		// 		"            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);\n"
+		// 		"        }\n"
+		// 		"    </style>\n"
+		// 		"</head>\n"
+		// 		"<body id=\"fps_counter\">FPS: 0</body>\n"
+		// 		"</rml>";
 
-		// Update FPS display every 250ms to avoid too frequent updates
-		if (m_fps_document && m_fps_update_timer >= 250.0f) {
-			m_fps_update_timer = 0.0f;
+		// 	m_fps_document = m_context->LoadDocumentFromMemory(fps_rml);
+		// 	if (m_fps_document) {
+		// 		m_fps_document->Show();
+		// 	}
+		// }
 
-			// Determine color based on FPS (green for good, yellow for ok, red for poor)
-			const char* color = "#00FF00"; // Green by default (good performance)
-			if (m_current_fps < 30.0f) {
-				color = "#FF0000"; // Red (poor performance)
-			}
-			else if (m_current_fps < 55.0f) {
-				color = "#FFFF00"; // Yellow (ok performance)
-			}
+		// // Update FPS display every 250ms to avoid too frequent updates
+		// if (m_fps_document && m_fps_update_timer >= 250.0f) {
+		// 	m_fps_update_timer = 0.0f;
 
-			char fps_text[64];
-			snprintf(fps_text, sizeof(fps_text), "FPS: <span style=\"color: %s;\">%.1f</span>",
-				color, m_current_fps);
-			m_fps_document->SetInnerRML(fps_text);
-		}
+		// 	// Determine color based on FPS (green for good, yellow for ok, red for poor)
+		// 	const char* color = "#00FF00"; // Green by default (good performance)
+		// 	if (m_current_fps < 30.0f) {
+		// 		color = "#FF0000"; // Red (poor performance)
+		// 	}
+		// 	else if (m_current_fps < 55.0f) {
+		// 		color = "#FFFF00"; // Yellow (ok performance)
+		// 	}
+
+		// 	char fps_text[64];
+		// 	snprintf(fps_text, sizeof(fps_text), "FPS: <span style=\"color: %s;\">%.1f</span>",
+		// 		color, m_current_fps);
+		// 	m_fps_document->SetInnerRML(fps_text);
+		// }
 
 		if (!m_inventory_document) {
 			createInventoryBar();
@@ -677,10 +679,16 @@ void UISystem::updateInventoryBar()
 					// TODO: Add item type to texture associations
 					// Add item display
 					if (item.type == ItemType::COFFEE_BEANS) {
-						slot_content += "<img src='interactables/coffee_bean.png' style='width: 32px; height: 32px; margin: 4px;' />";
+						slot_content += "<img src='interactables/coffee_bean.png' style='width: 32px; height: 32px; margin: 4px; transform: rotate(180deg);' />";
 					}
 					else if (item.type == ItemType::MAGICAL_FRUIT) {
-						slot_content += "<img src='interactables/magical_fruit.png' style='width: 32px; height: 32px; margin: 4px;' />";
+						slot_content += "<img src='interactables/magical_fruit.png' style='width: 32px; height: 32px; margin: 4px; transform: rotate(180deg);' />";
+					}
+					else if (item.type == ItemType::SAP) {
+						slot_content += "<img src='interactables/sap.png' style='width: 32px; height: 32px; margin: 4px; transform: rotate(180deg);' />";
+					}
+					else if (item.type == ItemType::MAGICAL_DUST) {
+						slot_content += "<img src='interactables/magical_dust.png' style='width: 32px; height: 32px; margin: 4px; transform: rotate(180deg);' />";
 					}
 					else if (item.type == ItemType::POTION) {
 						// TODO potion textures

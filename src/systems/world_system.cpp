@@ -161,29 +161,19 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 {
 	// Updating window title with number of fruits to show serialization
 	std::stringstream title_ss;
-	int total_items = 0;
-	int total_fruits = 0;
-	int total_beans = 0;
-
-	// Only count items in the player's inventory
-	if (!registry.players.entities.empty()) {
-		Entity player = registry.players.entities[0];
-		if (registry.inventories.has(player)) {
-			Inventory& player_inv = registry.inventories.get(player);
-
-			// Count specific item types and their amounts
-			for (Entity item : player_inv.items) {
-				if (registry.items.has(item)) {
-					Item& item_comp = registry.items.get(item);
-					total_items += item_comp.amount;
-					if (item_comp.type == ItemType::MAGICAL_FRUIT) total_fruits += item_comp.amount;
-					else if (item_comp.type == ItemType::COFFEE_BEANS) total_beans += item_comp.amount;
-				}
-			}
-		}
+	
+	updateFPS(elapsed_ms_since_last_update);
+	// visually update counter every 500 ms
+	if (m_fps_update_timer >= 500.0f) {
+		m_fps_update_timer = 0.0f;
+		m_last_fps = m_current_fps;
+		title_ss << "FPS: " << m_current_fps;
+	} else {
+		title_ss << "FPS: " << m_last_fps;
 	}
 
-	title_ss << total_items << " items in player inventory: " << total_fruits << " fruits " << total_beans << " beans";
+	// title_ss << total_items << " items in player inventory: " << total_fruits << " fruits " << total_beans << " beans";
+	
 	glfwSetWindowTitle(window, title_ss.str().c_str());
 
 	if (registry.players.entities.size() < 1)
@@ -240,6 +230,10 @@ void WorldSystem::restart_game()
 			player_inventory_data = ItemSystem::serializeInventory(player_entity);
 		}
 	}
+
+	// re-open tutorial
+	state.tutorial_state = (int) TUTORIAL::MOVEMENT;
+	state.tutorial_step_complete = true;
 
 	// Debugging for memory/component leaks
 	registry.list_all_components();
@@ -824,4 +818,22 @@ void WorldSystem::updateThrownAmmo(float elapsed_ms_since_last_update) {
 			registry.remove_all_components_of(entity);
 
 	}
+}
+
+void WorldSystem::updateFPS(float elapsed_ms)
+{
+	m_frame_time_sum -= m_frame_times[m_frame_time_index];
+	m_frame_times[m_frame_time_index] = elapsed_ms;
+	m_frame_time_sum += elapsed_ms;
+
+	m_frame_time_index = (m_frame_time_index + 1) % 60;
+
+	// Calculate average FPS over the last 60 frames
+	float avg_frame_time = m_frame_time_sum / 60.0f;
+	if (avg_frame_time > 0) {
+		m_current_fps = 1000.0f / avg_frame_time;
+	}
+
+	// Update timer for display refresh
+	m_fps_update_timer += elapsed_ms;
 }
