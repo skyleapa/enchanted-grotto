@@ -118,17 +118,16 @@ Players are able to interact with the cauldron and follow a series of steps to m
 4. Mesh-based Collisions
 The bridge now uses mesh-based collision detection and resolution. The top of the bridge and the bottom of the bridge have defined mesh .obj files that are rendered onto the screen. When the player’s bounding box intersects with any triangle in the mesh, this will be detected as a collision in physics_system, using barycentric coordinates to see if a line of the box intersects with the triangle
 5. Gameplay Tutorial
-Uses RmlUi to display tutorial steps and updates when the player has completed the step
-	
-Welcome message and WASD movement - complete on pressing any WASD key
-Fruit collection - complete on collecting 3 magical fruits or having 3 in inventory
-Combat and inventory selection - complete on defeating the enemy with 3 fruits
-Entering grotto - complete on interacting with grotto entrance
-Open potion making menu - complete on interacting with cauldron
-Heat knob - turn to H
-Add 5 coffee beans and 3 fruits
-Stirring - complete on picking up the ladle and successfully drawing a circle in cauldron to stir 3 times
-Pick up empty bottle and left click on cauldron to fill up a potion
+- Uses RmlUi to display tutorial steps and updates when the player has completed the step
+- Welcome message and WASD movement - complete on pressing any WASD key
+- Fruit collection - complete on collecting 3 magical fruits or having 3 in inventory
+- Combat and inventory selection - complete on defeating the enemy with 3 fruits
+- Entering grotto - complete on interacting with grotto entrance
+- Open potion making menu - complete on interacting with cauldron
+- Heat knob - turn to H
+- Add 5 coffee beans and 3 fruits
+- Stirring - complete on picking up the ladle and successfully drawing a circle in cauldron to stir 3 times
+- Pick up empty bottle and left click on cauldron to fill up a potion
 6. FPS Counter
 Displayed in the title and updates every 500ms.
 7. 2 minutes of non-repetitive gameplay
