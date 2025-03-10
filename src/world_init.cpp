@@ -405,7 +405,8 @@ Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemTy
 	if (type == ItemType::SAP) {
 		vec2 textbox_position = { position.x + 160.0f, position.y };
 		Entity textbox = createTextbox(renderer, textbox_position, entity);
-	} else {
+	}
+	else {
 		Entity textbox = createTextbox(renderer, position, entity);
 	}
 
