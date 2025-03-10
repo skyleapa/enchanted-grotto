@@ -18,6 +18,7 @@ Requires `freetype` to be installed. On macOS, use `brew install freetype`.
 chmod +x run.sh
 ./run.sh [game|test]
 ```
+
 # Milestone Features
 ## Milestone 1
 
@@ -83,4 +84,75 @@ Assets are digitally-drawn with Procreate (a graphics editor app). They are adde
 - The `potion_system.hpp` file defines several functions that can be used to update the state of cauldron entities, and fetch a potion from a cauldron if needed.
 - Every time a cauldron is updated, the system calculates the type and quality of the potion currently in the cauldron, updating its color and fading the cauldron’s current color towards the updated color.
 - The exact method used to calculate the type and quality of a potion based on the given list of recipes is documented in the header function `PotionSystem#updatePotion`.
+
+
+## Milestone 2
+
+**IMPORTANT (Kevin): If you previously ran Milestone 1, there are breaking changes to our persistence structure for Milestone 2. You will need to remove the `/build/game_state.json` file for the game to run.**
+
+## Build & Run Instructions
+Both systems take in a `game|test` argument:
+- `game` builds and runs the full game
+- `test` builds and runs tests for item serialization and potion comparison mechanics
+- If no arguments are supplied, the scripts default to `game`
+
+### Windows:
+```bash
+.\run [game|test]
+```
+
+### Linux/macOS:
+```bash
+chmod +x run.sh
+./run.sh [game|test]
+```
+
+### Required Elements:
+1. Improved AI:
+Enemy behavior is based on a decision tree with four states: Attack, Wander, Return, and Idle. In Attack, the enemy chases when the player gets too close. If the player gets away, the enemy switches to Wander and moves around randomly for a short time, then it enters Return, heading back to its spawn point. It stays in Idle until the player comes back into range.
+2. Improved Sprite Animations:
+The player now has a walking animation, so that as you move around the WASD keys, you can see the player animation. This is handled in WorldSystem::updatePlayerWalkAndAnimation(), and the frames for the assets are hand drawn.
+3. Improved Gameplay and Assets:
+We’ve included more background assets and sprites to support our game, such as the new desert, enemies and potion making menu.
+Players are able to interact with the cauldron and follow a series of steps to make a potion, improving the gameplay.
+4. Mesh-based Collisions
+The bridge now uses mesh-based collision detection and resolution. The top of the bridge and the bottom of the bridge have defined mesh .obj files that are rendered onto the screen. When the player’s bounding box intersects with any triangle in the mesh, this will be detected as a collision in physics_system, using barycentric coordinates to see if a line of the box intersects with the triangle
+5. Gameplay Tutorial
+Uses RmlUi to display tutorial steps and updates when the player has completed the step
+	
+Welcome message and WASD movement - complete on pressing any WASD key
+Fruit collection - complete on collecting 3 magical fruits or having 3 in inventory
+Combat and inventory selection - complete on defeating the enemy with 3 fruits
+Entering grotto - complete on interacting with grotto entrance
+Open potion making menu - complete on interacting with cauldron
+Heat knob - turn to H
+Add 5 coffee beans and 3 fruits
+Stirring - complete on picking up the ladle and successfully drawing a circle in cauldron to stir 3 times
+Pick up empty bottle and left click on cauldron to fill up a potion
+6. FPS Counter
+Displayed in the title and updates every 500ms.
+7. 2 minutes of non-repetitive gameplay
+Gameplay is illustrated by our demo video and the test plan walkthrough.
+8. Minimal lag
+Demonstrated by FPS counter in the screen title.
+9. Updated test plan
+Uploaded to `/doc/test-plan.docx`
+10. Updated bug list
+Uploaded to `/doc/bug-report.xlsx`
+11. Demo video
+TODO: include YouTube link
+
+## Creative Elements: 
+### Software Engineering: External Integration (20) - RmlUi
+We integrated RmlUi to facilitate integral game UIs such as the potion making menus, tutorials, and inventory bar. This integration will continue to remain in the game, supporting additional features like game HUDs and our inventory chest menu. RmlUi was approved by Kevin Huang in tutorial, based on our private Piazza post: https://piazza.com/class/m5kml0k6fxs2sz/post/271
+
+RmlUi also packages FreeType for use in our game.
+
+Relevant RmlUi code can be seen in `ui_system.cpp`, `ui_system.hpp`, `rmlui_render_interface.cpp`, and `rmlui_system_interface.cpp`. 
+
+RmlUi GitHub: https://github.com/mikke89/RmlUi 
+
+### User Interface (UI) & Input/Output (IO): Mouse Gestures (22) - RmlUi
+Users can now use their mouse to interact with the potion making menu. Mouse gestures include clicking on the ladle to pick it up, then dragging it into the cauldron which will update the ladle sprite. Then users can move their mouse in a circular motion to “stir” the cauldron. Users can also interact with the heat knob with their mouse by left clicking and dragging the knob. Users can also click on the empty potion bottle and drag it over the cauldron to bottle a potion.
+
 
