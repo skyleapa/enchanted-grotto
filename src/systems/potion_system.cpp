@@ -316,8 +316,6 @@ void PotionSystem::updatePotion(Entity cauldron) {
 		potion.effectValue = min_potency + (recipe.highestQualityEffect - min_potency) * potion.quality;
 		potion.duration = min_duration + (recipe.highestQualityDuration - min_duration) * potion.quality;
 		potion.color = interpolateColor(DEFAULT_COLOR, recipe.finalPotionColor, potion.quality);
-		std::cout << "Color should be: " << potion.color.x << " " << potion.color.y << " " << potion.color.z << std::endl;
-		std::cout << "Potion quality: " << potion.quality << std::endl;
 	}
 	else if (ci.items.size() > 0) {
 		// Otherwise, if there are ingredients, then its failed
