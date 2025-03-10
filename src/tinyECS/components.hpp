@@ -304,7 +304,8 @@ enum class TEXTURE_ASSET_ID
 	TEXTBOX_MAGICAL_DUST = TEXTBOX_SAP + 1,
 	ENT = TEXTBOX_MAGICAL_DUST + 1,
 	MUMMY = ENT + 1,
-	TEXTURE_COUNT = MUMMY + 1,
+	POTION = MUMMY + 1,
+	TEXTURE_COUNT = POTION + 1,
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 
@@ -392,8 +393,8 @@ const std::unordered_map<ItemType, ItemInfo> ITEM_INFO = {
 		ItemType::POTION, {
 			"Potion", 
 			vec2(0, 0), 
-			TEXTURE_ASSET_ID::TEXTURE_COUNT, 
-			"", 
+			TEXTURE_ASSET_ID::POTION, 
+			"interactables/potion_item.png", 
 			false}},
 	{
 		ItemType::COFFEE_BEANS, {

@@ -369,7 +369,6 @@ int UISystem::getKeyModifiers()
 	return modifiers;
 }
 
-
 void UISystem::handleKeyEvent(int key, int scancode, int action, int mods)
 {
 	if (!m_initialized || !m_context) return;
@@ -671,18 +670,24 @@ void UISystem::updateInventoryBar()
 			// Add item display
 			if (i < inventory.items.size()) {
 				Entity item_entity = inventory.items[i];
+                if (!registry.items.has(item_entity)) {
+                    continue;
+                }
 
-				if (registry.items.has(item_entity)) {
-					Item& item = registry.items.get(item_entity);
-                    std::string tex = ITEM_INFO.count(item.type) ? ITEM_INFO.at(item.type).texture_path : "interactables/coffee_bean.png";
-					slot_content += "<img src = '" + tex + "' style='width: 32px; height: 32px; margin: 4px; transform: scaleY(-1);' />";
+                Item& item = registry.items.get(item_entity);
+                std::string tex = ITEM_INFO.count(item.type) ? ITEM_INFO.at(item.type).texture_path : "interactables/coffee_bean.png";
+                slot_content += "<img src = '" + tex + "' style='width: 32px; height: 32px; margin: 4px; transform: scaleY(-1); ";
+                if (item.type == ItemType::POTION) {
+                    vec3 color = registry.potions.get(item_entity).color;
+                    slot_content += "image-color: " + getImageColorProperty(color, 255) + ";";
+                }
+                slot_content += "' />";
 
-					// Add item count if more than 1
-					if (item.amount > 1) {
-						slot_content += "<div style='position: absolute; bottom: 0; right: 2px; color: #FFFFFF; font-size: 14px; font-weight: bold;'>" +
-							std::to_string(item.amount) + "</div>";
-					}
-				}
+                // Add item count if more than 1
+                if (item.amount > 1) {
+                    slot_content += "<div style='position: absolute; bottom: 0; right: 2px; color: #FFFFFF; font-size: 14px; font-weight: bold;'>" +
+                        std::to_string(item.amount) + "</div>";
+                }
 			}
 
 			slot_element->SetInnerRML(slot_content);
@@ -917,10 +922,13 @@ void UISystem::updateCauldronUI() {
 	// Update color of cauldron
 	Rml::Element* cauldronElement = m_cauldron_document->GetElementById("cauldron-water");
 	vec3& color = registry.cauldrons.get(openedCauldron).color;
-	float alpha = 255;
+	cauldronElement->SetProperty("image-color", getImageColorProperty(color, 255));
+}
+
+std::string UISystem::getImageColorProperty(vec3 color, float alpha) {
 	std::stringstream s;
 	s << "rgba(" << color.x << "," << color.y << "," << color.z << "," << alpha << ")";
-	cauldronElement->SetProperty("image-color", s.str());
+	return s.str();
 }
 
 bool UISystem::isCauldronOpen() {

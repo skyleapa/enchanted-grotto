@@ -190,6 +190,10 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 		// If item is dragged onto cauldron, insert 1 of that ingredient
 		if (cur->GetId() == "cauldron" || cur->GetId() == "cauldron-water") {
 			Entity item = registry.inventories.get(player).items[selected];
+			if (!registry.ingredients.has(item)) {
+				return;
+			}
+			
 			Item& invItem = registry.items.get(item);
 			Entity copy = ItemSystem::copyItem(item);
 			invItem.amount -= 1;
