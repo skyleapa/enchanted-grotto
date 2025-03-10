@@ -788,7 +788,7 @@ void UISystem::updateTutorial()
 						transform: translate(-50%, -50%);
 						text-align: center;
 						font-size: 16px;
-						background-color: #000000;
+						background-color: #ffffff;
 						font-family: Open Sans;
 						padding: 5px;
 						width: 250px;
@@ -956,6 +956,12 @@ void UISystem::closeCauldron()
 {
 	if (isCauldronOpen()) {
 		m_cauldron_document->Hide();
+		// handle exit menu tutorial
+		if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::EXIT_MENU) {
+			ScreenState& screen = registry.screenStates.components[0];
+			screen.tutorial_step_complete = true;
+			screen.tutorial_state += 1;
+		}
 	}
 }
 

@@ -113,8 +113,8 @@ private:
         { (int)TUTORIAL::MOVEMENT, {
             "60%", "40%", "Welcome to Enchanted Grotto! Move around with the WASD keys. Press T to toggle the tutorial at any time or N to skip the tutorial step."
         }},
-        { (int)TUTORIAL::COLLECT_FRUITS, {
-            "80%", "85%", "Collect 3 Magical Fruits by pressing F when near fruit trees."
+        { (int)TUTORIAL::COLLECT_ITEMS, {
+            "80%", "85%", "Collect 6 Magical Fruits and 5 Coffee Beans by pressing F next to the items."
         }},
         { (int)TUTORIAL::ATTACK_ENEMY, {
             "25%", "35%", "Select the fruits by clicking on the corresponding inventory slot. Defeat the enemy by left-clicking to throw fruits from your inventory. If you touch the enemy you will die!"
@@ -125,9 +125,21 @@ private:
         { (int)TUTORIAL::INTERACT_CAULDRON, {
             "70%", "45%", "Open the potion-making menu by pressing F in front of the cauldron."
         }},
+        { (int)TUTORIAL::SET_HEAT, {
+            "85%", "90%", "Click and drag to turn the dial to max heat."
+        }},
+        { (int)TUTORIAL::ADD_INGREDIENT, {
+            "85%", "90%", "Click and drag to add items to the cauldron. Add 5 Coffee Beans and 3 Magical Fruits."
+        }},
         { (int)TUTORIAL::STIR, {
             "85%", "90%", "Click on the ladle and bring it to the cauldron. Click and drag to make a circle in the cauldron to stir."
-        }}
+        }},
+        { (int)TUTORIAL::BOTTLE, {
+            "85%", "90%", "Click on the bottle and bring it to the cauldron and click on the cauldron to bottle the newly brewed potion."
+        }},
+        { (int)TUTORIAL::EXIT_MENU, {
+            "85%", "90%", "Congrats! You just made your first potion! Press F to exit menu and best of luck on your adventure!"
+        }},
     };
 
 };

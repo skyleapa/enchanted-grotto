@@ -117,7 +117,7 @@ const float ENEMY_SPEED = (float)110;
 const float BAR_WIDTH = (float)450.0f;
 const float BAR_HEIGHT = (float)60.0f;
 const float BAR_X = (float)((WINDOW_WIDTH_PX - BAR_WIDTH) / 2.0f);
-const float BAR_Y = (float)(WINDOW_HEIGHT_PX - BAR_HEIGHT - 20.0f); // 20px from bottom
+const float BAR_Y = (float)(WINDOW_HEIGHT_PX - BAR_HEIGHT - 20.f); // 20 from bottom
 
 
 // Item and potion constants. The enums are declared here instead of in components.hpp
@@ -267,13 +267,16 @@ const float HEAT_PENALTY = 0.01f; // Heat is measured 1-100
 enum class TUTORIAL {
 	WELCOME_SCREEN = 0,
 	MOVEMENT = WELCOME_SCREEN + 1,
-	COLLECT_FRUITS = MOVEMENT + 1,
-	ATTACK_ENEMY = COLLECT_FRUITS + 1,
+	COLLECT_ITEMS = MOVEMENT + 1,
+	ATTACK_ENEMY = COLLECT_ITEMS + 1,
 	ENTER_GROTTO = ATTACK_ENEMY + 1,
 	INTERACT_CAULDRON = ENTER_GROTTO + 1,
-	STIR = INTERACT_CAULDRON + 1,
-	// other potion stuff to go here
-	COMPLETE = STIR + 1
+	SET_HEAT = INTERACT_CAULDRON + 1,
+	ADD_INGREDIENT = SET_HEAT + 1,
+	STIR = ADD_INGREDIENT + 1,
+	BOTTLE = STIR + 1,
+	EXIT_MENU = BOTTLE + 1,
+	COMPLETE = EXIT_MENU + 1
 };
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f

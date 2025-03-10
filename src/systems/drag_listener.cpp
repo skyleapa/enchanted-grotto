@@ -145,6 +145,13 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			float curDegree = getCurrentDegree(cur);
 			float newDegree = getHeatDegree(mouseCoords, curDegree);
 			setHeatDegree(cur, newDegree);
+			if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::SET_HEAT) {
+				if (newDegree == 60) { // indicating max rotation
+					ScreenState& screen = registry.screenStates.components[0];
+					screen.tutorial_step_complete = true;
+					screen.tutorial_state += 1;
+				}
+			}
 			lastCoords = mouseCoords;
 			return;
 		}

@@ -542,26 +542,34 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 		return false;
 
 	// handle fruit collection
-	if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::COLLECT_FRUITS) {
+	if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::COLLECT_ITEMS) {
 		Inventory& inventory = registry.inventories.get(player);
+		bool collected_fruits = false;
+		bool collected_beans = false;
 		for (Entity& entity : inventory.items) {
 			if (!registry.items.has(entity)) continue;
 			Item& item = registry.items.get(entity);
 			if (item.type == ItemType::MAGICAL_FRUIT) {
-				if (item.amount >= 3) {
-					ScreenState& screen = registry.screenStates.components[0];
-					screen.tutorial_step_complete = true;
-					screen.tutorial_state += 1;
+				if (item.amount >= 6) {
+					collected_fruits = true;
 				}
-				else {
-					break;
+			}
+			if (item.type == ItemType::COFFEE_BEANS) {
+				if (item.amount >= 5) {
+					collected_beans = true;
 				}
 			}
 		}
+		if (collected_fruits && collected_beans) {
+			ScreenState& screen = registry.screenStates.components[0];
+			screen.tutorial_step_complete = true;
+			screen.tutorial_state += 1;
+		}
 	}
 
-	// Set a random respawn time (5-15 seconds)
-	item_info.respawnTime = (rand() % 10000 + 5000);
+	// Set a random respawn time (1-5 seconds)
+	item_info.respawnTime = (rand() % 4000 + 1000);
+
 
 	// Hide item by removing motion & render components
 	if (registry.motions.has(item))
