@@ -23,6 +23,7 @@ public:
 
 	// Record a heatknob modification to the cauldron
 	// value is an integer from 1-100, where 100 is max heat
+	// A value of 0 is ignored if its the first action
 	static void changeHeat(Entity cauldron, int value);
 
 	// Record a stir action to the cauldron

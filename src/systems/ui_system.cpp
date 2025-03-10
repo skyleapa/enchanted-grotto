@@ -915,7 +915,7 @@ void UISystem::updateCauldronUI() {
 	}
 
 	// Update color of cauldron
-	Rml::Element* cauldronElement = m_cauldron_document->GetElementById("cauldron");
+	Rml::Element* cauldronElement = m_cauldron_document->GetElementById("cauldron-water");
 	vec3& color = registry.cauldrons.get(openedCauldron).color;
 	float alpha = 255;
 	std::stringstream s;

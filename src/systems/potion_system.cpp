@@ -20,6 +20,7 @@ void PotionSystem::updateCauldrons(float elapsed_ms) {
 
 		// Add wait action if threshold exceeded
 		if (cc.timeSinceLastAction >= DEFAULT_WAIT) {
+			std::cout << "WAIT action recorded!" << std::endl;
 			recordAction(cauldron, ActionType::WAIT, cc.timeSinceLastAction / DEFAULT_WAIT);
 			cc.timeSinceLastAction = 0;
 		}
@@ -55,16 +56,12 @@ void PotionSystem::addIngredient(Entity cauldron, Entity ingredient) {
 			break;
 		}
 
-		std::cout << "ingredient add detected" << std::endl;
-
 		Entity lastIngredient = ci.items[lastAction.value];
 		Item& curItem = registry.items.get(ingredient);
 		Item& lastItem = registry.items.get(lastIngredient);
 		if (lastItem.type != curItem.type) {
 			break;
 		}
-
-		std::cout << "adding same ing type" << std::endl;
 
 		// Float comparison moment. Return if grindlevels are far enough apart
 		Ingredient& curIng = registry.ingredients.get(ingredient);
@@ -73,7 +70,6 @@ void PotionSystem::addIngredient(Entity cauldron, Entity ingredient) {
 			break;
 		}
 
-		std::cout << "adding same ing grind" << std::endl;
 		lastItem.amount += curItem.amount;
 		updatePotion(cauldron);
 		return;
@@ -85,6 +81,10 @@ void PotionSystem::addIngredient(Entity cauldron, Entity ingredient) {
 
 void PotionSystem::changeHeat(Entity cauldron, int value) {
 	Cauldron& cc = registry.cauldrons.get(cauldron);
+	if (cc.actions.size() == 0 && value == 0) {
+		return;
+	}
+	
 	cc.heatLevel = value;
 	recordAction(cauldron, ActionType::MODIFY_HEAT, value);
 }
@@ -99,14 +99,23 @@ void PotionSystem::stirCauldron(Entity cauldron) {
 
 Potion PotionSystem::bottlePotion(Entity cauldron) {
 	Potion potion = getPotion(cauldron);
+	
+	// Clear cauldron
 	Cauldron& cc = registry.cauldrons.get(cauldron);
 	cc.color = DEFAULT_COLOR;
-	cc.filled = false;
+	// cc.filled = false; FOR NOW CAULDRON IS ALWAYS FILLED
 	cc.colorElapsed = 0;
 	cc.heatLevel = 0;
 	cc.timeElapsed = 0;
 	cc.timeSinceLastAction = 0;
 	cc.actions.clear();
+
+	// Clear cauldron items
+	Inventory& cinv = registry.inventories.get(cauldron);
+	for (Entity item : cinv.items) {
+		registry.remove_all_components_of(item);
+	}
+	cinv.items.clear();
 	return potion;
 }
 
@@ -171,12 +180,12 @@ Potion PotionSystem::getDefaultPotion() {
 vec3 PotionSystem::interpolateColor(vec3 init, vec3 end, float ratio) {
 	vec3 res(0, 0, 0);
 	for (int i = 0; i < 3; i++) {
-		int diff = abs(init[i] - end[i]) * ratio;
+		float diff = abs(init[i] - end[i]) * ratio;
 		if (end[i] > init[i]) {
-			res[i] = init[i] + diff;
+			res[i] = init[i] + (int) diff;
 		}
 		else {
-			res[i] = init[i] - diff;
+			res[i] = init[i] - (int) diff;
 		}
 	}
 	return res;
@@ -267,6 +276,9 @@ void PotionSystem::updatePotion(Entity cauldron) {
 	Inventory& ci = registry.inventories.get(cauldron);
 	Potion potion = getDefaultPotion();
 
+	// Reset last action time, since every action triggers an update
+	cc.timeSinceLastAction = 0;
+
 	// Step 1: Get recipe
 	Recipe recipe;
 	bool foundRecipe = false;
@@ -304,8 +316,8 @@ void PotionSystem::updatePotion(Entity cauldron) {
 		potion.effectValue = min_potency + (recipe.highestQualityEffect - min_potency) * potion.quality;
 		potion.duration = min_duration + (recipe.highestQualityDuration - min_duration) * potion.quality;
 		potion.color = interpolateColor(DEFAULT_COLOR, recipe.finalPotionColor, potion.quality);
-		std::cout << "Found recipe!" << std::endl;
-		std::cout << "Color should be " << potion.color.x << " " << potion.color.y << " " << potion.color.z << std::endl;
+		std::cout << "Color should be: " << potion.color.x << " " << potion.color.y << " " << potion.color.z << std::endl;
+		std::cout << "Potion quality: " << potion.quality << std::endl;
 	}
 	else if (ci.items.size() > 0) {
 		// Otherwise, if there are ingredients, then its failed
