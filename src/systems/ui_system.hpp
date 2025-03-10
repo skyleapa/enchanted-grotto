@@ -105,6 +105,8 @@ private:
     Rml::ElementDocument* m_tutorial_document = nullptr;
 
     const std::unordered_map<int, std::tuple<std::string, std::string, std::string>> tutorial_steps = {
+        { (int)TUTORIAL::WELCOME_SCREEN, {
+        }},
         { (int)TUTORIAL::MOVEMENT, {
             "60%", "40%", "Welcome to Enchanted Grotto! Move around with the WASD keys. Press T to toggle the tutorial at any time or N to skip the tutorial step."
         }},

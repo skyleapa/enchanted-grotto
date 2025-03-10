@@ -3,6 +3,32 @@
 #include "systems/item_system.hpp"
 #include <iostream>
 
+Entity createWelcomeScreen(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+	WelcomeScreen& screen = registry.welcomeScreens.emplace(entity);
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.velocity = { 0, 0 };
+	motion.angle = 180.f;
+	motion.position = position;
+
+	motion.scale = vec2({ WINDOW_WIDTH_PX - 230, WINDOW_HEIGHT_PX - 170 });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::WELCOME_TO_GROTTO,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::UI });
+
+	return entity;
+}
+
 Entity createTree(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();

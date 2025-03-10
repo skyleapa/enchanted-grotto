@@ -255,7 +255,7 @@ void RenderSystem::drawToScreen()
 	case ((GLuint)BIOME::GROTTO):
 		glBindTexture(GL_TEXTURE_2D, texture_gl_handles[(GLuint)TEXTURE_ASSET_ID::GROTTO_BG]); // Background texture
 		break;
-	case ((GLuint) BIOME::DESERT):
+	case ((GLuint)BIOME::DESERT):
 		glBindTexture(GL_TEXTURE_2D, texture_gl_handles[(GLuint)TEXTURE_ASSET_ID::DESERT_BG]); // Background texture
 		break;
 	default:
@@ -356,7 +356,7 @@ void RenderSystem::draw(UISystem* ui_system)
 
 	// draw all entities with a render request to the frame buffer
 	for (Entity entity : entities)
-	{ 
+	{
 		// skip invisble entities
 		if (registry.renderRequests.has(entity) && !registry.renderRequests.get(entity).is_visible) continue;
 
@@ -384,10 +384,10 @@ void RenderSystem::draw(UISystem* ui_system)
 	gl_has_errors();
 }
 
-void RenderSystem::swap_buffers() 
+void RenderSystem::swap_buffers()
 {
-    glfwSwapBuffers(window);
-    gl_has_errors();
+	glfwSwapBuffers(window);
+	gl_has_errors();
 }
 
 std::vector<Entity> RenderSystem::process_render_requests() {
