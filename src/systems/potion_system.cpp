@@ -1,4 +1,5 @@
 #include "potion_system.hpp"
+#include "item_system.hpp"
 #include <unordered_set>
 #include <iostream>
 #include <cfloat>
@@ -113,7 +114,7 @@ Potion PotionSystem::bottlePotion(Entity cauldron) {
 	// Clear cauldron items
 	Inventory& cinv = registry.inventories.get(cauldron);
 	for (Entity item : cinv.items) {
-		registry.remove_all_components_of(item);
+		ItemSystem::destroyItem(item);
 	}
 	cinv.items.clear();
 	return potion;
