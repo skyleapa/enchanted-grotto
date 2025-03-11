@@ -73,6 +73,7 @@ private:
 	void on_key(int key, int, int action, int mod);
 	void on_mouse_move(vec2 pos);
 	void on_mouse_button_pressed(int button, int action, int mods);
+	void on_window_resize();
 
 	// restart level
 	void restart_game();

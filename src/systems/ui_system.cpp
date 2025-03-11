@@ -70,11 +70,10 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 		glfwGetFramebufferSize(window, &frame_buffer_width_px, &frame_buffer_height_px);
 		if (frame_buffer_width_px != WINDOW_WIDTH_PX) {
 			// Retina display, scale up to 2x
-			content_scale = 2.0f;
+			content_scale = (float) frame_buffer_width_px / WINDOW_WIDTH_PX;
 		}
 
 		render_interface.SetContentScale(content_scale);
-
 		Rml::SetSystemInterface(&system_interface);
 		Rml::SetRenderInterface(&render_interface);
 		if (!Rml::Initialise()) {
@@ -135,6 +134,19 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 		std::cerr << "Exception in UISystem::init: " << e.what() << std::endl;
 		return false;
 	}
+}
+
+void UISystem::windowResizeCallback(int fbw, int fbh)
+{
+    float default_ratio = (float) WINDOW_WIDTH_PX / WINDOW_HEIGHT_PX;
+    float scale = 1.0f;
+    if ((float) fbw / fbh < default_ratio) {
+        scale = (float) fbh / WINDOW_HEIGHT_PX;
+    } else {
+        scale = (float) fbw / WINDOW_WIDTH_PX;
+    }
+    RmlUiRenderInterface* rinterface = static_cast<RmlUiRenderInterface*>(Rml::GetRenderInterface()); 
+    rinterface->SetContentScale(scale);
 }
 
 void UISystem::step(float elapsed_ms)
@@ -572,15 +584,15 @@ void UISystem::createInventoryBar()
             <style>
                 body {
                     position: absolute;
-                    bottom: 20px;
+                    bottom: 10px;
                     left: 50%;
                     margin-left: -225px;
-                    width: 450px;
-                    height: 60px;
+                    width: 506px;
+                    height: 52px;
                     background-color: #8B5A2B;
                     border-width: 4px;
                     border-color: #4E3620;
-                    padding: 5px;
+                    padding: 3px;
                     display: block;
                     z-index: 100;
                     font-family: Open Sans;
@@ -589,7 +601,7 @@ void UISystem::createInventoryBar()
                 .inventory-slot {
                     width: 40px;
                     height: 40px;
-                    margin: 5px;
+                    margin: 3px;
                     background-color: rgba(60, 40, 20, 0.7);
                     display: inline-block;
                     text-align: center;
@@ -619,9 +631,7 @@ void UISystem::createInventoryBar()
 			}
 
 			// Number near each slot
-			inventory_rml += "<div id='slot-" + std::to_string(i) + "' class='" + slot_class + "'>" +
-				"<span style='color: #FFE4B5; font-size: 12px; font-weight: bold; position: absolute; top: 2px; left: 2px;'>" +
-				std::to_string(i + 1) + "</span></div>";
+			inventory_rml += "<div id='slot-" + std::to_string(i) + "' class='" + slot_class + "'></div>";
 		}
 
 		inventory_rml += "</body></rml>";
@@ -672,8 +682,9 @@ void UISystem::updateInventoryBar()
 			}
 			slot_element->SetAttribute("class", slot_class);
 
-			std::string slot_content = "<span style='color: #FFE4B5; font-size: 12px; font-weight: bold; position: absolute; top: 2px; left: 2px;'>" +
-				std::to_string(i + 1) + "</span>";
+			std::string slot_content = "";
+            //"<span style='color: #FFE4B5; font-size: 12px; font-weight: bold; position: absolute; top: 2px; left: 2px;'>" +
+		    //std::to_string(i + 1) + "</span>";
 
 			// Add item display
 			if (i < inventory.items.size()) {

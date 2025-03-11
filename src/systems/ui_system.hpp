@@ -26,6 +26,7 @@ public:
     static UISystem* s_instance;
 
     bool init(GLFWwindow* window, RenderSystem* renderer);
+    void windowResizeCallback(int fbw, int fbh);
     void step(float elapsed_ms);
     void draw();
 
@@ -96,7 +97,7 @@ private:
     // Inventory bar variables
     Rml::ElementDocument* m_inventory_document = nullptr;
     int m_selected_slot = 0;
-    int m_hotbar_size = 8;
+    int m_hotbar_size = 10;
 
     // Cauldron variables
     Rml::ElementDocument* m_cauldron_document = nullptr;

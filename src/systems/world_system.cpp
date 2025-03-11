@@ -77,7 +77,7 @@ GLFWwindow* WorldSystem::create_window()
 #if __APPLE__
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
-	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 	// CK: setting GLFW_SCALE_TO_MONITOR to true will rescale window but then you must handle different scalings
 	// glfwWindowHint(GLFW_SCALE_TO_MONITOR, GL_TRUE);		// GLFW 3.3+
 	glfwWindowHint(GLFW_SCALE_TO_MONITOR, GL_FALSE); // GLFW 3.3+
@@ -100,10 +100,13 @@ GLFWwindow* WorldSystem::create_window()
 		{ ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_move({ _0, _1 }); };
 	auto mouse_button_pressed_redirect = [](GLFWwindow* wnd, int _button, int _action, int _mods)
 		{ ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_button_pressed(_button, _action, _mods); };
+	auto window_resize_redirect = [](GLFWwindow* wnd, int _width, int _height)
+		{ ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_window_resize(); };
 
 	glfwSetKeyCallback(window, key_redirect);
 	glfwSetCursorPosCallback(window, cursor_pos_redirect);
 	glfwSetMouseButtonCallback(window, mouse_button_pressed_redirect);
+	glfwSetWindowSizeCallback(window, window_resize_redirect);
 
 	return window;
 }
@@ -448,6 +451,13 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 		// don't throw ammo if in potion making menu or clicking on inventory
 		throwAmmo(vec2(mouse_pos_x, mouse_pos_y));
 	}
+}
+
+void WorldSystem::on_window_resize()
+{
+	int fbw, fbh;
+    glfwGetFramebufferSize(window, &fbw, &fbh);
+	m_ui_system->windowResizeCallback(fbw, fbh);
 }
 
 void WorldSystem::handle_player_interaction()
