@@ -758,7 +758,8 @@ void UISystem::updateTutorial()
 
 		// Mark tutorial step as incomplete again
 		screen.tutorial_step_complete = false;
-		if (screen.tutorial_state == (int)TUTORIAL::COMPLETE) return;
+		if (screen.tutorial_state == (int)TUTORIAL::COMPLETE || 
+            screen.tutorial_state == (int)TUTORIAL::WELCOME_SCREEN) return;
 
 		// Check if the tutorial state exists in the map
 		auto it = tutorial_steps.find(screen.tutorial_state);
