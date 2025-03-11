@@ -130,7 +130,7 @@ private:
             "85%", "90%", "Click and drag to turn the dial to max heat."
         }},
         { (int)TUTORIAL::ADD_INGREDIENT, {
-            "85%", "90%", "Click and drag to add items to the cauldron. Add 5 Coffee Beans and 3 Magical Fruits."
+            "85%", "90%", "Click and drag to add items to the cauldron. Add 5 Coffee Beans and 3 Magical Fruits. NOTE: this is buggy right now and the number isn't exact. Press N to move to the next step."
         }},
         { (int)TUTORIAL::STIR, {
             "85%", "90%", "Click on the ladle and bring it to the cauldron. Click and drag to make a circle in the cauldron to stir."
