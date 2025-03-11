@@ -105,7 +105,7 @@ Entity createPlayer(RenderSystem* renderer, vec2 position)
 	motion.scale = vec2({ PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT });
 
 	auto& inventory = registry.inventories.emplace(entity);
-	inventory.capacity = 10;
+	inventory.capacity = 8;
 	inventory.isFull = false;
 
 	std::vector<TEXTURE_ASSET_ID> walking_down = {
@@ -433,7 +433,7 @@ Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemTy
 	return entity;
 }
 
-Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name)
+Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name, bool create_textbox = false)
 {
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " cauldron" << std::endl;
@@ -456,7 +456,7 @@ Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id,
 
 	// Create cauldron
 	auto& cauldron = registry.cauldrons.emplace(entity);
-	Entity textbox = createTextbox(renderer, position, entity);
+	if (create_textbox) createTextbox(renderer, position, entity);
 
 	// Give cauldron an inventory
 	auto& inv = registry.inventories.emplace(entity);
