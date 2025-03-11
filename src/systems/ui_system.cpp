@@ -973,6 +973,10 @@ Entity UISystem::getOpenedCauldron() {
 	return openedCauldron;
 }
 
+void UISystem::setOpenedCauldron(Entity new_cauldron) {
+	openedCauldron = new_cauldron;
+}
+
 void followMouse(Rml::Element* e, double x, double y) {
 	int wl = e->GetProperty("width")->GetNumericValue().number;
 	int hl = e->GetProperty("height")->GetNumericValue().number;

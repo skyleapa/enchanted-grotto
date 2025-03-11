@@ -232,6 +232,18 @@ void WorldSystem::restart_game()
 		}
 	}
 
+	Entity cauldron;
+	nlohmann::json cauldron_inventory_data;
+	if (!registry.cauldrons.entities.empty()) { // in the future may have multiple cauldrons
+		cauldron = registry.cauldrons.entities[0];
+		if (registry.inventories.has(cauldron)) {
+			cauldron_inventory_data = ItemSystem::serializeInventory(cauldron);
+		}
+	}
+
+	// close cauldron if it's open
+	if (m_ui_system && m_ui_system->isCauldronOpen()) m_ui_system->closeCauldron();
+
 	// Debugging for memory/component leaks
 	registry.list_all_components();
 
@@ -259,6 +271,19 @@ void WorldSystem::restart_game()
 	if (!player_inventory_data.empty() && !registry.players.entities.empty()) {
 		Entity new_player = registry.players.entities[0];
 		ItemSystem::deserializeInventory(new_player, player_inventory_data);
+	}
+
+	// Restore cauldron's inventory if we had one and create a new cauldron to restore the data
+	if (!cauldron_inventory_data.empty()) {
+		if (registry.cauldrons.entities.size() == 0) {
+			Entity new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.50, GRID_CELL_HEIGHT_PX * 6.45 }), vec2({ 142, 196 }), 8, "Cauldron"); // make a new cauldron for now
+			if (registry.renderRequests.has(new_cauldron)) {
+				registry.renderRequests.get(new_cauldron).is_visible = false; // make it invisible for now but when we change to spawning in grotto, can remove this
+			}
+			ItemSystem::deserializeInventory(new_cauldron, cauldron_inventory_data);
+			// update ui system's reference to opened cauldron
+			if (m_ui_system) m_ui_system->setOpenedCauldron(new_cauldron);
+		}
 	}
 
 	biome_sys->init(renderer);
@@ -461,7 +486,7 @@ void WorldSystem::handle_player_interaction()
 		return;
 
 	// If a cauldron is open just close it
-	if (m_ui_system->isCauldronOpen()) {
+	if (m_ui_system && m_ui_system->isCauldronOpen()) {
 		m_ui_system->closeCauldron();
 		return;
 	}
@@ -497,12 +522,15 @@ void WorldSystem::handle_player_interaction()
 			handle_textbox = handle_item_pickup(player, item);
 		}
 		else if (registry.cauldrons.has(item)) {
-			std::cout << "found cauldron" << std::endl;
-			handle_textbox = m_ui_system->openCauldron(item);
-			if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::INTERACT_CAULDRON) {
-				ScreenState& screen = registry.screenStates.components[0];
-				screen.tutorial_step_complete = true;
-				screen.tutorial_state += 1;
+			std::cout << "found cauldron " << item.id() << std::endl;
+			if (m_ui_system != nullptr)
+			{
+				handle_textbox = m_ui_system->openCauldron(item);
+				if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::INTERACT_CAULDRON) {
+					ScreenState& screen = registry.screenStates.components[0];
+					screen.tutorial_step_complete = true;
+					screen.tutorial_state += 1;
+				}
 			}
 		}
 
