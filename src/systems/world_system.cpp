@@ -276,7 +276,7 @@ void WorldSystem::restart_game()
 	// Restore cauldron's inventory if we had one and create a new cauldron to restore the data
 	if (!cauldron_inventory_data.empty()) {
 		if (registry.cauldrons.entities.size() == 0) {
-			Entity new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.50, GRID_CELL_HEIGHT_PX * 6.45 }), vec2({ 142, 196 }), 8, "Cauldron"); // make a new cauldron for now
+			Entity new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.50, GRID_CELL_HEIGHT_PX * 6.45 }), vec2({ 142, 196 }), 8, "Cauldron", false); // make a new cauldron for now
 			if (registry.renderRequests.has(new_cauldron)) {
 				registry.renderRequests.get(new_cauldron).is_visible = false; // make it invisible for now but when we change to spawning in grotto, can remove this
 			}
@@ -522,6 +522,8 @@ void WorldSystem::handle_player_interaction()
 			handle_textbox = handle_item_pickup(player, item);
 		}
 		else if (registry.cauldrons.has(item)) {
+			// don't allow opening if it's currently invisible
+			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
 			std::cout << "found cauldron " << item.id() << std::endl;
 			if (m_ui_system != nullptr)
 			{
