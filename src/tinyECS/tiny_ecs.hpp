@@ -7,6 +7,7 @@
 #include <functional>
 #include <typeindex>
 #include <assert.h>
+#include <iostream>
 
 #include "entity.hpp"
 
@@ -64,6 +65,7 @@ public:
 
 	// A wrapper to return the component of an entity
 	Component& get(Entity e) {
+		if (!has(e)) std::cout << "Entity " << e.id() << " not in registry" << std::endl;
 		assert(has(e) && "Entity not contained in ECS registry");
 		return components[map_entity_componentID[e]];
 	}

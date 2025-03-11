@@ -6,6 +6,7 @@
 Entity createWelcomeScreen(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " welcome screen" << std::endl;
 	WelcomeScreen& screen = registry.welcomeScreens.emplace(entity);
 
 	// store a reference to the potentially re-used mesh object
@@ -32,6 +33,7 @@ Entity createWelcomeScreen(RenderSystem* renderer, vec2 position)
 Entity createTree(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " tree" << std::endl;
 	Terrain& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
 	terrain.height_ratio = 0.1f;
@@ -61,6 +63,7 @@ Entity createTree(RenderSystem* renderer, vec2 position)
 Entity createGridLine(vec2 start_pos, vec2 end_pos)
 {
 	Entity entity = Entity();
+	// std::cout << "Entity " << entity.id() << " gridline" << std::endl;
 
 	GridLine& gridLine = registry.gridLines.emplace(entity);
 	gridLine.start_pos = start_pos;
@@ -86,6 +89,7 @@ Entity createPlayer(RenderSystem* renderer, vec2 position)
 {
 	// reserve an entity
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " player" << std::endl;
 	Player& player = registry.players.emplace(entity);
 	player.name = "Madoka";
 
@@ -127,6 +131,7 @@ Entity createPlayer(RenderSystem* renderer, vec2 position)
 Entity createForestBridge(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " forest bridge" << std::endl;
 	auto& terrain = registry.terrains.emplace(entity);
 	// we're using mesh collisions here, so AABB is not used, see components.cpp for more
 	terrain.collision_setting = 2.0f;
@@ -156,6 +161,7 @@ Entity createForestBridge(RenderSystem* renderer, vec2 position)
 Entity createForestBridgeTop(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " forest bridge top" << std::endl;
 	auto& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 3.0f;
 
@@ -186,6 +192,7 @@ Entity createForestBridgeTop(RenderSystem* renderer, vec2 position)
 Entity createForestBridgeBottom(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " forest bridge bottom" << std::endl;
 	auto& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 3.0f;
 
@@ -221,6 +228,8 @@ Entity createForestRiver(RenderSystem* renderer, vec2 position)
 	auto entity2 = Entity();
 	auto& terrain2 = registry.terrains.emplace(entity2);
 	terrain2.collision_setting = 1.0f; // rivers are not walkable
+	// std::cout << "Entity " << entity1.id() << " river" << std::endl;
+	// std::cout << "Entity " << entity2.id() << " river" << std::endl;
 
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
 	registry.meshPtrs.emplace(entity1, &mesh);
@@ -264,6 +273,7 @@ Entity createForestRiver(RenderSystem* renderer, vec2 position)
 Entity create_grotto_static_entities(RenderSystem* renderer, vec2 position, vec2 scale, float angle, GLuint texture_asset_id, float can_collide)
 {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " static grotto entity" << std::endl;
 	if (can_collide == 1)
 	{
 		auto& terrain = registry.terrains.emplace(entity);
@@ -295,6 +305,7 @@ Entity create_grotto_static_entities(RenderSystem* renderer, vec2 position, vec2
 Entity create_boundary_line(RenderSystem* renderer, vec2 position, vec2 scale)
 {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " boundary line" << std::endl;
 
 	auto& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 1.0f; // cannot walk past boundaries
@@ -322,6 +333,7 @@ Entity create_boundary_line(RenderSystem* renderer, vec2 position, vec2 scale)
 Entity createGrottoEntrance(RenderSystem* renderer, vec2 position, int id, std::string name)
 {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " grotto entrance" << std::endl;
 
 	Entrance& entrance = registry.entrances.emplace(entity);
 	entrance.target_biome = (GLuint)BIOME::GROTTO;
@@ -359,6 +371,7 @@ Entity createGrottoEntrance(RenderSystem* renderer, vec2 position, int id, std::
 Entity createBush(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " bush" << std::endl;
 	Terrain& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
 	terrain.height_ratio = 0.35f;
@@ -423,6 +436,7 @@ Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemTy
 Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name)
 {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " cauldron" << std::endl;
 
 	Item& item = registry.items.emplace(entity);
 	item.type = ItemType::CAULDRON;
@@ -463,6 +477,7 @@ Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id,
 Entity createMortarPestle(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name)
 {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " mortar and pestle" << std::endl;
 
 	Item& item = registry.items.emplace(entity);
 	item.type = ItemType::MORTAR_PESTLE;
@@ -497,6 +512,7 @@ Entity createMortarPestle(RenderSystem* renderer, vec2 position, vec2 scale, int
 Entity createChest(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name)
 {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " chest" << std::endl;
 
 	Item& item = registry.items.emplace(entity);
 	item.type = ItemType::CHEST;
@@ -531,6 +547,7 @@ Entity createChest(RenderSystem* renderer, vec2 position, vec2 scale, int id, st
 Entity createRecipeBook(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name)
 {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " recipe book" << std::endl;
 
 	Item& item = registry.items.emplace(entity);
 	item.type = ItemType::RECIPE_BOOK;
@@ -566,6 +583,7 @@ Entity createRecipeBook(RenderSystem* renderer, vec2 position, vec2 scale, int i
 Entity createGrottoExit(RenderSystem* renderer, vec2 position, int id, std::string name)
 {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " grotto exit" << std::endl;
 
 	Entrance& entrance = registry.entrances.emplace(entity);
 	entrance.target_biome = (GLuint)BIOME::FOREST;
@@ -603,6 +621,7 @@ Entity createGrottoExit(RenderSystem* renderer, vec2 position, int id, std::stri
 Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity)
 {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " textbox" << std::endl;
 
 	// Create a Textbox component
 	Textbox& textbox = registry.textboxes.emplace(entity);
@@ -679,6 +698,7 @@ RenderRequest getTextboxRenderRequest(Textbox& textbox)
 
 Entity createEnt(RenderSystem* renderer, vec2 position, int movable) {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " ent" << std::endl;
 
 	Enemy& enemy = registry.enemies.emplace(entity);
 	enemy.attack_radius = 5;
@@ -711,6 +731,7 @@ Entity createEnt(RenderSystem* renderer, vec2 position, int movable) {
 
 Entity createMummy(RenderSystem* renderer, vec2 position, int movable) {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " mummy" << std::endl;
 
 	Enemy& enemy = registry.enemies.emplace(entity);
 	enemy.attack_radius = 5;
@@ -744,6 +765,7 @@ Entity createMummy(RenderSystem* renderer, vec2 position, int movable) {
 bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, Entity& player_entity) {
 
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " fired ammo" << std::endl;
 
 	if (!registry.ammo.has(item_entity)) std::cout << "item isn't in ammo list" << std::endl;
 	if (!registry.motions.has(player_entity) || !registry.ammo.has(item_entity)) return false;
@@ -788,6 +810,7 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 Entity createDesertEntrance(RenderSystem* renderer, vec2 position, int id, std::string name)
 {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " desert entrance" << std::endl;
 
 	Entrance& entrance = registry.entrances.emplace(entity);
 	entrance.target_biome = (GLuint)BIOME::DESERT;
@@ -825,6 +848,7 @@ Entity createDesertEntrance(RenderSystem* renderer, vec2 position, int id, std::
 Entity createDesertExit(RenderSystem* renderer, vec2 position, int id, std::string name)
 {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " desert exit" << std::endl;
 
 	Entrance& entrance = registry.entrances.emplace(entity);
 	entrance.target_biome = (GLuint)BIOME::FOREST;
@@ -862,6 +886,7 @@ Entity createDesertExit(RenderSystem* renderer, vec2 position, int id, std::stri
 Entity createDesertTree(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " desert tree" << std::endl;
 	Terrain& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
 	terrain.height_ratio = 0.1f;
@@ -891,6 +916,7 @@ Entity createDesertTree(RenderSystem* renderer, vec2 position)
 Entity createDesertCactus(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " desert catcus" << std::endl;
 	Terrain& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
 	terrain.height_ratio = 0.1f;
@@ -921,6 +947,7 @@ Entity createDesertCactus(RenderSystem* renderer, vec2 position)
 Entity createDesertRiver(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " desert river" << std::endl;
 	auto& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 1.0f; // rivers are not walkable
 
@@ -948,6 +975,7 @@ Entity createDesertRiver(RenderSystem* renderer, vec2 position)
 
 Entity createDesertSandPile(RenderSystem* renderer, vec2 position) {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " desert sand pile" << std::endl;
 	Terrain& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
 
@@ -975,6 +1003,7 @@ Entity createDesertSandPile(RenderSystem* renderer, vec2 position) {
 
 Entity createDesertPage(RenderSystem* renderer, vec2 position) {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " desert page" << std::endl;
 	Terrain& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
 	terrain.height_ratio = 1.f;
@@ -1004,6 +1033,7 @@ Entity createDesertPage(RenderSystem* renderer, vec2 position) {
 
 Entity createDesertSkull(RenderSystem* renderer, vec2 position) {
 	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " desert skull" << std::endl;
 	Terrain& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
 	terrain.height_ratio = 0.3f;
