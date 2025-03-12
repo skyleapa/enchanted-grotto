@@ -583,7 +583,7 @@ void UISystem::createInventoryBar()
                     margin-left: -220px;
                     width: 440px;
                     height: 44px;
-                    background-color: rgb(173, 146, 132);
+                    background-color: rgba(173, 146, 132, 242);
                     border-width: 2px;
                     border-color: rgb(78, 54, 32);
                     display: block;
