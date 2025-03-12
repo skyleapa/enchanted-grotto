@@ -756,13 +756,16 @@ void UISystem::updateTutorial()
 		}
 
 		if (screen.tutorial_state != (int)TUTORIAL::WELCOME_SCREEN) {
-			Entity& welcome_screen = registry.welcomeScreens.entities[0];
-			registry.remove_all_components_of(welcome_screen);
+			if (registry.welcomeScreens.entities.size() > 0) {
+				Entity& welcome_screen = registry.welcomeScreens.entities[0];
+				registry.remove_all_components_of(welcome_screen);
+			}
 		}
 
 		// Mark tutorial step as incomplete again
 		screen.tutorial_step_complete = false;
-		if (screen.tutorial_state == (int)TUTORIAL::COMPLETE) return;
+		if (screen.tutorial_state == (int)TUTORIAL::COMPLETE || 
+            screen.tutorial_state == (int)TUTORIAL::WELCOME_SCREEN) return;
 
 		// Check if the tutorial state exists in the map
 		auto it = tutorial_steps.find(screen.tutorial_state);
@@ -974,6 +977,7 @@ Entity UISystem::getOpenedCauldron() {
 	return openedCauldron;
 }
 
+<<<<<<< HEAD
 Rml::Vector2f UISystem::getScaledMouseCoords(double x, double y) {
     int windowx, windowy;
     glfwGetWindowSize(m_window, &windowx, &windowy);
@@ -984,6 +988,13 @@ Rml::Vector2f UISystem::getScaledMouseCoords(double x, double y) {
 }
 
 void UISystem::followMouse(Rml::Element* e, double x, double y) {
+=======
+void UISystem::setOpenedCauldron(Entity new_cauldron) {
+	openedCauldron = new_cauldron;
+}
+
+void followMouse(Rml::Element* e, double x, double y) {
+>>>>>>> M2_Submission
 	int wl = e->GetProperty("width")->GetNumericValue().number;
 	int hl = e->GetProperty("height")->GetNumericValue().number;
 	int ix = (int)x - wl / 2 - (m_context->GetDimensions().x - 1057) / 2;

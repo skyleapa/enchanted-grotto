@@ -129,6 +129,7 @@ void PotionSystem::stirCauldron(Entity cauldron) {
 
 Potion PotionSystem::bottlePotion(Entity cauldron) {
 	Potion potion = getPotion(cauldron);
+	registry.potions.remove(cauldron);
 
 	// Clear cauldron
 	Cauldron& cc = registry.cauldrons.get(cauldron);

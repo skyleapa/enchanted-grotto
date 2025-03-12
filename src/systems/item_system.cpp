@@ -4,6 +4,7 @@
 
 Entity ItemSystem::createItem(ItemType type, int amount, bool isCollectable, bool is_ammo) {
     Entity entity = Entity();
+    // std::cout << "Entity " << entity.id() << " of type " << (int) type << std::endl;
     
     Item& item = registry.items.emplace(entity);
     item.type = type;
@@ -169,6 +170,7 @@ void ItemSystem::swapItems(Entity inventory, int slot1, int slot2) {
 Entity ItemSystem::copyItem(Entity toCopy) {
     Item& item = registry.items.get(toCopy);
     Entity res = Entity();
+    // std::cout << "Entity " << res.id() << " item copy" << std::endl;
     registry.items.emplace(res, Item(item));
     if (registry.ingredients.has(toCopy)) {
         auto& oldIng = registry.ingredients.get(toCopy);
@@ -284,6 +286,7 @@ Entity ItemSystem::deserializeItem(const nlohmann::json& data) {
 
 void ItemSystem::deserializeInventory(Entity inventory, const nlohmann::json& data) {
     if (!registry.inventories.has(inventory)) {
+        // std::cout << "Entity " << inventory.id() << " deserialize inventory" << std::endl;
         registry.inventories.emplace(inventory);
     }
     
@@ -372,6 +375,7 @@ bool ItemSystem::loadGameState(const std::string& filename) {
             } else {
                 // For non-player inventories, create new entities
                 Entity inv = Entity();
+                // std::cout << "Entity " << inv.id() << " item copy" << std::endl;
                 deserializeInventory(inv, inv_data);
             }
         }

@@ -216,7 +216,7 @@ void BiomeSystem::createGrotto()
 
 	for (Entity cauldron_entity : registry.cauldrons.entities) {
 		if (!registry.motions.has(cauldron_entity)) { // means that the cauldron was reloaded from inventory TODO: fix this in itemsystem deserialization instead
-			Entity new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.50, GRID_CELL_HEIGHT_PX * 6.45 }), vec2({ 142, 196 }), 8, "Cauldron"); // make a new cauldron for now
+			Entity new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.50, GRID_CELL_HEIGHT_PX * 6.45 }), vec2({ 142, 196 }), 8, "Cauldron", true); // make a new cauldron and render textbox
 			if (registry.inventories.has(cauldron_entity)) {
 				Inventory& inv = registry.inventories.get(cauldron_entity);
 				Inventory& new_inv = registry.inventories.get(new_cauldron);
@@ -231,7 +231,8 @@ void BiomeSystem::createGrotto()
 			registry.remove_all_components_of(cauldron_entity);
 		}
 	}
-	if (registry.cauldrons.size() == 0) createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.35, GRID_CELL_HEIGHT_PX * 5.85 }), vec2({ 175, 280 }), 8, "Cauldron");
+
+	if (registry.cauldrons.size() == 0) createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.35, GRID_CELL_HEIGHT_PX * 5.85 }), vec2({ 175, 280 }), 8, "Cauldron", true);
 	createMortarPestle(renderer, vec2({ GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22 }), vec2({ 213, 141 }), 9, "Mortar and Pestle");
 	createRecipeBook(renderer, vec2({ GRID_CELL_WIDTH_PX * 4.15, GRID_CELL_HEIGHT_PX * 5.05 }), vec2({ 108, 160 }), 10, "Recipe Book");
 	createChest(renderer, vec2({ GRID_CELL_WIDTH_PX * 1.35, GRID_CELL_HEIGHT_PX * 5.2 }), vec2({ 100, 150 }), 11, "Chest");
