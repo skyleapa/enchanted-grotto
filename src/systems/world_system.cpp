@@ -101,7 +101,7 @@ GLFWwindow* WorldSystem::create_window()
 	auto mouse_button_pressed_redirect = [](GLFWwindow* wnd, int _button, int _action, int _mods)
 		{ ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_button_pressed(_button, _action, _mods); };
 	auto window_resize_redirect = [](GLFWwindow* wnd, int _width, int _height)
-		{ ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_window_resize(); };
+		{ ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_window_resize(_width, _height); };
 
 	glfwSetKeyCallback(window, key_redirect);
 	glfwSetCursorPosCallback(window, cursor_pos_redirect);
@@ -416,6 +416,18 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 	{
 		handle_player_interaction();
 	}
+
+	if (action == GLFW_PRESS && key == GLFW_KEY_F11) {
+		GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+		if (glfwGetWindowMonitor(window)) {
+			// We are in fullscreeen, undo it
+			glfwSetWindowMonitor(window, nullptr, winPosX, winPosY, WINDOW_WIDTH_PX, WINDOW_HEIGHT_PX, GLFW_DONT_CARE);
+		} else {
+			glfwGetWindowPos(window, &winPosX, &winPosY);
+			const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+			glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, GLFW_DONT_CARE);
+		}
+	}
 }
 
 void WorldSystem::on_mouse_move(vec2 mouse_position)
@@ -453,11 +465,25 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 	}
 }
 
-void WorldSystem::on_window_resize()
+void WorldSystem::on_window_resize(int w, int h)
 {
 	int fbw, fbh;
-    glfwGetFramebufferSize(window, &fbw, &fbh);
-	m_ui_system->windowResizeCallback(fbw, fbh);
+	glfwGetFramebufferSize(window, &fbw, &fbh);
+	float scale = 1.0f;
+	int x = 0, y = 0;
+	int xsize = WINDOW_WIDTH_PX, ysize = WINDOW_HEIGHT_PX;
+	if ((float) w / h > WINDOW_RATIO) {
+        scale = (float) fbh / ysize;
+	} else {
+		scale = (float) fbw / xsize;
+	}
+
+	xsize *= scale;
+	ysize *= scale;
+	x = (fbw - xsize) / 2;
+	y = (fbh - ysize) / 2;
+	glViewport(x, y, xsize, ysize);
+	m_ui_system->updateWindowSize(scale);
 }
 
 void WorldSystem::handle_player_interaction()

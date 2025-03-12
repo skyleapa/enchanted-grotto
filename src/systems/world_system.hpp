@@ -73,7 +73,7 @@ private:
 	void on_key(int key, int, int action, int mod);
 	void on_mouse_move(vec2 pos);
 	void on_mouse_button_pressed(int button, int action, int mods);
-	void on_window_resize();
+	void on_window_resize(int w, int h);
 
 	// restart level
 	void restart_game();
@@ -85,6 +85,8 @@ private:
 	RenderSystem* renderer;
 	BiomeSystem* biome_sys;
 	float current_speed;
+	int winPosX;
+	int winPosY;
 
 	// grid
 	std::vector<Entity> grid_lines;

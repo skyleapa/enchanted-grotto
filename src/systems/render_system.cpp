@@ -210,6 +210,9 @@ void RenderSystem::drawTexturedMesh(Entity entity,
 
 void RenderSystem::drawToScreen()
 {
+	GLint last_viewport[4];
+	glGetIntegerv(GL_VIEWPORT, last_viewport);
+
 	// Setting shaders for the background
 	glUseProgram(effects[(GLuint)EFFECT_ASSET_ID::BACKGROUND]);
 	gl_has_errors();
@@ -218,9 +221,9 @@ void RenderSystem::drawToScreen()
 	int w, h;
 	glfwGetFramebufferSize(window, &w, &h); // Note, this will be 2x the resolution given to glfwCreateWindow on retina displays
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(0, 0, w, h);
+	glViewport(last_viewport[0], last_viewport[1], last_viewport[2], last_viewport[3]);
 	glDepthRange(0, 10);		  // Adjust depth range
-	glClearColor(1.f, 0, 0, 1.0); // Red background for clearing
+	glClearColor(0, 0, 0, 1.0); // Red background for clearing
 	glClearDepth(1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear color and depth buffers
 	gl_has_errors();
@@ -272,6 +275,9 @@ void RenderSystem::drawToScreen()
 
 void RenderSystem::fadeScreen()
 {
+	GLint last_viewport[4];
+	glGetIntegerv(GL_VIEWPORT, last_viewport);
+
 	// Setting shaders for the background
 	glUseProgram(effects[(GLuint)EFFECT_ASSET_ID::FADE]);
 	glEnable(GL_BLEND);
@@ -282,7 +288,7 @@ void RenderSystem::fadeScreen()
 	int w, h;
 	glfwGetFramebufferSize(window, &w, &h); // Note, this will be 2x the resolution given to glfwCreateWindow on retina displays
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(0, 0, w, h);
+	glViewport(last_viewport[0], last_viewport[1], last_viewport[2], last_viewport[3]);
 	glDepthRange(0, 10);
 	gl_has_errors();
 
@@ -322,6 +328,9 @@ void RenderSystem::fadeScreen()
 // http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
 void RenderSystem::draw(UISystem* ui_system)
 {
+	GLint last_viewport[4];
+	glGetIntegerv(GL_VIEWPORT, last_viewport);
+
 	// Getting size of window
 	int w, h;
 	glfwGetFramebufferSize(window, &w, &h); // Note, this will be 2x the resolution given to glfwCreateWindow on retina displays
@@ -331,7 +340,7 @@ void RenderSystem::draw(UISystem* ui_system)
 	gl_has_errors();
 
 	// clear backbuffer
-	glViewport(0, 0, w, h);
+	glViewport(last_viewport[0], last_viewport[1], last_viewport[2], last_viewport[3]);
 	glDepthRange(0.00001, 10);
 
 	// black background

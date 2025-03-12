@@ -26,7 +26,7 @@ public:
     static UISystem* s_instance;
 
     bool init(GLFWwindow* window, RenderSystem* renderer);
-    void windowResizeCallback(int fbw, int fbh);
+    void updateWindowSize(float scale);
     void step(float elapsed_ms);
     void draw();
 
@@ -84,7 +84,9 @@ private:
     std::string getImageColorProperty(vec3 color, float alpha);
 
     // Update items that should follow the mouse
+    Rml::Vector2f getScaledMouseCoords(double x, double y);
     void updateFollowMouse(double x, double y);
+    void followMouse(Rml::Element* e, double x, double y);
 
     // FPS counter variables
     float m_frame_times[60] = { 0 }; // Store last 60 frame times
@@ -143,4 +145,8 @@ private:
         }},
     };
 
+    const std::string LADLE_LEFT_PX = "866px";
+    const std::string LADLE_TOP_PX = "45px";
+    const std::string BOTTLE_LEFT_PX = "904px";
+    const std::string BOTTLE_TOP_PX = "395px";
 };

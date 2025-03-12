@@ -136,15 +136,8 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 	}
 }
 
-void UISystem::windowResizeCallback(int fbw, int fbh)
+void UISystem::updateWindowSize(float scale)
 {
-    float default_ratio = (float) WINDOW_WIDTH_PX / WINDOW_HEIGHT_PX;
-    float scale = 1.0f;
-    if ((float) fbw / fbh < default_ratio) {
-        scale = (float) fbh / WINDOW_HEIGHT_PX;
-    } else {
-        scale = (float) fbw / WINDOW_WIDTH_PX;
-    }
     RmlUiRenderInterface* rinterface = static_cast<RmlUiRenderInterface*>(Rml::GetRenderInterface()); 
     rinterface->SetContentScale(scale);
 }
@@ -266,7 +259,7 @@ void UISystem::draw()
 
 		// Ensure we're rendering to the default framebuffer
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(0, 0, width, height);
+		glViewport(last_viewport[0], last_viewport[1], last_viewport[2], last_viewport[3]);
 
 		// Enable blending for transparency
 		glEnable(GL_BLEND);
@@ -284,7 +277,6 @@ void UISystem::draw()
 		glActiveTexture(last_active_texture);
 
 		// Restore previous OpenGL state
-		glViewport(last_viewport[0], last_viewport[1], last_viewport[2], last_viewport[3]);
 		glUseProgram(last_program);
 
 		if (depth_test)
@@ -409,8 +401,9 @@ void UISystem::handleTextInput(unsigned int codepoint)
 void UISystem::handleMouseMoveEvent(double x, double y)
 {
 	if (!m_initialized || !m_context) return;
-	updateFollowMouse(x, y);
-	m_context->ProcessMouseMove((int)x, (int)y, getKeyModifiers());
+    Rml::Vector2f pos = getScaledMouseCoords(x, y);
+	updateFollowMouse(pos.x, pos.y);
+	m_context->ProcessMouseMove((int)pos.x, (int)pos.y, getKeyModifiers());
 }
 
 void UISystem::handleMouseButtonEvent(int button, int action, int mods)
@@ -434,8 +427,9 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 	}
 
 	// Get mouse position
-	double x, y;
-	glfwGetCursorPos(m_window, &x, &y);
+	double wx, wy;
+	glfwGetCursorPos(m_window, &wx, &wy);
+    Rml::Vector2f mousePos = getScaledMouseCoords(wx, wy);
 
 	// Check clicks for inventory bar and cauldron
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT) {
@@ -456,18 +450,19 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 
 			if (id == "ladle") {
 				// If we click cauldron don't drop ladle
-				Rml::Element* possibleCauldron = m_context->GetElementAtPoint(Rml::Vector2f(x, y), hovered);
+				Rml::Element* possibleCauldron = m_context->GetElementAtPoint(mousePos, hovered);
 				if (possibleCauldron && possibleCauldron->GetId() == "cauldron") {
 					break;
 				}
+
 				if (heldLadle) {
-					hovered->SetProperty("top", "70px");
-					hovered->SetProperty("left", "962px");
+					hovered->SetProperty("top", LADLE_TOP_PX);
+					hovered->SetProperty("left", LADLE_LEFT_PX);
 					heldLadle = nullptr;
 				}
 				else {
 					heldLadle = hovered;
-					updateFollowMouse(x, y);
+					updateFollowMouse(mousePos.x, mousePos.y);
 				}
 
 				break;
@@ -476,12 +471,12 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 			if (id == "bottle") {
 				if (!heldBottle) {
 					heldBottle = hovered;
-					updateFollowMouse(x, y);
+					updateFollowMouse(mousePos.x, mousePos.y);
 					break;
 				}
 
                 // Check if clicking on cauldron water to bottle potion
-                Rml::Element* possibleCauldron = m_context->GetElementAtPoint(Rml::Vector2f(x, y), hovered);
+                Rml::Element* possibleCauldron = m_context->GetElementAtPoint(mousePos, hovered);
                 if (possibleCauldron && (possibleCauldron->GetId() == "cauldron-water" || possibleCauldron->GetId() == "cauldron")) {
                     // Create potion and add to player inventory
                     Entity cauldron = getOpenedCauldron();
@@ -508,8 +503,8 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
                 }
 
 				// Reset bottle position
-				hovered->SetProperty("top", "420px");
-				hovered->SetProperty("left", "1000px");
+				hovered->SetProperty("top", BOTTLE_TOP_PX);
+				hovered->SetProperty("left", BOTTLE_LEFT_PX);
 				heldBottle = nullptr;
 			}
 		} while (false);
@@ -586,7 +581,7 @@ void UISystem::createInventoryBar()
                     position: absolute;
                     bottom: 10px;
                     left: 50%;
-                    margin-left: -225px;
+                    margin-left: -253px;
                     width: 506px;
                     height: 52px;
                     background-color: #8B5A2B;
@@ -843,14 +838,14 @@ bool UISystem::openCauldron(Entity cauldron)
         <rml>
         <head>
             <style>
-                #ui {
+                body {
                     position: absolute;
                     display: flex;
                     top: 25px;
-                    left: 96px;
+                    left: 50%;
+                    margin-left: -528px;
                     width: 1057px;
                     height: 550px;
-                    text-align: center;
                     decorator: image("interactables/cauldron_background.png" flip-vertical fill);
                 }
 
@@ -880,15 +875,15 @@ bool UISystem::openCauldron(Entity cauldron)
                     width: 319px;
                     height: 303px;
                     top: 82px;
-                    left: 500px;
+                    left: 404px;
                 }
 
                 #ladle {
                     position: absolute;
                     width: 132px;
                     height: 246px;
-                    top: 70px;
-                    left: 962px;
+                    top: )" + LADLE_TOP_PX + R"(;
+                    left: )" + LADLE_LEFT_PX + R"(;
                     decorator: image("interactables/spoon_on_table.png" contain);
                     drag: drag;
                 }
@@ -897,8 +892,8 @@ bool UISystem::openCauldron(Entity cauldron)
                     position: absolute;
                     width: 60px;
                     height: 100px;
-                    top: 420px;
-                    left: 1000px;
+                    top: )" + BOTTLE_TOP_PX + R"(;
+                    left: )" + BOTTLE_LEFT_PX + R"(;
                     decorator: image("interactables/potion_bottle.png" contain);
                     transform: rotate(180deg) scale(1.2);
                     cursor: pointer;
@@ -906,10 +901,8 @@ bool UISystem::openCauldron(Entity cauldron)
             </style>
         </head>
         <body>
-            <div id="ui">
-                <div id="heat"></div>
-                <div id="cauldron-water"></div>
-            </div>
+            <div id="heat"></div>
+            <div id="cauldron-water"></div>
             <div id="cauldron"></div>
             <div id="ladle"></div>
             <div id="bottle"></div>
@@ -981,11 +974,20 @@ Entity UISystem::getOpenedCauldron() {
 	return openedCauldron;
 }
 
-void followMouse(Rml::Element* e, double x, double y) {
+Rml::Vector2f UISystem::getScaledMouseCoords(double x, double y) {
+    int windowx, windowy;
+    glfwGetWindowSize(m_window, &windowx, &windowy);
+    Rml::Vector2i rmlSize = m_context->GetDimensions();
+    x *= (float) rmlSize.x / windowx;
+    y *= (float) rmlSize.y / windowy;
+	return Rml::Vector2f(x, y);
+}
+
+void UISystem::followMouse(Rml::Element* e, double x, double y) {
 	int wl = e->GetProperty("width")->GetNumericValue().number;
 	int hl = e->GetProperty("height")->GetNumericValue().number;
-	int ix = (int)x - wl / 2;
-	int iy = (int)y - hl / 2;
+	int ix = (int)x - wl / 2 - (m_context->GetDimensions().x - 1057) / 2;
+	int iy = (int)y - hl / 2 - 25;
 	e->SetProperty("left", std::to_string(ix) + "px");
 	e->SetProperty("top", std::to_string(iy) + "px");
 }
