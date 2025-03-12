@@ -580,37 +580,33 @@ void UISystem::createInventoryBar()
                     position: absolute;
                     bottom: 10px;
                     left: 50%;
-                    margin-left: -253px;
-                    width: 506px;
-                    height: 52px;
-                    background-color: #8B5A2B;
-                    border-width: 4px;
-                    border-color: #4E3620;
-                    padding: 3px;
+                    margin-left: -220px;
+                    width: 440px;
+                    height: 44px;
+                    background-color: rgb(173, 146, 132);
+                    border-width: 2px;
+                    border-color: rgb(78, 54, 32);
                     display: block;
-                    z-index: 100;
                     font-family: Open Sans;
                 }
                 
                 .inventory-slot {
+                    position: absolute;
                     width: 40px;
                     height: 40px;
-                    margin: 3px;
-                    background-color: rgba(60, 40, 20, 0.7);
                     display: inline-block;
-                    text-align: center;
+                    text-align: right;
                     vertical-align: middle;
                     border-width: 2px;
-                    border-color: #5D4037;
-                    position: relative;
-                    z-index: 150;
+                    border-color: rgb(114, 80, 76);
+                    z-index: 10;
                     drag: clone;
                 }
                 
                 .inventory-slot.selected {
-                    background-color: rgba(120, 80, 40, 0.8);
-                    border-width: 2px;
+                    border-width: 4px;
                     border-color: #FFD700;
+                    z-index: 15;
                 }
             </style>
         </head>
@@ -625,7 +621,9 @@ void UISystem::createInventoryBar()
 			}
 
 			// Number near each slot
-			inventory_rml += "<div id='slot-" + std::to_string(i) + "' class='" + slot_class + "'></div>";
+            int left = i * 44;
+			inventory_rml += "<div id='slot-" + std::to_string(i) + "' class='" + slot_class + 
+                "' style='left: " + std::to_string(left) + "px;'></div>";
 		}
 
 		inventory_rml += "</body></rml>";
@@ -671,9 +669,17 @@ void UISystem::updateInventoryBar()
 
 			// Update the slot class (selected or not)
 			std::string slot_class = "inventory-slot";
+            int loc = i * 44;
 			if (i == m_selected_slot) {
 				slot_class += " selected";
-			}
+                int selectedLoc = loc - 2;
+                slot_element->SetProperty("left", std::to_string(selectedLoc) + "px");
+                slot_element->SetProperty("top", "-2px");
+			} else {
+                slot_element->SetProperty("left", std::to_string(loc) + "px");
+                slot_element->SetProperty("top", "0");
+            }
+
 			slot_element->SetAttribute("class", slot_class);
 
 			std::string slot_content = "";
@@ -689,7 +695,15 @@ void UISystem::updateInventoryBar()
 
 				Item& item = registry.items.get(item_entity);
 				std::string tex = ITEM_INFO.count(item.type) ? ITEM_INFO.at(item.type).texture_path : "interactables/coffee_bean.png";
-				slot_content += "<img src = '" + tex + "' style='width: 32px; height: 32px; margin: 4px; transform: scaleY(-1); ";
+				slot_content += R"(
+                    <img src=")" + tex + R"(" 
+                    style='
+                        pointer-events: none;
+                        width: 32px; 
+                        height: 32px; 
+                        margin: 4px; 
+                        transform: scaleY(-1); 
+                    )";
 				if (item.type == ItemType::POTION) {
 					vec3 color = registry.potions.get(item_entity).color;
 					slot_content += "image-color: " + getImageColorProperty(color, 255) + ";";
@@ -698,8 +712,17 @@ void UISystem::updateInventoryBar()
 
 				// Add item count if more than 1
 				if (item.amount > 1) {
-					slot_content += "<div style='position: absolute; bottom: 0; right: 2px; color: #FFFFFF; font-size: 14px; font-weight: bold;'>" +
-						std::to_string(item.amount) + "</div>";
+					slot_content += R"(
+                        <div style='
+                            pointer-events: none; 
+                            position: absolute; 
+                            bottom: 0px;
+                            right: -2px;
+                            color: #FFFFFF; 
+                            font-size: 14px; 
+                            font-weight: bold;'>
+                        )" + std::to_string(item.amount) + R"(
+                        </div>)";
 				}
 			}
 
