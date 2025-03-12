@@ -977,7 +977,6 @@ Entity UISystem::getOpenedCauldron() {
 	return openedCauldron;
 }
 
-<<<<<<< HEAD
 Rml::Vector2f UISystem::getScaledMouseCoords(double x, double y) {
     int windowx, windowy;
     glfwGetWindowSize(m_window, &windowx, &windowy);
@@ -988,13 +987,6 @@ Rml::Vector2f UISystem::getScaledMouseCoords(double x, double y) {
 }
 
 void UISystem::followMouse(Rml::Element* e, double x, double y) {
-=======
-void UISystem::setOpenedCauldron(Entity new_cauldron) {
-	openedCauldron = new_cauldron;
-}
-
-void followMouse(Rml::Element* e, double x, double y) {
->>>>>>> M2_Submission
 	int wl = e->GetProperty("width")->GetNumericValue().number;
 	int hl = e->GetProperty("height")->GetNumericValue().number;
 	int ix = (int)x - wl / 2 - (m_context->GetDimensions().x - 1057) / 2;
