@@ -977,6 +977,10 @@ Entity UISystem::getOpenedCauldron() {
 	return openedCauldron;
 }
 
+void UISystem::setOpenedCauldron(Entity new_cauldron) {
+	openedCauldron = new_cauldron;
+}
+
 Rml::Vector2f UISystem::getScaledMouseCoords(double x, double y) {
     int windowx, windowy;
     glfwGetWindowSize(m_window, &windowx, &windowy);
