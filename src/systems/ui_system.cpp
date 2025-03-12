@@ -401,9 +401,8 @@ void UISystem::handleTextInput(unsigned int codepoint)
 void UISystem::handleMouseMoveEvent(double x, double y)
 {
 	if (!m_initialized || !m_context) return;
-    Rml::Vector2f pos = getScaledMouseCoords(x, y);
-	updateFollowMouse(pos.x, pos.y);
-	m_context->ProcessMouseMove((int)pos.x, (int)pos.y, getKeyModifiers());
+	updateFollowMouse(x, y);
+	m_context->ProcessMouseMove((int)x, (int)y, getKeyModifiers());
 }
 
 void UISystem::handleMouseButtonEvent(int button, int action, int mods)
@@ -429,7 +428,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 	// Get mouse position
 	double wx, wy;
 	glfwGetCursorPos(m_window, &wx, &wy);
-    Rml::Vector2f mousePos = getScaledMouseCoords(wx, wy);
+    Rml::Vector2f mousePos = Rml::Vector2f(wx, wy);
 
 	// Check clicks for inventory bar and cauldron
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT) {
@@ -979,15 +978,6 @@ Entity UISystem::getOpenedCauldron() {
 
 void UISystem::setOpenedCauldron(Entity new_cauldron) {
 	openedCauldron = new_cauldron;
-}
-
-Rml::Vector2f UISystem::getScaledMouseCoords(double x, double y) {
-    int windowx, windowy;
-    glfwGetWindowSize(m_window, &windowx, &windowy);
-    Rml::Vector2i rmlSize = m_context->GetDimensions();
-    x *= (float) rmlSize.x / windowx;
-    y *= (float) rmlSize.y / windowy;
-	return Rml::Vector2f(x, y);
 }
 
 void UISystem::followMouse(Rml::Element* e, double x, double y) {

@@ -457,14 +457,22 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 
 void WorldSystem::on_mouse_move(vec2 mouse_position)
 {
+	// Get scaled mouse coords
+	double x = mouse_position.x;
+	double y = mouse_position.y;
+    int windowx, windowy;
+    glfwGetWindowSize(window, &windowx, &windowy);
+    x *= (float) WINDOW_WIDTH_PX / windowx;
+    y *= (float) WINDOW_HEIGHT_PX / windowy;
+	
 	// Pass the event to the UI system if it's initialized
 	if (m_ui_system != nullptr) {
-		m_ui_system->handleMouseMoveEvent(mouse_position.x, mouse_position.y);
+		m_ui_system->handleMouseMoveEvent(x, y);
 	}
 
 	// record the current mouse position
-	mouse_pos_x = mouse_position.x;
-	mouse_pos_y = mouse_position.y;
+	mouse_pos_x = x;
+	mouse_pos_y = y;
 }
 
 void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)

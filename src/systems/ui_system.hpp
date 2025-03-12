@@ -85,7 +85,6 @@ private:
     std::string getImageColorProperty(vec3 color, float alpha);
 
     // Update items that should follow the mouse
-    Rml::Vector2f getScaledMouseCoords(double x, double y);
     void updateFollowMouse(double x, double y);
     void followMouse(Rml::Element* e, double x, double y);
 
