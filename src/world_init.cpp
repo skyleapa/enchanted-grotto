@@ -105,7 +105,7 @@ Entity createPlayer(RenderSystem* renderer, vec2 position)
 	motion.scale = vec2({ PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT });
 
 	auto& inventory = registry.inventories.emplace(entity);
-	inventory.capacity = 8;
+	inventory.capacity = 10;
 	inventory.isFull = false;
 
 	std::vector<TEXTURE_ASSET_ID> walking_down = {
