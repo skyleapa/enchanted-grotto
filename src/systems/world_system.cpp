@@ -521,7 +521,8 @@ void WorldSystem::on_window_resize(int w, int h)
 	ysize *= scale;
 	x = (fbw - xsize) / 2;
 	y = (fbh - ysize) / 2;
-	glViewport(x, y, xsize, ysize);
+	renderer->setViewportCoords(x, y, xsize, ysize);
+	renderer->updateViewport();
 	m_ui_system->updateWindowSize(scale);
 }
 
