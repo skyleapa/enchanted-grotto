@@ -77,6 +77,10 @@ private:
     // State tracking
     bool m_initialized;
 
+    // Mouse tracking
+    double mouse_pos_x;
+    double mouse_pos_y;
+
     // Convert GLFW key to RmlUi key
     Rml::Input::KeyIdentifier convertKey(int key);
     int getKeyModifiers();
@@ -85,8 +89,8 @@ private:
     std::string getImageColorProperty(vec3 color, float alpha);
 
     // Update items that should follow the mouse
-    void updateFollowMouse(double x, double y);
-    void followMouse(Rml::Element* e, double x, double y);
+    void updateFollowMouse();
+    void followMouse(Rml::Element* e, bool dummy);
 
     // FPS counter variables
     float m_frame_times[60] = { 0 }; // Store last 60 frame times

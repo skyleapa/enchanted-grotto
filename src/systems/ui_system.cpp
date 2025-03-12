@@ -401,7 +401,9 @@ void UISystem::handleTextInput(unsigned int codepoint)
 void UISystem::handleMouseMoveEvent(double x, double y)
 {
 	if (!m_initialized || !m_context) return;
-	updateFollowMouse(x, y);
+    mouse_pos_x = x;
+    mouse_pos_y = y;
+	updateFollowMouse();
 	m_context->ProcessMouseMove((int)x, (int)y, getKeyModifiers());
 }
 
@@ -426,9 +428,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 	}
 
 	// Get mouse position
-	double wx, wy;
-	glfwGetCursorPos(m_window, &wx, &wy);
-    Rml::Vector2f mousePos = Rml::Vector2f(wx, wy);
+    Rml::Vector2f mousePos = Rml::Vector2f(mouse_pos_x, mouse_pos_y);
 
 	// Check clicks for inventory bar and cauldron
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT) {
@@ -461,7 +461,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 				}
 				else {
 					heldLadle = hovered;
-					updateFollowMouse(mousePos.x, mousePos.y);
+					updateFollowMouse();
 				}
 
 				break;
@@ -470,7 +470,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 			if (id == "bottle") {
 				if (!heldBottle) {
 					heldBottle = hovered;
-					updateFollowMouse(mousePos.x, mousePos.y);
+					updateFollowMouse();
 					break;
 				}
 
@@ -980,23 +980,24 @@ void UISystem::setOpenedCauldron(Entity new_cauldron) {
 	openedCauldron = new_cauldron;
 }
 
-void UISystem::followMouse(Rml::Element* e, double x, double y) {
+// Added dummy bool cause vscode was doing some strange error
+void UISystem::followMouse(Rml::Element* e, bool dummy) {
 	int wl = e->GetProperty("width")->GetNumericValue().number;
 	int hl = e->GetProperty("height")->GetNumericValue().number;
-	int ix = (int)x - wl / 2 - (m_context->GetDimensions().x - 1057) / 2;
-	int iy = (int)y - hl / 2 - 25;
+	int ix = (int)mouse_pos_x - wl / 2 - 96;
+	int iy = (int)mouse_pos_y - hl / 2 - 25;
 	e->SetProperty("left", std::to_string(ix) + "px");
 	e->SetProperty("top", std::to_string(iy) + "px");
 }
 
-void UISystem::updateFollowMouse(double x, double y) {
+void UISystem::updateFollowMouse() {
 	if (heldLadle) {
-		followMouse(heldLadle, x, y);
+		followMouse(heldLadle, false);
 		return;
 	}
 
 	if (heldBottle) {
-		followMouse(heldBottle, x, y);
+		followMouse(heldBottle, false);
 		return;
 	}
 }
