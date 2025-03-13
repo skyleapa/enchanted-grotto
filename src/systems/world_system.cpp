@@ -173,9 +173,18 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		title_ss << "FPS: " << m_last_fps;
 	}
 
-	// title_ss << total_items << " items in player inventory: " << total_fruits << " fruits " << total_beans << " beans";
-
 	glfwSetWindowTitle(window, title_ss.str().c_str());
+
+	// autosave every minute
+
+	if (registry.screenStates.entities.size() > 0) {
+		ScreenState& screen = registry.screenStates.components[0];
+		screen.autosave_timer -= elapsed_ms_since_last_update;
+		if (screen.autosave_timer <= 0) {
+			screen.autosave_timer = AUTOSAVE_TIMER;
+			ItemSystem::saveGameState("game_state.json");
+		}
+	}
 
 	if (registry.players.entities.size() < 1)
 		return true;

@@ -49,6 +49,7 @@ struct ScreenState
 	GLuint from_biome = 2;
 	int tutorial_state = 0;
 	bool tutorial_step_complete = true;
+	float autosave_timer = AUTOSAVE_TIMER;
 };
 
 // A struct to refer to debugging graphics in the ECS
