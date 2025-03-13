@@ -38,6 +38,14 @@ void BiomeSystem::step(float elapsed_ms_since_last_update) {
 			screen.darken_screen_factor += elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
 			if (screen.darken_screen_factor >= 1)
 				screen.fade_status = 1; // after fade out
+			
+			// stop ammo motion, enemy motion is handled in ai_system
+			for (Entity ammo : registry.ammo.entities) {
+				if (registry.motions.has(ammo)) {
+					registry.motions.get(ammo).velocity = {0,0};
+				}
+			}
+
 		}
 		else if (screen.fade_status == 1)
 		{
