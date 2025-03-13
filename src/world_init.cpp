@@ -217,21 +217,15 @@ Entity createForestBridgeBottom(RenderSystem* renderer, vec2 position)
 
 Entity createForestRiver(RenderSystem* renderer, vec2 position)
 {
-	// top half of river
+	// top half of river texture
 	auto entity1 = Entity();
 	auto& terrain1 = registry.terrains.emplace(entity1);
-	// doing 0 with full height and width because of sliding along terrain
-	terrain1.collision_setting = 0.0f;
-	terrain1.width_ratio = 1.0f;
-	terrain1.height_ratio = 1.0f;
+	terrain1.collision_setting = 1.0f;
 
-	// bottom half of river
+	// bottom half of river texture
 	auto entity2 = Entity();
 	auto& terrain2 = registry.terrains.emplace(entity2);
-	// doing 0 with full height and width because of sliding along terrain
-	terrain2.collision_setting = 0.0f;
-	terrain2.height_ratio = 1.0f;
-	terrain2.width_ratio = 1.0f;
+	terrain2.collision_setting = 1.0f;
 
 	// std::cout << "Entity " << entity1.id() << " river" << std::endl;
 	// std::cout << "Entity " << entity2.id() << " river" << std::endl;
