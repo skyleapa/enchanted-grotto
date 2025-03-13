@@ -457,18 +457,20 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 
 void WorldSystem::on_mouse_move(vec2 mouse_position)
 {
-	// Get scaled mouse coords
+	// Actual mouse coords
 	double x = mouse_position.x;
 	double y = mouse_position.y;
-	int windowx, windowy;
-	glfwGetWindowSize(window, &windowx, &windowy);
-    x *= (float) WINDOW_WIDTH_PX / windowx;
-    y *= (float) WINDOW_HEIGHT_PX / windowy;
 
+	// Subtract possible black bar heights
 	GLint viewport_coords[4];
 	glGetIntegerv(GL_VIEWPORT, viewport_coords);
-	x -= viewport_coords[0] / renderer->getRetinaScale();
-	y -= viewport_coords[1] / renderer->getRetinaScale();
+	float scale = renderer->getRetinaScale();
+	x -= viewport_coords[0] / scale;
+	y -= viewport_coords[1] / scale;
+
+	// Scale down to size
+    x *= (float) WINDOW_WIDTH_PX / (viewport_coords[2] / scale);
+    y *= (float) WINDOW_HEIGHT_PX / (viewport_coords[3] / scale);
 
 	if (x < 0 || x > WINDOW_WIDTH_PX || y < 0 || y > WINDOW_HEIGHT_PX) {
 		return;
