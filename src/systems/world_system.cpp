@@ -343,6 +343,15 @@ void WorldSystem::handle_collisions()
 			screen.game_over = true;
 			continue;
 		}
+		else if ((registry.ammo.has(collision_entity) || registry.ammo.has(collision.other)) && (registry.terrains.has(collision_entity) || registry.terrains.has(collision.other))) {
+			if (registry.ammo.has(collision_entity)) {
+				registry.remove_all_components_of(collision_entity);
+			}
+			else {
+				registry.remove_all_components_of(collision.other);
+			}
+			continue;
+		}
 
 		Entity terrain_entity = (collision_entity == player_entity) ? collision.other : collision_entity;
 		if (!registry.terrains.has(terrain_entity) || !registry.motions.has(terrain_entity))

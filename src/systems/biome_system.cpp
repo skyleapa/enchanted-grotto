@@ -10,9 +10,9 @@
 void BiomeSystem::init(RenderSystem* renderer_arg) {
 	this->renderer = renderer_arg;
 	ScreenState& screen = registry.screenStates.components[0];
-	screen.darken_screen_factor = 0;
-	screen.fade_status = 0;
-	screen.is_switching_biome = false;
+	screen.darken_screen_factor = 1;
+	screen.fade_status = 1; // start from black screen
+	screen.is_switching_biome = true;
 	screen.biome = (GLuint)BIOME::FOREST;
 	screen.from_biome = (GLuint)BIOME::FOREST;
 
