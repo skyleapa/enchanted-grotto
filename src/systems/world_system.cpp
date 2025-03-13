@@ -77,7 +77,7 @@ GLFWwindow* WorldSystem::create_window()
 #if __APPLE__
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
-	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 	// CK: setting GLFW_SCALE_TO_MONITOR to true will rescale window but then you must handle different scalings
 	// glfwWindowHint(GLFW_SCALE_TO_MONITOR, GL_TRUE);		// GLFW 3.3+
 	glfwWindowHint(GLFW_SCALE_TO_MONITOR, GL_FALSE); // GLFW 3.3+
@@ -100,10 +100,13 @@ GLFWwindow* WorldSystem::create_window()
 		{ ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_move({ _0, _1 }); };
 	auto mouse_button_pressed_redirect = [](GLFWwindow* wnd, int _button, int _action, int _mods)
 		{ ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_button_pressed(_button, _action, _mods); };
+	auto window_resize_redirect = [](GLFWwindow* wnd, int _width, int _height)
+		{ ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_window_resize(_width, _height); };
 
 	glfwSetKeyCallback(window, key_redirect);
 	glfwSetCursorPosCallback(window, cursor_pos_redirect);
 	glfwSetMouseButtonCallback(window, mouse_button_pressed_redirect);
+	glfwSetWindowSizeCallback(window, window_resize_redirect);
 
 	return window;
 }
@@ -438,18 +441,49 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 	{
 		handle_player_interaction();
 	}
+
+	if (action == GLFW_PRESS && key == GLFW_KEY_F11) {
+		GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+		if (glfwGetWindowMonitor(window)) {
+			// We are in fullscreeen, undo it
+			glfwSetWindowMonitor(window, nullptr, winPosX, winPosY, WINDOW_WIDTH_PX, WINDOW_HEIGHT_PX, GLFW_DONT_CARE);
+		} else {
+			glfwGetWindowPos(window, &winPosX, &winPosY);
+			const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+			glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, GLFW_DONT_CARE);
+		}
+	}
 }
 
 void WorldSystem::on_mouse_move(vec2 mouse_position)
 {
+	// Actual mouse coords
+	double x = mouse_position.x;
+	double y = mouse_position.y;
+
+	// Subtract possible black bar heights
+	GLint viewport_coords[4];
+	glGetIntegerv(GL_VIEWPORT, viewport_coords);
+	float scale = renderer->getRetinaScale();
+	x -= viewport_coords[0] / scale;
+	y -= viewport_coords[1] / scale;
+
+	// Scale down to size
+    x *= (float) WINDOW_WIDTH_PX / (viewport_coords[2] / scale);
+    y *= (float) WINDOW_HEIGHT_PX / (viewport_coords[3] / scale);
+
+	if (x < 0 || x > WINDOW_WIDTH_PX || y < 0 || y > WINDOW_HEIGHT_PX) {
+		return;
+	}
+
 	// Pass the event to the UI system if it's initialized
 	if (m_ui_system != nullptr) {
-		m_ui_system->handleMouseMoveEvent(mouse_position.x, mouse_position.y);
+		m_ui_system->handleMouseMoveEvent(x, y);
 	}
 
 	// record the current mouse position
-	mouse_pos_x = mouse_position.x;
-	mouse_pos_y = mouse_position.y;
+	mouse_pos_x = x;
+	mouse_pos_y = y;
 }
 
 void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
@@ -473,6 +507,27 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 		// don't throw ammo if in potion making menu or clicking on inventory
 		throwAmmo(vec2(mouse_pos_x, mouse_pos_y));
 	}
+}
+
+void WorldSystem::on_window_resize(int w, int h)
+{
+	int fbw, fbh;
+	glfwGetFramebufferSize(window, &fbw, &fbh);
+	float scale = 1.0f;
+	int xsize = WINDOW_WIDTH_PX, ysize = WINDOW_HEIGHT_PX;
+	if ((float) w / h > WINDOW_RATIO) {
+        scale = (float) fbh / ysize;
+	} else {
+		scale = (float) fbw / xsize;
+	}
+
+	xsize *= scale;
+	ysize *= scale;
+	int x = (fbw - xsize) / 2;
+	int y = (fbh - ysize) / 2;
+	renderer->setViewportCoords(x, y, xsize, ysize);
+	renderer->updateViewport();
+	m_ui_system->updateWindowSize(scale);
 }
 
 void WorldSystem::handle_player_interaction()

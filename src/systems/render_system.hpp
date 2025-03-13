@@ -147,12 +147,27 @@ public:
 
 	Entity get_screen_state_entity() { return screen_state_entity; }
 
+	void updateViewport() { glViewport(viewport_x, viewport_y, viewport_sizex, viewport_sizey); }
+
+	void setViewportCoords(int x, int y, int sizex, int sizey) { 
+		viewport_x = x, viewport_y = y, viewport_sizex = sizex, viewport_sizey = sizey;
+	}
+
+	float getRetinaScale() { return retina_scale; }
+
 private:
 	// Internal drawing functions for each entity type
 	void drawGridLine(Entity entity, const mat3& projection);
 	void drawTexturedMesh(Entity entity, const mat3& projection);
 	void drawToScreen();
 	void fadeScreen();
+
+	// Viewport numbers
+	int viewport_x;
+	int viewport_y;
+	int viewport_sizex;
+	int viewport_sizey;
+	float retina_scale = 1.0f; // 1.0 on windows, 2.0 on mac
 
 	// Window handle
 	GLFWwindow* window;
