@@ -196,7 +196,12 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 
 		// If item is dragged onto cauldron, insert 1 of that ingredient
 		if (cur->GetId() == "cauldron" || cur->GetId() == "cauldron-water") {
-			Entity item = registry.inventories.get(player).items[selected];
+			Inventory& pinv = registry.inventories.get(player);
+			if (selected >= pinv.items.size()) {
+				return;
+			}
+
+			Entity item = pinv.items[selected];
 			if (!registry.ingredients.has(item)) {
 				return;
 			}

@@ -44,7 +44,7 @@ Entity createBush(RenderSystem* renderer, vec2 position);
 Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemType type, int amount);
 
 // cauldron
-Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name);
+Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name, bool create_textbox);
 
 // mortar and pestle
 Entity createMortarPestle(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name);
