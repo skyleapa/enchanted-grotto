@@ -13,8 +13,9 @@ void BiomeSystem::init(RenderSystem* renderer_arg) {
 	screen.darken_screen_factor = 1;
 	screen.fade_status = 1; // start from black screen
 	screen.is_switching_biome = true;
-	screen.biome = (GLuint)BIOME::FOREST;
-	screen.from_biome = (GLuint)BIOME::FOREST;
+	screen.biome = (GLuint)BIOME::BLANK;
+	screen.from_biome = (GLuint)BIOME::BLANK;
+	screen.switching_to_biome = (GLuint)BIOME::GROTTO;
 
 	switchBiome(screen.biome);
 }
@@ -38,11 +39,11 @@ void BiomeSystem::step(float elapsed_ms_since_last_update) {
 			screen.darken_screen_factor += elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
 			if (screen.darken_screen_factor >= 1)
 				screen.fade_status = 1; // after fade out
-			
+
 			// stop ammo motion, enemy motion is handled in ai_system
 			for (Entity ammo : registry.ammo.entities) {
 				if (registry.motions.has(ammo)) {
-					registry.motions.get(ammo).velocity = {0,0};
+					registry.motions.get(ammo).velocity = { 0,0 };
 				}
 			}
 
@@ -114,9 +115,9 @@ void BiomeSystem::renderPlayerInNewBiome() {
 
 	player_motion.scale = { PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT };
 
-	if (screen.from_biome == (int)BIOME::FOREST && screen.biome == (int)BIOME::GROTTO) { // through grotto entrance from forest
+	if (screen.switching_to_biome == (int)BIOME::GROTTO && screen.biome == (int)BIOME::GROTTO) { // through grotto entrance from forest
 		player_motion.scale = { PLAYER_BB_WIDTH * PlAYER_BB_GROTTO_SIZE_FACTOR, PLAYER_BB_HEIGHT * PlAYER_BB_GROTTO_SIZE_FACTOR };
-		player_motion.position = vec2({ player_motion.position.x, GRID_CELL_HEIGHT_PX * 11 }); // bring player to front of door
+		player_motion.position = vec2({ GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 11 }); // bring player to front of door
 		if (screen.tutorial_state == (int)TUTORIAL::ENTER_GROTTO) {
 			screen.tutorial_step_complete = true;
 			screen.tutorial_state += 1;
@@ -127,6 +128,7 @@ void BiomeSystem::renderPlayerInNewBiome() {
 			if (registry.renderRequests.has(cauldron)) {
 				RenderRequest& rr = registry.renderRequests.get(cauldron);
 				rr.is_visible = true;
+				std::cout << "re-rendering cauldron" << std::endl;
 			}
 			// recreate textbox
 			if (registry.motions.has(cauldron)) {
@@ -158,9 +160,6 @@ void BiomeSystem::renderPlayerInNewBiome() {
 void BiomeSystem::createForest()
 {
 	ScreenState& screen = registry.screenStates.components[0];
-	if (screen.tutorial_state == (int)TUTORIAL::WELCOME_SCREEN) {
-		createWelcomeScreen(renderer, vec2(WINDOW_WIDTH_PX / 2, WINDOW_HEIGHT_PX / 2 - 50));
-	}
 
 	// create boundaries
 	for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::FOREST))
@@ -212,6 +211,11 @@ void BiomeSystem::createForest()
 
 void BiomeSystem::createGrotto()
 {
+	// create tutorial screen
+	if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::WELCOME_SCREEN) {
+		createWelcomeScreen(renderer, vec2(WINDOW_WIDTH_PX / 2, WINDOW_HEIGHT_PX / 2 - 50));
+	}
+
 	// positions are according to sample grotto interior
 	for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::GROTTO))
 	{
@@ -222,9 +226,13 @@ void BiomeSystem::createGrotto()
 		create_grotto_static_entities(renderer, position, size, rotation, texture, layer);
 	}
 
+	bool new_cauldron_created = false;
+	Entity new_cauldron;
 	for (Entity cauldron_entity : registry.cauldrons.entities) {
-		if (!registry.motions.has(cauldron_entity)) { // means that the cauldron was reloaded from inventory TODO: fix this in itemsystem deserialization instead
-			Entity new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.50, GRID_CELL_HEIGHT_PX * 6.45 }), vec2({ 142, 196 }), 8, "Cauldron", true); // make a new cauldron and render textbox
+		if (!registry.motions.has(cauldron_entity)) { // means that the cauldron was reloaded from inventory
+			std::cout <<"recreating cauldron from data" << std::endl;
+			new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.50, GRID_CELL_HEIGHT_PX * 6.45 }), vec2({ 142, 196 }), 8, "Cauldron", true); // make a new cauldron and render textbox
+			new_cauldron_created = true;
 			if (registry.inventories.has(cauldron_entity)) {
 				Inventory& inv = registry.inventories.get(cauldron_entity);
 				Inventory& new_inv = registry.inventories.get(new_cauldron);
@@ -235,12 +243,25 @@ void BiomeSystem::createGrotto()
 					new_inv.items.push_back(new_item);
 					ItemSystem::destroyItem(item_e);
 				}
+				std::cout <<"new cualdron size " << new_inv.items.size() <<std::endl;
 			}
-			registry.remove_all_components_of(cauldron_entity);
 		}
 	}
 
-	if (registry.cauldrons.size() == 0) createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.35, GRID_CELL_HEIGHT_PX * 5.85 }), vec2({ 175, 280 }), 8, "Cauldron", true);
+	if (registry.cauldrons.entities.size() == 0) {
+		std::cout << "creating cauldron in grotto" << std::endl;
+		new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.35, GRID_CELL_HEIGHT_PX * 5.85 }), vec2({ 175, 280 }), 8, "Cauldron", true);
+		new_cauldron_created = true;
+	}
+	if (new_cauldron_created) {
+		for (Entity cauldron : registry.cauldrons.entities) {
+			if (new_cauldron != cauldron) registry.remove_all_components_of(cauldron);
+		}
+	}
+	assert(registry.cauldrons.entities.size() == 1);
+		
+	std::cout << "number of cualdrons: " << registry.cauldrons.entities.size() << std::endl;
+
 	createMortarPestle(renderer, vec2({ GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22 }), vec2({ 213, 141 }), 9, "Mortar and Pestle");
 	createRecipeBook(renderer, vec2({ GRID_CELL_WIDTH_PX * 4.15, GRID_CELL_HEIGHT_PX * 5.05 }), vec2({ 108, 160 }), 10, "Recipe Book");
 	createChest(renderer, vec2({ GRID_CELL_WIDTH_PX * 1.35, GRID_CELL_HEIGHT_PX * 5.2 }), vec2({ 100, 150 }), 11, "Chest");

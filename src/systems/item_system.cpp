@@ -337,6 +337,7 @@ bool ItemSystem::saveGameState(const std::string& filename) {
         inventories.push_back(serializeInventory(inventory));
     }
     data["inventories"] = inventories;
+    std::cout << "saved data: " << data["inventories"] <<std::endl;
     
     try {
         std::ofstream file(filename);
@@ -358,6 +359,7 @@ bool ItemSystem::loadGameState(const std::string& filename) {
         
         nlohmann::json data;
         file >> data;
+        std::cout << "data: " << data << std::endl;
         
         Entity player;
         if (!registry.players.entities.empty()) {
