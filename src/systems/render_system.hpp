@@ -161,10 +161,10 @@ private:
 	void fadeScreen();
 
 	// Viewport numbers
-	int viewport_x = 0;
-	int viewport_y = 0;
-	int viewport_sizex = WINDOW_WIDTH_PX;
-	int viewport_sizey = WINDOW_HEIGHT_PX;
+	int viewport_x;
+	int viewport_y;
+	int viewport_sizex;
+	int viewport_sizey;
 
 	// Window handle
 	GLFWwindow* window;

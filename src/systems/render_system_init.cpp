@@ -39,6 +39,8 @@ bool RenderSystem::init(GLFWwindow* window_arg)
 		printf("requested window width,height = %d,%d\n", WINDOW_WIDTH_PX, WINDOW_HEIGHT_PX);
 	}
 
+	setViewportCoords(0, 0, frame_buffer_width_px, frame_buffer_height_px);
+
 	// Hint: Ask your TA for how to setup pretty OpenGL error callbacks. 
 	// This can not be done in mac os, so do not enable
 	// it unless you are on Linux or Windows. You will need to change the window creation

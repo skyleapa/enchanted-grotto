@@ -460,10 +460,13 @@ void WorldSystem::on_mouse_move(vec2 mouse_position)
 	// Get scaled mouse coords
 	double x = mouse_position.x;
 	double y = mouse_position.y;
+	int windowx, windowy;
+	glfwGetWindowSize(window, &windowx, &windowy);
+    x *= (float) WINDOW_WIDTH_PX / windowx;
+    y *= (float) WINDOW_HEIGHT_PX / windowy;
+
 	GLint viewport_coords[4];
 	glGetIntegerv(GL_VIEWPORT, viewport_coords);
-    x *= (float) WINDOW_WIDTH_PX / viewport_coords[2];
-    y *= (float) WINDOW_HEIGHT_PX / viewport_coords[3];
 	x -= viewport_coords[0];
 	y -= viewport_coords[1];
 
