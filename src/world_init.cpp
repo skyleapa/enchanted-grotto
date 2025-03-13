@@ -398,11 +398,11 @@ Entity createBush(RenderSystem* renderer, vec2 position)
 	return entity;
 }
 
-Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemType type, int amount)
+Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemType type, int amount, bool canRespawn)
 {
 	assert(ITEM_INFO.count(type) && "Tried to create an item that has no info!");
 	ItemInfo info = ITEM_INFO.at(type);
-	auto entity = ItemSystem::createCollectableIngredient(position, type, amount);
+	auto entity = ItemSystem::createCollectableIngredient(position, type, amount, canRespawn);
 
 	// Mesh
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -683,7 +683,7 @@ RenderRequest getTextboxRenderRequest(Textbox& textbox)
 		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_FOREST;
 	}
 	else if (item.type == ItemType::SAP) {
-		texture = TEXTURE_ASSET_ID::TEXTBOX_SAP;
+		texture = TEXTURE_ASSET_ID::TEXTBOX_TWIG;
 	}
 	else if (item.type == ItemType::MAGICAL_DUST) {
 		texture = TEXTURE_ASSET_ID::TEXTBOX_MAGICAL_DUST;

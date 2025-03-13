@@ -2,7 +2,7 @@
 #include <iostream>
 #include <fstream>
 
-Entity ItemSystem::createItem(ItemType type, int amount, bool isCollectable, bool is_ammo) {
+Entity ItemSystem::createItem(ItemType type, int amount, bool isCollectable, bool is_ammo, bool canRespawn) {
     Entity entity = Entity();
     // std::cout << "Entity " << entity.id() << " of type " << (int) type << std::endl;
     
@@ -12,6 +12,7 @@ Entity ItemSystem::createItem(ItemType type, int amount, bool isCollectable, boo
     item.isCollectable = isCollectable;
     item.name = ITEM_INFO.at(type).name;
     item.is_ammo = is_ammo;
+    item.canRespawn = canRespawn;
 
     if (is_ammo) {
         registry.ammo.emplace(entity);
@@ -46,8 +47,8 @@ Entity ItemSystem::createPotion(PotionEffect effect, int duration, const vec3& c
     return entity;
 }
 
-Entity ItemSystem::createCollectableIngredient(vec2 position, ItemType type, int amount) {
-    Entity item = createItem(type, amount, true, true);
+Entity ItemSystem::createCollectableIngredient(vec2 position, ItemType type, int amount, bool canRespawn) {
+    Entity item = createItem(type, amount, true, true, canRespawn);
     registry.items.get(item).originalPosition = position;
     Ingredient& ing = registry.ingredients.emplace(item);
     ing.grindLevel = ITEM_INFO.at(type).grindable ? 0.f : -1.f;

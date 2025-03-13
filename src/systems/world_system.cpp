@@ -325,10 +325,10 @@ void WorldSystem::handle_collisions()
 			if (enemy.health <= 0) {
 				// using can_move for now since ent cannot move, but mummy can
 				if (enemy.can_move == 0) {
-					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::SAP, 1);
+					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::SAP, 1, FALSE);
 				}
 				else if (enemy.can_move == 1) {
-					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MAGICAL_DUST, 1);
+					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MAGICAL_DUST, 1, FALSE);
 				}
 				if (screen.tutorial_state == (int)TUTORIAL::ATTACK_ENEMY) {
 					screen.tutorial_step_complete = true;
@@ -597,8 +597,8 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 		}
 	}
 
-	// Set a random respawn time (1-5 seconds)
-	item_info.respawnTime = (rand() % 4000 + 1000);
+	// Set a random respawn time (10-15 seconds)
+	item_info.respawnTime = (rand() % 5001 + 10000);
 
 
 	// Hide item by removing motion & render components
@@ -631,7 +631,7 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 	{
 		Item& item_info = registry.items.get(item);
 
-		if (item_info.canRespawn == false)
+		if (!item_info.canRespawn)
 			return;
 
 		if (item_info.respawnTime <= 0)
