@@ -153,6 +153,8 @@ public:
 		viewport_x = x, viewport_y = y, viewport_sizex = sizex, viewport_sizey = sizey;
 	}
 
+	float getRetinaScale() { return retina_scale; }
+
 private:
 	// Internal drawing functions for each entity type
 	void drawGridLine(Entity entity, const mat3& projection);
@@ -165,6 +167,7 @@ private:
 	int viewport_y;
 	int viewport_sizex;
 	int viewport_sizey;
+	float retina_scale = 1.0f; // 1.0 on windows, 2.0 on mac
 
 	// Window handle
 	GLFWwindow* window;

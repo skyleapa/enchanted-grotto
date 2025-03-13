@@ -467,8 +467,8 @@ void WorldSystem::on_mouse_move(vec2 mouse_position)
 
 	GLint viewport_coords[4];
 	glGetIntegerv(GL_VIEWPORT, viewport_coords);
-	x -= viewport_coords[0];
-	y -= viewport_coords[1];
+	x -= viewport_coords[0] / renderer->getRetinaScale();
+	y -= viewport_coords[1] / renderer->getRetinaScale();
 
 	if (x < 0 || x > WINDOW_WIDTH_PX || y < 0 || y > WINDOW_HEIGHT_PX) {
 		return;
@@ -512,7 +512,6 @@ void WorldSystem::on_window_resize(int w, int h)
 	int fbw, fbh;
 	glfwGetFramebufferSize(window, &fbw, &fbh);
 	float scale = 1.0f;
-	int x = 0, y = 0;
 	int xsize = WINDOW_WIDTH_PX, ysize = WINDOW_HEIGHT_PX;
 	if ((float) w / h > WINDOW_RATIO) {
         scale = (float) fbh / ysize;
@@ -522,8 +521,8 @@ void WorldSystem::on_window_resize(int w, int h)
 
 	xsize *= scale;
 	ysize *= scale;
-	x = (fbw - xsize) / 2;
-	y = (fbh - ysize) / 2;
+	int x = (fbw - xsize) / 2;
+	int y = (fbh - ysize) / 2;
 	renderer->setViewportCoords(x, y, xsize, ysize);
 	renderer->updateViewport();
 	m_ui_system->updateWindowSize(scale);
