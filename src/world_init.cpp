@@ -623,8 +623,7 @@ Entity createGrottoExit(RenderSystem* renderer, vec2 position, int id, std::stri
 Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity)
 {
 	auto entity = Entity();
-	std::cout << "Entity " << entity.id() << " textbox for entity item " << itemEntity.id() << std::endl;
-
+	
 	// Create a Textbox component
 	Textbox& textbox = registry.textboxes.emplace(entity);
 	textbox.targetItem = itemEntity;
