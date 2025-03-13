@@ -265,28 +265,7 @@ void WorldSystem::restart_game()
 	state.tutorial_state = (int)TUTORIAL::WELCOME_SCREEN;
 	state.tutorial_step_complete = true;
 
-	ItemSystem::loadGameState("game_state.json");
-	// // Restore player's inventory if we had one
-	// if (!player_inventory_data.empty() && !registry.players.entities.empty()) {
-	// 	Entity new_player = registry.players.entities[0];
-	// 	ItemSystem::deserializeInventory(new_player, player_inventory_data);
-	// }
-
-	// // Restore cauldron's inventory if we had one and create a new cauldron to restore the data
-	// if (!cauldron_inventory_data.empty()) {
-	// 	std::cout << "cauldron data not empty" << std::endl;
-	// 	for (Entity entity : registry.cauldrons.entities) {
-	// 		registry.remove_all_components_of(entity);
-	// 	}
-
-	// 	if (registry.cauldrons.entities.size() == 0) {
-	// 		std::cout << "recreating cauldron from data" << std::endl;
-	// 		Entity new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.50, GRID_CELL_HEIGHT_PX * 6.45 }), vec2({ 142, 196 }), 8, "Cauldron", true); // make a new cauldron for now
-	// 		ItemSystem::deserializeInventory(new_cauldron, cauldron_inventory_data);
-	// 		// update ui system's reference to opened cauldron
-	// 		if (m_ui_system) m_ui_system->setOpenedCauldron(new_cauldron);
-	// 	}
-	// }
+	ItemSystem::loadGameState("game_state.json"); // load the game state
 
 	biome_sys->init(renderer);
 
@@ -340,10 +319,12 @@ void WorldSystem::handle_collisions()
 			}
 			continue;
 		}
-		// case where enemy hits player - automatically die and restart game
+		// case where enemy hits player - automatically die
 		else if ((registry.players.has(collision_entity) || registry.players.has(collision.other)) && (registry.enemies.has(collision_entity) || registry.enemies.has(collision.other))) {
+			ItemSystem::loadGameState("game_state.json");
 			screen.is_switching_biome = true;
 			screen.switching_to_biome = (GLuint)BIOME::GROTTO;
+			// load the most recently saved file
 			continue;
 		}
 		else if ((registry.ammo.has(collision_entity) || registry.ammo.has(collision.other)) && (registry.terrains.has(collision_entity) || registry.terrains.has(collision.other))) {

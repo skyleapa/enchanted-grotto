@@ -1,6 +1,9 @@
 #include "item_system.hpp"
+#include "world_init.hpp"
 #include <iostream>
 #include <fstream>
+
+RenderSystem* ItemSystem::renderer = nullptr;
 
 Entity ItemSystem::createItem(ItemType type, int amount, bool isCollectable, bool is_ammo) {
     Entity entity = Entity();
@@ -54,9 +57,11 @@ Entity ItemSystem::createCollectableIngredient(vec2 position, ItemType type, int
 	return item;
 }
 
-void ItemSystem::init() {
-    // Load persistent data
-    loadGameState("game_state.json");
+void ItemSystem::init(RenderSystem* renderer_arg) {
+    this->renderer = renderer_arg;
+
+    // Load persistent data - moved to restart_game
+    // loadGameState("game_state.json");
 }
 
 void ItemSystem::step(float elapsed_ms) {
@@ -295,9 +300,10 @@ void ItemSystem::deserializeInventory(Entity inventory, const nlohmann::json& da
     
     // Create appropriate components based on owner type
     std::string owner_type = data["owner_type"];
-    if (owner_type == "cauldron" && !registry.cauldrons.has(inventory)) {
-        registry.cauldrons.emplace(inventory);
-    } else if (owner_type == "chest" && !registry.chests.has(inventory)) {
+    // Don't need this anymore because we call createCauldron
+    // if (owner_type == "cauldron" && !registry.cauldrons.has(inventory)) {
+    //     registry.cauldrons.emplace(inventory);
+    if (owner_type == "chest" && !registry.chests.has(inventory)) {
         registry.chests.emplace(inventory);
     }
     
@@ -337,7 +343,6 @@ bool ItemSystem::saveGameState(const std::string& filename) {
         inventories.push_back(serializeInventory(inventory));
     }
     data["inventories"] = inventories;
-    std::cout << "saved data: " << data["inventories"] <<std::endl;
     
     try {
         std::ofstream file(filename);
@@ -359,7 +364,6 @@ bool ItemSystem::loadGameState(const std::string& filename) {
         
         nlohmann::json data;
         file >> data;
-        std::cout << "data: " << data << std::endl;
         
         Entity player;
         if (!registry.players.entities.empty()) {
@@ -374,6 +378,11 @@ bool ItemSystem::loadGameState(const std::string& filename) {
                 if (player) {
                     deserializeInventory(player, inv_data);
                 }
+            } else if (owner_type == "cauldron") {
+                if (registry.cauldrons.entities.size() > 1) continue;
+                Entity cauldron_inv = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.35, GRID_CELL_HEIGHT_PX * 5.85 }), vec2({ 175, 280 }), 8, "Cauldron", false);
+                // std::cout << "Entity " << cauldron_inv.id() << " cauldron" << std::endl;
+                deserializeInventory(cauldron_inv, inv_data);
             } else {
                 // For non-player inventories, create new entities
                 Entity inv = Entity();

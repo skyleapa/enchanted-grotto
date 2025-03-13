@@ -226,41 +226,14 @@ void BiomeSystem::createGrotto()
 		create_grotto_static_entities(renderer, position, size, rotation, texture, layer);
 	}
 
-	bool new_cauldron_created = false;
-	Entity new_cauldron;
-	for (Entity cauldron_entity : registry.cauldrons.entities) {
-		if (!registry.motions.has(cauldron_entity)) { // means that the cauldron was reloaded from inventory
-			std::cout <<"recreating cauldron from data" << std::endl;
-			new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.50, GRID_CELL_HEIGHT_PX * 6.45 }), vec2({ 142, 196 }), 8, "Cauldron", true); // make a new cauldron and render textbox
-			new_cauldron_created = true;
-			if (registry.inventories.has(cauldron_entity)) {
-				Inventory& inv = registry.inventories.get(cauldron_entity);
-				Inventory& new_inv = registry.inventories.get(new_cauldron);
-				for (Entity item_e : inv.items) {
-					if (!registry.items.has(item_e)) continue;
-					Item& item = registry.items.get(item_e);
-					Entity new_item = ItemSystem::createItem(item.type, item.amount, item.isCollectable, item.is_ammo); // this also emplaces in items
-					new_inv.items.push_back(new_item);
-					ItemSystem::destroyItem(item_e);
-				}
-				std::cout <<"new cualdron size " << new_inv.items.size() <<std::endl;
-			}
-		}
-	}
-
 	if (registry.cauldrons.entities.size() == 0) {
 		std::cout << "creating cauldron in grotto" << std::endl;
-		new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.35, GRID_CELL_HEIGHT_PX * 5.85 }), vec2({ 175, 280 }), 8, "Cauldron", true);
-		new_cauldron_created = true;
-	}
-	if (new_cauldron_created) {
+		Entity new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.35, GRID_CELL_HEIGHT_PX * 5.85 }), vec2({ 175, 280 }), 8, "Cauldron", true);
 		for (Entity cauldron : registry.cauldrons.entities) {
 			if (new_cauldron != cauldron) registry.remove_all_components_of(cauldron);
 		}
 	}
-	assert(registry.cauldrons.entities.size() == 1);
-		
-	std::cout << "number of cualdrons: " << registry.cauldrons.entities.size() << std::endl;
+	// assert(registry.cauldrons.entities.size() == 1); // We should always only have one cauldron for testing purposes
 
 	createMortarPestle(renderer, vec2({ GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22 }), vec2({ 213, 141 }), 9, "Mortar and Pestle");
 	createRecipeBook(renderer, vec2({ GRID_CELL_WIDTH_PX * 4.15, GRID_CELL_HEIGHT_PX * 5.05 }), vec2({ 108, 160 }), 10, "Recipe Book");

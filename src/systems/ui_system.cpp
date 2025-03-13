@@ -198,7 +198,7 @@ void UISystem::step(float elapsed_ms)
 		// }
 
 		// update cauldron reference
-		if (registry.cauldrons.size() > 0) {
+		if (registry.cauldrons.entities.size() > 0) {
 			Entity cauldron = registry.cauldrons.entities[0];
 			if (openedCauldron != cauldron) openedCauldron = cauldron;
 		}
