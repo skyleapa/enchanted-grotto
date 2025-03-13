@@ -131,10 +131,6 @@ Entity createPlayer(RenderSystem* renderer, vec2 position)
 Entity createForestBridge(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
-	// std::cout << "Entity " << entity.id() << " forest bridge" << std::endl;
-	auto& terrain = registry.terrains.emplace(entity);
-	// we're using mesh collisions here, so AABB is not used, see components.cpp for more
-	terrain.collision_setting = 2.0f;
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
 	registry.meshPtrs.emplace(entity, &mesh);
 

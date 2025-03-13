@@ -146,7 +146,7 @@ bool collides_with_mesh(const Mesh* mesh, const Motion& player_motion, const Mot
 }
 
 
-bool collides(const Motion& player_motion, const Motion& terrain_motion, const Terrain* terrain, Entity terrain_entity)
+bool PhysicsSystem::collides(const Motion& player_motion, const Motion& terrain_motion, const Terrain* terrain, Entity terrain_entity)
 {
 	float player_width_ratio = 0.7f, player_height_ratio = 0.3f;
 	float terrain_width_ratio = 1.0f, terrain_height_ratio = 1.0f;
@@ -233,7 +233,7 @@ void PhysicsSystem::step(float elapsed_ms)
 		for (Entity ammo_entity : registry.ammo.entities) {
 			if (!registry.motions.has(ammo_entity)) continue;
 			Motion& ammo_motion = registry.motions.get(ammo_entity);
-			Ammo &ammo = registry.ammo.get(ammo_entity);
+			Ammo& ammo = registry.ammo.get(ammo_entity);
 			if (!ammo.is_fired) continue;
 
 			if (enemyCollides(ammo_motion, enemy_motion)) {

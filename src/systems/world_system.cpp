@@ -12,9 +12,6 @@
 
 #include "physics_system.hpp"
 
-// Forward declaration of the collides function from physics_system.cpp
-bool collides(const Motion& player_motion, const Motion& terrain_motion, const Terrain* terrain, Entity terrain_entity);
-
 // create the world
 WorldSystem::WorldSystem()
 {
@@ -303,13 +300,10 @@ void WorldSystem::handle_collisions()
 		return;
 
 	Motion& player_motion = registry.motions.get(player_entity);
-	vec2 movement = player_motion.position - player_motion.previous_position;
+	vec2 original_position = player_motion.position;
+	vec2 previous_position = player_motion.previous_position;
 
-	// Track collision entities and separate boundary collisions
-	std::vector<Entity> collision_terrain_entities;
-	std::vector<Entity> boundary_entities;
-
-	// First pass: identify all terrain entities the player is colliding with
+	// Handle non-terrain collisions first (ammo, enemies, etc.)
 	for (Entity collision_entity : registry.collisions.entities)
 	{
 		ScreenState& screen = registry.screenStates.components[0];
@@ -348,133 +342,75 @@ void WorldSystem::handle_collisions()
 			screen.game_over = true;
 			continue;
 		}
-
-		Entity terrain_entity = (collision_entity == player_entity) ? collision.other : collision_entity;
-		if (!registry.terrains.has(terrain_entity) || !registry.motions.has(terrain_entity))
-			continue;
-
-		// Separate boundaries from regular terrain
-		if (registry.terrains.get(terrain_entity).collision_setting == 1.0f) {
-			boundary_entities.push_back(terrain_entity);
-		}
-		else {
-			collision_terrain_entities.push_back(terrain_entity);
-		}
 	}
 
-	// If no collisions at all, we're done
-	if (collision_terrain_entities.empty() && boundary_entities.empty()) {
-		registry.collisions.clear();
-		return;
-	}
+	bool moving_diagonally = (original_position.x != previous_position.x) && (original_position.y != previous_position.y);
 
-	// First handle boundary collisions - these take precedence
-	if (!boundary_entities.empty()) {
-		// Try horizontal movement only
-		vec2 horizontal_pos = player_motion.previous_position;
-		horizontal_pos.x = player_motion.position.x; // Only apply X movement
+	// Helper function to check collisions with all terrain entities for an updated position
+	// this takes in a test_position argument that will act as player's "new" position, 
+	// returns a boolean if there is a collision or not
+	auto checkCollisions = [this](const vec2& test_position) {
+		for (Entity terrain_entity : registry.terrains.entities) {
+			if (!registry.motions.has(terrain_entity))
+				continue;
 
-		// Try vertical movement only
-		vec2 vertical_pos = player_motion.previous_position;
-		vertical_pos.y = player_motion.position.y; // Only apply Y movement
-
-		// Check if horizontal or vertical movements cause boundary collisions
-		bool horizontal_boundary_collision = false;
-		bool vertical_boundary_collision = false;
-
-		// Test each boundary entity against horizontal and vertical movement
-		for (Entity boundary_entity : boundary_entities) {
-			Motion& boundary_motion = registry.motions.get(boundary_entity);
-			Terrain& boundary = registry.terrains.get(boundary_entity);
-
-			// Store original position
-			vec2 orig_pos = player_motion.position;
-
-			// Test horizontal movement
-			player_motion.position = horizontal_pos;
-			if (collides(player_motion, boundary_motion, &boundary, boundary_entity)) {
-				horizontal_boundary_collision = true;
-			}
-
-			// Test vertical movement
-			player_motion.position = vertical_pos;
-			if (collides(player_motion, boundary_motion, &boundary, boundary_entity)) {
-				vertical_boundary_collision = true;
-			}
-
-			// Restore position for next check
-			player_motion.position = orig_pos;
-		}
-
-		// Handle boundary collisions - prevent sliding
-		if (horizontal_boundary_collision || vertical_boundary_collision) {
-			// If either direction is blocked by boundaries, revert to previous position
-			player_motion.position = player_motion.previous_position;
-			registry.collisions.clear();
-			return;
-		}
-	}
-
-	// If we get here, there are no boundary collisions blocking movement
-	// Now handle regular terrain collisions
-	if (!collision_terrain_entities.empty()) {
-		// Try horizontal movement only
-		vec2 horizontal_pos = player_motion.previous_position;
-		horizontal_pos.x = player_motion.position.x; // Only apply X movement
-
-		// Try vertical movement only
-		vec2 vertical_pos = player_motion.previous_position;
-		vertical_pos.y = player_motion.position.y; // Only apply Y movement
-
-		// Check if horizontal or vertical movements cause collisions
-		bool horizontal_collision = false;
-		bool vertical_collision = false;
-
-		for (Entity terrain_entity : collision_terrain_entities) {
 			Motion& terrain_motion = registry.motions.get(terrain_entity);
 			Terrain& terrain = registry.terrains.get(terrain_entity);
 
-			// Store original position
-			vec2 orig_pos = player_motion.position;
+			vec2 orig_pos = registry.motions.get(registry.players.entities[0]).position;
 
-			// Test horizontal movement
-			player_motion.position = horizontal_pos;
-			if (collides(player_motion, terrain_motion, &terrain, terrain_entity)) {
-				horizontal_collision = true;
+			// set our player's position to the test position
+			registry.motions.get(registry.players.entities[0]).position = test_position;
+
+			bool has_collision = PhysicsSystem::collides(registry.motions.get(registry.players.entities[0]),
+				terrain_motion, &terrain, terrain_entity);
+
+			// restore original position
+			registry.motions.get(registry.players.entities[0]).position = orig_pos;
+
+			if (has_collision)
+				return true;
+		}
+
+		return false;
+		};
+
+	if (moving_diagonally) {
+		// position as if we moved just horizontally
+		vec2 horizontal_pos = previous_position;
+		horizontal_pos.x = original_position.x;
+
+		// position as if we moved just vertically
+		vec2 vertical_pos = previous_position;
+		vertical_pos.y = original_position.y;
+
+		bool horizontal_collision = checkCollisions(horizontal_pos);
+		bool vertical_collision = checkCollisions(vertical_pos);
+		bool diagonal_collision = checkCollisions(original_position);
+
+		if (diagonal_collision) {
+			if (!horizontal_collision && !vertical_collision) {
+				player_motion.position = previous_position;
 			}
-
-			// Test vertical movement
-			player_motion.position = vertical_pos;
-			if (collides(player_motion, terrain_motion, &terrain, terrain_entity)) {
-				vertical_collision = true;
+			else if (!horizontal_collision) {
+				player_motion.position = horizontal_pos;
 			}
-
-			// Restore position for next check
-			player_motion.position = orig_pos;
-
-			// If both directions are blocked, no need to check other terrain entities
-			if (horizontal_collision && vertical_collision) {
-				break;
+			else if (!vertical_collision) {
+				player_motion.position = vertical_pos;
+			}
+			else {
+				player_motion.position = previous_position;
 			}
 		}
-
-		// Apply movement resolution based on collision results
-		if (horizontal_collision && vertical_collision) {
-			// Both directions blocked, revert to previous position
-			player_motion.position = player_motion.previous_position;
+		else {
+			// there's no collision with diagonal movement, allow player to move
+			player_motion.position = original_position;
 		}
-		else if (horizontal_collision) {
-			// Horizontal movement blocked, allow vertical movement
-			player_motion.position = vertical_pos;
-		}
-		else if (vertical_collision) {
-			// Vertical movement blocked, allow horizontal movement
-			player_motion.position = horizontal_pos;
-		}
-		// If neither direction is blocked individually but we still have collisions,
-		// it means the diagonal movement is causing issues - revert to previous position
-		else if (!collision_terrain_entities.empty()) {
-			player_motion.position = player_motion.previous_position;
+	}
+	else {
+		// For non-diagonal movement, just check if there's a collision
+		if (checkCollisions(original_position)) {
+			player_motion.position = previous_position;
 		}
 	}
 
@@ -520,7 +456,7 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 	// toggle tutorial
 	if (action == GLFW_PRESS && key == GLFW_KEY_T) {
 		screen.tutorial_step_complete = true;
-		screen.tutorial_state = (screen.tutorial_state == (int)TUTORIAL::COMPLETE) ? (int)TUTORIAL::MOVEMENT : (int)TUTORIAL::COMPLETE;
+		screen.tutorial_state = (screen.tutorial_state == (int)TUTORIAL::COMPLETE) ? (int)TUTORIAL::WELCOME_SCREEN : (int)TUTORIAL::COMPLETE;
 	}
 
 	// skip tutorial step
