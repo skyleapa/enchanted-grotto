@@ -228,7 +228,7 @@ void BiomeSystem::createGrotto()
 
 	if (registry.cauldrons.entities.size() == 0) {
 		std::cout << "creating cauldron in grotto" << std::endl;
-		Entity new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.35, GRID_CELL_HEIGHT_PX * 5.85 }), vec2({ 175, 280 }), 8, "Cauldron", true);
+		Entity new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.35, GRID_CELL_HEIGHT_PX * 5.85 }), vec2({ 175, 280 }), 8, "Cauldron", false);
 		for (Entity cauldron : registry.cauldrons.entities) {
 			if (new_cauldron != cauldron) registry.remove_all_components_of(cauldron);
 		}

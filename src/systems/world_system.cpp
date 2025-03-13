@@ -377,9 +377,14 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 		close_window();
 	}
 
-	if (action == GLFW_PRESS && key == GLFW_KEY_R)
+	if (action == GLFW_RELEASE && key == GLFW_KEY_R)
 	{
 		restart_game();
+	}
+
+	if (action == GLFW_RELEASE && key == GLFW_KEY_P)
+	{
+		ItemSystem::saveGameState("game_state.json");
 	}
 
 	Entity player = registry.players.entities[0]; // Assume only one player entity
