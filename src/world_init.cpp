@@ -221,13 +221,22 @@ Entity createForestBridgeBottom(RenderSystem* renderer, vec2 position)
 
 Entity createForestRiver(RenderSystem* renderer, vec2 position)
 {
+	// top half of river
 	auto entity1 = Entity();
 	auto& terrain1 = registry.terrains.emplace(entity1);
-	terrain1.collision_setting = 1.0f; // rivers are not walkable
+	// doing 0 with full height and width because of sliding along terrain
+	terrain1.collision_setting = 0.0f;
+	terrain1.width_ratio = 1.0f;
+	terrain1.height_ratio = 1.0f;
 
+	// bottom half of river
 	auto entity2 = Entity();
 	auto& terrain2 = registry.terrains.emplace(entity2);
-	terrain2.collision_setting = 1.0f; // rivers are not walkable
+	// doing 0 with full height and width because of sliding along terrain
+	terrain2.collision_setting = 0.0f;
+	terrain2.height_ratio = 1.0f;
+	terrain2.width_ratio = 1.0f;
+
 	// std::cout << "Entity " << entity1.id() << " river" << std::endl;
 	// std::cout << "Entity " << entity2.id() << " river" << std::endl;
 

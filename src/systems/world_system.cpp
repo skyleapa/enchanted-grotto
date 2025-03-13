@@ -12,6 +12,9 @@
 
 #include "physics_system.hpp"
 
+// Forward declaration of the collides function from physics_system.cpp
+bool collides(const Motion& player_motion, const Motion& terrain_motion, const Terrain* terrain, Entity terrain_entity);
+
 // create the world
 WorldSystem::WorldSystem()
 {
@@ -302,9 +305,11 @@ void WorldSystem::handle_collisions()
 	Motion& player_motion = registry.motions.get(player_entity);
 	vec2 movement = player_motion.position - player_motion.previous_position;
 
-	bool x_blocked = false;
-	bool y_blocked = false;
+	// Track collision entities and separate boundary collisions
+	std::vector<Entity> collision_terrain_entities;
+	std::vector<Entity> boundary_entities;
 
+	// First pass: identify all terrain entities the player is colliding with
 	for (Entity collision_entity : registry.collisions.entities)
 	{
 		ScreenState& screen = registry.screenStates.components[0];
@@ -348,17 +353,130 @@ void WorldSystem::handle_collisions()
 		if (!registry.terrains.has(terrain_entity) || !registry.motions.has(terrain_entity))
 			continue;
 
-		if (std::abs(movement.x) > 0.0f)
-			x_blocked = true;
-		if (std::abs(movement.y) > 0.0f)
-			y_blocked = true;
+		// Separate boundaries from regular terrain
+		if (registry.terrains.get(terrain_entity).collision_setting == 1.0f) {
+			boundary_entities.push_back(terrain_entity);
+		}
+		else {
+			collision_terrain_entities.push_back(terrain_entity);
+		}
 	}
 
-	// Resolve movement based on blockages
-	if (x_blocked)
-		player_motion.position.x = player_motion.previous_position.x;
-	if (y_blocked)
-		player_motion.position.y = player_motion.previous_position.y;
+	// If no collisions at all, we're done
+	if (collision_terrain_entities.empty() && boundary_entities.empty()) {
+		registry.collisions.clear();
+		return;
+	}
+
+	// First handle boundary collisions - these take precedence
+	if (!boundary_entities.empty()) {
+		// Try horizontal movement only
+		vec2 horizontal_pos = player_motion.previous_position;
+		horizontal_pos.x = player_motion.position.x; // Only apply X movement
+
+		// Try vertical movement only
+		vec2 vertical_pos = player_motion.previous_position;
+		vertical_pos.y = player_motion.position.y; // Only apply Y movement
+
+		// Check if horizontal or vertical movements cause boundary collisions
+		bool horizontal_boundary_collision = false;
+		bool vertical_boundary_collision = false;
+
+		// Test each boundary entity against horizontal and vertical movement
+		for (Entity boundary_entity : boundary_entities) {
+			Motion& boundary_motion = registry.motions.get(boundary_entity);
+			Terrain& boundary = registry.terrains.get(boundary_entity);
+
+			// Store original position
+			vec2 orig_pos = player_motion.position;
+
+			// Test horizontal movement
+			player_motion.position = horizontal_pos;
+			if (collides(player_motion, boundary_motion, &boundary, boundary_entity)) {
+				horizontal_boundary_collision = true;
+			}
+
+			// Test vertical movement
+			player_motion.position = vertical_pos;
+			if (collides(player_motion, boundary_motion, &boundary, boundary_entity)) {
+				vertical_boundary_collision = true;
+			}
+
+			// Restore position for next check
+			player_motion.position = orig_pos;
+		}
+
+		// Handle boundary collisions - prevent sliding
+		if (horizontal_boundary_collision || vertical_boundary_collision) {
+			// If either direction is blocked by boundaries, revert to previous position
+			player_motion.position = player_motion.previous_position;
+			registry.collisions.clear();
+			return;
+		}
+	}
+
+	// If we get here, there are no boundary collisions blocking movement
+	// Now handle regular terrain collisions
+	if (!collision_terrain_entities.empty()) {
+		// Try horizontal movement only
+		vec2 horizontal_pos = player_motion.previous_position;
+		horizontal_pos.x = player_motion.position.x; // Only apply X movement
+
+		// Try vertical movement only
+		vec2 vertical_pos = player_motion.previous_position;
+		vertical_pos.y = player_motion.position.y; // Only apply Y movement
+
+		// Check if horizontal or vertical movements cause collisions
+		bool horizontal_collision = false;
+		bool vertical_collision = false;
+
+		for (Entity terrain_entity : collision_terrain_entities) {
+			Motion& terrain_motion = registry.motions.get(terrain_entity);
+			Terrain& terrain = registry.terrains.get(terrain_entity);
+
+			// Store original position
+			vec2 orig_pos = player_motion.position;
+
+			// Test horizontal movement
+			player_motion.position = horizontal_pos;
+			if (collides(player_motion, terrain_motion, &terrain, terrain_entity)) {
+				horizontal_collision = true;
+			}
+
+			// Test vertical movement
+			player_motion.position = vertical_pos;
+			if (collides(player_motion, terrain_motion, &terrain, terrain_entity)) {
+				vertical_collision = true;
+			}
+
+			// Restore position for next check
+			player_motion.position = orig_pos;
+
+			// If both directions are blocked, no need to check other terrain entities
+			if (horizontal_collision && vertical_collision) {
+				break;
+			}
+		}
+
+		// Apply movement resolution based on collision results
+		if (horizontal_collision && vertical_collision) {
+			// Both directions blocked, revert to previous position
+			player_motion.position = player_motion.previous_position;
+		}
+		else if (horizontal_collision) {
+			// Horizontal movement blocked, allow vertical movement
+			player_motion.position = vertical_pos;
+		}
+		else if (vertical_collision) {
+			// Vertical movement blocked, allow horizontal movement
+			player_motion.position = horizontal_pos;
+		}
+		// If neither direction is blocked individually but we still have collisions,
+		// it means the diagonal movement is causing issues - revert to previous position
+		else if (!collision_terrain_entities.empty()) {
+			player_motion.position = player_motion.previous_position;
+		}
+	}
 
 	// Clear collisions after processing
 	registry.collisions.clear();
