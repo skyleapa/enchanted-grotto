@@ -117,6 +117,11 @@ void DragListener::checkCompletedStir() {
 	stirCoords.push_back(last);
 }
 
+void DragListener::endStir(Rml::Element* e) {
+	e->SetProperty("decorator", "image(\"interactables/spoon_on_table.png\" contain)");
+	stirCoords.clear();
+}
+
 void DragListener::ProcessEvent(Rml::Event& event) {
 	Rml::Element* cur = event.GetCurrentElement();
 	Rml::Vector2f mouseCoords = event.GetUnprojectedMouseScreenPos();
@@ -158,7 +163,13 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 
 		// Where all the magic happens
 		if (cur->GetId() == "ladle" && stirCoords.size()) {
-			stirCoords.push_back(getPolarCoordinates(mouseCoords));
+			auto coords = getPolarCoordinates(mouseCoords);
+			if (coords.first > MAX_STIR_RADIUS) {
+				endStir(cur);
+				return;
+			}
+			
+			stirCoords.push_back(coords);
 			checkCompletedStir();
 			return;
 		}
@@ -172,9 +183,8 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			return;
 		}	
 
-		if (cur->GetId() == "ladle") {
-			cur->SetProperty("decorator", "image(\"interactables/spoon_on_table.png\" contain)");
-			stirCoords.clear();
+		if (cur->GetId() == "ladle" && stirCoords.size()) {
+			endStir(cur);
 			return;
 		}
 	}

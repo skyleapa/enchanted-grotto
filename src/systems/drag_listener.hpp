@@ -36,7 +36,7 @@ private:
 	// Center coord: 625, 285
 	std::pair<float, float> getPolarCoordinates(Rml::Vector2f input);
 	void checkCompletedStir();
-
+	void endStir(Rml::Element* e);
 
 	// Need to ref back to UI system to get the cauldron
 	static UISystem* m_ui_system;
@@ -56,7 +56,7 @@ private:
 
 	// The min and max squared magnitudes to consider for stir coords
 	const float MIN_STIR_RADIUS = 50 * 50;
-	const float MAX_STIR_RADIUS = 150 * 150;
+	const float MAX_STIR_RADIUS = 170 * 170;
 };
 
 #endif
