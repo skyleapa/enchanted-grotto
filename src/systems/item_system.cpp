@@ -3,18 +3,17 @@
 #include <iostream>
 #include <fstream>
 
-RenderSystem* ItemSystem::renderer = nullptr;
-
-Entity ItemSystem::createItem(ItemType type, int amount, bool isCollectable, bool is_ammo) {
-	Entity entity = Entity();
-	// std::cout << "Entity " << entity.id() << " of type " << (int) type << std::endl;
-	
-	Item& item = registry.items.emplace(entity);
-	item.type = type;
-	item.amount = amount;
-	item.isCollectable = isCollectable;
-	item.name = ITEM_INFO.at(type).name;
-	item.is_ammo = is_ammo;
+Entity ItemSystem::createItem(ItemType type, int amount, bool isCollectable, bool is_ammo, bool canRespawn) {
+    Entity entity = Entity();
+    // std::cout << "Entity " << entity.id() << " of type " << (int) type << std::endl;
+    
+    Item& item = registry.items.emplace(entity);
+    item.type = type;
+    item.amount = amount;
+    item.isCollectable = isCollectable;
+    item.name = ITEM_INFO.at(type).name;
+    item.is_ammo = is_ammo;
+    item.canRespawn = canRespawn;
 
 	if (is_ammo) {
 		registry.ammo.emplace(entity);
@@ -49,11 +48,12 @@ Entity ItemSystem::createPotion(PotionEffect effect, int duration, const vec3& c
 	return entity;
 }
 
-Entity ItemSystem::createCollectableIngredient(vec2 position, ItemType type, int amount) {
-	Entity item = createItem(type, amount, true, true);
-	registry.items.get(item).originalPosition = position;
-	Ingredient& ing = registry.ingredients.emplace(item);
-	ing.grindLevel = ITEM_INFO.at(type).grindable ? 0.f : -1.f;
+Entity ItemSystem::createCollectableIngredient(vec2 position, ItemType type, int amount, bool canRespawn) {
+    Entity item = createItem(type, amount, true, true, canRespawn);
+    registry.items.get(item).originalPosition = position;
+    Ingredient& ing = registry.ingredients.emplace(item);
+    ing.grindLevel = ITEM_INFO.at(type).grindable ? 0.f : -1.f;
+
 	return item;
 }
 

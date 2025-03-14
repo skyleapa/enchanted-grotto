@@ -35,10 +35,10 @@ public:
     static bool loadGameState(const std::string& filename);
     
     // Item factory methods
-    static Entity createItem(ItemType type, int amount = 1, bool isCollectable = false, bool is_ammo = false);
+    static Entity createItem(ItemType type, int amount = 1, bool isCollectable = false, bool is_ammo = false, bool canRespawn = true);
     static Entity createIngredient(ItemType type, int amount = 1);
     static Entity createPotion(PotionEffect effect, int duration, const vec3& color, float quality, float effectValue);
-    static Entity createCollectableIngredient(vec2 position, ItemType type, int amount);
+    static Entity createCollectableIngredient(vec2 position, ItemType type, int amount, bool canRespawn);
     
     // Serialization helpers made public and static
     static nlohmann::json serializeItem(Entity item);
