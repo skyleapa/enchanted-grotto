@@ -46,18 +46,19 @@ int main()
 	// initialize the main systems
 	renderer_system.init(window);
 	world_system.init(&renderer_system, &biome_system);
-	item_system.init(&renderer_system);
+	item_system.init();
 	biome_system.init(&renderer_system);
 
 	// Initialize UI system last (after all other systems) and set reference in world system 
-	bool ui_initialized = ui_system.init(window, &renderer_system); 
-	if (ui_initialized) { 
-		world_system.setUISystem(&ui_system); 
-		glfwSetCharCallback(window, UISystem::charCallback); 
-		std::cout << "UI system initialized successfully" << std::endl; 
-	} else { 
-		std::cerr << "Failed to initialize UI system, continuing without UI" << std::endl; 
-	} 
+	bool ui_initialized = ui_system.init(window, &renderer_system);
+	if (ui_initialized) {
+		world_system.setUISystem(&ui_system);
+		glfwSetCharCallback(window, UISystem::charCallback);
+		std::cout << "UI system initialized successfully" << std::endl;
+	}
+	else {
+		std::cerr << "Failed to initialize UI system, continuing without UI" << std::endl;
+	}
 
 	// variable timestep loop
 	auto t = Clock::now();

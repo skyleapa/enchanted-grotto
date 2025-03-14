@@ -14,7 +14,7 @@ class ItemSystem {
 public:
     ItemSystem() {}
     
-    void init(RenderSystem* renderer_arg);
+    void init();
     void step(float elapsed_ms);
     
     // Item management

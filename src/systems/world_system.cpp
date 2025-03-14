@@ -317,10 +317,10 @@ void WorldSystem::handle_collisions()
 			if (enemy.health <= 0) {
 				// using can_move for now since ent cannot move, but mummy can
 				if (enemy.can_move == 0) {
-					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::SAP, 1, FALSE);
+					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::SAP, 1, false);
 				}
 				else if (enemy.can_move == 1) {
-					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MAGICAL_DUST, 1, FALSE);
+					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MAGICAL_DUST, 1, false);
 				}
 				if (screen.tutorial_state == (int)TUTORIAL::ATTACK_ENEMY) {
 					screen.tutorial_step_complete = true;
@@ -354,7 +354,7 @@ void WorldSystem::handle_collisions()
 	// Helper function to check collisions with all terrain entities for an updated position
 	// this takes in a test_position argument that will act as player's "new" position, 
 	// returns a boolean if there is a collision or not
-	auto checkCollisions = [this](const vec2& test_position) {
+	auto checkCollisions = [](const vec2& test_position) {
 		for (Entity terrain_entity : registry.terrains.entities) {
 			if (!registry.motions.has(terrain_entity))
 				continue;
@@ -508,7 +508,8 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 		if (glfwGetWindowMonitor(window)) {
 			// We are in fullscreeen, undo it
 			glfwSetWindowMonitor(window, nullptr, winPosX, winPosY, WINDOW_WIDTH_PX, WINDOW_HEIGHT_PX, GLFW_DONT_CARE);
-		} else {
+		}
+		else {
 			glfwGetWindowPos(window, &winPosX, &winPosY);
 			const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 			glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, GLFW_DONT_CARE);
@@ -530,8 +531,8 @@ void WorldSystem::on_mouse_move(vec2 mouse_position)
 	y -= viewport_coords[1] / scale;
 
 	// Scale down to size
-    x *= (float) WINDOW_WIDTH_PX / (viewport_coords[2] / scale);
-    y *= (float) WINDOW_HEIGHT_PX / (viewport_coords[3] / scale);
+	x *= (float)WINDOW_WIDTH_PX / (viewport_coords[2] / scale);
+	y *= (float)WINDOW_HEIGHT_PX / (viewport_coords[3] / scale);
 
 	if (x < 0 || x > WINDOW_WIDTH_PX || y < 0 || y > WINDOW_HEIGHT_PX) {
 		return;
@@ -557,9 +558,6 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 	// on button press
 	if (action == GLFW_PRESS)
 	{
-		int tile_x = (int)(mouse_pos_x / GRID_CELL_WIDTH_PX);
-		int tile_y = (int)(mouse_pos_y / GRID_CELL_HEIGHT_PX);
-
 		// std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
 		// std::cout << "mouse tile position: " << tile_x << ", " << tile_y << std::endl;
 
@@ -576,10 +574,11 @@ void WorldSystem::on_window_resize(int w, int h)
 	glfwGetFramebufferSize(window, &fbw, &fbh);
 	float scale = 1.0f;
 	int xsize = WINDOW_WIDTH_PX, ysize = WINDOW_HEIGHT_PX;
-	if ((float) w / h > WINDOW_RATIO) {
-        scale = (float) fbh / ysize;
-	} else {
-		scale = (float) fbw / xsize;
+	if ((float)w / h > WINDOW_RATIO) {
+		scale = (float)fbh / ysize;
+	}
+	else {
+		scale = (float)fbw / xsize;
 	}
 
 	xsize *= scale;

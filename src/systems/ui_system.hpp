@@ -98,7 +98,6 @@ private:
     float m_frame_time_sum = 0;
     float m_current_fps = 0;
     float m_fps_update_timer = 0;
-    Rml::ElementDocument* m_fps_document = nullptr;
 
     // Inventory bar variables
     Rml::ElementDocument* m_inventory_document = nullptr;

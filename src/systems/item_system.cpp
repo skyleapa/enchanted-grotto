@@ -57,9 +57,7 @@ Entity ItemSystem::createCollectableIngredient(vec2 position, ItemType type, int
 	return item;
 }
 
-void ItemSystem::init(RenderSystem* renderer_arg) {
-	this->renderer = renderer_arg;
-
+void ItemSystem::init() {
 	// Load persistent data - moved to restart_game
 	// loadGameState("game_state.json");
 }
