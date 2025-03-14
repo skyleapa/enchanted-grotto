@@ -218,9 +218,9 @@ void RenderSystem::drawToScreen()
 	int w, h;
 	glfwGetFramebufferSize(window, &w, &h); // Note, this will be 2x the resolution given to glfwCreateWindow on retina displays
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(0, 0, w, h);
+	updateViewport();
 	glDepthRange(0, 10);		  // Adjust depth range
-	glClearColor(1.f, 0, 0, 1.0); // Red background for clearing
+	glClearColor(0, 0, 0, 1.0); // Red background for clearing
 	glClearDepth(1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear color and depth buffers
 	gl_has_errors();
@@ -282,7 +282,7 @@ void RenderSystem::fadeScreen()
 	int w, h;
 	glfwGetFramebufferSize(window, &w, &h); // Note, this will be 2x the resolution given to glfwCreateWindow on retina displays
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(0, 0, w, h);
+	updateViewport();
 	glDepthRange(0, 10);
 	gl_has_errors();
 
@@ -331,7 +331,7 @@ void RenderSystem::draw(UISystem* ui_system)
 	gl_has_errors();
 
 	// clear backbuffer
-	glViewport(0, 0, w, h);
+	updateViewport();
 	glDepthRange(0.00001, 10);
 
 	// black background

@@ -26,6 +26,7 @@ public:
     static UISystem* s_instance;
 
     bool init(GLFWwindow* window, RenderSystem* renderer);
+    void updateWindowSize(float scale);
     void step(float elapsed_ms);
     void draw();
 
@@ -76,6 +77,10 @@ private:
     // State tracking
     bool m_initialized;
 
+    // Mouse tracking
+    double mouse_pos_x;
+    double mouse_pos_y;
+
     // Convert GLFW key to RmlUi key
     Rml::Input::KeyIdentifier convertKey(int key);
     int getKeyModifiers();
@@ -84,7 +89,8 @@ private:
     std::string getImageColorProperty(vec3 color, float alpha);
 
     // Update items that should follow the mouse
-    void updateFollowMouse(double x, double y);
+    void updateFollowMouse();
+    void followMouse(Rml::Element* e, bool dummy);
 
     // FPS counter variables
     float m_frame_times[60] = { 0 }; // Store last 60 frame times
@@ -97,7 +103,7 @@ private:
     // Inventory bar variables
     Rml::ElementDocument* m_inventory_document = nullptr;
     int m_selected_slot = 0;
-    int m_hotbar_size = 8;
+    int m_hotbar_size = 10;
 
     // Cauldron variables
     Rml::ElementDocument* m_cauldron_document = nullptr;
@@ -112,10 +118,10 @@ private:
         { (int)TUTORIAL::WELCOME_SCREEN, {
         }},
         { (int)TUTORIAL::MOVEMENT, {
-            "60%", "40%", "Welcome to Enchanted Grotto! Move around with the WASD keys. Press T to toggle the tutorial at any time or N to skip the tutorial step."
+            "65%", "70%", "Welcome to Enchanted Grotto! Move around with the WASD keys. Press T to toggle the tutorial at any time or N to skip the tutorial step."
         }},
         { (int)TUTORIAL::COLLECT_ITEMS, {
-            "80%", "85%", "Collect 6 Magical Fruits and 5 Coffee Beans by pressing F next to the items."
+            "60%", "75%", "Exit the grotto by pressing F in front of the door. Collect 6 Magical Fruits and 5 Coffee Beans by pressing F next to the items."
         }},
         { (int)TUTORIAL::ATTACK_ENEMY, {
             "25%", "35%", "Select the fruits by clicking on the corresponding inventory slot. Defeat the enemy by left-clicking to throw fruits from your inventory. If you touch the enemy you will die!"
@@ -143,4 +149,8 @@ private:
         }},
     };
 
+    const std::string LADLE_LEFT_PX = "866px";
+    const std::string LADLE_TOP_PX = "45px";
+    const std::string BOTTLE_LEFT_PX = "904px";
+    const std::string BOTTLE_TOP_PX = "395px";
 };

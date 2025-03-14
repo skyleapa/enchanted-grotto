@@ -4,6 +4,7 @@
 #include "tinyECS/tiny_ecs.hpp"
 #include "tinyECS/components.hpp"
 #include "tinyECS/registry.hpp"
+#include "render_system.hpp"
 #include <string>
 #include <fstream>
 #include "nlohmann/json.hpp"
@@ -13,7 +14,7 @@ class ItemSystem {
 public:
     ItemSystem() {}
     
-    void init();
+    void init(RenderSystem* renderer_arg);
     void step(float elapsed_ms);
     
     // Item management
@@ -30,8 +31,8 @@ public:
     static Entity copyItem(Entity toCopy);
     
     // Serialization
-    bool saveGameState(const std::string& filename);
-    bool loadGameState(const std::string& filename);
+    static bool saveGameState(const std::string& filename);
+    static bool loadGameState(const std::string& filename);
     
     // Item factory methods
     static Entity createItem(ItemType type, int amount = 1, bool isCollectable = false, bool is_ammo = false, bool canRespawn = true);
@@ -47,4 +48,5 @@ public:
     
 private:
     // Helper methods for serialization have been moved to public
+    static RenderSystem* renderer;
 }; 

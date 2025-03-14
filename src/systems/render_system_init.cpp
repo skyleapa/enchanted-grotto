@@ -37,7 +37,10 @@ bool RenderSystem::init(GLFWwindow* window_arg)
 		printf("WARNING: retina display! https://stackoverflow.com/questions/36672935/why-retina-screen-coordinate-value-is-twice-the-value-of-pixel-value\n");
 		printf("glfwGetFramebufferSize = %d,%d\n", frame_buffer_width_px, frame_buffer_height_px);
 		printf("requested window width,height = %d,%d\n", WINDOW_WIDTH_PX, WINDOW_HEIGHT_PX);
+		retina_scale = 2.0f;
 	}
+
+	setViewportCoords(0, 0, frame_buffer_width_px, frame_buffer_height_px);
 
 	// Hint: Ask your TA for how to setup pretty OpenGL error callbacks. 
 	// This can not be done in mac os, so do not enable
