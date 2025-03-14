@@ -118,10 +118,10 @@ private:
         { (int)TUTORIAL::WELCOME_SCREEN, {
         }},
         { (int)TUTORIAL::MOVEMENT, {
-            "60%", "40%", "Welcome to Enchanted Grotto! Move around with the WASD keys. Press T to toggle the tutorial at any time or N to skip the tutorial step."
+            "65%", "70%", "Welcome to Enchanted Grotto! Move around with the WASD keys. Press T to toggle the tutorial at any time or N to skip the tutorial step."
         }},
         { (int)TUTORIAL::COLLECT_ITEMS, {
-            "80%", "85%", "Collect 6 Magical Fruits and 5 Coffee Beans by pressing F next to the items."
+            "60%", "75%", "Exit the grotto by pressing F in front of the door. Collect 6 Magical Fruits and 5 Coffee Beans by pressing F next to the items."
         }},
         { (int)TUTORIAL::ATTACK_ENEMY, {
             "25%", "35%", "Select the fruits by clicking on the corresponding inventory slot. Defeat the enemy by left-clicking to throw fruits from your inventory. If you touch the enemy you will die!"

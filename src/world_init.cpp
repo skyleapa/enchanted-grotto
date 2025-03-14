@@ -87,6 +87,8 @@ Entity createGridLine(vec2 start_pos, vec2 end_pos)
 
 Entity createPlayer(RenderSystem* renderer, vec2 position)
 {
+	// create player in grotto
+
 	// reserve an entity
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " player" << std::endl;
@@ -102,7 +104,7 @@ Entity createPlayer(RenderSystem* renderer, vec2 position)
 	motion.velocity = { 0, 0 };
 	motion.position = position;
 
-	motion.scale = vec2({ PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT });
+	motion.scale = { PLAYER_BB_WIDTH * PlAYER_BB_GROTTO_SIZE_FACTOR, PLAYER_BB_HEIGHT * PlAYER_BB_GROTTO_SIZE_FACTOR };
 
 	auto& inventory = registry.inventories.emplace(entity);
 	inventory.capacity = 10;
@@ -621,8 +623,7 @@ Entity createGrottoExit(RenderSystem* renderer, vec2 position, int id, std::stri
 Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity)
 {
 	auto entity = Entity();
-	// std::cout << "Entity " << entity.id() << " textbox" << std::endl;
-
+	
 	// Create a Textbox component
 	Textbox& textbox = registry.textboxes.emplace(entity);
 	textbox.targetItem = itemEntity;
