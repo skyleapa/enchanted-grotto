@@ -293,11 +293,10 @@ void WorldSystem::handle_collisions()
 		return;
 
 	Motion& player_motion = registry.motions.get(player_entity);
-	vec2 movement = player_motion.position - player_motion.previous_position;
+	vec2 original_position = player_motion.position;
+	vec2 previous_position = player_motion.previous_position;
 
-	bool x_blocked = false;
-	bool y_blocked = false;
-
+	// Handle non-terrain collisions first (ammo, enemies, etc.)
 	for (Entity collision_entity : registry.collisions.entities)
 	{
 		ScreenState& screen = registry.screenStates.components[0];
@@ -348,22 +347,77 @@ void WorldSystem::handle_collisions()
 			}
 			continue;
 		}
-
-		Entity terrain_entity = (collision_entity == player_entity) ? collision.other : collision_entity;
-		if (!registry.terrains.has(terrain_entity) || !registry.motions.has(terrain_entity))
-			continue;
-
-		if (std::abs(movement.x) > 0.0f)
-			x_blocked = true;
-		if (std::abs(movement.y) > 0.0f)
-			y_blocked = true;
 	}
 
-	// Resolve movement based on blockages
-	if (x_blocked)
-		player_motion.position.x = player_motion.previous_position.x;
-	if (y_blocked)
-		player_motion.position.y = player_motion.previous_position.y;
+	bool moving_diagonally = (original_position.x != previous_position.x) && (original_position.y != previous_position.y);
+
+	// Helper function to check collisions with all terrain entities for an updated position
+	// this takes in a test_position argument that will act as player's "new" position, 
+	// returns a boolean if there is a collision or not
+	auto checkCollisions = [this](const vec2& test_position) {
+		for (Entity terrain_entity : registry.terrains.entities) {
+			if (!registry.motions.has(terrain_entity))
+				continue;
+
+			Motion& terrain_motion = registry.motions.get(terrain_entity);
+			Terrain& terrain = registry.terrains.get(terrain_entity);
+
+			vec2 orig_pos = registry.motions.get(registry.players.entities[0]).position;
+
+			// set our player's position to the test position
+			registry.motions.get(registry.players.entities[0]).position = test_position;
+
+			bool has_collision = PhysicsSystem::collides(registry.motions.get(registry.players.entities[0]),
+				terrain_motion, &terrain, terrain_entity);
+
+			// restore original position
+			registry.motions.get(registry.players.entities[0]).position = orig_pos;
+
+			if (has_collision)
+				return true;
+		}
+
+		return false;
+		};
+
+	if (moving_diagonally) {
+		// position as if we moved just horizontally
+		vec2 horizontal_pos = previous_position;
+		horizontal_pos.x = original_position.x;
+
+		// position as if we moved just vertically
+		vec2 vertical_pos = previous_position;
+		vertical_pos.y = original_position.y;
+
+		bool horizontal_collision = checkCollisions(horizontal_pos);
+		bool vertical_collision = checkCollisions(vertical_pos);
+		bool diagonal_collision = checkCollisions(original_position);
+
+		if (diagonal_collision) {
+			if (!horizontal_collision && !vertical_collision) {
+				player_motion.position = previous_position;
+			}
+			else if (!horizontal_collision) {
+				player_motion.position = horizontal_pos;
+			}
+			else if (!vertical_collision) {
+				player_motion.position = vertical_pos;
+			}
+			else {
+				player_motion.position = previous_position;
+			}
+		}
+		else {
+			// there's no collision with diagonal movement, allow player to move
+			player_motion.position = original_position;
+		}
+	}
+	else {
+		// For non-diagonal movement, just check if there's a collision
+		if (checkCollisions(original_position)) {
+			player_motion.position = previous_position;
+		}
+	}
 
 	// Clear collisions after processing
 	registry.collisions.clear();

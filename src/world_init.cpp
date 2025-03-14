@@ -133,10 +133,6 @@ Entity createPlayer(RenderSystem* renderer, vec2 position)
 Entity createForestBridge(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
-	// std::cout << "Entity " << entity.id() << " forest bridge" << std::endl;
-	auto& terrain = registry.terrains.emplace(entity);
-	// we're using mesh collisions here, so AABB is not used, see components.cpp for more
-	terrain.collision_setting = 2.0f;
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
 	registry.meshPtrs.emplace(entity, &mesh);
 
@@ -223,13 +219,16 @@ Entity createForestBridgeBottom(RenderSystem* renderer, vec2 position)
 
 Entity createForestRiver(RenderSystem* renderer, vec2 position)
 {
+	// top half of river texture
 	auto entity1 = Entity();
 	auto& terrain1 = registry.terrains.emplace(entity1);
-	terrain1.collision_setting = 1.0f; // rivers are not walkable
+	terrain1.collision_setting = 1.0f;
 
+	// bottom half of river texture
 	auto entity2 = Entity();
 	auto& terrain2 = registry.terrains.emplace(entity2);
-	terrain2.collision_setting = 1.0f; // rivers are not walkable
+	terrain2.collision_setting = 1.0f;
+
 	// std::cout << "Entity " << entity1.id() << " river" << std::endl;
 	// std::cout << "Entity " << entity2.id() << " river" << std::endl;
 
