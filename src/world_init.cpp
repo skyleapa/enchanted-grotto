@@ -7,7 +7,7 @@ Entity createWelcomeScreen(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " welcome screen" << std::endl;
-	WelcomeScreen& screen = registry.welcomeScreens.emplace(entity);
+	registry.welcomeScreens.emplace(entity);
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -456,7 +456,7 @@ Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id,
 	motion.scale = scale;
 
 	// Create cauldron
-	auto& cauldron = registry.cauldrons.emplace(entity);
+	registry.cauldrons.emplace(entity);
 	if (create_textbox) createTextbox(renderer, position, entity);
 
 	// Give cauldron an inventory
@@ -622,7 +622,7 @@ Entity createGrottoExit(RenderSystem* renderer, vec2 position, int id, std::stri
 Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity)
 {
 	auto entity = Entity();
-	
+
 	// Create a Textbox component
 	Textbox& textbox = registry.textboxes.emplace(entity);
 	textbox.targetItem = itemEntity;
