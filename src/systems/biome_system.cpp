@@ -13,9 +13,6 @@ void BiomeSystem::init(RenderSystem* renderer_arg) {
 	screen.darken_screen_factor = 1;
 	screen.fade_status = 1; // start from black screen
 	screen.is_switching_biome = true;
-	screen.biome = (GLuint)BIOME::BLANK;
-	screen.from_biome = (GLuint)BIOME::BLANK;
-	screen.switching_to_biome = (GLuint)BIOME::GROTTO;
 
 	switchBiome(screen.biome);
 }
@@ -55,7 +52,6 @@ void BiomeSystem::step(float elapsed_ms_since_last_update) {
 				screen.biome = screen.switching_to_biome;
 				screen.darken_screen_factor = 1;
 				switchBiome((int)screen.biome);
-				renderPlayerInNewBiome();
 			}
 			screen.darken_screen_factor -= elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
 			if (screen.darken_screen_factor <= 0)
@@ -101,6 +97,8 @@ void BiomeSystem::switchBiome(int biome) {
 	else if (biome == (GLuint)BIOME::DESERT) {
 		createDesert();
 	}
+
+	renderPlayerInNewBiome();
 }
 
 void BiomeSystem::renderPlayerInNewBiome() {
@@ -201,8 +199,12 @@ void BiomeSystem::createForest()
 	createCollectableIngredient(renderer, vec2(GRID_CELL_WIDTH_PX * 9.9, GRID_CELL_HEIGHT_PX * 12.1), ItemType::COFFEE_BEANS, 1, true);
 	createCollectableIngredient(renderer, vec2(GRID_CELL_WIDTH_PX * 12, GRID_CELL_HEIGHT_PX * 12.7), ItemType::COFFEE_BEANS, 1, true);
 
-	createEnt(renderer, vec2(GRID_CELL_WIDTH_PX * 1.7, GRID_CELL_HEIGHT_PX * 5), 0);
-
+	ScreenState screen = registry.screenStates.components[0];
+	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Ent 1") == screen.killed_enemies.end())
+	{
+		createEnt(renderer, vec2(GRID_CELL_WIDTH_PX * 1.7, GRID_CELL_HEIGHT_PX * 5), 0, "Ent 1");
+	}
+	
 	createDesertEntrance(renderer, vec2(GRID_CELL_WIDTH_PX * 2.1, GRID_CELL_HEIGHT_PX * 1.7), 7, "Desert Entrance");
 }
 
@@ -274,6 +276,15 @@ void BiomeSystem::createDesert()
 	createDesertPage(renderer, vec2(GRID_CELL_WIDTH_PX * 13.5, GRID_CELL_HEIGHT_PX * 3.2));
 	createDesertSkull(renderer, vec2(GRID_CELL_WIDTH_PX * 13.7, GRID_CELL_HEIGHT_PX * 10.9));
 
-	createMummy(renderer, vec2(GRID_CELL_WIDTH_PX * 15, GRID_CELL_HEIGHT_PX * 5), 1);
-	createMummy(renderer, vec2(GRID_CELL_WIDTH_PX * 4, GRID_CELL_HEIGHT_PX * 8), 1);
+
+	ScreenState screen = registry.screenStates.components[0];
+	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Mummy 1") == screen.killed_enemies.end())
+	{
+		createMummy(renderer, vec2(GRID_CELL_WIDTH_PX * 15, GRID_CELL_HEIGHT_PX * 5), 1, "Mummy 1");
+	}
+	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Mummy 2") == screen.killed_enemies.end()) {
+		createMummy(renderer, vec2(GRID_CELL_WIDTH_PX * 4, GRID_CELL_HEIGHT_PX * 8), 1, "Mummy 2");
+	}
+
+
 }

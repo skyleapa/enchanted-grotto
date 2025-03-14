@@ -273,9 +273,8 @@ void WorldSystem::restart_game()
 		createPlayer(renderer, vec2(GRID_CELL_WIDTH_PX * 17.5, GRID_CELL_HEIGHT_PX * 6.5)); // bring player to front of door));
 	}
 
-	// re-open tutorial
-	state.tutorial_state = (int)TUTORIAL::WELCOME_SCREEN;
-	state.tutorial_step_complete = true;
+	// re-open tutorial, state is loaded from persistence
+	// state.tutorial_step_complete = true;
 
 	ItemSystem::loadGameState("game_state.json"); // load the game state
 
@@ -326,6 +325,12 @@ void WorldSystem::handle_collisions()
 					screen.tutorial_step_complete = true;
 					screen.tutorial_state += 1;
 				}
+
+				// add enemy name to killed_enemies for persistence
+				if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), enemy.name) == screen.killed_enemies.end()) {
+					screen.killed_enemies.push_back(enemy.name);
+				}
+				
 				registry.remove_all_components_of(enemy_entity);
 			}
 			continue;
