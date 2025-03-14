@@ -70,11 +70,10 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 		glfwGetFramebufferSize(window, &frame_buffer_width_px, &frame_buffer_height_px);
 		if (frame_buffer_width_px != WINDOW_WIDTH_PX) {
 			// Retina display, scale up to 2x
-			content_scale = 2.0f;
+			content_scale = (float) frame_buffer_width_px / WINDOW_WIDTH_PX;
 		}
 
 		render_interface.SetContentScale(content_scale);
-
 		Rml::SetSystemInterface(&system_interface);
 		Rml::SetRenderInterface(&render_interface);
 		if (!Rml::Initialise()) {
@@ -137,6 +136,12 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 	}
 }
 
+void UISystem::updateWindowSize(float scale)
+{
+    RmlUiRenderInterface* rinterface = static_cast<RmlUiRenderInterface*>(Rml::GetRenderInterface()); 
+    rinterface->SetContentScale(scale);
+}
+
 void UISystem::step(float elapsed_ms)
 {
 	if (!m_initialized || !m_context) return;
@@ -197,6 +202,12 @@ void UISystem::step(float elapsed_ms)
 		// 	m_fps_document->SetInnerRML(fps_text);
 		// }
 
+		// update cauldron reference
+		if (registry.cauldrons.entities.size() > 0) {
+			Entity cauldron = registry.cauldrons.entities[0];
+			if (openedCauldron != cauldron) openedCauldron = cauldron;
+		}
+
 		if (!m_inventory_document) {
 			createInventoryBar();
 		}
@@ -254,7 +265,7 @@ void UISystem::draw()
 
 		// Ensure we're rendering to the default framebuffer
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(0, 0, width, height);
+		glViewport(last_viewport[0], last_viewport[1], last_viewport[2], last_viewport[3]);
 
 		// Enable blending for transparency
 		glEnable(GL_BLEND);
@@ -272,7 +283,6 @@ void UISystem::draw()
 		glActiveTexture(last_active_texture);
 
 		// Restore previous OpenGL state
-		glViewport(last_viewport[0], last_viewport[1], last_viewport[2], last_viewport[3]);
 		glUseProgram(last_program);
 
 		if (depth_test)
@@ -397,7 +407,9 @@ void UISystem::handleTextInput(unsigned int codepoint)
 void UISystem::handleMouseMoveEvent(double x, double y)
 {
 	if (!m_initialized || !m_context) return;
-	updateFollowMouse(x, y);
+    mouse_pos_x = x;
+    mouse_pos_y = y;
+	updateFollowMouse();
 	m_context->ProcessMouseMove((int)x, (int)y, getKeyModifiers());
 }
 
@@ -422,8 +434,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 	}
 
 	// Get mouse position
-	double x, y;
-	glfwGetCursorPos(m_window, &x, &y);
+    Rml::Vector2f mousePos = Rml::Vector2f(mouse_pos_x, mouse_pos_y);
 
 	// Check clicks for inventory bar and cauldron
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT) {
@@ -444,18 +455,19 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 
 			if (id == "ladle") {
 				// If we click cauldron don't drop ladle
-				Rml::Element* possibleCauldron = m_context->GetElementAtPoint(Rml::Vector2f(x, y), hovered);
+				Rml::Element* possibleCauldron = m_context->GetElementAtPoint(mousePos, hovered);
 				if (possibleCauldron && possibleCauldron->GetId() == "cauldron") {
 					break;
 				}
+
 				if (heldLadle) {
-					hovered->SetProperty("top", "70px");
-					hovered->SetProperty("left", "962px");
+					hovered->SetProperty("top", LADLE_TOP_PX);
+					hovered->SetProperty("left", LADLE_LEFT_PX);
 					heldLadle = nullptr;
 				}
 				else {
 					heldLadle = hovered;
-					updateFollowMouse(x, y);
+					updateFollowMouse();
 				}
 
 				break;
@@ -464,40 +476,40 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 			if (id == "bottle") {
 				if (!heldBottle) {
 					heldBottle = hovered;
-					updateFollowMouse(x, y);
+					updateFollowMouse();
 					break;
 				}
 
-				// Check if clicking on cauldron water to bottle potion
-				Rml::Element* possibleCauldron = m_context->GetElementAtPoint(Rml::Vector2f(x, y), hovered);
-				if (possibleCauldron && (possibleCauldron->GetId() == "cauldron-water" || possibleCauldron->GetId() == "cauldron")) {
-					// Create potion and add to player inventory
-					Entity cauldron = getOpenedCauldron();
-					Potion potion = PotionSystem::bottlePotion(cauldron);
+                // Check if clicking on cauldron water to bottle potion
+                Rml::Element* possibleCauldron = m_context->GetElementAtPoint(mousePos, hovered);
+                if (possibleCauldron && (possibleCauldron->GetId() == "cauldron-water" || possibleCauldron->GetId() == "cauldron")) {
+                    // Create potion and add to player inventory
+                    Entity cauldron = getOpenedCauldron();
+                    Potion potion = PotionSystem::bottlePotion(cauldron);
+                    
+                    // Create potion item and add to player inventory
+                    Entity player = registry.players.entities[0];
+                    Entity potionItem = ItemSystem::createPotion(
+                        potion.effect,
+                        potion.duration,
+                        potion.color,
+                        potion.quality,
+                        potion.effectValue
+                    );
 
-					// Create potion item and add to player inventory
-					Entity player = registry.players.entities[0];
-					Entity potionItem = ItemSystem::createPotion(
-						potion.effect,
-						potion.duration,
-						potion.color,
-						potion.quality,
-						potion.effectValue
-					);
-
-					// TODOOO
-					// if (potion.effect != PotionEffect::WATER) {
-					//     registry.items.get(potionItem).is_ammo = true;
-					//     auto& ammo = registry.ammo.emplace(potionItem);
-					//     ammo.damage = 1000;
-					// }
-
-					ItemSystem::addItemToInventory(player, potionItem);
-				}
+                    // TODOOO
+                    // if (potion.effect != PotionEffect::WATER) {
+                    //     registry.items.get(potionItem).is_ammo = true;
+                    //     auto& ammo = registry.ammo.emplace(potionItem);
+                    //     ammo.damage = 1000;
+                    // }
+                    
+                    ItemSystem::addItemToInventory(player, potionItem);
+                }
 
 				// Reset bottle position
-				hovered->SetProperty("top", "420px");
-				hovered->SetProperty("left", "1000px");
+				hovered->SetProperty("top", BOTTLE_TOP_PX);
+				hovered->SetProperty("left", BOTTLE_LEFT_PX);
 				heldBottle = nullptr;
 			}
 		} while (false);
@@ -572,39 +584,35 @@ void UISystem::createInventoryBar()
             <style>
                 body {
                     position: absolute;
-                    bottom: 20px;
+                    bottom: 10px;
                     left: 50%;
-                    margin-left: -225px;
-                    width: 450px;
-                    height: 60px;
-                    background-color: #8B5A2B;
-                    border-width: 4px;
-                    border-color: #4E3620;
-                    padding: 5px;
+                    margin-left: -220px;
+                    width: 440px;
+                    height: 44px;
+                    background-color: rgba(173, 146, 132, 238);
+                    border-width: 2px;
+                    border-color: rgb(78, 54, 32);
                     display: block;
-                    z-index: 100;
                     font-family: Open Sans;
                 }
                 
                 .inventory-slot {
+                    position: absolute;
                     width: 40px;
                     height: 40px;
-                    margin: 5px;
-                    background-color: rgba(60, 40, 20, 0.7);
                     display: inline-block;
-                    text-align: center;
+                    text-align: right;
                     vertical-align: middle;
                     border-width: 2px;
-                    border-color: #5D4037;
-                    position: relative;
-                    z-index: 150;
+                    border-color: rgb(114, 80, 76);
+                    z-index: 10;
                     drag: clone;
                 }
                 
                 .inventory-slot.selected {
-                    background-color: rgba(120, 80, 40, 0.8);
-                    border-width: 2px;
+                    border-width: 4px;
                     border-color: #FFD700;
+                    z-index: 15;
                 }
             </style>
         </head>
@@ -619,9 +627,9 @@ void UISystem::createInventoryBar()
 			}
 
 			// Number near each slot
-			inventory_rml += "<div id='slot-" + std::to_string(i) + "' class='" + slot_class + "'>" +
-				"<span style='color: #FFE4B5; font-size: 12px; font-weight: bold; position: absolute; top: 2px; left: 2px;'>" +
-				std::to_string(i + 1) + "</span></div>";
+            int left = i * 44;
+			inventory_rml += "<div id='slot-" + std::to_string(i) + "' class='" + slot_class + 
+                "' style='left: " + std::to_string(left) + "px;'></div>";
 		}
 
 		inventory_rml += "</body></rml>";
@@ -667,13 +675,22 @@ void UISystem::updateInventoryBar()
 
 			// Update the slot class (selected or not)
 			std::string slot_class = "inventory-slot";
+            int loc = i * 44;
 			if (i == m_selected_slot) {
 				slot_class += " selected";
-			}
+                int selectedLoc = loc - 2;
+                slot_element->SetProperty("left", std::to_string(selectedLoc) + "px");
+                slot_element->SetProperty("top", "-2px");
+			} else {
+                slot_element->SetProperty("left", std::to_string(loc) + "px");
+                slot_element->SetProperty("top", "0");
+            }
+
 			slot_element->SetAttribute("class", slot_class);
 
-			std::string slot_content = "<span style='color: #FFE4B5; font-size: 12px; font-weight: bold; position: absolute; top: 2px; left: 2px;'>" +
-				std::to_string(i + 1) + "</span>";
+			std::string slot_content = "";
+            //"<span style='color: #FFE4B5; font-size: 12px; font-weight: bold; position: absolute; top: 2px; left: 2px;'>" +
+		    //std::to_string(i + 1) + "</span>";
 
 			// Add item display
 			if (i < inventory.items.size()) {
@@ -684,7 +701,15 @@ void UISystem::updateInventoryBar()
 
 				Item& item = registry.items.get(item_entity);
 				std::string tex = ITEM_INFO.count(item.type) ? ITEM_INFO.at(item.type).texture_path : "interactables/coffee_bean.png";
-				slot_content += "<img src = '" + tex + "' style='width: 32px; height: 32px; margin: 4px; transform: scaleY(-1); ";
+				slot_content += R"(
+                    <img src=")" + tex + R"(" 
+                    style='
+                        pointer-events: none;
+                        width: 32px; 
+                        height: 32px; 
+                        margin: 4px; 
+                        transform: scaleY(-1); 
+                    )";
 				if (item.type == ItemType::POTION) {
 					vec3 color = registry.potions.get(item_entity).color;
 					slot_content += "image-color: " + getImageColorProperty(color, 255) + ";";
@@ -693,8 +718,17 @@ void UISystem::updateInventoryBar()
 
 				// Add item count if more than 1
 				if (item.amount > 1) {
-					slot_content += "<div style='position: absolute; bottom: 0; right: 2px; color: #FFFFFF; font-size: 14px; font-weight: bold;'>" +
-						std::to_string(item.amount) + "</div>";
+					slot_content += R"(
+                        <div style='
+                            pointer-events: none; 
+                            position: absolute; 
+                            bottom: 0px;
+                            right: -2px;
+                            color: #FFFFFF; 
+                            font-size: 14px; 
+                            font-weight: bold;'>
+                        )" + std::to_string(item.amount) + R"(
+                        </div>)";
 				}
 			}
 
@@ -835,14 +869,14 @@ bool UISystem::openCauldron(Entity cauldron)
         <rml>
         <head>
             <style>
-                #ui {
+                body {
                     position: absolute;
                     display: flex;
                     top: 25px;
-                    left: 96px;
+                    left: 50%;
+                    margin-left: -528px;
                     width: 1057px;
                     height: 550px;
-                    text-align: center;
                     decorator: image("interactables/cauldron_background.png" flip-vertical fill);
                 }
 
@@ -872,15 +906,15 @@ bool UISystem::openCauldron(Entity cauldron)
                     width: 319px;
                     height: 303px;
                     top: 82px;
-                    left: 500px;
+                    left: 404px;
                 }
 
                 #ladle {
                     position: absolute;
                     width: 132px;
                     height: 246px;
-                    top: 70px;
-                    left: 962px;
+                    top: )" + LADLE_TOP_PX + R"(;
+                    left: )" + LADLE_LEFT_PX + R"(;
                     decorator: image("interactables/spoon_on_table.png" contain);
                     drag: drag;
                 }
@@ -889,8 +923,8 @@ bool UISystem::openCauldron(Entity cauldron)
                     position: absolute;
                     width: 60px;
                     height: 100px;
-                    top: 420px;
-                    left: 1000px;
+                    top: )" + BOTTLE_TOP_PX + R"(;
+                    left: )" + BOTTLE_LEFT_PX + R"(;
                     decorator: image("interactables/potion_bottle.png" contain);
                     transform: rotate(180deg) scale(1.2);
                     cursor: pointer;
@@ -898,10 +932,8 @@ bool UISystem::openCauldron(Entity cauldron)
             </style>
         </head>
         <body>
-            <div id="ui">
-                <div id="heat"></div>
-                <div id="cauldron-water"></div>
-            </div>
+            <div id="heat"></div>
+            <div id="cauldron-water"></div>
             <div id="cauldron"></div>
             <div id="ladle"></div>
             <div id="bottle"></div>
@@ -977,23 +1009,24 @@ void UISystem::setOpenedCauldron(Entity new_cauldron) {
 	openedCauldron = new_cauldron;
 }
 
-void followMouse(Rml::Element* e, double x, double y) {
+// Added dummy bool cause vscode was doing some strange error
+void UISystem::followMouse(Rml::Element* e, bool dummy) {
 	int wl = e->GetProperty("width")->GetNumericValue().number;
 	int hl = e->GetProperty("height")->GetNumericValue().number;
-	int ix = (int)x - wl / 2;
-	int iy = (int)y - hl / 2;
+	int ix = (int)mouse_pos_x - wl / 2 - 96;
+	int iy = (int)mouse_pos_y - hl / 2 - 25;
 	e->SetProperty("left", std::to_string(ix) + "px");
 	e->SetProperty("top", std::to_string(iy) + "px");
 }
 
-void UISystem::updateFollowMouse(double x, double y) {
+void UISystem::updateFollowMouse() {
 	if (heldLadle) {
-		followMouse(heldLadle, x, y);
+		followMouse(heldLadle, false);
 		return;
 	}
 
 	if (heldBottle) {
-		followMouse(heldBottle, x, y);
+		followMouse(heldBottle, false);
 		return;
 	}
 }

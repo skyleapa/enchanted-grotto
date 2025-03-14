@@ -87,6 +87,8 @@ Entity createGridLine(vec2 start_pos, vec2 end_pos)
 
 Entity createPlayer(RenderSystem* renderer, vec2 position)
 {
+	// create player in grotto
+
 	// reserve an entity
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " player" << std::endl;
@@ -102,10 +104,10 @@ Entity createPlayer(RenderSystem* renderer, vec2 position)
 	motion.velocity = { 0, 0 };
 	motion.position = position;
 
-	motion.scale = vec2({ PLAYER_BB_WIDTH, PLAYER_BB_HEIGHT });
+	motion.scale = { PLAYER_BB_WIDTH * PlAYER_BB_GROTTO_SIZE_FACTOR, PLAYER_BB_HEIGHT * PlAYER_BB_GROTTO_SIZE_FACTOR };
 
 	auto& inventory = registry.inventories.emplace(entity);
-	inventory.capacity = 8;
+	inventory.capacity = 10;
 	inventory.isFull = false;
 
 	std::vector<TEXTURE_ASSET_ID> walking_down = {
@@ -397,11 +399,11 @@ Entity createBush(RenderSystem* renderer, vec2 position)
 	return entity;
 }
 
-Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemType type, int amount)
+Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemType type, int amount, bool canRespawn)
 {
 	assert(ITEM_INFO.count(type) && "Tried to create an item that has no info!");
 	ItemInfo info = ITEM_INFO.at(type);
-	auto entity = ItemSystem::createCollectableIngredient(position, type, amount);
+	auto entity = ItemSystem::createCollectableIngredient(position, type, amount, canRespawn);
 
 	// Mesh
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -620,8 +622,7 @@ Entity createGrottoExit(RenderSystem* renderer, vec2 position, int id, std::stri
 Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity)
 {
 	auto entity = Entity();
-	// std::cout << "Entity " << entity.id() << " textbox" << std::endl;
-
+	
 	// Create a Textbox component
 	Textbox& textbox = registry.textboxes.emplace(entity);
 	textbox.targetItem = itemEntity;
@@ -682,7 +683,7 @@ RenderRequest getTextboxRenderRequest(Textbox& textbox)
 		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_FOREST;
 	}
 	else if (item.type == ItemType::SAP) {
-		texture = TEXTURE_ASSET_ID::TEXTBOX_SAP;
+		texture = TEXTURE_ASSET_ID::TEXTBOX_TWIG;
 	}
 	else if (item.type == ItemType::MAGICAL_DUST) {
 		texture = TEXTURE_ASSET_ID::TEXTBOX_MAGICAL_DUST;

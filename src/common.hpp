@@ -38,6 +38,7 @@ inline std::string mesh_path(const std::string& name) { return data_path() + "/m
 //
 const int WINDOW_WIDTH_PX = 1250;
 const int WINDOW_HEIGHT_PX = 700;
+const float WINDOW_RATIO = (float) WINDOW_WIDTH_PX / WINDOW_HEIGHT_PX;
 
 const int GRID_CELL_WIDTH_PX = 50;
 const int GRID_CELL_HEIGHT_PX = 50;
@@ -50,6 +51,7 @@ const float PLAYER_SPEED = (float)200;
 
 const float TIME_UPDATE_FACTOR = 0.001f;
 const float THROW_UPDATE_FACTOR = 0.3f;
+const float AUTOSAVE_TIMER = 1000.f * 60; // every 60 seconds
 
 const float TREE_WIDTH = (float)GRID_CELL_WIDTH_PX * 4;
 const float TREE_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 4;

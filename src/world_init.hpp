@@ -41,7 +41,7 @@ Entity createGrottoEntrance(RenderSystem* renderer, vec2 position, int id, std::
 Entity createBush(RenderSystem* renderer, vec2 position);
 
 // Collectable items
-Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemType type, int amount);
+Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemType type, int amount, bool canRespawn);
 
 // cauldron
 Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name, bool create_textbox);
