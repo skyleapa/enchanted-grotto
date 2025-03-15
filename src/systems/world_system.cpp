@@ -185,7 +185,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		screen.autosave_timer -= elapsed_ms_since_last_update;
 		if (screen.autosave_timer <= 0) {
 			screen.autosave_timer = AUTOSAVE_TIMER;
-			ItemSystem::saveGameState("game_state.json");
+			ItemSystem::saveGameState();
 		}
 	}
 
@@ -277,7 +277,7 @@ void WorldSystem::restart_game()
 	state.tutorial_state = (int)TUTORIAL::WELCOME_SCREEN;
 	state.tutorial_step_complete = true;
 
-	ItemSystem::loadGameState("game_state.json"); // load the game state
+	ItemSystem::loadGameState(); // load the game state
 
 	biome_sys->init(renderer);
 
@@ -332,7 +332,7 @@ void WorldSystem::handle_collisions()
 		}
 		// case where enemy hits player - automatically die
 		else if ((registry.players.has(collision_entity) || registry.players.has(collision.other)) && (registry.enemies.has(collision_entity) || registry.enemies.has(collision.other))) {
-			ItemSystem::loadGameState("game_state.json");
+			ItemSystem::loadGameState();
 			screen.is_switching_biome = true;
 			screen.switching_to_biome = (GLuint)BIOME::GROTTO;
 			// load the most recently saved file
@@ -450,7 +450,7 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 
 	if (action == GLFW_RELEASE && key == GLFW_KEY_P)
 	{
-		ItemSystem::saveGameState("game_state.json");
+		ItemSystem::saveGameState();
 	}
 
 	Entity player = registry.players.entities[0]; // Assume only one player entity

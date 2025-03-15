@@ -32,6 +32,7 @@ inline std::string shader_path(const std::string& name) { return std::string(PRO
 inline std::string textures_path(const std::string& name) { return data_path() + "/textures/" + std::string(name); };
 inline std::string audio_path(const std::string& name) { return data_path() + "/audio/" + std::string(name); };
 inline std::string mesh_path(const std::string& name) { return data_path() + "/meshes/" + std::string(name); };
+inline std::string game_state_path(const std::string& name) { return data_path() + "/game_states/v0/" + std::string(name); };
 
 //
 // game constants
