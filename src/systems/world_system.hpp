@@ -76,7 +76,7 @@ private:
 	void on_window_resize(int w, int h);
 
 	// restart level
-	void restart_game();
+	void restart_game(bool hard_reset);
 
 	// OpenGL window handle
 	GLFWwindow* window;

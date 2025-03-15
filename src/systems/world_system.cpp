@@ -154,7 +154,7 @@ bool WorldSystem::init(RenderSystem* renderer_arg, BiomeSystem* biome_sys)
 	// Mix_PlayMusic(background_music, -1);
 
 	// Set all states to default
-	restart_game();
+	restart_game(false);
 
 	return true;
 }
@@ -225,11 +225,11 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 }
 
 // Reset the world state to its initial state
-void WorldSystem::restart_game()
+void WorldSystem::restart_game(bool hard_reset)
 {
 	std::cout << "Restarting..." << std::endl;
 
-	ScreenState& state = registry.screenStates.components[0];
+	ScreenState& screen = registry.screenStates.components[0];
 
 	// Save the player's inventory before clearing if it exists
 	// Entity player_entity;
@@ -276,7 +276,17 @@ void WorldSystem::restart_game()
 	// re-open tutorial, state is loaded from persistence
 	// state.tutorial_step_complete = true;
 
-	ItemSystem::loadGameState("game_state.json"); // load the game state
+	if (hard_reset) {
+		screen.from_biome = (int) BIOME::BLANK;
+		screen.biome = (int) BIOME::BLANK;
+		screen.switching_to_biome = (int) BIOME::GROTTO;
+		screen.tutorial_state = 0;
+		screen.tutorial_step_complete = true;
+		createWelcomeScreen(renderer, vec2(WINDOW_WIDTH_PX / 2, WINDOW_HEIGHT_PX / 2 - 50));
+		screen.killed_enemies = {};
+	} else {
+		ItemSystem::loadGameState("game_state.json"); // load the game state
+	}
 
 	biome_sys->init(renderer);
 
@@ -450,7 +460,7 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 
 	if (action == GLFW_RELEASE && key == GLFW_KEY_R)
 	{
-		restart_game();
+		restart_game(true);
 	}
 
 	if (action == GLFW_RELEASE && key == GLFW_KEY_P)
