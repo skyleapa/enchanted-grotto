@@ -34,6 +34,9 @@ inline std::string audio_path(const std::string& name) { return data_path() + "/
 inline std::string mesh_path(const std::string& name) { return data_path() + "/meshes/" + std::string(name); };
 inline std::string game_state_path(const std::string& name) { return data_path() + "/game_states/v0/" + std::string(name); };
 
+const std::string GAME_STATE_FILE = "game_state.json";
+
+
 //
 // game constants
 //

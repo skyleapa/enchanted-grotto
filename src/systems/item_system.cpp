@@ -343,7 +343,7 @@ bool ItemSystem::saveGameState() {
 	data["inventories"] = inventories;
 	
 	try {
-		std::string save_path = game_state_path("game_state.json");
+		std::string save_path = game_state_path(GAME_STATE_FILE);
 		std::ofstream file(save_path);
 		// https://json.nlohmann.me/api/basic_json/dump/
 		file << data.dump(4);
@@ -356,7 +356,7 @@ bool ItemSystem::saveGameState() {
 
 bool ItemSystem::loadGameState() {
 	try {
-		std::string save_path = game_state_path("game_state.json");
+		std::string save_path = game_state_path(GAME_STATE_FILE);
 		std::ifstream file(save_path);
 		if (!file.is_open()) {
 			return false;
