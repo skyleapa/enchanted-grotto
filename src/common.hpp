@@ -284,7 +284,8 @@ enum class TUTORIAL {
 enum class SOUND_CHANNEL {
 	GENERAL = -1, // this indicates choosing any available channel
 	BGM = 0,
-	HEAT_BOIL_AUDIO_CHANNEL = BGM + 1
+	BOILING = BGM + 1,
+	MENU = BOILING + 1
 };
 
 #ifndef M_PI

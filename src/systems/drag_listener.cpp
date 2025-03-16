@@ -9,6 +9,7 @@
 
 static DragListener drag_listener;
 UISystem* DragListener::m_ui_system;
+bool DragListener::is_boiling = false;
 
 void DragListener::RegisterDraggableElement(Rml::Element* element) {
 	element->AddEventListener("dragstart", &drag_listener);
@@ -111,7 +112,7 @@ void DragListener::checkCompletedStir() {
 				screen.tutorial_state += 1;
 			}
 			std::cout << "Recorded a successful ladle stir" << std::endl;
-			SoundSystem::play_stir_sound((int) SOUND_CHANNEL::GENERAL, 0);
+			SoundSystem::play_stir_sound((int) SOUND_CHANNEL::MENU, 0);
 			break;
 		}
 	}
@@ -161,7 +162,9 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			lastCoords = mouseCoords;
 			if (!is_heat_changing) {
 				is_heat_changing = true;
-				SoundSystem::play_interact_menu_sound((int) SOUND_CHANNEL::HEAT_BOIL_AUDIO_CHANNEL, -1); // play infinitely until dragging is finished
+				SoundSystem::halt_general_sound();
+				if (is_boiling) SoundSystem::play_boil_sound((int) SOUND_CHANNEL::BOILING, -1); // continue boiling if it was already boiling
+				SoundSystem::play_interact_menu_sound((int) SOUND_CHANNEL::MENU, -1); // play infinitely until dragging is finished
 			}
 			return;
 		}
@@ -180,10 +183,16 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			int heatLevel = getHeatLevel(curDegree);
 			PotionSystem::changeHeat(m_ui_system->getOpenedCauldron(), heatLevel);
 			is_heat_changing = false;
-			// play turn dial sound to signify completion of drag
-			SoundSystem::play_turn_dial_sound((int) SOUND_CHANNEL::GENERAL, 0);
-			// start boiling
-			SoundSystem::play_boil_sound((int) SOUND_CHANNEL::HEAT_BOIL_AUDIO_CHANNEL, -1);
+			// play turn dial sound to signify completion of drag and start boiling
+			if (heatLevel == 0) {
+				SoundSystem::halt_boil_sound(); // no boiling if setting temperature back to off
+				SoundSystem::halt_general_sound();
+				is_boiling = false;
+			} else {
+				is_boiling = true;
+				SoundSystem::play_boil_sound((int) SOUND_CHANNEL::BOILING, -1);
+			}
+			SoundSystem::play_turn_dial_sound((int) SOUND_CHANNEL::MENU, 0);
 			return;
 		}
 

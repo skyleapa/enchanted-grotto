@@ -30,6 +30,7 @@ public:
     static void play_turn_dial_sound(int channel, int loops); // done
 
     static void halt_boil_sound();
+    static void halt_general_sound();
 
     SoundSystem()
     {

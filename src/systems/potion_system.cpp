@@ -106,7 +106,7 @@ void PotionSystem::addIngredient(Entity cauldron, Entity ingredient) {
 	} while (false);
 
 	ci.items.push_back(ingredient);
-	SoundSystem::play_drop_in_cauldron_sound((int) SOUND_CHANNEL::GENERAL, 0);
+	SoundSystem::play_drop_in_cauldron_sound((int) SOUND_CHANNEL::MENU, 0);
 	recordAction(cauldron, ActionType::ADD_INGREDIENT, ci.items.size() - 1);
 
 }

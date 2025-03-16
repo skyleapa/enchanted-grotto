@@ -64,7 +64,7 @@ SoundSystem::~SoundSystem()
 }
 
 void SoundSystem::play_boil_sound(int channel, int loops) {
-    Mix_FadeInChannel(channel, boil_sound, loops, 1500); // fade this in so you can hear the dial click
+    Mix_FadeInChannel(channel, boil_sound, loops, 2000); // fade this in so you can hear the dial click
 }
 
 void SoundSystem::play_bottle_high_quality_potion_sound(int channel, int loops) {
@@ -108,5 +108,9 @@ void SoundSystem::play_turn_dial_sound(int channel, int loops) {
 }
 
 void SoundSystem::halt_boil_sound() {
-    Mix_FadeOutChannel((int) SOUND_CHANNEL::HEAT_BOIL_AUDIO_CHANNEL, 500);
+    Mix_FadeOutChannel((int) SOUND_CHANNEL::BOILING, 500);
+}
+
+void SoundSystem::halt_general_sound() {
+    Mix_HaltChannel((int) SOUND_CHANNEL::GENERAL);
 }
