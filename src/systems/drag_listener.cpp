@@ -112,7 +112,7 @@ void DragListener::checkCompletedStir() {
 				screen.tutorial_state += 1;
 			}
 			std::cout << "Recorded a successful ladle stir" << std::endl;
-			SoundSystem::play_stir_sound((int) SOUND_CHANNEL::MENU, 0);
+			SoundSystem::playStirSound((int) SOUND_CHANNEL::MENU, 0);
 			break;
 		}
 	}
@@ -162,9 +162,9 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			lastCoords = mouseCoords;
 			if (!is_heat_changing) {
 				is_heat_changing = true;
-				SoundSystem::halt_general_sound();
-				if (is_boiling) SoundSystem::play_boil_sound((int) SOUND_CHANNEL::BOILING, -1); // continue boiling if it was already boiling
-				SoundSystem::play_interact_menu_sound((int) SOUND_CHANNEL::MENU, -1); // play infinitely until dragging is finished
+				SoundSystem::haltGeneralSound();
+				if (is_boiling) SoundSystem::continueBoilSound((int) SOUND_CHANNEL::BOILING, -1); // continue boiling if it was already boiling
+				SoundSystem::playInteractMenuSound((int) SOUND_CHANNEL::MENU, -1); // play infinitely until dragging is finished
 			}
 			return;
 		}
@@ -184,15 +184,20 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			PotionSystem::changeHeat(m_ui_system->getOpenedCauldron(), heatLevel);
 			is_heat_changing = false;
 			// play turn dial sound to signify completion of drag and start boiling
+			std::cout <<" heat level :" << heatLevel << std::endl;
 			if (heatLevel == 0) {
-				SoundSystem::halt_boil_sound(); // no boiling if setting temperature back to off
-				SoundSystem::halt_general_sound();
+				SoundSystem::haltBoilSound(); // no boiling if setting temperature back to off
+				SoundSystem::haltGeneralSound();
 				is_boiling = false;
 			} else {
-				is_boiling = true;
-				SoundSystem::play_boil_sound((int) SOUND_CHANNEL::BOILING, -1);
+				// stsart boiling or continue boiling
+				if (is_boiling) SoundSystem::continueBoilSound((int) SOUND_CHANNEL::BOILING, -1);
+				else {
+					is_boiling = true;
+					SoundSystem::playBoilSound((int) SOUND_CHANNEL::BOILING, -1);
+				}
 			}
-			SoundSystem::play_turn_dial_sound((int) SOUND_CHANNEL::MENU, 0);
+			SoundSystem::playTurnDialSound((int) SOUND_CHANNEL::MENU, 0);
 			return;
 		}
 
@@ -237,6 +242,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 				ItemSystem::removeItemFromInventory(player, item);
 			}
 			registry.items.get(copy).amount = 1;
+			SoundSystem::playDropInCauldronSound((int) SOUND_CHANNEL::MENU, 0);
 			PotionSystem::addIngredient(m_ui_system->getOpenedCauldron(), copy);
 			return;
 		}

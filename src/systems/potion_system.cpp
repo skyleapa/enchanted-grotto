@@ -1,7 +1,6 @@
 #include "potion_system.hpp"
 #include "item_system.hpp"
 #include "tinyECS/registry.hpp"
-#include "sound_system.hpp"
 #include <unordered_set>
 #include <iostream>
 #include <cfloat>
@@ -106,7 +105,6 @@ void PotionSystem::addIngredient(Entity cauldron, Entity ingredient) {
 	} while (false);
 
 	ci.items.push_back(ingredient);
-	SoundSystem::play_drop_in_cauldron_sound((int) SOUND_CHANNEL::MENU, 0);
 	recordAction(cauldron, ActionType::ADD_INGREDIENT, ci.items.size() - 1);
 
 }

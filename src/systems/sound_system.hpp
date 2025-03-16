@@ -14,23 +14,24 @@ class SoundSystem
 {
 public:
 
-    static bool start_and_load_sounds(); // initialize sounds
+    static bool startAndLoadSounds(); // initialize sounds
 
-    static void play_boil_sound(int channel, int loops);
-    
-    static void play_bottle_high_quality_potion_sound(int channel, int loops);
-    static void play_bottle_sound(int channel, int loops); // done
-    static void play_collect_item_sound(int channel, int loops); // done
-    static void play_enemy_ouch_sound(int channel, int loops); // done
-    static void play_drop_in_cauldron_sound(int channel, int loops); // done
-    static void play_interact_menu_sound(int channel, int loops); // done
-    static void play_page_flip_sound(int channel, int loops);
-    static void play_stir_sound(int channel, int loops);
-    static void play_throw_sound(int channel, int loops); // done
-    static void play_turn_dial_sound(int channel, int loops); // done
+    static void playBoilSound(int channel, int loops);
+    static void playBottleHighQualityPotionSound(int channel, int loops);
+    static void playBottleSound(int channel, int loops); // done
+    static void playCollectItemSound(int channel, int loops); // done
+    static void playEnemyOuchSound(int channel, int loops); // done
+    static void playDropInCauldronSound(int channel, int loops); // done
+    static void playInteractMenuSound(int channel, int loops); // done
+    static void playPageFlipSound(int channel, int loops);
+    static void playStirSound(int channel, int loops);
+    static void playThrowSound(int channel, int loops); // done
+    static void playTurnDialSound(int channel, int loops); // done
 
-    static void halt_boil_sound();
-    static void halt_general_sound();
+    static void continueBoilSound(int channel, int loops);
+
+    static void haltBoilSound();
+    static void haltGeneralSound();
 
     SoundSystem()
     {

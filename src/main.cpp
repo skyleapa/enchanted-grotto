@@ -41,7 +41,7 @@ int main()
 		return EXIT_FAILURE;
 	}
 
-	if (!sound_system.start_and_load_sounds()) {
+	if (!sound_system.startAndLoadSounds()) {
 		std::cerr << "ERROR: Failed to start or load sounds." << std::endl;
 	}
 

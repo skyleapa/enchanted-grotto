@@ -14,7 +14,7 @@ Mix_Chunk* SoundSystem::throw_sound = nullptr;
 Mix_Chunk* SoundSystem::turn_dial_sound = nullptr;
 
 // initialize sounds
-bool SoundSystem::start_and_load_sounds()
+bool SoundSystem::startAndLoadSounds()
 {
 
     //////////////////////////////////////
@@ -63,54 +63,57 @@ SoundSystem::~SoundSystem()
     Mix_CloseAudio();
 }
 
-void SoundSystem::play_boil_sound(int channel, int loops) {
+void SoundSystem::playBoilSound(int channel, int loops) {
     Mix_FadeInChannel(channel, boil_sound, loops, 2000); // fade this in so you can hear the dial click
 }
 
-void SoundSystem::play_bottle_high_quality_potion_sound(int channel, int loops) {
+void SoundSystem::playBottleHighQualityPotionSound(int channel, int loops) {
     Mix_PlayChannel(channel, bottle_high_quality_potion_sound, loops);
 }
 
-void SoundSystem::play_bottle_sound(int channel, int loops) {
+void SoundSystem::playBottleSound(int channel, int loops) {
     Mix_PlayChannel(channel, bottle_sound, loops);
 }
 
-void SoundSystem::play_collect_item_sound(int channel, int loops) {
+void SoundSystem::playCollectItemSound(int channel, int loops) {
     Mix_PlayChannel(channel, collect_item_sound, loops);
 }
 
-void SoundSystem::play_enemy_ouch_sound(int channel, int loops) {
+void SoundSystem::playEnemyOuchSound(int channel, int loops) {
     Mix_PlayChannel(channel, enemy_ouch_sound, loops);
 }
 
-void SoundSystem::play_drop_in_cauldron_sound(int channel, int loops) {
+void SoundSystem::playDropInCauldronSound(int channel, int loops) {
     Mix_PlayChannel(channel, drop_in_cauldron_sound, loops);
 }
 
-void SoundSystem::play_interact_menu_sound(int channel, int loops) {
+void SoundSystem::playInteractMenuSound(int channel, int loops) {
     Mix_PlayChannel(channel, interact_menu_sound, loops);
 }
 
-void SoundSystem::play_page_flip_sound(int channel, int loops) {
+void SoundSystem::playPageFlipSound(int channel, int loops) {
     Mix_PlayChannel(channel, page_flip_sound, loops);
 }
 
-void SoundSystem::play_stir_sound(int channel, int loops) {
+void SoundSystem::playStirSound(int channel, int loops) {
     Mix_PlayChannel(channel, stir_sound, loops);
 }
 
-void SoundSystem::play_throw_sound(int channel, int loops) {
+void SoundSystem::playThrowSound(int channel, int loops) {
     Mix_PlayChannel(channel, throw_sound, loops);
 }
 
-void SoundSystem::play_turn_dial_sound(int channel, int loops) {
+void SoundSystem::playTurnDialSound(int channel, int loops) {
     Mix_PlayChannel(channel, turn_dial_sound, loops);
 }
 
-void SoundSystem::halt_boil_sound() {
+void SoundSystem::continueBoilSound(int channel, int loops) {
+    Mix_PlayChannel(channel, boil_sound, loops);
+}
+void SoundSystem::haltBoilSound() {
     Mix_FadeOutChannel((int) SOUND_CHANNEL::BOILING, 500);
 }
 
-void SoundSystem::halt_general_sound() {
+void SoundSystem::haltGeneralSound() {
     Mix_HaltChannel((int) SOUND_CHANNEL::GENERAL);
 }

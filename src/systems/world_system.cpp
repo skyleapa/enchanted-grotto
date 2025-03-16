@@ -315,7 +315,7 @@ void WorldSystem::handle_collisions()
 			Enemy& enemy = registry.enemies.get(enemy_entity);
 			enemy.health -= ammo.damage;
 			registry.remove_all_components_of(ammo_entity);
-			SoundSystem::play_enemy_ouch_sound((int) SOUND_CHANNEL::GENERAL, 0); // play enemy ouch sound
+			SoundSystem::playEnemyOuchSound((int) SOUND_CHANNEL::GENERAL, 0); // play enemy ouch sound
 			if (enemy.health <= 0) {
 				// using can_move for now since ent cannot move, but mummy can
 				if (enemy.can_move == 0) {
@@ -566,7 +566,7 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 		if (m_ui_system != nullptr && m_ui_system->isCauldronOpen()) return;
 		if (mouse_pos_x >= BAR_X && mouse_pos_x <= BAR_X + BAR_WIDTH && mouse_pos_y >= BAR_Y && mouse_pos_y <= BAR_Y + BAR_HEIGHT) return;
 		// don't throw ammo if in potion making menu or clicking on inventory
-		if (throwAmmo(vec2(mouse_pos_x, mouse_pos_y))) SoundSystem::play_throw_sound((int) SOUND_CHANNEL::GENERAL, 0);
+		if (throwAmmo(vec2(mouse_pos_x, mouse_pos_y))) SoundSystem::playThrowSound((int) SOUND_CHANNEL::GENERAL, 0);
 	}
 }
 
@@ -687,7 +687,7 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 	Item& item_info = registry.items.get(item);
 	if (!ItemSystem::addItemToInventory(player, item))
 		return false;
-	SoundSystem::play_collect_item_sound((int) SOUND_CHANNEL::GENERAL, 0);
+	SoundSystem::playCollectItemSound((int) SOUND_CHANNEL::GENERAL, 0);
 
 	// handle fruit collection
 	if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::COLLECT_ITEMS) {
