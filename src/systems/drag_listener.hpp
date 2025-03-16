@@ -57,6 +57,8 @@ private:
 	// The min and max squared magnitudes to consider for stir coords
 	const float MIN_STIR_RADIUS = 50 * 50;
 	const float MAX_STIR_RADIUS = 150 * 150;
+
+	bool is_heat_changing = false; // track the dragging 
 };
 
 #endif

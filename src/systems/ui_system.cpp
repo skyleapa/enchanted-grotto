@@ -5,6 +5,7 @@
 #include "item_system.hpp"
 #include "rmlui_system_interface.hpp"
 #include "rmlui_render_interface.hpp"
+#include "sound_system.hpp"
 #include <iostream>
 #include <vector>
 #include <string>
@@ -70,7 +71,7 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 		glfwGetFramebufferSize(window, &frame_buffer_width_px, &frame_buffer_height_px);
 		if (frame_buffer_width_px != WINDOW_WIDTH_PX) {
 			// Retina display, scale up to 2x
-			content_scale = (float) frame_buffer_width_px / WINDOW_WIDTH_PX;
+			content_scale = (float)frame_buffer_width_px / WINDOW_WIDTH_PX;
 		}
 
 		render_interface.SetContentScale(content_scale);
@@ -138,8 +139,8 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 
 void UISystem::updateWindowSize(float scale)
 {
-    RmlUiRenderInterface* rinterface = static_cast<RmlUiRenderInterface*>(Rml::GetRenderInterface()); 
-    rinterface->SetContentScale(scale);
+	RmlUiRenderInterface* rinterface = static_cast<RmlUiRenderInterface*>(Rml::GetRenderInterface());
+	rinterface->SetContentScale(scale);
 }
 
 void UISystem::step(float elapsed_ms)
@@ -407,8 +408,8 @@ void UISystem::handleTextInput(unsigned int codepoint)
 void UISystem::handleMouseMoveEvent(double x, double y)
 {
 	if (!m_initialized || !m_context) return;
-    mouse_pos_x = x;
-    mouse_pos_y = y;
+	mouse_pos_x = x;
+	mouse_pos_y = y;
 	updateFollowMouse();
 	m_context->ProcessMouseMove((int)x, (int)y, getKeyModifiers());
 }
@@ -434,7 +435,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 	}
 
 	// Get mouse position
-    Rml::Vector2f mousePos = Rml::Vector2f(mouse_pos_x, mouse_pos_y);
+	Rml::Vector2f mousePos = Rml::Vector2f(mouse_pos_x, mouse_pos_y);
 
 	// Check clicks for inventory bar and cauldron
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT) {
@@ -460,6 +461,8 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 					break;
 				}
 
+				SoundSystem::play_interact_menu_sound((int) SOUND_CHANNEL::GENERAL, 0);
+
 				if (heldLadle) {
 					hovered->SetProperty("top", LADLE_TOP_PX);
 					hovered->SetProperty("left", LADLE_LEFT_PX);
@@ -475,37 +478,42 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 
 			if (id == "bottle") {
 				if (!heldBottle) {
+					SoundSystem::play_interact_menu_sound((int) SOUND_CHANNEL::GENERAL, 0); // play only when picking up bottle
 					heldBottle = hovered;
 					updateFollowMouse();
 					break;
 				}
 
-                // Check if clicking on cauldron water to bottle potion
-                Rml::Element* possibleCauldron = m_context->GetElementAtPoint(mousePos, hovered);
-                if (possibleCauldron && (possibleCauldron->GetId() == "cauldron-water" || possibleCauldron->GetId() == "cauldron")) {
-                    // Create potion and add to player inventory
-                    Entity cauldron = getOpenedCauldron();
-                    Potion potion = PotionSystem::bottlePotion(cauldron);
-                    
-                    // Create potion item and add to player inventory
-                    Entity player = registry.players.entities[0];
-                    Entity potionItem = ItemSystem::createPotion(
-                        potion.effect,
-                        potion.duration,
-                        potion.color,
-                        potion.quality,
-                        potion.effectValue
-                    );
+				// Check if clicking on cauldron water to bottle potion
+				Rml::Element* possibleCauldron = m_context->GetElementAtPoint(mousePos, hovered);
+				if (possibleCauldron && (possibleCauldron->GetId() == "cauldron-water" || possibleCauldron->GetId() == "cauldron")) {
+					// Create potion and add to player inventory
+					Entity cauldron = getOpenedCauldron();
+					Potion potion = PotionSystem::bottlePotion(cauldron);
 
-                    // TODOOO
-                    // if (potion.effect != PotionEffect::WATER) {
-                    //     registry.items.get(potionItem).is_ammo = true;
-                    //     auto& ammo = registry.ammo.emplace(potionItem);
-                    //     ammo.damage = 1000;
-                    // }
-                    
-                    ItemSystem::addItemToInventory(player, potionItem);
-                }
+					// Create potion item and add to player inventory
+					Entity player = registry.players.entities[0];
+					Entity potionItem = ItemSystem::createPotion(
+						potion.effect,
+						potion.duration,
+						potion.color,
+						potion.quality,
+						potion.effectValue
+					);
+
+					// TODOOO
+					// if (potion.effect != PotionEffect::WATER) {
+					//     registry.items.get(potionItem).is_ammo = true;
+					//     auto& ammo = registry.ammo.emplace(potionItem);
+					//     ammo.damage = 1000;
+					// }
+
+					if (ItemSystem::addItemToInventory(player, potionItem)) {
+						// stop the boiling sound then bottle the potion
+						SoundSystem::play_bottle_high_quality_potion_sound((int) SOUND_CHANNEL::GENERAL, 0);
+						SoundSystem::halt_boil_sound();
+					};
+				}
 
 				// Reset bottle position
 				hovered->SetProperty("top", BOTTLE_TOP_PX);
@@ -627,9 +635,9 @@ void UISystem::createInventoryBar()
 			}
 
 			// Number near each slot
-            int left = i * 44;
-			inventory_rml += "<div id='slot-" + std::to_string(i) + "' class='" + slot_class + 
-                "' style='left: " + std::to_string(left) + "px;'></div>";
+			int left = i * 44;
+			inventory_rml += "<div id='slot-" + std::to_string(i) + "' class='" + slot_class +
+				"' style='left: " + std::to_string(left) + "px;'></div>";
 		}
 
 		inventory_rml += "</body></rml>";
@@ -675,22 +683,23 @@ void UISystem::updateInventoryBar()
 
 			// Update the slot class (selected or not)
 			std::string slot_class = "inventory-slot";
-            int loc = i * 44;
+			int loc = i * 44;
 			if (i == m_selected_slot) {
 				slot_class += " selected";
-                int selectedLoc = loc - 2;
-                slot_element->SetProperty("left", std::to_string(selectedLoc) + "px");
-                slot_element->SetProperty("top", "-2px");
-			} else {
-                slot_element->SetProperty("left", std::to_string(loc) + "px");
-                slot_element->SetProperty("top", "0");
-            }
+				int selectedLoc = loc - 2;
+				slot_element->SetProperty("left", std::to_string(selectedLoc) + "px");
+				slot_element->SetProperty("top", "-2px");
+			}
+			else {
+				slot_element->SetProperty("left", std::to_string(loc) + "px");
+				slot_element->SetProperty("top", "0");
+			}
 
 			slot_element->SetAttribute("class", slot_class);
 
 			std::string slot_content = "";
-            //"<span style='color: #FFE4B5; font-size: 12px; font-weight: bold; position: absolute; top: 2px; left: 2px;'>" +
-		    //std::to_string(i + 1) + "</span>";
+			//"<span style='color: #FFE4B5; font-size: 12px; font-weight: bold; position: absolute; top: 2px; left: 2px;'>" +
+			//std::to_string(i + 1) + "</span>";
 
 			// Add item display
 			if (i < inventory.items.size()) {
@@ -792,8 +801,8 @@ void UISystem::updateTutorial()
 
 		// Mark tutorial step as incomplete again
 		screen.tutorial_step_complete = false;
-		if (screen.tutorial_state == (int)TUTORIAL::COMPLETE || 
-            screen.tutorial_state == (int)TUTORIAL::WELCOME_SCREEN) return;
+		if (screen.tutorial_state == (int)TUTORIAL::COMPLETE ||
+			screen.tutorial_state == (int)TUTORIAL::WELCOME_SCREEN) return;
 
 		// Check if the tutorial state exists in the map
 		auto it = tutorial_steps.find(screen.tutorial_state);
@@ -859,6 +868,7 @@ bool UISystem::openCauldron(Entity cauldron)
 	if (!m_initialized || !m_context) return false;
 	if (m_cauldron_document) {
 		m_cauldron_document->Show();
+		SoundSystem::play_interact_menu_sound((int) SOUND_CHANNEL::GENERAL, 0);
 		return true;
 	}
 
@@ -952,6 +962,7 @@ bool UISystem::openCauldron(Entity cauldron)
 		DragListener::RegisterDragDropElement(m_cauldron_document->GetElementById("cauldron-water"));
 		DragListener::RegisterDragDropElement(m_cauldron_document->GetElementById("cauldron"));
 		m_cauldron_document->Show();
+		SoundSystem::play_interact_menu_sound((int) SOUND_CHANNEL::GENERAL, 0);
 		openedCauldron = cauldron;
 		registry.cauldrons.get(cauldron).filled = true;
 		std::cout << "UISystem::openCauldron - Cauldron created successfully" << std::endl;
@@ -992,6 +1003,8 @@ void UISystem::closeCauldron()
 {
 	if (isCauldronOpen()) {
 		m_cauldron_document->Hide();
+		SoundSystem::halt_boil_sound();
+		SoundSystem::play_interact_menu_sound((int) SOUND_CHANNEL::GENERAL, 0);
 		// handle exit menu tutorial
 		if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::EXIT_MENU) {
 			ScreenState& screen = registry.screenStates.components[0];
