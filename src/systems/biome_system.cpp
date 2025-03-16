@@ -125,7 +125,6 @@ void BiomeSystem::renderPlayerInNewBiome() {
 			if (registry.renderRequests.has(cauldron)) {
 				RenderRequest& rr = registry.renderRequests.get(cauldron);
 				rr.is_visible = true;
-				std::cout << "re-rendering cauldron" << std::endl;
 			}
 			// recreate textbox
 			if (registry.motions.has(cauldron)) {

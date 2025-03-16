@@ -184,7 +184,6 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			PotionSystem::changeHeat(m_ui_system->getOpenedCauldron(), heatLevel);
 			is_heat_changing = false;
 			// play turn dial sound to signify completion of drag and start boiling
-			std::cout <<" heat level :" << heatLevel << std::endl;
 			if (heatLevel == 0) {
 				SoundSystem::haltBoilSound(); // no boiling if setting temperature back to off
 				SoundSystem::haltGeneralSound();

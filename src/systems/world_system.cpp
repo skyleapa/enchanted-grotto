@@ -656,7 +656,6 @@ void WorldSystem::handle_player_interaction()
 		else if (registry.cauldrons.has(item)) {
 			// don't allow opening if it's currently invisible
 			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
-			std::cout << "found cauldron " << item.id() << std::endl;
 			if (m_ui_system != nullptr)
 			{
 				handle_textbox = m_ui_system->openCauldron(item);
