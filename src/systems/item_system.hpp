@@ -31,8 +31,8 @@ public:
     static Entity copyItem(Entity toCopy);
     
     // Serialization
-    static bool saveGameState(const std::string& filename);
-    static bool loadGameState(const std::string& filename);
+    static bool saveGameState();
+    static bool loadGameState();
     
     // Item factory methods
     static Entity createItem(ItemType type, int amount = 1, bool isCollectable = false, bool is_ammo = false, bool canRespawn = true);

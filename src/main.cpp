@@ -90,7 +90,7 @@ int main()
 	}
 
 	// Save game state before exit
-	item_system.saveGameState("game_state.json");
+	item_system.saveGameState();
 
 	return EXIT_SUCCESS;
 }
