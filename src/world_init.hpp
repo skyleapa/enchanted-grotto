@@ -64,10 +64,10 @@ Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity);
 RenderRequest getTextboxRenderRequest(Textbox& textbox);
 
 // create ent
-Entity createEnt(RenderSystem* renderer, vec2 position, int movable);
+Entity createEnt(RenderSystem* renderer, vec2 position, int movable, std::string name);
 
 // create mummy
-Entity createMummy(RenderSystem* renderer, vec2 position, int movable);
+Entity createMummy(RenderSystem* renderer, vec2 position, int movable, std::string name);
 
 // render fired ammo
 bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, Entity& player_entity);

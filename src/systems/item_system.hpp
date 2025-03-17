@@ -43,8 +43,10 @@ public:
     // Serialization helpers made public and static
     static nlohmann::json serializeItem(Entity item);
     static nlohmann::json serializeInventory(Entity inventory);
+    static nlohmann::json serializeScreenState();
     static Entity deserializeItem(const nlohmann::json& data);
     static void deserializeInventory(Entity inventory, const nlohmann::json& data);
+    static void deserializeScreenState(const nlohmann::json& data);
     
 private:
     // Helper methods for serialization have been moved to public

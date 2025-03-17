@@ -14,6 +14,7 @@
 #include "systems/item_system.hpp"
 #include "systems/potion_system.hpp"
 #include "systems/ui_system.hpp"
+#include "systems/sound_system.hpp"
 
 using Clock = std::chrono::high_resolution_clock;
 
@@ -29,6 +30,7 @@ int main()
 	PotionSystem  potion_system;
 	BiomeSystem   biome_system;
 	UISystem      ui_system;
+	SoundSystem	  sound_system;
 
 	// initialize window
 	GLFWwindow* window = world_system.create_window();
@@ -39,7 +41,7 @@ int main()
 		return EXIT_FAILURE;
 	}
 
-	if (!world_system.start_and_load_sounds()) {
+	if (!sound_system.startAndLoadSounds()) {
 		std::cerr << "ERROR: Failed to start or load sounds." << std::endl;
 	}
 
