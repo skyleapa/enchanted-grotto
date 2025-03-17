@@ -108,13 +108,13 @@ TEST_F(ItemSystemTest, Serialization) {
     EXPECT_TRUE(item_system.addItemToInventory(inv, ingredient));
     
     // Save state
-    EXPECT_TRUE(item_system.saveGameState("test_save.json"));
+    EXPECT_TRUE(item_system.saveGameState());
     
     // Clear everything
     registry.clear_all_components();
     
     // Load state
-    EXPECT_TRUE(item_system.loadGameState("test_save.json"));
+    EXPECT_TRUE(item_system.loadGameState());
     
     // Verify loaded data
     bool found_inventory = false;
@@ -172,7 +172,7 @@ TEST_F(ItemSystemTest, ErrorHandling) {
     EXPECT_FALSE(item_system.addItemToInventory(inv, item2)); // Should fail, inventory full
     
     // Test invalid serialization operations
-    EXPECT_FALSE(item_system.loadGameState("nonexistent_file.json"));
+    EXPECT_FALSE(item_system.loadGameState());
 }
 
 // Test entity ID continuity
@@ -182,13 +182,13 @@ TEST_F(ItemSystemTest, EntityIDContinuity) {
     unsigned int first_id = item1.id();
     
     // Save state
-    EXPECT_TRUE(item_system.saveGameState("test_save.json"));
+    EXPECT_TRUE(item_system.saveGameState());
     
     // Clear everything
     registry.clear_all_components();
     
     // Load state and create a new item
-    EXPECT_TRUE(item_system.loadGameState("test_save.json"));
+    EXPECT_TRUE(item_system.loadGameState());
     Entity item2 = ItemSystem::createItem(ItemType::MAGICAL_FRUIT, 1);
     
     // The new item should have a new unique ID
@@ -221,13 +221,13 @@ TEST_F(ItemSystemTest, DifferentInventoryTypes) {
     EXPECT_TRUE(item_system.addItemToInventory(chest_inv, chest_item));
     
     // Save state
-    EXPECT_TRUE(item_system.saveGameState("test_save.json"));
+    EXPECT_TRUE(item_system.saveGameState());
     
     // Clear everything
     registry.clear_all_components();
     
     // Load state
-    EXPECT_TRUE(item_system.loadGameState("test_save.json"));
+    EXPECT_TRUE(item_system.loadGameState());
     
     // Verify all inventory types were restored correctly
     bool found_player = false, found_cauldron = false, found_chest = false;
