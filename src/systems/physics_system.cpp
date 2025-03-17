@@ -219,6 +219,12 @@ void PhysicsSystem::step(float elapsed_ms)
 
 	Motion& player_motion = registry.motions.get(player_entity);
 
+	// Leave this out for now - apply to health bar in the future
+	// // if player's health is below 20, keep flashing red to indicate that they're close to death
+	// if (registry.players.components[0].health <= PLAYER_DYING) {
+	// 	if (!registry.damageFlashes.has(player_entity)) registry.damageFlashes.emplace(player_entity);
+	// }
+
 	for (Entity terrain_entity : registry.terrains.entities)
 	{
 		if (!registry.motions.has(terrain_entity))
@@ -262,8 +268,8 @@ void PhysicsSystem::step(float elapsed_ms)
 
 			if (genericCollides(ammo_motion, enemy_motion)) {
 				registry.collisions.emplace_with_duplicates(ammo_entity, enemy);
-				// add a damage flash to the enemy
-				registry.damageFlashes.emplace(enemy);
+				// enemy flashes red
+				if (!registry.damageFlashes.has(enemy)) registry.damageFlashes.emplace(enemy);
 			}
 		}
 
