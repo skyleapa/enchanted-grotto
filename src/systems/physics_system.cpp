@@ -200,6 +200,15 @@ bool genericCollides(const Motion& motion, const Motion& other_motion)
 
 void PhysicsSystem::step(float elapsed_ms)
 {
+	// first update the flash value of any enemies who took damage
+	for (Entity entity : registry.damageFlashes.entities) {
+		DamageFlash& flash = registry.damageFlashes.get(entity);
+		flash.flash_value -= elapsed_ms * TIME_UPDATE_FACTOR; // change this for speed of flash
+		if (flash.flash_value <= 0) {
+			registry.damageFlashes.remove(entity); // remove once flash value goes to 0
+		}
+	}
+
 	// get our one player
 	if (registry.players.entities.empty())
 		return;
@@ -253,6 +262,8 @@ void PhysicsSystem::step(float elapsed_ms)
 
 			if (genericCollides(ammo_motion, enemy_motion)) {
 				registry.collisions.emplace_with_duplicates(ammo_entity, enemy);
+				// add a damage flash to the enemy
+				registry.damageFlashes.emplace(enemy);
 			}
 		}
 

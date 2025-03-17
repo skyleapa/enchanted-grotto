@@ -432,3 +432,8 @@ const std::unordered_map<ItemType, ItemInfo> ITEM_INFO = {
 			"interactables/magical_dust.png",
 			true}},
 };
+
+// damage flash only to be applied to player and enemies
+struct DamageFlash {
+	float flash_value = 1.f; // defaults to 0 for no flash, and 1 for red tint
+};
