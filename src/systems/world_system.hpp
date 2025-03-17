@@ -59,7 +59,7 @@ public:
 	// Set reference to UI system
 	void setUISystem(UISystem* ui_system) { m_ui_system = ui_system; }
 
-	void throwAmmo(vec2 target);
+	bool throwAmmo(vec2 target);
 
 	void updateThrownAmmo(float elapsed_ms_since_last_update);
 
@@ -76,7 +76,7 @@ private:
 	void on_window_resize(int w, int h);
 
 	// restart level
-	void restart_game();
+	void restart_game(bool hard_reset);
 
 	// OpenGL window handle
 	GLFWwindow* window;

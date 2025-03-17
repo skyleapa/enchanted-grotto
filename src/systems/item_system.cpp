@@ -260,6 +260,19 @@ nlohmann::json ItemSystem::serializeInventory(Entity inventory) {
 	return data;
 }
 
+nlohmann::json ItemSystem::serializeScreenState() {
+	ScreenState& screen = registry.screenStates.components[0];
+
+	nlohmann::json data;
+
+	data["tutorial_state"] = screen.tutorial_state;
+	data["biome"] = screen.biome;
+	data["from_biome"] = screen.from_biome;
+	data["killed_enemies"] = screen.killed_enemies;
+
+	return data;
+}
+
 Entity ItemSystem::deserializeItem(const nlohmann::json& data) {
 	Entity entity;
 
@@ -341,6 +354,7 @@ bool ItemSystem::saveGameState() {
 		inventories.push_back(serializeInventory(inventory));
 	}
 	data["inventories"] = inventories;
+	data["screen_state"] = serializeScreenState();
 	
 	try {
 		std::string save_path = game_state_path(GAME_STATE_FILE);
@@ -392,9 +406,25 @@ bool ItemSystem::loadGameState() {
 			}
 		}
 		
+		if (!data["screen_state"].empty()) {
+			deserializeScreenState(data["screen_state"]);
+		}
+		
 		return true;
 	} catch (const std::exception& e) {
 		std::cerr << "Failed to load game state: " << e.what() << std::endl;
 		return false;
 	}
 } 
+
+void ItemSystem::deserializeScreenState(const nlohmann::json& data) {
+	ScreenState& screen = registry.screenStates.components[0];
+
+	screen.tutorial_state = data["tutorial_state"];
+	screen.switching_to_biome = data["biome"]; // biome switching happens only if switching to biome != biome
+	screen.from_biome = data["from_biome"];
+	for (const auto& enemy : data["killed_enemies"]) {
+		registry.screenStates.components[0].killed_enemies.push_back(enemy);
+	}
+}
+	

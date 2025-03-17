@@ -3,6 +3,7 @@
 #include "world_init.hpp"
 #include "common.hpp"
 #include "item_system.hpp"
+#include "sound_system.hpp"
 
 // stlib
 #include <cassert>
@@ -154,7 +155,7 @@ bool WorldSystem::init(RenderSystem* renderer_arg, BiomeSystem* biome_sys)
 	// Mix_PlayMusic(background_music, -1);
 
 	// Set all states to default
-	restart_game();
+	restart_game(false);
 
 	return true;
 }
@@ -225,11 +226,11 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 }
 
 // Reset the world state to its initial state
-void WorldSystem::restart_game()
+void WorldSystem::restart_game(bool hard_reset)
 {
 	std::cout << "Restarting..." << std::endl;
 
-	ScreenState& state = registry.screenStates.components[0];
+	ScreenState& screen = registry.screenStates.components[0];
 
 	// Save the player's inventory before clearing if it exists
 	// Entity player_entity;
@@ -273,11 +274,20 @@ void WorldSystem::restart_game()
 		createPlayer(renderer, vec2(GRID_CELL_WIDTH_PX * 17.5, GRID_CELL_HEIGHT_PX * 6.5)); // bring player to front of door));
 	}
 
-	// re-open tutorial
-	state.tutorial_state = (int)TUTORIAL::WELCOME_SCREEN;
-	state.tutorial_step_complete = true;
+	// re-open tutorial, state is loaded from persistence
+	// state.tutorial_step_complete = true;
 
-	ItemSystem::loadGameState(); // load the game state
+	if (hard_reset) {
+		screen.from_biome = (int) BIOME::BLANK;
+		screen.biome = (int) BIOME::BLANK;
+		screen.switching_to_biome = (int) BIOME::GROTTO;
+		screen.tutorial_state = 0;
+		screen.tutorial_step_complete = true;
+		createWelcomeScreen(renderer, vec2(WINDOW_WIDTH_PX / 2, WINDOW_HEIGHT_PX / 2 - 50));
+		screen.killed_enemies = {};
+	} else {
+		ItemSystem::loadGameState(); // load the game state
+	}
 
 	biome_sys->init(renderer);
 
@@ -314,6 +324,7 @@ void WorldSystem::handle_collisions()
 			Enemy& enemy = registry.enemies.get(enemy_entity);
 			enemy.health -= ammo.damage;
 			registry.remove_all_components_of(ammo_entity);
+			SoundSystem::playEnemyOuchSound((int) SOUND_CHANNEL::GENERAL, 0); // play enemy ouch sound
 			if (enemy.health <= 0) {
 				// using can_move for now since ent cannot move, but mummy can
 				if (enemy.can_move == 0) {
@@ -326,6 +337,12 @@ void WorldSystem::handle_collisions()
 					screen.tutorial_step_complete = true;
 					screen.tutorial_state += 1;
 				}
+
+				// add enemy name to killed_enemies for persistence
+				if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), enemy.name) == screen.killed_enemies.end()) {
+					screen.killed_enemies.push_back(enemy.name);
+				}
+				
 				registry.remove_all_components_of(enemy_entity);
 			}
 			continue;
@@ -445,7 +462,7 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 
 	if (action == GLFW_RELEASE && key == GLFW_KEY_R)
 	{
-		restart_game();
+		restart_game(true);
 	}
 
 	if (action == GLFW_RELEASE && key == GLFW_KEY_P)
@@ -564,7 +581,7 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 		if (m_ui_system != nullptr && m_ui_system->isCauldronOpen()) return;
 		if (mouse_pos_x >= BAR_X && mouse_pos_x <= BAR_X + BAR_WIDTH && mouse_pos_y >= BAR_Y && mouse_pos_y <= BAR_Y + BAR_HEIGHT) return;
 		// don't throw ammo if in potion making menu or clicking on inventory
-		throwAmmo(vec2(mouse_pos_x, mouse_pos_y));
+		if (throwAmmo(vec2(mouse_pos_x, mouse_pos_y))) SoundSystem::playThrowSound((int) SOUND_CHANNEL::GENERAL, 0);
 	}
 }
 
@@ -639,7 +656,6 @@ void WorldSystem::handle_player_interaction()
 		else if (registry.cauldrons.has(item)) {
 			// don't allow opening if it's currently invisible
 			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
-			std::cout << "found cauldron " << item.id() << std::endl;
 			if (m_ui_system != nullptr)
 			{
 				handle_textbox = m_ui_system->openCauldron(item);
@@ -685,6 +701,7 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 	Item& item_info = registry.items.get(item);
 	if (!ItemSystem::addItemToInventory(player, item))
 		return false;
+	SoundSystem::playCollectItemSound((int) SOUND_CHANNEL::GENERAL, 0);
 
 	// handle fruit collection
 	if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::COLLECT_ITEMS) {
@@ -928,17 +945,21 @@ void WorldSystem::updatePlayerWalkAndAnimation(Entity& player, Motion& player_mo
 	}
 }
 
-void WorldSystem::throwAmmo(vec2 target) {
-	if (registry.players.entities.empty()) return;
+bool WorldSystem::throwAmmo(vec2 target) {
+	if (registry.players.entities.empty()) return false;
 	Entity player_entity = registry.players.entities[0];
 	Player& player = registry.players.get(player_entity);
 
-	if (player.cooldown > 0.f) std::cout << "on cooldown" << std::endl;
-	if (!registry.inventories.has(player_entity) || player.cooldown > 0.f || !registry.motions.has(player_entity)) return;
+	if (player.cooldown > 0.f) {
+		std::cout << "on cooldown" << std::endl;
+		return false;
+	}
+
+	if (!registry.inventories.has(player_entity) || player.cooldown > 0.f || !registry.motions.has(player_entity)) return false;
 	Inventory& inventory = registry.inventories.get(player_entity);
 	if (inventory.items.size() < inventory.selection + 1) {
 		std::cout << "cannot throw selected item" << std::endl;
-		return;
+		return false;
 	}
 
 	Entity& item_entity = inventory.items[inventory.selection];
@@ -953,7 +974,10 @@ void WorldSystem::throwAmmo(vec2 target) {
 			}
 		}
 		player.cooldown = 1000.f;
+		return true;
 	}
+
+	return false;
 
 }
 
