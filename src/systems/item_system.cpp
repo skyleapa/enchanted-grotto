@@ -59,7 +59,7 @@ Entity ItemSystem::createCollectableIngredient(vec2 position, ItemType type, int
 
 void ItemSystem::init() {
 	// Load persistent data - moved to restart_game
-	// loadGameState("game_state.json");
+	// loadGameState();
 }
 
 void ItemSystem::step(float elapsed_ms) {
@@ -333,7 +333,7 @@ void ItemSystem::deserializeInventory(Entity inventory, const nlohmann::json& da
 	}
 }
 
-bool ItemSystem::saveGameState(const std::string& filename) {
+bool ItemSystem::saveGameState() {
 	nlohmann::json data;
 	nlohmann::json inventories = nlohmann::json::array();
 	
@@ -357,7 +357,8 @@ bool ItemSystem::saveGameState(const std::string& filename) {
 	data["screen_state"] = serializeScreenState();
 	
 	try {
-		std::ofstream file(filename);
+		std::string save_path = game_state_path(GAME_STATE_FILE);
+		std::ofstream file(save_path);
 		// https://json.nlohmann.me/api/basic_json/dump/
 		file << data.dump(4);
 		return true;
@@ -367,9 +368,10 @@ bool ItemSystem::saveGameState(const std::string& filename) {
 	}
 }
 
-bool ItemSystem::loadGameState(const std::string& filename) {
+bool ItemSystem::loadGameState() {
 	try {
-		std::ifstream file(filename);
+		std::string save_path = game_state_path(GAME_STATE_FILE);
+		std::ifstream file(save_path);
 		if (!file.is_open()) {
 			return false;
 		}

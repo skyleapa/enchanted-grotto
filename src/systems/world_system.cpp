@@ -186,7 +186,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		screen.autosave_timer -= elapsed_ms_since_last_update;
 		if (screen.autosave_timer <= 0) {
 			screen.autosave_timer = AUTOSAVE_TIMER;
-			ItemSystem::saveGameState("game_state.json");
+			ItemSystem::saveGameState();
 		}
 	}
 
@@ -286,7 +286,7 @@ void WorldSystem::restart_game(bool hard_reset)
 		createWelcomeScreen(renderer, vec2(WINDOW_WIDTH_PX / 2, WINDOW_HEIGHT_PX / 2 - 50));
 		screen.killed_enemies = {};
 	} else {
-		ItemSystem::loadGameState("game_state.json"); // load the game state
+		ItemSystem::loadGameState(); // load the game state
 	}
 
 	biome_sys->init(renderer);
@@ -483,7 +483,7 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 
 	if (action == GLFW_RELEASE && key == GLFW_KEY_P)
 	{
-		ItemSystem::saveGameState("game_state.json");
+		ItemSystem::saveGameState();
 	}
 
 	Entity player = registry.players.entities[0]; // Assume only one player entity
