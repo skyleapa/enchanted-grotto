@@ -516,6 +516,12 @@ void WorldSystem::on_window_resize(int w, int h)
 {
 	int fbw, fbh;
 	glfwGetFramebufferSize(window, &fbw, &fbh);
+
+	// This could happen when alt-tabbing from fullscreen
+	if (fbw == 0 || fbh == 0) {
+		return;
+	}
+
 	float scale = 1.0f;
 	int xsize = WINDOW_WIDTH_PX, ysize = WINDOW_HEIGHT_PX;
 	if ((float) w / h > WINDOW_RATIO) {
@@ -529,7 +535,7 @@ void WorldSystem::on_window_resize(int w, int h)
 	int x = (fbw - xsize) / 2;
 	int y = (fbh - ysize) / 2;
 	renderer->setViewportCoords(x, y, xsize, ysize);
-	renderer->initializeWaterBuffers(); // Need to redo water sim cause of texture size change
+	renderer->initializeWaterBuffers(false); // Need to redo water sim cause of texture size change
 	m_ui_system->updateWindowSize(scale);
 }
 

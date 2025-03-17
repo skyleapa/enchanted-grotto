@@ -501,7 +501,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
                     ItemSystem::addItemToInventory(player, potionItem);
 
 					// Reset cauldron water
-					m_renderer->initializeWaterBuffers();
+					m_renderer->initializeWaterBuffers(false);
                 }
 
 				// Reset bottle position

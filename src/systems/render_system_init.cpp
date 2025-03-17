@@ -58,7 +58,7 @@ bool RenderSystem::init(GLFWwindow* window_arg)
 	initializeGlTextures();
 	initializeGlEffects();
 	initializeGlGeometryBuffers();
-	initializeWaterBuffers();
+	initializeWaterBuffers(true);
 
 	return true;
 }
@@ -250,7 +250,7 @@ void RenderSystem::initializeGlGeometryBuffers()
 	bindVBOandIBO(GEOMETRY_BUFFER_ID::WATER_QUAD, water_vertices, water_indices);
 }
 
-void RenderSystem::initializeWaterBuffers()
+void RenderSystem::initializeWaterBuffers(bool init)
 {
 	// Set quality level
 	uint16 dataType = GL_RGBA16F;
@@ -259,9 +259,11 @@ void RenderSystem::initializeWaterBuffers()
 	}
 
 	// Buffer 1
-	glGenFramebuffers(1, &water_buffer_one);
+	if (init) {
+		glGenFramebuffers(1, &water_buffer_one);
+		glGenTextures(1, &water_texture_one);
+	}
 	glBindFramebuffer(GL_FRAMEBUFFER, water_buffer_one);
-	glGenTextures(1, &water_texture_one);
 	glBindTexture(GL_TEXTURE_2D, water_texture_one);
 	glTexImage2D(GL_TEXTURE_2D, 0, dataType, viewport_sizex, viewport_sizey, 0, GL_RGBA, GL_FLOAT, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -271,9 +273,11 @@ void RenderSystem::initializeWaterBuffers()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	// Buffer 2
-	glGenFramebuffers(1, &water_buffer_two);
+	if (init) {
+		glGenFramebuffers(1, &water_buffer_two);
+		glGenTextures(1, &water_texture_two);
+	}
 	glBindFramebuffer(GL_FRAMEBUFFER, water_buffer_two);
-	glGenTextures(1, &water_texture_two);	
 	glBindTexture(GL_TEXTURE_2D, water_texture_two);
 	glTexImage2D(GL_TEXTURE_2D, 0, dataType, viewport_sizex, viewport_sizey, 0, GL_RGBA, GL_FLOAT, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

@@ -132,7 +132,7 @@ public:
 
 	void initializeGlGeometryBuffers();
 
-	void initializeWaterBuffers();
+	void initializeWaterBuffers(bool init);
 
 	// Initialize the screen texture used as intermediate render target
 	// The draw loop first renders to this texture, then it is used for the vignette shader
