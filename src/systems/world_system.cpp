@@ -364,7 +364,7 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 			// if player dies, reload from most recent save and respawn in grotto
 			if (player.health <= 0) {
 				std::cout << "player died!" << std::endl;
-				ItemSystem::loadGameState("game_state.json");
+				ItemSystem::loadGameState();
 				screen.is_switching_biome = true;
 				screen.switching_to_biome = (GLuint)BIOME::GROTTO;
 				player.health = PLAYER_HEALTH; // reset to max health
