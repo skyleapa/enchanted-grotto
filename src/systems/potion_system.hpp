@@ -29,6 +29,7 @@ public:
 	// Record a stir action to the cauldron
 	// This method does nothing if the cauldron inventory is empty
 	static void stirCauldron(Entity cauldron);
+	static void stirCauldron(Entity cauldron, int amount);
 
 	// Gets the resulting potion in its current state and
 	// empties the cauldron, resetting its values. Requires that

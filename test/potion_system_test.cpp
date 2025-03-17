@@ -16,6 +16,11 @@ protected:
         cc.filled = true;
         Inventory& ci = registry.inventories.emplace(cauldron);
         ci.capacity = INT_MAX;
+
+        // So potion tests don't segfault
+        auto ent = Entity();
+        ScreenState& ss = registry.screenStates.emplace(ent);
+        ss.tutorial_state = -1;
     }
 
     Entity createIngredient(ItemType type, int amount, float grindLevel) {

@@ -33,6 +33,9 @@ inline std::string textures_path(const std::string& name) { return data_path() +
 inline std::string audio_path(const std::string& name) { return data_path() + "/audio/" + std::string(name); };
 inline std::string mesh_path(const std::string& name) { return data_path() + "/meshes/" + std::string(name); };
 
+// 0 = lower quality (higher FPS), 1 = higher quality (computer fan go brrr)
+const int WATER_QUALITY_LEVEL = 1;
+
 //
 // game constants
 //
@@ -98,10 +101,6 @@ const float DESERT_SKULL_HEIGHT = (float)110 * 0.8;
 
 const float DESERT_PAGE_WIDTH = (float)54 * 0.8;
 const float DESERT_PAGE_HEIGHT = (float)37 * 0.8;
-
-const float CAULDRON_WATER_WIDTH = (float)354 * 0.9;
-const float CAULDRON_WATER_HEIGHT = (float)337 * 0.9;
-const vec2 CAULDRON_WATER_POS = vec2(622, 289);
 
 const float ENT_WIDTH = (float)90;
 const float ENT_HEIGHT = (float)130;
@@ -250,8 +249,17 @@ const vec3 DEFAULT_COLOR = vec3(116, 204, 244);
 const float MIN_POTENCY_PERCENTAGE = 0.1;
 const float MIN_DURATION_PERCENTAGE = 0.05;
 
-// Cauldron color settings
+// Cauldron settings
 const int COLOR_FADE_DURATION = 5000;
+const float CAULDRON_D = 316;               // cauldron is a circle, this is diameter
+const vec2 CAULDRON_WATER_POS = vec2(0.4976f, 0.5757f); // center of cauldron relative to window
+const int STIR_FLASH_DURATION = 1000;
+    
+// Ladle offset coords for mouse and cauldron center
+const vec2 LADLE_OFFSET = vec2(25, -55);
+
+// The maximum UI degree change (both pos and neg) of the heat knob
+const int MAX_KNOB_DEGREE = 60;
 
 // Recipe penalty settings
 // If potion difficulty > 1, potions are harder to make good quality and vice versa

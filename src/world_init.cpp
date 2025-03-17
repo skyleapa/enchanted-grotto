@@ -435,6 +435,27 @@ Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemTy
 
 Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name, bool create_textbox = false)
 {
+	// Create simple cauldron water entity
+	auto waterEntity = Entity();
+	auto& waterMotion = registry.motions.emplace(waterEntity);
+	waterMotion.angle = 180.f;
+	waterMotion.velocity = { 0, 0 };
+	waterMotion.position = {
+		CAULDRON_WATER_POS.x * WINDOW_WIDTH_PX - 2,
+		WINDOW_HEIGHT_PX - CAULDRON_WATER_POS.y * WINDOW_HEIGHT_PX - 2
+	};
+	waterMotion.scale = { CAULDRON_D + 10, CAULDRON_D + 10 }; // looks slightly better
+	registry.renderRequests.insert(
+		waterEntity,
+		{
+			TEXTURE_ASSET_ID::CAULDRON_WATER,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::UI,
+			0, false
+		});
+
+	// The actual cauldron entity
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " cauldron" << std::endl;
 
@@ -456,6 +477,7 @@ Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id,
 
 	// Create cauldron
 	auto& cauldron = registry.cauldrons.emplace(entity);
+	cauldron.water = waterEntity;
 	if (create_textbox) createTextbox(renderer, position, entity);
 
 	// Give cauldron an inventory

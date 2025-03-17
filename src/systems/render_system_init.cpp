@@ -50,7 +50,6 @@ bool RenderSystem::init(GLFWwindow* window_arg)
 
 	// We are not really using VAO's but without at least one bound we will crash in
 	// some systems.
-	GLuint vao;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 	gl_has_errors();
@@ -59,6 +58,7 @@ bool RenderSystem::init(GLFWwindow* window_arg)
 	initializeGlTextures();
 	initializeGlEffects();
 	initializeGlGeometryBuffers();
+	initializeWaterBuffers();
 
 	return true;
 }
@@ -99,7 +99,14 @@ void RenderSystem::initializeGlEffects()
 {
 	for (uint i = 0; i < effect_paths.size(); i++)
 	{
-		const std::string vertex_shader_name = effect_paths[i] + ".vs.glsl";
+		std::string vertex_shader = effect_paths[i] + ".vs.glsl";
+		if (effect_paths[i].find("water_") != std::string::npos) {
+			vertex_shader = std::string(PROJECT_SOURCE_DIR) + "/shaders/water_vertex.vs.glsl";
+		} else {
+			vertex_shader = effect_paths[i] + ".vs.glsl";
+		}
+
+		const std::string vertex_shader_name = vertex_shader;
 		const std::string fragment_shader_name = effect_paths[i] + ".fs.glsl";
 
 		bool is_valid = loadEffectFromFile(vertex_shader_name, fragment_shader_name, effects[i]);
@@ -229,6 +236,51 @@ void RenderSystem::initializeGlGeometryBuffers()
 	// Counterclockwise as it's the default opengl front winding direction.
 	const std::vector<uint16_t> screen_indices = { 0, 1, 2 };
 	bindVBOandIBO(GEOMETRY_BUFFER_ID::SCREEN_TRIANGLE, screen_vertices, screen_indices);
+
+	///////////////////////////////////////////////////////
+	// Cauldron water stuff
+	// Initialize cauldron water quad
+	std::vector<vec3> water_vertices(4);
+	water_vertices[0] = { -1.f, -1.f, 0.f };
+	water_vertices[1] = { -1.f,  1.f, 0.f };
+	water_vertices[2] = {  1.f,  1.f, 0.f };
+	water_vertices[3] = {  1.f, -1.f, 0.f };
+
+	const std::vector<uint16_t> water_indices = { 0, 1, 3, 1, 2, 3 };
+	bindVBOandIBO(GEOMETRY_BUFFER_ID::WATER_QUAD, water_vertices, water_indices);
+}
+
+void RenderSystem::initializeWaterBuffers()
+{
+	// Set quality level
+	uint16 dataType = GL_RGBA16F;
+	if (WATER_QUALITY_LEVEL == 1) {
+		dataType = GL_RGBA32F;
+	}
+
+	// Buffer 1
+	glGenFramebuffers(1, &water_buffer_one);
+	glBindFramebuffer(GL_FRAMEBUFFER, water_buffer_one);
+	glGenTextures(1, &water_texture_one);
+	glBindTexture(GL_TEXTURE_2D, water_texture_one);
+	glTexImage2D(GL_TEXTURE_2D, 0, dataType, viewport_sizex, viewport_sizey, 0, GL_RGBA, GL_FLOAT, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, water_texture_one, 0);
+	assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// Buffer 2
+	glGenFramebuffers(1, &water_buffer_two);
+	glBindFramebuffer(GL_FRAMEBUFFER, water_buffer_two);
+	glGenTextures(1, &water_texture_two);	
+	glBindTexture(GL_TEXTURE_2D, water_texture_two);
+	glTexImage2D(GL_TEXTURE_2D, 0, dataType, viewport_sizex, viewport_sizey, 0, GL_RGBA, GL_FLOAT, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, water_texture_two, 0);
+	assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 RenderSystem::~RenderSystem()
@@ -260,12 +312,9 @@ bool RenderSystem::initScreenTexture()
 	// create a single entry
 	registry.screenStates.emplace(screen_state_entity);
 
-	int framebuffer_width, framebuffer_height;
-	glfwGetFramebufferSize(const_cast<GLFWwindow*>(window), &framebuffer_width, &framebuffer_height);  // Note, this will be 2x the resolution given to glfwCreateWindow on retina displays
-
 	glGenTextures(1, &off_screen_render_buffer_color);
 	glBindTexture(GL_TEXTURE_2D, off_screen_render_buffer_color);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, framebuffer_width, framebuffer_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, viewport_sizex, viewport_sizey, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	gl_has_errors();
@@ -273,7 +322,7 @@ bool RenderSystem::initScreenTexture()
 	glGenRenderbuffers(1, &off_screen_render_buffer_depth);
 	glBindRenderbuffer(GL_RENDERBUFFER, off_screen_render_buffer_depth);
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, off_screen_render_buffer_color, 0);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, framebuffer_width, framebuffer_height);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, viewport_sizex, viewport_sizey);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, off_screen_render_buffer_depth);
 	gl_has_errors();
 

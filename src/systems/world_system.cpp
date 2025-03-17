@@ -461,6 +461,9 @@ void WorldSystem::on_mouse_move(vec2 mouse_position)
 	double x = mouse_position.x;
 	double y = mouse_position.y;
 
+	// Cauldron uses unscaled mouse coords lmao
+	renderer->updateCauldronMouseLoc(x, y);
+
 	// Subtract possible black bar heights
 	GLint viewport_coords[4];
 	glGetIntegerv(GL_VIEWPORT, viewport_coords);
@@ -526,7 +529,7 @@ void WorldSystem::on_window_resize(int w, int h)
 	int x = (fbw - xsize) / 2;
 	int y = (fbh - ysize) / 2;
 	renderer->setViewportCoords(x, y, xsize, ysize);
-	renderer->updateViewport();
+	renderer->initializeWaterBuffers(); // Need to redo water sim cause of texture size change
 	m_ui_system->updateWindowSize(scale);
 }
 

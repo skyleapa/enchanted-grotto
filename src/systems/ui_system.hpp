@@ -61,7 +61,8 @@ public:
     bool isCauldronOpen(Entity cauldron);
     Entity getOpenedCauldron();
     void setOpenedCauldron(Entity new_cauldron);
-
+    void cauldronDragUpdate(bool isDown);
+ 
     // tutorial
     void updateTutorial();
 

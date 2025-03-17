@@ -24,7 +24,7 @@ private:
 	float getHeatDegree(Rml::Vector2f coords, float curDegree);
 	int getHeatLevel(float degree);
 	float getCurrentDegree(Rml::Element* heatknob);
-	void setHeatDegree(Rml::Element* heatknob, float degree);
+	void setHeatDegree(float degree);
 
 	// Ladle functions
 
@@ -46,9 +46,6 @@ private:
 	
 	// The last heat knob coords
 	Rml::Vector2f lastCoords = Rml::Vector2f(0, 0);
-
-	// The maximum degree change (both pos and neg) of the heat knob
-	const int MAX_DEGREE = 60;
 
 	// The center to calculate polar coords from
 	// = center cauldron coords + an offset to account for the ladle size

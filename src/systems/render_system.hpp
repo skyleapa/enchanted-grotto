@@ -92,7 +92,8 @@ class RenderSystem {
 		textures_path("enemies/ent.png"),
 		textures_path("enemies/mummy.png"),
 		textures_path("interactables/potion_item.png"),
-		textures_path("welcome_to_grotto.png")
+		textures_path("welcome_to_grotto.png"),
+		textures_path("interactables/cauldron_water.png")
 	};
 
 	std::array<GLuint, effect_count> effects;
@@ -104,6 +105,10 @@ class RenderSystem {
 		shader_path("textured"),
 		shader_path("background"),
 		shader_path("fade"),
+		shader_path("water_A_advection"),
+		shader_path("water_B_pressure"),
+		shader_path("water_C_projection"),
+		shader_path("water_final")
 	};
 
 	std::array<GLuint, geometry_count> vertex_buffers;
@@ -127,6 +132,8 @@ public:
 
 	void initializeGlGeometryBuffers();
 
+	void initializeWaterBuffers();
+
 	// Initialize the screen texture used as intermediate render target
 	// The draw loop first renders to this texture, then it is used for the vignette shader
 	bool initScreenTexture();
@@ -149,18 +156,24 @@ public:
 
 	void updateViewport() { glViewport(viewport_x, viewport_y, viewport_sizex, viewport_sizey); }
 
-	void setViewportCoords(int x, int y, int sizex, int sizey) { 
-		viewport_x = x, viewport_y = y, viewport_sizex = sizex, viewport_sizey = sizey;
-	}
+	void setViewportCoords(int x, int y, int sizex, int sizey);
 
 	float getRetinaScale() { return retina_scale; }
 
+	// Update iMouseCauldron on drag.
+	void updateCauldronMouseLoc(double mouseX, double mouseY);
+
+	void setIsMouseDragging(bool isDrag) { isCauldronDrag = isDrag; }
+
 private:
+	GLuint vao;
+
 	// Internal drawing functions for each entity type
 	void drawGridLine(Entity entity, const mat3& projection);
 	void drawTexturedMesh(Entity entity, const mat3& projection);
 	void drawToScreen();
 	void fadeScreen();
+	void simulate_water(bool toScreen, Entity cauldron);
 
 	// Viewport numbers
 	int viewport_x;
@@ -168,6 +181,7 @@ private:
 	int viewport_sizex;
 	int viewport_sizey;
 	float retina_scale = 1.0f; // 1.0 on windows, 2.0 on mac
+	float scale = 1.0f;        // simply records current window scale
 
 	// Window handle
 	GLFWwindow* window;
@@ -176,6 +190,14 @@ private:
 	GLuint frame_buffer;
 	GLuint off_screen_render_buffer_color;
 	GLuint off_screen_render_buffer_depth;
+	
+	// Water stuff
+	GLuint water_buffer_one;
+	GLuint water_buffer_two;
+	GLuint water_texture_one;
+	GLuint water_texture_two;
+	vec4 iMouseCauldron = vec4(0, 0, 0, 0);
+	bool isCauldronDrag = false;
 
 	Entity screen_state_entity;
 };
