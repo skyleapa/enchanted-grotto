@@ -74,6 +74,21 @@ class RenderSystem {
 		textures_path("terrain/desert/desert_tree.png"),
 		textures_path("terrain/desert/desert_to_forest.png"),
 		textures_path("terrain/desert/desert_sand_pile_page.png"),
+		textures_path("backgrounds/mushroom_bg.png"),
+		textures_path("terrain/mushroom/mushroom_acid_lake.png"),
+		textures_path("terrain/mushroom/mushroom_blue.png"),
+		textures_path("terrain/mushroom/mushroom_pink.png"),
+		textures_path("terrain/mushroom/mushroom_purple.png"),
+		textures_path("terrain/mushroom/mushroom_tall_blue.png"),
+		textures_path("terrain/mushroom/mushroom_tall_pink.png"),
+		textures_path("backgrounds/crystal_bg.png"),
+		textures_path("terrain/crystal/crystal_1.png"),
+		textures_path("terrain/crystal/crystal_2.png"),
+		textures_path("terrain/crystal/crystal_3.png"),
+		textures_path("terrain/crystal/crystal_4.png"),
+		textures_path("terrain/crystal/crystal_minecart.png"),
+		textures_path("terrain/crystal/crystal_page.png"),
+		textures_path("terrain/crystal/crystal_rock.png"),
 		textures_path("terrain/boundary_transparent.png"),
 		textures_path("terrain/forest/bush.png"),
 		textures_path("interactables/magical_fruit.png"),
@@ -149,7 +164,7 @@ public:
 
 	void updateViewport() { glViewport(viewport_x, viewport_y, viewport_sizex, viewport_sizey); }
 
-	void setViewportCoords(int x, int y, int sizex, int sizey) { 
+	void setViewportCoords(int x, int y, int sizex, int sizey) {
 		viewport_x = x, viewport_y = y, viewport_sizex = sizex, viewport_sizey = sizey;
 	}
 
