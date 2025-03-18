@@ -934,6 +934,7 @@ void WorldSystem::updateFPS(float elapsed_ms)
 	float avg_frame_time = m_frame_time_sum / 60.0f;
 	if (avg_frame_time > 0) {
 		m_current_fps = 1000.0f / avg_frame_time;
+		renderer->setFPS(m_current_fps);
 	}
 
 	// Update timer for display refresh

@@ -265,7 +265,7 @@ void RenderSystem::initializeWaterBuffers(bool init)
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, water_buffer_one);
 	glBindTexture(GL_TEXTURE_2D, water_texture_one);
-	glTexImage2D(GL_TEXTURE_2D, 0, dataType, viewport_sizex, viewport_sizey, 0, GL_RGBA, GL_FLOAT, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, dataType, frameBufferWidth, frameBufferHeight, 0, GL_RGBA, GL_FLOAT, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, water_texture_one, 0);
@@ -279,7 +279,7 @@ void RenderSystem::initializeWaterBuffers(bool init)
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, water_buffer_two);
 	glBindTexture(GL_TEXTURE_2D, water_texture_two);
-	glTexImage2D(GL_TEXTURE_2D, 0, dataType, viewport_sizex, viewport_sizey, 0, GL_RGBA, GL_FLOAT, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, dataType, frameBufferWidth, frameBufferHeight, 0, GL_RGBA, GL_FLOAT, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, water_texture_two, 0);
@@ -316,12 +316,9 @@ bool RenderSystem::initScreenTexture()
 	// create a single entry
 	registry.screenStates.emplace(screen_state_entity);
 
-	int fbw, fbh;
-	glfwGetFramebufferSize(const_cast<GLFWwindow*>(window), &fbw, &fbh);
-
 	glGenTextures(1, &off_screen_render_buffer_color);
 	glBindTexture(GL_TEXTURE_2D, off_screen_render_buffer_color);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fbw, fbh, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, frameBufferWidth, frameBufferHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	gl_has_errors();
@@ -329,7 +326,7 @@ bool RenderSystem::initScreenTexture()
 	glGenRenderbuffers(1, &off_screen_render_buffer_depth);
 	glBindRenderbuffer(GL_RENDERBUFFER, off_screen_render_buffer_depth);
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, off_screen_render_buffer_color, 0);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, fbw, fbh);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, frameBufferWidth, frameBufferHeight);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, off_screen_render_buffer_depth);
 	gl_has_errors();
 

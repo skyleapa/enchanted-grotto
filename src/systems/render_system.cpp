@@ -215,8 +215,6 @@ void RenderSystem::drawToScreen()
 	gl_has_errors();
 
 	// Clearing backbuffer
-	int w, h;
-	glfwGetFramebufferSize(window, &w, &h); // Note, this will be 2x the resolution given to glfwCreateWindow on retina displays
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	updateViewport();
 	glDepthRange(0, 10);		  // Adjust depth range
@@ -279,8 +277,6 @@ void RenderSystem::fadeScreen()
 	gl_has_errors();
 
 	// Clearing backbuffer
-	int w, h;
-	glfwGetFramebufferSize(window, &w, &h); // Note, this will be 2x the resolution given to glfwCreateWindow on retina displays
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	updateViewport();
 	glDepthRange(0, 10);
@@ -322,10 +318,6 @@ void RenderSystem::fadeScreen()
 // http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
 void RenderSystem::draw(UISystem* ui_system)
 {
-	// Getting size of window
-	int w, h;
-	glfwGetFramebufferSize(window, &w, &h); // Note, this will be 2x the resolution given to glfwCreateWindow on retina displays
-
 	// First render to the custom framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
 	gl_has_errors();
@@ -375,7 +367,7 @@ void RenderSystem::draw(UISystem* ui_system)
 	}
 
 	// Draw water
-	simulate_water(ui_system->isCauldronOpen(), ui_system->getOpenedCauldron());
+	simulate_water(ui_system);
 
 	// Render ui system first, so it can be faded out
 	ui_system->draw();
@@ -387,17 +379,23 @@ void RenderSystem::draw(UISystem* ui_system)
 	gl_has_errors();
 }
 
-void RenderSystem::simulate_water(bool toScreen, Entity cauldron)
+void RenderSystem::simulate_water(UISystem* ui_system)
 {
+	// FULL CREDIT TO https://www.shadertoy.com/view/tt3yzn
+	// for the Navier-Stokes simulation shader
+
 	// Water parameters
-	float dx = 0.8f;            // honestly not really sure what this does
+	float dx = 0.8f;            // smaller seems to make it more accurate
 	float dt = 1.0f;            // how fast time progresses
+	float dyeScale = scale * 2; // how fat the dye is
 	
 	// Resolution based on window size
-	vec2 resolution = vec2(viewport_sizex, viewport_sizey);
-	vec2 cauldronCenter = resolution * CAULDRON_WATER_POS;
+	vec2 resolution = vec2(frameBufferWidth, frameBufferHeight);
+	vec2 cauldronCenter = vec2(viewport_sizex, viewport_sizey) * CAULDRON_WATER_POS;
 	cauldronCenter.x += viewport_x;
 	cauldronCenter.y += viewport_y;
+
+	// Calm dye flow from top if no heat and no mouse drag
 	vec4 iMouse = iMouseCauldron;
 	if (!isCauldronDrag) {
 		vec2 bottom = vec2(cauldronCenter.x, cauldronCenter.y + scale * (CAULDRON_D / 2 - 5));
@@ -405,9 +403,10 @@ void RenderSystem::simulate_water(bool toScreen, Entity cauldron)
 	}
 
 	// First draw cauldron water texture underneath fluid sim
+	bool toScreen = ui_system->isCauldronOpen();
 	vec4 color = vec4(0.f, 0.f, 0.f, 0.f);
 	if (toScreen) {
-		Cauldron& cc = registry.cauldrons.get(cauldron);
+		Cauldron& cc = registry.cauldrons.get(ui_system->getOpenedCauldron());
 		color = vec4(cc.color / 255.f, 1.f);
 		float underScale = 2.0f;
 		vec4 underColor = vec4(color.x / underScale, color.y / underScale, color.z / underScale, 1.f);
@@ -432,16 +431,19 @@ void RenderSystem::simulate_water(bool toScreen, Entity cauldron)
 		drawTexturedMesh(cc.water, createProjectionMatrix());
 	}
 
-	// Disable blending to use multipass
-	glDisable(GL_BLEND);
-
 	// Cauldron center coords to define inner bounds
 	float cauldronR = CAULDRON_D * scale / 2;
 	float cauldronOuterR = (CAULDRON_D + 50.f) * scale / 2; // outer bound to improve performance
+	
+	// Normalize water sim speed to FPS
+	dt *= WATER_FPS / m_fps;
 
 	// Setup effect
 	GLuint curEffect = (GLuint)EFFECT_ASSET_ID::WATER_A;
 	bool b = true;
+
+	// Disable blending to use multipass
+	glDisable(GL_BLEND);
 
 	// Setting vertex and index buffers
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[(GLuint)GEOMETRY_BUFFER_ID::WATER_QUAD]);
@@ -468,8 +470,6 @@ void RenderSystem::simulate_water(bool toScreen, Entity cauldron)
 			glClear(GL_COLOR_BUFFER_BIT);
 		}
 
-		updateViewport();
-
 		const GLuint program = (GLuint)effects[curEffect];
 		glUseProgram(program);
 		gl_has_errors();
@@ -483,7 +483,7 @@ void RenderSystem::simulate_water(bool toScreen, Entity cauldron)
 			glUniform4fv(glGetUniformLocation(program, "iMouse"), 1, (float*)&iMouse);
 			glUniform1f(glGetUniformLocation(program, "dt"), dt);
 			glUniform1f(glGetUniformLocation(program, "crSq"), cauldronR * cauldronR);
-			glUniform1f(glGetUniformLocation(program, "scale"), scale * 2.0f);
+			glUniform1f(glGetUniformLocation(program, "scale"), dyeScale);
 		} else if (curEffect == (GLuint) EFFECT_ASSET_ID::WATER_FINAL) {
 			glUniform2fv(glGetUniformLocation(program, "iResolution"), 1, (float*)&resolution);
 			glUniform4fv(glGetUniformLocation(program, "color"), 1, (float*)&color);
@@ -614,6 +614,8 @@ mat3 RenderSystem::createProjectionMatrix()
 }
 
 void RenderSystem::setViewportCoords(int x, int y, int sizex, int sizey) { 
+	scale = (float) sizex / WINDOW_WIDTH_PX;
+	frameBufferWidth = 2 * x + sizex;
+	frameBufferHeight = 2 * y + sizey;
 	viewport_x = x, viewport_y = y, viewport_sizex = sizex, viewport_sizey = sizey;
-	scale = (float) viewport_sizex / WINDOW_WIDTH_PX;
 }

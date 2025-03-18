@@ -165,6 +165,8 @@ public:
 
 	void setIsMouseDragging(bool isDrag) { isCauldronDrag = isDrag; }
 
+	void setFPS(float fps) { m_fps = fps; }
+
 private:
 	GLuint vao;
 
@@ -173,13 +175,15 @@ private:
 	void drawTexturedMesh(Entity entity, const mat3& projection);
 	void drawToScreen();
 	void fadeScreen();
-	void simulate_water(bool toScreen, Entity cauldron);
+	void simulate_water(UISystem* ui_system);
 
 	// Viewport numbers
 	int viewport_x;
 	int viewport_y;
 	int viewport_sizex;
 	int viewport_sizey;
+	int frameBufferWidth;
+	int frameBufferHeight;
 	float retina_scale = 1.0f; // 1.0 on windows, 2.0 on mac
 	float scale = 1.0f;        // simply records current window scale
 
@@ -198,6 +202,7 @@ private:
 	GLuint water_texture_two;
 	vec4 iMouseCauldron = vec4(0, 0, 0, 0);
 	bool isCauldronDrag = false;
+	float m_fps;
 
 	Entity screen_state_entity;
 };
