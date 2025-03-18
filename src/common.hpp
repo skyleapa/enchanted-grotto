@@ -48,8 +48,8 @@ const int GRID_CELL_WIDTH_PX = 50;
 const int GRID_CELL_HEIGHT_PX = 50;
 const int GRID_LINE_WIDTH_PX = 2;
 
-const float PLAYER_BB_WIDTH = (float)65;
-const float PLAYER_BB_HEIGHT = (float)100;
+const float PLAYER_BB_WIDTH = (float)75;
+const float PLAYER_BB_HEIGHT = (float)110;
 const float PlAYER_BB_GROTTO_SIZE_FACTOR = 1.8;
 const float PLAYER_SPEED = (float)200;
 

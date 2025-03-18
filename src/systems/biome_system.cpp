@@ -175,7 +175,7 @@ void BiomeSystem::renderPlayerInNewBiome() {
 	}
 	// between mushroom and crystal
 	else if (screen.from_biome == (int)BIOME::MUSHROOM && screen.biome == (int)BIOME::CRYSTAL) {
-		player_motion.position = vec2(100, 200);
+		player_motion.position = vec2(70, 200);
 	}
 	else if (screen.from_biome == (int)BIOME::CRYSTAL && screen.biome == (int)BIOME::MUSHROOM) {
 		player_motion.position = vec2(1130, 200);
