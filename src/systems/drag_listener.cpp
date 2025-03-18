@@ -1,12 +1,15 @@
 #include "drag_listener.hpp"
 #include "potion_system.hpp"
 #include "item_system.hpp"
+#include "sound_system.hpp"
+#include "common.hpp"
 #include <iostream>
 #include <sstream>
 #include <RmlUi/Core/Element.h>
 
 static DragListener drag_listener;
 UISystem* DragListener::m_ui_system;
+bool DragListener::is_boiling = false;
 
 void DragListener::RegisterDraggableElement(Rml::Element* element) {
 	element->AddEventListener("dragstart", &drag_listener);
@@ -73,7 +76,7 @@ void DragListener::checkCompletedStir() {
 
 	// Check if initialAngle btwn cur and prev angle
 	if (!((curAngle < initialAngle && initialAngle < prevAngle) ||
-	      (prevAngle < initialAngle && initialAngle < curAngle))) {
+		(prevAngle < initialAngle && initialAngle < curAngle))) {
 		return;
 	}
 
@@ -86,13 +89,16 @@ void DragListener::checkCompletedStir() {
 		}
 
 		float angle = polar.second;
-		if (!a && angle > 0 && angle < M_PI/2) {
+		if (!a && angle > 0 && angle < M_PI / 2) {
 			a = true;
-		} else if (!b && angle > M_PI/2 && angle < M_PI) {
+		}
+		else if (!b && angle > M_PI / 2 && angle < M_PI) {
 			b = true;
-		} else if (!c && angle > -M_PI && angle < -M_PI/2) {
+		}
+		else if (!c && angle > -M_PI && angle < -M_PI / 2) {
 			c = true;
-		} else if (!d && angle < 0 && angle > -M_PI/2) {
+		}
+		else if (!d && angle < 0 && angle > -M_PI / 2) {
 			d = true;
 		}
 
@@ -104,6 +110,7 @@ void DragListener::checkCompletedStir() {
 				screen.tutorial_state += 1;
 			}
 			std::cout << "Recorded a successful ladle stir" << std::endl;
+			SoundSystem::playStirSound((int) SOUND_CHANNEL::MENU, 0);
 			break;
 		}
 	}
@@ -132,7 +139,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 
 		if (cur->GetId() == "ladle") {
 			Rml::Context* context = cur->GetContext();
-            Rml::Element* possibleCauldron = context->GetElementAtPoint(mouseCoords, cur);
+			Rml::Element* possibleCauldron = context->GetElementAtPoint(mouseCoords, cur);
 			if (!possibleCauldron || possibleCauldron->GetId() != "cauldron") {
 				event.StopImmediatePropagation();
 				return;
@@ -157,6 +164,12 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 				}
 			}
 			lastCoords = mouseCoords;
+			if (!is_heat_changing) {
+				is_heat_changing = true;
+				SoundSystem::haltGeneralSound();
+				if (is_boiling) SoundSystem::continueBoilSound((int) SOUND_CHANNEL::BOILING, -1); // continue boiling if it was already boiling
+				SoundSystem::playInteractMenuSound((int) SOUND_CHANNEL::MENU, -1); // play infinitely until dragging is finished
+			}
 			return;
 		}
 
@@ -180,8 +193,23 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			float curDegree = getCurrentDegree(cur);
 			int heatLevel = getHeatLevel(curDegree);
 			PotionSystem::changeHeat(m_ui_system->getOpenedCauldron(), heatLevel);
+			is_heat_changing = false;
+			// play turn dial sound to signify completion of drag and start boiling
+			if (heatLevel == 0) {
+				SoundSystem::haltBoilSound(); // no boiling if setting temperature back to off
+				SoundSystem::haltGeneralSound();
+				is_boiling = false;
+			} else {
+				// stsart boiling or continue boiling
+				if (is_boiling) SoundSystem::continueBoilSound((int) SOUND_CHANNEL::BOILING, -1);
+				else {
+					is_boiling = true;
+					SoundSystem::playBoilSound((int) SOUND_CHANNEL::BOILING, -1);
+				}
+			}
+			SoundSystem::playTurnDialSound((int) SOUND_CHANNEL::MENU, 0);
 			return;
-		}	
+		}
 
 		if (cur->GetId() == "ladle" && stirCoords.size()) {
 			endStir(cur);
@@ -215,7 +243,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			if (!registry.ingredients.has(item)) {
 				return;
 			}
-			
+
 			Item& invItem = registry.items.get(item);
 			Entity copy = ItemSystem::copyItem(item);
 			invItem.amount -= 1;
@@ -223,6 +251,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 				ItemSystem::removeItemFromInventory(player, item);
 			}
 			registry.items.get(copy).amount = 1;
+			SoundSystem::playDropInCauldronSound((int) SOUND_CHANNEL::MENU, 0);
 			PotionSystem::addIngredient(m_ui_system->getOpenedCauldron(), copy);
 			return;
 		}

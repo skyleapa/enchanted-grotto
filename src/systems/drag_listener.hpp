@@ -12,6 +12,7 @@ public:
 	static void RegisterDraggableElement(Rml::Element* element);
 	static void RegisterDragDropElement(Rml::Element* element);
 	static void LinkUISystem(UISystem* ui_system) { m_ui_system = ui_system; }
+	static bool is_boiling; // is the boiling sound playing
 
 protected:
 	virtual void ProcessEvent(Rml::Event& event);
@@ -54,6 +55,8 @@ private:
 	// The min and max squared magnitudes to consider for stir coords
 	const float MIN_STIR_RADIUS = 50 * 50;
 	const float MAX_STIR_RADIUS = 170 * 170;
+
+	bool is_heat_changing = false; // is the dial click playing
 };
 
 #endif

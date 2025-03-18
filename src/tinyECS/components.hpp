@@ -50,6 +50,7 @@ struct ScreenState
 	int tutorial_state = 0;
 	bool tutorial_step_complete = true;
 	float autosave_timer = AUTOSAVE_TIMER;
+	std::vector<std::string> killed_enemies = {};
 };
 
 // A struct to refer to debugging graphics in the ECS
@@ -202,6 +203,7 @@ struct Enemy {
 	int state; // uses enum class ENEMY_STATE
 	int can_move;
 	float wander_timer = 10.0f;  // 10-second random movement before returning
+	std::string name; // gets passed into killed_enemies
 };
 
 struct Ammo {

@@ -7,7 +7,7 @@ Entity createWelcomeScreen(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " welcome screen" << std::endl;
-	WelcomeScreen& screen = registry.welcomeScreens.emplace(entity);
+	registry.welcomeScreens.emplace(entity);
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -644,7 +644,7 @@ Entity createGrottoExit(RenderSystem* renderer, vec2 position, int id, std::stri
 Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity)
 {
 	auto entity = Entity();
-	
+
 	// Create a Textbox component
 	Textbox& textbox = registry.textboxes.emplace(entity);
 	textbox.targetItem = itemEntity;
@@ -718,7 +718,8 @@ RenderRequest getTextboxRenderRequest(Textbox& textbox)
 		RENDER_LAYER::ITEM };
 }
 
-Entity createEnt(RenderSystem* renderer, vec2 position, int movable) {
+Entity createEnt(RenderSystem* renderer, vec2 position, int movable, std::string name) {
+
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " ent" << std::endl;
 
@@ -728,6 +729,7 @@ Entity createEnt(RenderSystem* renderer, vec2 position, int movable) {
 	enemy.start_pos = position;
 	enemy.state = (int)ENEMY_STATE::IDLE;
 	enemy.can_move = movable;
+	enemy.name = name;
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -751,7 +753,7 @@ Entity createEnt(RenderSystem* renderer, vec2 position, int movable) {
 	return entity;
 }
 
-Entity createMummy(RenderSystem* renderer, vec2 position, int movable) {
+Entity createMummy(RenderSystem* renderer, vec2 position, int movable, std::string name) {
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " mummy" << std::endl;
 
@@ -761,6 +763,7 @@ Entity createMummy(RenderSystem* renderer, vec2 position, int movable) {
 	enemy.start_pos = position;
 	enemy.state = (int)ENEMY_STATE::IDLE;
 	enemy.can_move = movable;
+	enemy.name = name;
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);

@@ -30,8 +30,8 @@ public:
     static Entity copyItem(Entity toCopy);
     
     // Serialization
-    static bool saveGameState(const std::string& filename);
-    static bool loadGameState(const std::string& filename);
+    static bool saveGameState();
+    static bool loadGameState();
     
     // Item factory methods
     static Entity createItem(ItemType type, int amount = 1, bool isCollectable = false, bool is_ammo = false, bool canRespawn = true);
@@ -42,6 +42,8 @@ public:
     // Serialization helpers made public and static
     static nlohmann::json serializeItem(Entity item);
     static nlohmann::json serializeInventory(Entity inventory);
+    static nlohmann::json serializeScreenState();
     static Entity deserializeItem(const nlohmann::json& data);
     static void deserializeInventory(Entity inventory, const nlohmann::json& data);
+    static void deserializeScreenState(const nlohmann::json& data);
 }; 

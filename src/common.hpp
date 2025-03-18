@@ -32,6 +32,10 @@ inline std::string shader_path(const std::string& name) { return std::string(PRO
 inline std::string textures_path(const std::string& name) { return data_path() + "/textures/" + std::string(name); };
 inline std::string audio_path(const std::string& name) { return data_path() + "/audio/" + std::string(name); };
 inline std::string mesh_path(const std::string& name) { return data_path() + "/meshes/" + std::string(name); };
+inline std::string game_state_path(const std::string& name) { return data_path() + "/game_states/v0/" + std::string(name); };
+
+const std::string GAME_STATE_FILE = "game_state.json";
+
 
 // 0 = lower quality (higher FPS), 1 = higher quality (computer fan go brrr)
 const int WATER_QUALITY_LEVEL = 1;
@@ -41,7 +45,7 @@ const int WATER_QUALITY_LEVEL = 1;
 //
 const int WINDOW_WIDTH_PX = 1250;
 const int WINDOW_HEIGHT_PX = 700;
-const float WINDOW_RATIO = (float) WINDOW_WIDTH_PX / WINDOW_HEIGHT_PX;
+const float WINDOW_RATIO = (float)WINDOW_WIDTH_PX / WINDOW_HEIGHT_PX;
 
 const int GRID_CELL_WIDTH_PX = 50;
 const int GRID_CELL_HEIGHT_PX = 50;
@@ -289,6 +293,14 @@ enum class TUTORIAL {
 	EXIT_MENU = BOTTLE + 1,
 	COMPLETE = EXIT_MENU + 1
 };
+
+enum class SOUND_CHANNEL {
+	GENERAL = -1, // this indicates choosing any available channel
+	BGM = 0,
+	BOILING = BGM + 1,
+	MENU = BOILING + 1
+};
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
 #endif
