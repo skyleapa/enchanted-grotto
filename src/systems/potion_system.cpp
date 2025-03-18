@@ -370,3 +370,71 @@ void PotionSystem::updatePotion(Entity cauldron) {
 	// Allow color update to happen
 	cc.colorElapsed = 0;
 }
+
+void PotionSystem::grindIngredient(Entity mortar) {
+	if (!registry.mortarAndPestles.has(mortar)) {
+		// std::cerr << "Invalid mortar entity" << std::endl;
+		return;
+	}
+
+	Inventory& mortarInventory = registry.inventories.get(mortar);
+
+	if (mortarInventory.items.empty()) {
+		std::cerr << "No ingredients in mortar" << std::endl;
+		return;
+	}
+
+	// We only allow grinding the first ingredient in the mortar
+	Entity ingredient = mortarInventory.items[0];
+	if (!registry.ingredients.has(ingredient)) {
+		// std::cerr << "Item is not an ingredient" << std::endl;
+		return;
+	}
+
+	Ingredient& ing = registry.ingredients.get(ingredient);
+
+	// Increase grind level up to a maximum
+	if (ing.grindLevel < 1.0f) {
+		ing.grindLevel += 1;
+		//std::cout << "Ingredient grindlevel increased to " << ing.grindLevel << std::endl;
+	}
+
+	// Check if fully ground and update texture?
+	if (ing.grindLevel >= 1.0f) {
+		std::cout << "Ingredient is fully ground" << std::endl;
+		// registry.items.get(ingredient).texture = TEXTURE_ASSET_ID::GROUND_COFFEE_BEAN;
+	}
+
+	Entity player = registry.players.entities[0];
+	ItemSystem::addItemToInventory(player, ingredient);
+
+	// Clear mortar items
+	Inventory& minv = registry.inventories.get(mortar);
+	for (Entity item : minv.items) {
+		ItemSystem::destroyItem(item);
+	}
+
+	minv.items.clear();
+}
+
+void PotionSystem::storeIngredientInMortar(Entity mortar, Entity ingredient) {
+	if (!registry.mortarAndPestles.has(mortar)) {
+		// std::cerr << "Invalid mortar entity" << std::endl;
+		return;
+	}
+	
+	Inventory& mortarInventory = registry.inventories.get(mortar);
+
+	// Check if the mortar already has an ingredient
+	if (!mortarInventory.items.empty()) {
+		std::cerr << "Mortar already contains an ingredient" << std::endl;
+		return;
+	}
+
+	Item& itemComp = registry.items.get(ingredient);
+	itemComp.isCollectable = true;
+
+	// Add the ingredient to the mortar's inventory
+	mortarInventory.items.push_back(ingredient);
+	std::cout << "Ingredient stored in mortar" << std::endl;
+}

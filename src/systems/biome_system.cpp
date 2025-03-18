@@ -136,6 +136,20 @@ void BiomeSystem::renderPlayerInNewBiome() {
 			}
 
 		}
+
+		for (Entity mortar : registry.mortarAndPestles.entities) {
+			if (registry.renderRequests.has(mortar)) {
+				RenderRequest& rr = registry.renderRequests.get(mortar);
+				rr.is_visible = true;
+				std::cout << "re-rendering mortar" << std::endl;
+			}
+			// recreate textbox
+			if (registry.motions.has(mortar)) {
+				Motion& motion = registry.motions.get(mortar);
+				createTextbox(renderer, motion.position, mortar);
+			}
+
+		}
 	}
 	else if (screen.from_biome == (int)BIOME::GROTTO && screen.biome == (int)BIOME::FOREST) { // through grotto exit into forest
 		player_motion.position = vec2(GROTTO_ENTRANCE_X, GROTTO_ENTRANCE_Y + 50);
@@ -144,6 +158,12 @@ void BiomeSystem::renderPlayerInNewBiome() {
 		for (Entity cauldron : registry.cauldrons.entities) {
 			if (registry.renderRequests.has(cauldron)) {
 				RenderRequest& rr = registry.renderRequests.get(cauldron);
+				rr.is_visible = false;
+			}
+		}
+		for (Entity mortar : registry.mortarAndPestles.entities) {
+			if (registry.renderRequests.has(mortar)) {
+				RenderRequest& rr = registry.renderRequests.get(mortar);
 				rr.is_visible = false;
 			}
 		}
@@ -232,7 +252,15 @@ void BiomeSystem::createGrotto()
 	}
 	// assert(registry.cauldrons.entities.size() == 1); // We should always only have one cauldron for testing purposes
 
-	createMortarPestle(renderer, vec2({ GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22 }), vec2({ 213, 141 }), 9, "Mortar and Pestle");
+	if (registry.mortarAndPestles.entities.size() == 0) {
+		std::cout << "creating mortar in grotto" << std::endl;
+		Entity new_mortar = createMortarPestle(renderer, vec2({ GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22 }), vec2({ 213, 141 }), 9, "Mortar and Pestle");
+		for (Entity mortar : registry.mortarAndPestles.entities) {
+			if (new_mortar != mortar) registry.remove_all_components_of(mortar);
+		}
+	}
+
+	//createMortarPestle(renderer, vec2({ GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22 }), vec2({ 213, 141 }), 9, "Mortar and Pestle");
 	createRecipeBook(renderer, vec2({ GRID_CELL_WIDTH_PX * 4.15, GRID_CELL_HEIGHT_PX * 5.05 }), vec2({ 108, 160 }), 10, "Recipe Book");
 	createChest(renderer, vec2({ GRID_CELL_WIDTH_PX * 1.35, GRID_CELL_HEIGHT_PX * 5.2 }), vec2({ 100, 150 }), 11, "Chest");
 	createGrottoExit(renderer, vec2(GRID_CELL_WIDTH_PX * 20.5, GRID_CELL_HEIGHT_PX * 13), 12, "Grotto Exit");

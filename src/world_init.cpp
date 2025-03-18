@@ -497,6 +497,14 @@ Entity createMortarPestle(RenderSystem* renderer, vec2 position, vec2 scale, int
 	motion.scale = scale;
 
 	// Entity textbox = createTextbox(renderer, position, entity); // not needed for Milestone 1
+	
+	// Create mortar pestle
+	registry.mortarAndPestles.emplace(entity);
+	createTextbox(renderer, position, entity);
+
+	// Give mortar an inventory
+	auto& inv = registry.inventories.emplace(entity);
+	inv.capacity = 1;
 
 	registry.renderRequests.insert(
 		entity,
