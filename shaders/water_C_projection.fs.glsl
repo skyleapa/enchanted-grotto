@@ -9,7 +9,7 @@ uniform float dx;
 // projection
 void main()
 {
-	vec2 fragCoord = gl_FragCoord.xy;
+    vec2 fragCoord = gl_FragCoord.xy;
     vec2 dist = fragCoord - cauldronCoords;
     float sqm = dot(dist, dist);
     if(sqm > maxSqm) {
@@ -22,7 +22,7 @@ void main()
     vec4 e = texelFetch(iChannel0, ivec2(fragCoord) + ivec2( 1, 0), 0);
     vec4 s = texelFetch(iChannel0, ivec2(fragCoord) + ivec2( 0,-1), 0);
     vec4 w = texelFetch(iChannel0, ivec2(fragCoord) + ivec2(-1, 0), 0);
-    
+
     // gradient of the pressure
     vec2 grad = vec2( e.z - w.z, n.z - s.z ) / (2.0f * dx * dx);
 

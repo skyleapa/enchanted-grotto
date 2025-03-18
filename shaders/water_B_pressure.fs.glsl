@@ -9,7 +9,7 @@ uniform float dx;
 // pressure poisson
 void main()
 {
-	vec2 fragCoord = gl_FragCoord.xy;
+    vec2 fragCoord = gl_FragCoord.xy;
     vec2 dist = fragCoord - cauldronCoords;
     float sqm = dot(dist, dist);
     if(sqm > maxSqm) {
@@ -22,10 +22,10 @@ void main()
     vec4 e = texelFetch(iChannel0, ivec2(fragCoord) + ivec2( 1, 0), 0);
     vec4 s = texelFetch(iChannel0, ivec2(fragCoord) + ivec2( 0,-1), 0);
     vec4 w = texelFetch(iChannel0, ivec2(fragCoord) + ivec2(-1, 0), 0);
-    
+
     // divergence of the velocity
     float div = (e.x - w.x + n.y - s.y) / (2.0f * dx * dx);
-    
+
     // one jacobi iteration
     float a = 1.0f / ( dx * dx);
     float p = 1.0f / ( -4.0f * a ) * ( div - a * (n.z + e.z + s.z + w.z));

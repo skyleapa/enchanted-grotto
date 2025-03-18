@@ -13,7 +13,7 @@ uniform float scale;
 // advection & boundary & control
 void main()
 {
-	vec2 fragCoord = gl_FragCoord.xy;
+    vec2 fragCoord = gl_FragCoord.xy;
     vec2 dist = fragCoord - cauldronCoords;
     float sqm = dot(dist, dist);
     if(sqm > maxSqm) {
@@ -26,11 +26,11 @@ void main()
     vec4 e = texelFetch(iChannel0, ivec2(fragCoord) + ivec2( 1, 0), 0);
     vec4 s = texelFetch(iChannel0, ivec2(fragCoord) + ivec2( 0,-1), 0);
     vec4 w = texelFetch(iChannel0, ivec2(fragCoord) + ivec2(-1, 0), 0);
-    
+
     // advection
     vec4 a = texture(iChannel0, (fragCoord-o.xy*dt)/iResolution.xy);
     fragColor = a;
-    
+
     // interaction
     if(sign(iMouse.z)==1.0f)
     {
@@ -51,31 +51,31 @@ void main()
     if(sqm < crSq) {
         return;
     }
-    
+
     float angle = atan(dist.y, dist.x);
     fragColor.w = 0.0f;
-    
+
     // Right side
     if (abs(angle) < 0.785f) {
         fragColor.xy = -w.xy;
         fragColor.z = w.z;
         return;
     }
-    
+
     // Left side
     if (abs(angle) > 2.356f) {
         fragColor.xy = -e.xy;
         fragColor.z = e.z;
         return;
     }
-    
+
     // Top side
     if (0.785f < angle && angle < 2.356f) {
         fragColor.xy = -s.xy;
         fragColor.z = s.z;
         return;
     }
-    
+
     // Bottom side
     fragColor.xy = -n.xy;
     fragColor.z = n.z;

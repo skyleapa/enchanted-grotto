@@ -9,7 +9,7 @@ uniform float maxSqm;
 
 void main()
 {
-	vec2 fragCoord = gl_FragCoord.xy;
+    vec2 fragCoord = gl_FragCoord.xy;
     vec2 dist = fragCoord - cauldronCoords;
     float sqm = dot(dist, dist);
     if(sqm > maxSqm) {
