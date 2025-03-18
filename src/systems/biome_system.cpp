@@ -218,11 +218,11 @@ void BiomeSystem::createGrotto()
 	// positions are according to sample grotto interior
 	for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::GROTTO))
 	{
-		create_boundary_line(renderer, position, scale);
+		createBoundaryLine(renderer, position, scale);
 	}
 
 	for (const auto& [position, size, rotation, texture, layer] : grotto_static_entity_pos) {
-		create_grotto_static_entities(renderer, position, size, rotation, texture, layer);
+		createGrottoStaticEntities(renderer, position, size, rotation, texture, layer);
 	}
 
 	if (registry.cauldrons.entities.size() == 0) {
@@ -237,14 +237,14 @@ void BiomeSystem::createGrotto()
 	createMortarPestle(renderer, vec2({ GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22 }), vec2({ 213, 141 }), "Mortar and Pestle");
 	createRecipeBook(renderer, vec2({ GRID_CELL_WIDTH_PX * 4.15, GRID_CELL_HEIGHT_PX * 5.05 }), vec2({ 108, 160 }), "Recipe Book");
 	createChest(renderer, vec2({ GRID_CELL_WIDTH_PX * 1.35, GRID_CELL_HEIGHT_PX * 5.2 }), vec2({ 100, 150 }), "Chest");
-	createGrottoExit(renderer, vec2(GRID_CELL_WIDTH_PX * 20.5, GRID_CELL_HEIGHT_PX * 13), "Grotto Exit");
+	createGrottoToForest(renderer, vec2(GRID_CELL_WIDTH_PX * 20.5, GRID_CELL_HEIGHT_PX * 13), "Grotto Exit");
 }
 
 void BiomeSystem::createForest()
 {
 	for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::FOREST))
 	{
-		create_boundary_line(renderer, position, scale);
+		createBoundaryLine(renderer, position, scale);
 	}
 
 	createForestBridge(renderer, vec2(307, 485));
@@ -285,8 +285,8 @@ void BiomeSystem::createForest()
 		createEnt(renderer, vec2(GRID_CELL_WIDTH_PX * 1.7, GRID_CELL_HEIGHT_PX * 5), 1, "Ent 1");
 	}
 
-	createGrottoEntrance(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 1), "Grotto Entrance");
-	createDesertEntrance(renderer, vec2(GRID_CELL_WIDTH_PX * 2.1, GRID_CELL_HEIGHT_PX * 1.7), "Desert Entrance");
+	createForestToGrotto(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 1), "Grotto Entrance");
+	createForestToDesert(renderer, vec2(GRID_CELL_WIDTH_PX * 2.1, GRID_CELL_HEIGHT_PX * 1.7), "Desert Entrance");
 	createForestToMushroom(renderer, vec2(GRID_CELL_WIDTH_PX * 2.1, WINDOW_HEIGHT_PX - 40), "Mushroom Entrance");
 }
 
@@ -294,7 +294,7 @@ void BiomeSystem::createForestEx()
 {
 	for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::FOREST_EX))
 	{
-		create_boundary_line(renderer, position, scale);
+		createBoundaryLine(renderer, position, scale);
 	}
 }
 
@@ -303,10 +303,10 @@ void BiomeSystem::createDesert()
 	// positions are according to sample desert
 	for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::DESERT))
 	{
-		create_boundary_line(renderer, position, scale);
+		createBoundaryLine(renderer, position, scale);
 	}
 
-	createDesertExit(renderer, vec2(GRID_CELL_WIDTH_PX * 20.3, GRID_CELL_HEIGHT_PX * 12.9), "Desert Exit");
+	createDesertToForest(renderer, vec2(GRID_CELL_WIDTH_PX * 20.3, GRID_CELL_HEIGHT_PX * 12.9), "Desert Exit");
 	createDesertTree(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 3.9));
 	createDesertCactus(renderer, vec2(GRID_CELL_WIDTH_PX * 4.1, GRID_CELL_HEIGHT_PX * 6.2));
 	createDesertRiver(renderer, vec2(GRID_CELL_WIDTH_PX * 24, WINDOW_HEIGHT_PX / 2));
@@ -327,7 +327,7 @@ void BiomeSystem::createMushroom()
 {
 	for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::MUSHROOM))
 	{
-		create_boundary_line(renderer, position, scale);
+		createBoundaryLine(renderer, position, scale);
 	}
 
 	createMushroomToForest(renderer, vec2(60, 0), "Mushroom To Forest");
@@ -337,7 +337,7 @@ void BiomeSystem::createCrystal()
 {
 	for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::CRYSTAL))
 	{
-		create_boundary_line(renderer, position, scale);
+		createBoundaryLine(renderer, position, scale);
 	}
 
 
