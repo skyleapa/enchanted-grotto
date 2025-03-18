@@ -35,7 +35,7 @@ Entity createGridLine(vec2 start_pos, vec2 end_pos);
 Entity createLine(vec2 position, vec2 size);
 
 // grotto entrance
-Entity createGrottoEntrance(RenderSystem* renderer, vec2 position, int id, std::string name);
+Entity createGrottoEntrance(RenderSystem* renderer, vec2 position, std::string name);
 
 // bushes
 Entity createBush(RenderSystem* renderer, vec2 position);
@@ -44,19 +44,19 @@ Entity createBush(RenderSystem* renderer, vec2 position);
 Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemType type, int amount, bool canRespawn);
 
 // cauldron
-Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name, bool create_textbox);
+Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, std::string name, bool create_textbox);
 
 // mortar and pestle
-Entity createMortarPestle(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name);
+Entity createMortarPestle(RenderSystem* renderer, vec2 position, vec2 scale, std::string name);
 
 // chest
-Entity createChest(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name);
+Entity createChest(RenderSystem* renderer, vec2 position, vec2 scale, std::string name);
 
 // recipe book
-Entity createRecipeBook(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name);
+Entity createRecipeBook(RenderSystem* renderer, vec2 position, vec2 scale, std::string name);
 
 // grotto exit
-Entity createGrottoExit(RenderSystem* renderer, vec2 position, int id, std::string name);
+Entity createGrottoExit(RenderSystem* renderer, vec2 position, std::string name);
 
 // interaction textbox
 Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity);
@@ -73,10 +73,10 @@ Entity createMummy(RenderSystem* renderer, vec2 position, int movable, std::stri
 bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, Entity& player_entity);
 
 // desert entrance
-Entity createDesertEntrance(RenderSystem* renderer, vec2 position, int id, std::string name);
+Entity createDesertEntrance(RenderSystem* renderer, vec2 position, std::string name);
 
 // desert exit
-Entity createDesertExit(RenderSystem* renderer, vec2 position, int id, std::string name);
+Entity createDesertExit(RenderSystem* renderer, vec2 position, std::string name);
 
 // desert tree
 Entity createDesertTree(RenderSystem* renderer, vec2 position);
@@ -95,3 +95,15 @@ Entity createDesertPage(RenderSystem* renderer, vec2 position);
 
 // desert skull
 Entity createDesertSkull(RenderSystem* renderer, vec2 position);
+
+Entity createForestToForestEx(RenderSystem* renderer, vec2 position, std::string name);
+Entity createForestExToForest(RenderSystem* renderer, vec2 position, std::string name);
+
+Entity createForestToMushroom(RenderSystem* renderer, vec2 position, std::string name);
+Entity createMushroomToForest(RenderSystem* renderer, vec2 position, std::string name);
+
+Entity createMushroomToCrystal(RenderSystem* renderer, vec2 position, std::string name);
+Entity createCrystalToMushroom(RenderSystem* renderer, vec2 position, std::string name, BIOME biome);
+
+Entity createCrystalToForestEx(RenderSystem* renderer, vec2 position, std::string name);
+Entity createForestExToCrystal(RenderSystem* renderer, vec2 position, std::string name);

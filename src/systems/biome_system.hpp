@@ -17,14 +17,12 @@ public:
     bool handleEntranceInteraction(Entity entrance_entity);
     void renderPlayerInNewBiome();
 
-    // create objects that are rendered onto the forest biome
-    void createForest();
-
-    // create objects that are rendered in the grotto
     void createGrotto();
-
-    // create objects that are rendered in the desert
+    void createForest();
+    void createForestEx();
     void createDesert();
+    void createMushroom();
+    void createCrystal();
 
     BiomeSystem()
     {
@@ -60,7 +58,31 @@ private:
             std::make_tuple(vec2(GRID_CELL_WIDTH_PX * 17.5, WINDOW_HEIGHT_PX - 30), vec2(BOUNDARY_LINE_THICKNESS, GRID_CELL_HEIGHT_PX)), // desert bottom right
             std::make_tuple(vec2(GRID_CELL_WIDTH_PX, WINDOW_HEIGHT_PX / 2), vec2(BOUNDARY_LINE_THICKNESS, WINDOW_HEIGHT_PX)), // left
             std::make_tuple(vec2(WINDOW_WIDTH_PX, WINDOW_HEIGHT_PX / 2), vec2(BOUNDARY_LINE_THICKNESS, WINDOW_HEIGHT_PX)), // right
-            }}
+            }},
+        {(int)BIOME::MUSHROOM,
+            {std::make_tuple(vec2(WINDOW_WIDTH_PX / 2, GRID_CELL_HEIGHT_PX), vec2(WINDOW_WIDTH_PX, BOUNDARY_LINE_THICKNESS)), // top
+                std::make_tuple(vec2(WINDOW_WIDTH_PX / 2, WINDOW_HEIGHT_PX), vec2(WINDOW_WIDTH_PX, BOUNDARY_LINE_THICKNESS)), // desert bottom
+                std::make_tuple(vec2(GRID_CELL_WIDTH_PX * 9, WINDOW_HEIGHT_PX - GRID_CELL_HEIGHT_PX - 5), vec2(GRID_CELL_WIDTH_PX * 17, BOUNDARY_LINE_THICKNESS)), // desert bottom wall
+                std::make_tuple(vec2(GRID_CELL_WIDTH_PX * 17.5, WINDOW_HEIGHT_PX - 30), vec2(BOUNDARY_LINE_THICKNESS, GRID_CELL_HEIGHT_PX)), // desert bottom right
+                std::make_tuple(vec2(GRID_CELL_WIDTH_PX, WINDOW_HEIGHT_PX / 2), vec2(BOUNDARY_LINE_THICKNESS, WINDOW_HEIGHT_PX)), // left
+                std::make_tuple(vec2(WINDOW_WIDTH_PX, WINDOW_HEIGHT_PX / 2), vec2(BOUNDARY_LINE_THICKNESS, WINDOW_HEIGHT_PX)), // right
+            }},
+        {(int)BIOME::CRYSTAL,
+            {std::make_tuple(vec2(WINDOW_WIDTH_PX / 2, GRID_CELL_HEIGHT_PX), vec2(WINDOW_WIDTH_PX, BOUNDARY_LINE_THICKNESS)), // top
+                std::make_tuple(vec2(WINDOW_WIDTH_PX / 2, WINDOW_HEIGHT_PX), vec2(WINDOW_WIDTH_PX, BOUNDARY_LINE_THICKNESS)), // desert bottom
+                std::make_tuple(vec2(GRID_CELL_WIDTH_PX * 9, WINDOW_HEIGHT_PX - GRID_CELL_HEIGHT_PX - 5), vec2(GRID_CELL_WIDTH_PX * 17, BOUNDARY_LINE_THICKNESS)), // desert bottom wall
+                std::make_tuple(vec2(GRID_CELL_WIDTH_PX * 17.5, WINDOW_HEIGHT_PX - 30), vec2(BOUNDARY_LINE_THICKNESS, GRID_CELL_HEIGHT_PX)), // desert bottom right
+                std::make_tuple(vec2(GRID_CELL_WIDTH_PX, WINDOW_HEIGHT_PX / 2), vec2(BOUNDARY_LINE_THICKNESS, WINDOW_HEIGHT_PX)), // left
+                std::make_tuple(vec2(WINDOW_WIDTH_PX, WINDOW_HEIGHT_PX / 2), vec2(BOUNDARY_LINE_THICKNESS, WINDOW_HEIGHT_PX)), // right
+            }},
+        {(int)BIOME::FOREST_EX,
+            {std::make_tuple(vec2(WINDOW_WIDTH_PX / 2, GRID_CELL_HEIGHT_PX), vec2(WINDOW_WIDTH_PX, BOUNDARY_LINE_THICKNESS)), // top
+                std::make_tuple(vec2(WINDOW_WIDTH_PX / 2, WINDOW_HEIGHT_PX), vec2(WINDOW_WIDTH_PX, BOUNDARY_LINE_THICKNESS)), // desert bottom
+                std::make_tuple(vec2(GRID_CELL_WIDTH_PX * 9, WINDOW_HEIGHT_PX - GRID_CELL_HEIGHT_PX - 5), vec2(GRID_CELL_WIDTH_PX * 17, BOUNDARY_LINE_THICKNESS)), // desert bottom wall
+                std::make_tuple(vec2(GRID_CELL_WIDTH_PX * 17.5, WINDOW_HEIGHT_PX - 30), vec2(BOUNDARY_LINE_THICKNESS, GRID_CELL_HEIGHT_PX)), // desert bottom right
+                std::make_tuple(vec2(GRID_CELL_WIDTH_PX, WINDOW_HEIGHT_PX / 2), vec2(BOUNDARY_LINE_THICKNESS, WINDOW_HEIGHT_PX)), // left
+                std::make_tuple(vec2(WINDOW_WIDTH_PX, WINDOW_HEIGHT_PX / 2), vec2(BOUNDARY_LINE_THICKNESS, WINDOW_HEIGHT_PX)), // right
+            }},
     };
 
     std::vector<std::tuple<vec2, vec2, float, GLuint, int>> grotto_static_entity_pos = {

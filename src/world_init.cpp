@@ -331,7 +331,7 @@ Entity create_boundary_line(RenderSystem* renderer, vec2 position, vec2 scale)
 	return entity;
 }
 
-Entity createGrottoEntrance(RenderSystem* renderer, vec2 position, int id, std::string name)
+Entity createGrottoEntrance(RenderSystem* renderer, vec2 position, std::string name)
 {
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " grotto entrance" << std::endl;
@@ -434,7 +434,7 @@ Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemTy
 	return entity;
 }
 
-Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name, bool create_textbox = false)
+Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, std::string name, bool create_textbox = false)
 {
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " cauldron" << std::endl;
@@ -475,7 +475,7 @@ Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id,
 	return entity;
 }
 
-Entity createMortarPestle(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name)
+Entity createMortarPestle(RenderSystem* renderer, vec2 position, vec2 scale, std::string name)
 {
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " mortar and pestle" << std::endl;
@@ -510,7 +510,7 @@ Entity createMortarPestle(RenderSystem* renderer, vec2 position, vec2 scale, int
 	return entity;
 }
 
-Entity createChest(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name)
+Entity createChest(RenderSystem* renderer, vec2 position, vec2 scale, std::string name)
 {
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " chest" << std::endl;
@@ -545,7 +545,7 @@ Entity createChest(RenderSystem* renderer, vec2 position, vec2 scale, int id, st
 	return entity;
 }
 
-Entity createRecipeBook(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name)
+Entity createRecipeBook(RenderSystem* renderer, vec2 position, vec2 scale, std::string name)
 {
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " recipe book" << std::endl;
@@ -581,7 +581,7 @@ Entity createRecipeBook(RenderSystem* renderer, vec2 position, vec2 scale, int i
 }
 
 
-Entity createGrottoExit(RenderSystem* renderer, vec2 position, int id, std::string name)
+Entity createGrottoExit(RenderSystem* renderer, vec2 position, std::string name)
 {
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " grotto exit" << std::endl;
@@ -675,11 +675,11 @@ RenderRequest getTextboxRenderRequest(Textbox& textbox)
 	{
 		texture = TEXTURE_ASSET_ID::TEXTBOX_GROTTO_EXIT;
 	}
-	else if (item.type == ItemType::DESERT_ENTRANCE)
+	else if (item.type == ItemType::FOREST_TO_DESERT_ENTRANCE)
 	{
 		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_DESERT;
 	}
-	else if (item.type == ItemType::FOREST_ENTRANCE) {
+	else if (item.type == ItemType::DESERT_TO_FOREST_ENTRANCE) {
 		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_FOREST;
 	}
 	else if (item.type == ItemType::SAP) {
@@ -810,7 +810,7 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 	return true;
 }
 
-Entity createDesertEntrance(RenderSystem* renderer, vec2 position, int id, std::string name)
+Entity createDesertEntrance(RenderSystem* renderer, vec2 position, std::string name)
 {
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " desert entrance" << std::endl;
@@ -819,7 +819,7 @@ Entity createDesertEntrance(RenderSystem* renderer, vec2 position, int id, std::
 	entrance.target_biome = (GLuint)BIOME::DESERT;
 
 	Item& item = registry.items.emplace(entity);
-	item.type = ItemType::DESERT_ENTRANCE;
+	item.type = ItemType::FOREST_TO_DESERT_ENTRANCE;
 	item.name = name;
 	item.isCollectable = false;
 	item.amount = 1;
@@ -848,7 +848,7 @@ Entity createDesertEntrance(RenderSystem* renderer, vec2 position, int id, std::
 	return entity;
 }
 
-Entity createDesertExit(RenderSystem* renderer, vec2 position, int id, std::string name)
+Entity createDesertExit(RenderSystem* renderer, vec2 position, std::string name)
 {
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " desert exit" << std::endl;
@@ -857,7 +857,7 @@ Entity createDesertExit(RenderSystem* renderer, vec2 position, int id, std::stri
 	entrance.target_biome = (GLuint)BIOME::FOREST;
 
 	Item& item = registry.items.emplace(entity);
-	item.type = ItemType::FOREST_ENTRANCE;
+	item.type = ItemType::DESERT_TO_FOREST_ENTRANCE;
 	item.name = name;
 	item.isCollectable = false;
 	item.amount = 1;
@@ -1060,6 +1060,295 @@ Entity createDesertSkull(RenderSystem* renderer, vec2 position) {
 		 GEOMETRY_BUFFER_ID::SPRITE,
 		 RENDER_LAYER::TERRAIN ,
 		 1 });
+
+	return entity;
+}
+
+Entity createForestToForestEx(RenderSystem* renderer, vec2 position, std::string name)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::FOREST_EX;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::FOREST_TO_MUSHROOM_ENTRANCE;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ FOREST_TO_MUSHROOM_WIDTH, FOREST_TO_MUSHROOM_HEIGHT });
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x, position.y + 20 }), entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::FOREST_TO_MUSHROOM,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::STRUCTURE,
+		 0 });
+
+	return entity;
+}
+
+Entity createForestExToForest(RenderSystem* renderer, vec2 position, std::string name)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::FOREST;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::FOREST_TO_MUSHROOM_ENTRANCE;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ FOREST_TO_MUSHROOM_WIDTH, FOREST_TO_MUSHROOM_HEIGHT });
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x, position.y + 20 }), entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::FOREST_TO_MUSHROOM,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::STRUCTURE,
+		 0 });
+
+	return entity;
+}
+
+Entity createForestToMushroom(RenderSystem* renderer, vec2 position, std::string name)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::MUSHROOM;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::FOREST_TO_MUSHROOM_ENTRANCE;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ FOREST_TO_MUSHROOM_WIDTH, FOREST_TO_MUSHROOM_HEIGHT });
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x, position.y + 20 }), entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::FOREST_TO_MUSHROOM,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::STRUCTURE,
+		 0 });
+
+	return entity;
+}
+
+
+Entity createMushroomToForest(RenderSystem* renderer, vec2 position, std::string name)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::FOREST;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::MUSHROOM_TO_FOREST_ENTRANCE;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ GENERIC_ENTRANCE_WIDTH, GENERIC_ENTRANCE_HEIGHT });
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x, position.y + 20 }), entity);
+
+	return entity;
+}
+
+Entity createMushroomToCrystal(RenderSystem* renderer, vec2 position, std::string name)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::MUSHROOM;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::FOREST_TO_MUSHROOM_ENTRANCE;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ FOREST_TO_MUSHROOM_WIDTH, FOREST_TO_MUSHROOM_HEIGHT });
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x, position.y + 20 }), entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::FOREST_TO_MUSHROOM,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::STRUCTURE,
+		 0 });
+
+	return entity;
+}
+
+Entity createCrystalToMushroom(RenderSystem* renderer, vec2 position, std::string name, BIOME biome)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::MUSHROOM;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::FOREST_TO_MUSHROOM_ENTRANCE;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ FOREST_TO_MUSHROOM_WIDTH, FOREST_TO_MUSHROOM_HEIGHT });
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x, position.y + 20 }), entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::FOREST_TO_MUSHROOM,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::STRUCTURE,
+		 0 });
+
+	return entity;
+}
+
+Entity createCrystalToForestEx(RenderSystem* renderer, vec2 position, std::string name)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::MUSHROOM;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::FOREST_TO_MUSHROOM_ENTRANCE;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ FOREST_TO_MUSHROOM_WIDTH, FOREST_TO_MUSHROOM_HEIGHT });
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x, position.y + 20 }), entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::FOREST_TO_MUSHROOM,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::STRUCTURE,
+		 0 });
+
+	return entity;
+}
+
+Entity createForestExToCrystal(RenderSystem* renderer, vec2 position, std::string name)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::MUSHROOM;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::FOREST_TO_MUSHROOM_ENTRANCE;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ FOREST_TO_MUSHROOM_WIDTH, FOREST_TO_MUSHROOM_HEIGHT });
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x, position.y + 20 }), entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::FOREST_TO_MUSHROOM,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::STRUCTURE,
+		 0 });
 
 	return entity;
 }
