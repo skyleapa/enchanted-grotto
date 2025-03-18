@@ -515,7 +515,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 						SoundSystem::haltBoilSound();
 					}
           
-          // Reset cauldron water
+					// Reset cauldron water
 					m_renderer->initializeWaterBuffers(true);
 				}
 
