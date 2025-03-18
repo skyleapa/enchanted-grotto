@@ -189,7 +189,7 @@ bool genericCollides(const Motion& motion, const Motion& other_motion)
 {
 	// gets our bounding boxes for the player and terrain
 	vec4 box = get_bounding_box(motion, 1.f, 1.f);
-	vec4 other_box = get_bounding_box(other_motion, 1.f, 1.f);
+	vec4 other_box = get_bounding_box(other_motion, 0.4f, 0.6f);
 
 	// calculate our AABB overlapping bounding boxes
 	bool overlap_x = (box.x < other_box.x + other_box.z) && (box.x + other_box.z > other_box.x);

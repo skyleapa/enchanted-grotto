@@ -107,16 +107,16 @@ const float DESERT_PAGE_HEIGHT = (float)37 * 0.8;
 const float FOREST_TO_MUSHROOM_WIDTH = (float)132;
 const float FOREST_TO_MUSHROOM_HEIGHT = (float)96;
 
-const float GENERIC_ENTRANCE_WIDTH = (float)120;
+const float GENERIC_ENTRANCE_WIDTH = (float)100;
 const float GENERIC_ENTRANCE_HEIGHT = (float)100;
 
 const float MUSHROOM_ACID_LAKE_WIDTH = (float)828;
 const float MUSHROOM_ACID_LAKE_HEIGHT = (float)233;
 
-const float MUSHROOM_WIDTH = (float)168;
-const float MUSHROOM_HEIGHT = (float)192;
+const float MUSHROOM_WIDTH = (float)230;
+const float MUSHROOM_HEIGHT = (float)191;
 
-const float MUSHROOM_TALL_WIDTH = (float)191;
+const float MUSHROOM_TALL_WIDTH = (float)230;
 const float MUSHROOM_TALL_HEIGHT = (float)285;
 
 const float CRYSTAL_1_WIDTH = (float)148;

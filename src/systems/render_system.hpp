@@ -28,6 +28,8 @@ class RenderSystem {
 		// specify meshes of other assets here
 		std::pair<GEOMETRY_BUFFER_ID, std::string>(GEOMETRY_BUFFER_ID::BRIDGE_TOP, mesh_path("bridge_top.obj")),
 		std::pair<GEOMETRY_BUFFER_ID, std::string>(GEOMETRY_BUFFER_ID::BRIDGE_BOTTOM, mesh_path("bridge_bottom.obj")),
+		std::pair<GEOMETRY_BUFFER_ID, std::string>(GEOMETRY_BUFFER_ID::GROTTO_POOL, mesh_path("grotto_pool.obj")),
+		std::pair<GEOMETRY_BUFFER_ID, std::string>(GEOMETRY_BUFFER_ID::MUSHROOM_ACID_LAKE, mesh_path("mushroom_acid_lake.obj")),
 	};
 
 	// Make sure these paths remain in sync with the associated enumerators (see TEXTURE_ASSET_ID).
