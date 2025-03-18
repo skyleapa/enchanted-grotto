@@ -5,6 +5,7 @@
 #include "item_system.hpp"
 #include "rmlui_system_interface.hpp"
 #include "rmlui_render_interface.hpp"
+#include "sound_system.hpp"
 #include <iostream>
 #include <vector>
 #include <string>
@@ -460,6 +461,8 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 					break;
 				}
 
+				SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+
 				if (heldLadle) {
 					hovered->SetProperty("top", LADLE_TOP_PX);
 					hovered->SetProperty("left", LADLE_LEFT_PX);
@@ -475,6 +478,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 
 			if (id == "bottle") {
 				if (!heldBottle) {
+					SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0); // play only when picking up bottle
 					heldBottle = hovered;
 					updateFollowMouse();
 					break;
@@ -504,7 +508,12 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 					//     ammo.damage = 1000;
 					// }
 
-					ItemSystem::addItemToInventory(player, potionItem);
+					if (ItemSystem::addItemToInventory(player, potionItem)) {
+						// stop the boiling sound then bottle the potion
+						DragListener::is_boiling = false;
+						SoundSystem::playBottleHighQualityPotionSound((int)SOUND_CHANNEL::MENU, 0);
+						SoundSystem::haltBoilSound();
+					};
 				}
 
 				// Reset bottle position
@@ -860,6 +869,8 @@ bool UISystem::openCauldron(Entity cauldron)
 	if (!m_initialized || !m_context) return false;
 	if (m_cauldron_document) {
 		m_cauldron_document->Show();
+		SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+		if (DragListener::is_boiling) SoundSystem::continueBoilSound((int)SOUND_CHANNEL::BOILING, -1); // continue boiling if it was boiling before leaving menu
 		return true;
 	}
 
@@ -953,6 +964,7 @@ bool UISystem::openCauldron(Entity cauldron)
 		DragListener::RegisterDragDropElement(m_cauldron_document->GetElementById("cauldron-water"));
 		DragListener::RegisterDragDropElement(m_cauldron_document->GetElementById("cauldron"));
 		m_cauldron_document->Show();
+		SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
 		openedCauldron = cauldron;
 		registry.cauldrons.get(cauldron).filled = true;
 		std::cout << "UISystem::openCauldron - Cauldron created successfully" << std::endl;
@@ -993,6 +1005,8 @@ void UISystem::closeCauldron()
 {
 	if (isCauldronOpen()) {
 		m_cauldron_document->Hide();
+		SoundSystem::haltBoilSound();
+		SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
 		// handle exit menu tutorial
 		if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::EXIT_MENU) {
 			ScreenState& screen = registry.screenStates.components[0];
