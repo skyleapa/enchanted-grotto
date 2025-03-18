@@ -576,7 +576,7 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 	// on button press
 	if (action == GLFW_PRESS)
 	{
-		std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
+		// std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
 		// std::cout << "mouse tile position: " << tile_x << ", " << tile_y << std::endl;
 
 		if (m_ui_system != nullptr && m_ui_system->isCauldronOpen()) return;

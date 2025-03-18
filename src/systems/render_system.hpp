@@ -93,7 +93,7 @@ class RenderSystem {
 		textures_path("terrain/crystal/crystal_minecart.png"),
 		textures_path("terrain/crystal/crystal_page.png"),
 		textures_path("terrain/crystal/crystal_rock.png"),
-		textures_path("terrain/boundary_black.png"),
+		textures_path("terrain/boundary_transparent.png"),
 		textures_path("terrain/forest/bush.png"),
 		textures_path("interactables/magical_fruit.png"),
 		textures_path("interactables/coffee_bean.png"),
