@@ -513,7 +513,7 @@ void RenderSystem::updateCauldronMouseLoc(double mouseX, double mouseY)
 
 	// Flip y mouse coords cause of opengl
 	// and then add ladle offsets
-	mouseY = 2 * viewport_y + viewport_sizey - mouseY;
+	mouseY = frameBufferHeight - mouseY;
 	mouseX -= LADLE_OFFSET.x * scale;
 	mouseY += LADLE_OFFSET.y * scale;
 
