@@ -44,12 +44,12 @@ struct ScreenState
 	float darken_screen_factor = 0;
 	GLuint biome = 1; // default to forest
 	bool is_switching_biome = false;
-	GLuint switching_to_biome = 1; // track biome that is being switched to
+	GLuint switching_to_biome = 0; // track biome that is being switched to
 	float fade_status = 0; // 0 - before fade out, 1 after fade out, 2 - after fade in
-	bool game_over = false;
-	GLuint from_biome = 1;
+	GLuint from_biome = 2;
 	int tutorial_state = 0;
 	bool tutorial_step_complete = true;
+	float autosave_timer = AUTOSAVE_TIMER;
 };
 
 // A struct to refer to debugging graphics in the ECS
@@ -306,8 +306,8 @@ enum class TEXTURE_ASSET_ID
 	TEXTBOX_CAULDRON = TEXTBOX_GROTTO_EXIT + 1,
 	TEXTBOX_ENTER_DESERT = TEXTBOX_CAULDRON + 1,
 	TEXTBOX_ENTER_FOREST = TEXTBOX_ENTER_DESERT + 1,
-	TEXTBOX_SAP = TEXTBOX_ENTER_FOREST + 1,
-	TEXTBOX_MAGICAL_DUST = TEXTBOX_SAP + 1,
+	TEXTBOX_TWIG = TEXTBOX_ENTER_FOREST + 1,
+	TEXTBOX_MAGICAL_DUST = TEXTBOX_TWIG + 1,
 	ENT = TEXTBOX_MAGICAL_DUST + 1,
 	MUMMY = ENT + 1,
 	POTION = MUMMY + 1,

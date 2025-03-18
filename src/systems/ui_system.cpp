@@ -202,6 +202,12 @@ void UISystem::step(float elapsed_ms)
 		// 	m_fps_document->SetInnerRML(fps_text);
 		// }
 
+		// update cauldron reference
+		if (registry.cauldrons.entities.size() > 0) {
+			Entity cauldron = registry.cauldrons.entities[0];
+			if (openedCauldron != cauldron) openedCauldron = cauldron;
+		}
+
 		if (!m_inventory_document) {
 			createInventoryBar();
 		}

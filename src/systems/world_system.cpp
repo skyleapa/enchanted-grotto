@@ -176,9 +176,18 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		title_ss << "FPS: " << m_last_fps;
 	}
 
-	// title_ss << total_items << " items in player inventory: " << total_fruits << " fruits " << total_beans << " beans";
-
 	glfwSetWindowTitle(window, title_ss.str().c_str());
+
+	// autosave every minute
+
+	if (registry.screenStates.entities.size() > 0) {
+		ScreenState& screen = registry.screenStates.components[0];
+		screen.autosave_timer -= elapsed_ms_since_last_update;
+		if (screen.autosave_timer <= 0) {
+			screen.autosave_timer = AUTOSAVE_TIMER;
+			ItemSystem::saveGameState("game_state.json");
+		}
+	}
 
 	if (registry.players.entities.size() < 1)
 		return true;
@@ -212,8 +221,6 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	update_textbox_visibility();
 	handle_item_respawn(elapsed_ms_since_last_update);
 
-	if (registry.screenStates.components[0].game_over) restart_game();
-
 	return true;
 }
 
@@ -223,26 +230,26 @@ void WorldSystem::restart_game()
 	std::cout << "Restarting..." << std::endl;
 
 	ScreenState& state = registry.screenStates.components[0];
-	state.game_over = false;
 
 	// Save the player's inventory before clearing if it exists
-	Entity player_entity;
-	nlohmann::json player_inventory_data;
-	if (!registry.players.entities.empty()) {
-		player_entity = registry.players.entities[0];
-		if (registry.inventories.has(player_entity)) {
-			player_inventory_data = ItemSystem::serializeInventory(player_entity);
-		}
-	}
+	// Entity player_entity;
+	// nlohmann::json player_inventory_data;
+	// if (!registry.players.entities.empty()) {
+	// 	player_entity = registry.players.entities[0];
+	// 	if (registry.inventories.has(player_entity)) {
+	// 		player_inventory_data = ItemSystem::serializeInventory(player_entity);
+	// 	}
+	// }
 
-	Entity cauldron;
-	nlohmann::json cauldron_inventory_data;
-	if (!registry.cauldrons.entities.empty()) { // in the future may have multiple cauldrons
-		cauldron = registry.cauldrons.entities[0];
-		if (registry.inventories.has(cauldron)) {
-			cauldron_inventory_data = ItemSystem::serializeInventory(cauldron);
-		}
-	}
+	// Entity cauldron;
+	// nlohmann::json cauldron_inventory_data;
+	// if (!registry.cauldrons.entities.empty()) { // in the future may have multiple cauldrons
+	// 	cauldron = registry.cauldrons.entities[0];
+	// 	if (registry.inventories.has(cauldron)) {
+	// 		cauldron_inventory_data = ItemSystem::serializeInventory(cauldron);
+	// 		std::cout << "serialized cauldron data" << std::endl;
+	// 	}
+	// }
 
 	// close cauldron if it's open
 	if (m_ui_system && m_ui_system->isCauldronOpen()) m_ui_system->closeCauldron();
@@ -263,31 +270,14 @@ void WorldSystem::restart_game()
 
 	if (registry.players.components.size() == 0)
 	{
-		createPlayer(renderer, vec2(GROTTO_ENTRANCE_X, GROTTO_ENTRANCE_Y + 50));
+		createPlayer(renderer, vec2(GRID_CELL_WIDTH_PX * 17.5, GRID_CELL_HEIGHT_PX * 6.5)); // bring player to front of door));
 	}
 
 	// re-open tutorial
 	state.tutorial_state = (int)TUTORIAL::WELCOME_SCREEN;
 	state.tutorial_step_complete = true;
 
-	// Restore player's inventory if we had one
-	if (!player_inventory_data.empty() && !registry.players.entities.empty()) {
-		Entity new_player = registry.players.entities[0];
-		ItemSystem::deserializeInventory(new_player, player_inventory_data);
-	}
-
-	// Restore cauldron's inventory if we had one and create a new cauldron to restore the data
-	if (!cauldron_inventory_data.empty()) {
-		if (registry.cauldrons.entities.size() == 0) {
-			Entity new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.50, GRID_CELL_HEIGHT_PX * 6.45 }), vec2({ 142, 196 }), 8, "Cauldron", false); // make a new cauldron for now
-			if (registry.renderRequests.has(new_cauldron)) {
-				registry.renderRequests.get(new_cauldron).is_visible = false; // make it invisible for now but when we change to spawning in grotto, can remove this
-			}
-			ItemSystem::deserializeInventory(new_cauldron, cauldron_inventory_data);
-			// update ui system's reference to opened cauldron
-			if (m_ui_system) m_ui_system->setOpenedCauldron(new_cauldron);
-		}
-	}
+	ItemSystem::loadGameState("game_state.json"); // load the game state
 
 	biome_sys->init(renderer);
 
@@ -303,11 +293,10 @@ void WorldSystem::handle_collisions()
 		return;
 
 	Motion& player_motion = registry.motions.get(player_entity);
-	vec2 movement = player_motion.position - player_motion.previous_position;
+	vec2 original_position = player_motion.position;
+	vec2 previous_position = player_motion.previous_position;
 
-	bool x_blocked = false;
-	bool y_blocked = false;
-
+	// Handle non-terrain collisions first (ammo, enemies, etc.)
 	for (Entity collision_entity : registry.collisions.entities)
 	{
 		ScreenState& screen = registry.screenStates.components[0];
@@ -328,10 +317,10 @@ void WorldSystem::handle_collisions()
 			if (enemy.health <= 0) {
 				// using can_move for now since ent cannot move, but mummy can
 				if (enemy.can_move == 0) {
-					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::SAP, 1);
+					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::SAP, 1, FALSE);
 				}
 				else if (enemy.can_move == 1) {
-					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MAGICAL_DUST, 1);
+					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MAGICAL_DUST, 1, FALSE);
 				}
 				if (screen.tutorial_state == (int)TUTORIAL::ATTACK_ENEMY) {
 					screen.tutorial_step_complete = true;
@@ -341,27 +330,94 @@ void WorldSystem::handle_collisions()
 			}
 			continue;
 		}
-		// case where enemy hits player - automatically die and restart game
+		// case where enemy hits player - automatically die
 		else if ((registry.players.has(collision_entity) || registry.players.has(collision.other)) && (registry.enemies.has(collision_entity) || registry.enemies.has(collision.other))) {
-			screen.game_over = true;
+			ItemSystem::loadGameState("game_state.json");
+			screen.is_switching_biome = true;
+			screen.switching_to_biome = (GLuint)BIOME::GROTTO;
+			// load the most recently saved file
 			continue;
 		}
-
-		Entity terrain_entity = (collision_entity == player_entity) ? collision.other : collision_entity;
-		if (!registry.terrains.has(terrain_entity) || !registry.motions.has(terrain_entity))
+		else if ((registry.ammo.has(collision_entity) || registry.ammo.has(collision.other)) && (registry.terrains.has(collision_entity) || registry.terrains.has(collision.other))) {
+			if (registry.ammo.has(collision_entity)) {
+				registry.remove_all_components_of(collision_entity);
+			}
+			else {
+				registry.remove_all_components_of(collision.other);
+			}
 			continue;
-
-		if (std::abs(movement.x) > 0.0f)
-			x_blocked = true;
-		if (std::abs(movement.y) > 0.0f)
-			y_blocked = true;
+		}
 	}
 
-	// Resolve movement based on blockages
-	if (x_blocked)
-		player_motion.position.x = player_motion.previous_position.x;
-	if (y_blocked)
-		player_motion.position.y = player_motion.previous_position.y;
+	bool moving_diagonally = (original_position.x != previous_position.x) && (original_position.y != previous_position.y);
+
+	// Helper function to check collisions with all terrain entities for an updated position
+	// this takes in a test_position argument that will act as player's "new" position, 
+	// returns a boolean if there is a collision or not
+	auto checkCollisions = [this](const vec2& test_position) {
+		for (Entity terrain_entity : registry.terrains.entities) {
+			if (!registry.motions.has(terrain_entity))
+				continue;
+
+			Motion& terrain_motion = registry.motions.get(terrain_entity);
+			Terrain& terrain = registry.terrains.get(terrain_entity);
+
+			vec2 orig_pos = registry.motions.get(registry.players.entities[0]).position;
+
+			// set our player's position to the test position
+			registry.motions.get(registry.players.entities[0]).position = test_position;
+
+			bool has_collision = PhysicsSystem::collides(registry.motions.get(registry.players.entities[0]),
+				terrain_motion, &terrain, terrain_entity);
+
+			// restore original position
+			registry.motions.get(registry.players.entities[0]).position = orig_pos;
+
+			if (has_collision)
+				return true;
+		}
+
+		return false;
+		};
+
+	if (moving_diagonally) {
+		// position as if we moved just horizontally
+		vec2 horizontal_pos = previous_position;
+		horizontal_pos.x = original_position.x;
+
+		// position as if we moved just vertically
+		vec2 vertical_pos = previous_position;
+		vertical_pos.y = original_position.y;
+
+		bool horizontal_collision = checkCollisions(horizontal_pos);
+		bool vertical_collision = checkCollisions(vertical_pos);
+		bool diagonal_collision = checkCollisions(original_position);
+
+		if (diagonal_collision) {
+			if (!horizontal_collision && !vertical_collision) {
+				player_motion.position = previous_position;
+			}
+			else if (!horizontal_collision) {
+				player_motion.position = horizontal_pos;
+			}
+			else if (!vertical_collision) {
+				player_motion.position = vertical_pos;
+			}
+			else {
+				player_motion.position = previous_position;
+			}
+		}
+		else {
+			// there's no collision with diagonal movement, allow player to move
+			player_motion.position = original_position;
+		}
+	}
+	else {
+		// For non-diagonal movement, just check if there's a collision
+		if (checkCollisions(original_position)) {
+			player_motion.position = previous_position;
+		}
+	}
 
 	// Clear collisions after processing
 	registry.collisions.clear();
@@ -387,9 +443,14 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 		close_window();
 	}
 
-	if (action == GLFW_PRESS && key == GLFW_KEY_R)
+	if (action == GLFW_RELEASE && key == GLFW_KEY_R)
 	{
 		restart_game();
+	}
+
+	if (action == GLFW_RELEASE && key == GLFW_KEY_P)
+	{
+		ItemSystem::saveGameState("game_state.json");
 	}
 
 	Entity player = registry.players.entities[0]; // Assume only one player entity
@@ -661,8 +722,8 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 		}
 	}
 
-	// Set a random respawn time (1-5 seconds)
-	item_info.respawnTime = (rand() % 4000 + 1000);
+	// Set a random respawn time (10-15 seconds)
+	item_info.respawnTime = (rand() % 5001 + 10000);
 
 
 	// Hide item by removing motion & render components
@@ -695,7 +756,7 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 	{
 		Item& item_info = registry.items.get(item);
 
-		if (item_info.canRespawn == false)
+		if (!item_info.canRespawn)
 			return;
 
 		if (item_info.respawnTime <= 0)
@@ -808,14 +869,14 @@ void WorldSystem::update_textbox_visibility()
 
 void WorldSystem::updatePlayerWalkAndAnimation(Entity& player, Motion& player_motion, float elapsed_ms_since_last_update) {
 
-	if (m_ui_system != nullptr && m_ui_system->isCauldronOpen()) return; // no movement while menu is open
-
 	Animation& player_animation = registry.animations.get(player);
 
 	// Update velocity based on active keys
 	player_motion.velocity = { 0, 0 }; // Reset velocity before recalculating
 
-	if (registry.screenStates.components[0].is_switching_biome) return; // don't move while switching biomes
+	// no movement while menu is open, switching biome, or on welcome screen
+	ScreenState& screen = registry.screenStates.components[0];
+	if ((m_ui_system != nullptr && m_ui_system->isCauldronOpen()) || screen.is_switching_biome || screen.tutorial_state == (int)TUTORIAL::WELCOME_SCREEN) return;
 
 	if (pressed_keys.count(GLFW_KEY_W)) {
 		player_motion.velocity[1] -= PLAYER_SPEED;

@@ -146,7 +146,7 @@ bool collides_with_mesh(const Mesh* mesh, const Motion& player_motion, const Mot
 }
 
 
-bool collides(const Motion& player_motion, const Motion& terrain_motion, const Terrain* terrain, Entity terrain_entity)
+bool PhysicsSystem::collides(const Motion& player_motion, const Motion& terrain_motion, const Terrain* terrain, Entity terrain_entity)
 {
 	float player_width_ratio = 0.7f, player_height_ratio = 0.3f;
 	float terrain_width_ratio = 1.0f, terrain_height_ratio = 1.0f;
@@ -185,15 +185,15 @@ bool collides(const Motion& player_motion, const Motion& terrain_motion, const T
 	return overlap_x && overlap_y;
 }
 
-bool enemyCollides(const Motion& other_motion, const Motion& enemy_motion)
+bool genericCollides(const Motion& motion, const Motion& other_motion)
 {
 	// gets our bounding boxes for the player and terrain
+	vec4 box = get_bounding_box(motion, 1.f, 1.f);
 	vec4 other_box = get_bounding_box(other_motion, 1.f, 1.f);
-	vec4 enemy_box = get_bounding_box(enemy_motion, 1.f, 1.f);
 
 	// calculate our AABB overlapping bounding boxes
-	bool overlap_x = (other_box.x < enemy_box.x + enemy_box.z) && (other_box.x + enemy_box.z > enemy_box.x);
-	bool overlap_y = (other_box.y < enemy_box.y + enemy_box.w) && (other_box.y + enemy_box.w > enemy_box.y);
+	bool overlap_x = (box.x < other_box.x + other_box.z) && (box.x + other_box.z > other_box.x);
+	bool overlap_y = (box.y < other_box.y + other_box.w) && (box.y + other_box.w > other_box.y);
 
 	return overlap_x && overlap_y;
 }
@@ -222,6 +222,21 @@ void PhysicsSystem::step(float elapsed_ms)
 		{
 			registry.collisions.emplace_with_duplicates(player_entity, terrain_entity);
 		}
+
+		// also check ammo-terrain detection with ammo_stopping_entities
+		for (Entity ammo_entity : registry.ammo.entities) {
+			if (!registry.motions.has(ammo_entity)) continue;
+			Motion& ammo_motion = registry.motions.get(ammo_entity);
+			if (!registry.ammo.get(ammo_entity).is_fired) continue;
+
+			if (genericCollides(ammo_motion, terrain_motion)) {
+				if (registry.renderRequests.has(terrain_entity) &&
+					std::find(ammo_stopping_entities.begin(), ammo_stopping_entities.end(),
+						(int)registry.renderRequests.get(terrain_entity).used_texture) != ammo_stopping_entities.end()) {
+					registry.collisions.emplace_with_duplicates(ammo_entity, terrain_entity);
+				}
+			}
+		}
 	}
 
 	// Check enemy collisions
@@ -233,16 +248,16 @@ void PhysicsSystem::step(float elapsed_ms)
 		for (Entity ammo_entity : registry.ammo.entities) {
 			if (!registry.motions.has(ammo_entity)) continue;
 			Motion& ammo_motion = registry.motions.get(ammo_entity);
-			Ammo &ammo = registry.ammo.get(ammo_entity);
-			if (!ammo.is_fired) continue;
 
-			if (enemyCollides(ammo_motion, enemy_motion)) {
+			if (!registry.ammo.get(ammo_entity).is_fired) continue;
+
+			if (genericCollides(ammo_motion, enemy_motion)) {
 				registry.collisions.emplace_with_duplicates(ammo_entity, enemy);
 			}
 		}
 
 		// with player
-		if (enemyCollides(player_motion, enemy_motion)) {
+		if (genericCollides(player_motion, enemy_motion)) {
 			registry.collisions.emplace_with_duplicates(player_entity, enemy);
 		}
 	}

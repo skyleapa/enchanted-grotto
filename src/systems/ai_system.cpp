@@ -5,6 +5,15 @@
 #include <ctime>
 
 void AISystem::step(float elapsed_ms) {
+	if (registry.screenStates.components[0].is_switching_biome)
+	{
+		for (Entity enemy : registry.enemies.entities) {
+			if (registry.motions.has(enemy)) {
+				registry.motions.get(enemy).velocity = {0,0};
+			}
+		}
+		return;
+	}
 	for (const Entity& player : registry.players.entities) {
 		for (const Entity& enemy : registry.enemies.entities) {
 			updateEnemyAI(elapsed_ms, enemy, player);
