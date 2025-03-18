@@ -46,7 +46,6 @@ int main()
 	// initialize the main systems
 	renderer_system.init(window);
 	world_system.init(&renderer_system, &biome_system);
-	item_system.init(&renderer_system);
 	biome_system.init(&renderer_system);
 
 	// Initialize UI system last (after all other systems) and set reference in world system 

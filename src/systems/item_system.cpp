@@ -57,13 +57,6 @@ Entity ItemSystem::createCollectableIngredient(vec2 position, ItemType type, int
 	return item;
 }
 
-void ItemSystem::init(RenderSystem* renderer_arg) {
-	this->renderer = renderer_arg;
-
-	// Load persistent data - moved to restart_game
-	// loadGameState("game_state.json");
-}
-
 void ItemSystem::step(float elapsed_ms) {
 	// TODO - Update any time-based item effects here, unused for now
 	(void)elapsed_ms;

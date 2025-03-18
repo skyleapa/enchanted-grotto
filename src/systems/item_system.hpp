@@ -14,7 +14,6 @@ class ItemSystem {
 public:
     ItemSystem() {}
     
-    void init(RenderSystem* renderer_arg);
     void step(float elapsed_ms);
     
     // Item management
@@ -45,8 +44,4 @@ public:
     static nlohmann::json serializeInventory(Entity inventory);
     static Entity deserializeItem(const nlohmann::json& data);
     static void deserializeInventory(Entity inventory, const nlohmann::json& data);
-    
-private:
-    // Helper methods for serialization have been moved to public
-    static RenderSystem* renderer;
 }; 
