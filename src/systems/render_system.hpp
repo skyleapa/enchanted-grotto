@@ -175,7 +175,7 @@ private:
 	void drawTexturedMesh(Entity entity, const mat3& projection);
 	void drawToScreen();
 	void fadeScreen();
-	void simulate_water(UISystem* ui_system);
+	void simulate_water(Entity cauldron);
 
 	// Viewport numbers
 	int viewport_x;

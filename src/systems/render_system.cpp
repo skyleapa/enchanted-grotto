@@ -367,7 +367,9 @@ void RenderSystem::draw(UISystem* ui_system)
 	}
 
 	// Draw water
-	simulate_water(ui_system);
+	if (ui_system->isCauldronOpen()) {
+		simulate_water(ui_system->getOpenedCauldron());
+	}
 
 	// Render ui system first, so it can be faded out
 	ui_system->draw();
@@ -379,7 +381,7 @@ void RenderSystem::draw(UISystem* ui_system)
 	gl_has_errors();
 }
 
-void RenderSystem::simulate_water(UISystem* ui_system)
+void RenderSystem::simulate_water(Entity cauldron)
 {
 	// FULL CREDIT TO https://www.shadertoy.com/view/tt3yzn
 	// for the Navier-Stokes simulation shader
@@ -395,6 +397,10 @@ void RenderSystem::simulate_water(UISystem* ui_system)
 	cauldronCenter.x += viewport_x;
 	cauldronCenter.y += viewport_y;
 
+	// Cauldron center coords to define inner bounds
+	float cauldronR = CAULDRON_D * scale / 2;
+	float cauldronOuterR = (CAULDRON_D + 50.f) * scale / 2; // outer bound to improve performance
+
 	// Calm dye flow from top if no heat and no mouse drag
 	vec4 iMouse = iMouseCauldron;
 	if (!isCauldronDrag) {
@@ -403,40 +409,32 @@ void RenderSystem::simulate_water(UISystem* ui_system)
 	}
 
 	// First draw cauldron water texture underneath fluid sim
-	bool toScreen = ui_system->isCauldronOpen();
-	vec4 color = vec4(0.f, 0.f, 0.f, 0.f);
-	if (toScreen) {
-		Cauldron& cc = registry.cauldrons.get(ui_system->getOpenedCauldron());
-		color = vec4(cc.color / 255.f, 1.f);
-		float underScale = 2.0f;
-		vec4 underColor = vec4(color.x / underScale, color.y / underScale, color.z / underScale, 1.f);
-		registry.colors.remove(cc.water);
-		registry.colors.insert(cc.water, underColor);
-		
-		// Adjust dt and dye location based on heat level
-		// Range 1.5 - 3.5
-		if (cc.heatLevel > 0) {
-			dt = (cc.heatLevel / 100.f) * 2.0f + 1.5f;
-			if (!isCauldronDrag) {
-				iMouse = vec4(cauldronCenter, cauldronCenter.x + 5, cauldronCenter.y + 5);
-			}
+	Cauldron& cc = registry.cauldrons.get(cauldron);
+	vec4 color = vec4(cc.color / 255.f, 1.f);
+	float underScale = 2.0f;
+	vec4 underColor = vec4(color.x / underScale, color.y / underScale, color.z / underScale, 1.f);
+	registry.colors.remove(cc.water);
+	registry.colors.insert(cc.water, underColor);
+
+	// Hacky method of drawing without creating component, curtesy of Steph
+	// No renderrequest.isVisible check here, straight up draw the mesh
+	drawTexturedMesh(cc.water, createProjectionMatrix());
+	
+	// Adjust dt and dye location based on heat level
+	// Range 1.5 - 3.5
+	if (cc.heatLevel > 0) {
+		dt = (cc.heatLevel / 100.f) * 2.0f + 1.5f;
+		if (!isCauldronDrag) {
+			iMouse = vec4(cauldronCenter, cauldronCenter.x + 5, cauldronCenter.y + 5);
 		}
-
-		// Stir flash color. Kinda janky calculation but whatever
-		float flash = max((float) cc.stirFlash / STIR_FLASH_DURATION, 0.f);
-		color.w += flash * 0.5f;
-
-		// Hacky method of drawing without creating component, curtesy of Steph
-		// No renderrequest.isVisible check here, straight up draw the mesh
-		drawTexturedMesh(cc.water, createProjectionMatrix());
 	}
-
-	// Cauldron center coords to define inner bounds
-	float cauldronR = CAULDRON_D * scale / 2;
-	float cauldronOuterR = (CAULDRON_D + 50.f) * scale / 2; // outer bound to improve performance
 	
 	// Normalize water sim speed to FPS
 	dt *= WATER_FPS / m_fps;
+
+	// Stir flash color. Kinda janky calculation but whatever
+	float flash = max((float) cc.stirFlash / STIR_FLASH_DURATION, 0.f);
+	color.w += flash * 0.5f;
 
 	// Setup effect
 	GLuint curEffect = (GLuint)EFFECT_ASSET_ID::WATER_A;
@@ -458,10 +456,6 @@ void RenderSystem::simulate_water(UISystem* ui_system)
 	int curJIterations = 1;
 	while (curEffect <= (GLuint) EFFECT_ASSET_ID::WATER_FINAL) {
 		if (curEffect == (GLuint) EFFECT_ASSET_ID::WATER_FINAL) {
-			if (!toScreen) {
-				break;
-			}
-
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			glEnable(GL_BLEND);
 		} else {
