@@ -122,16 +122,6 @@ void DragListener::checkGrindingMotion() {
 		return;  // Not enough movement to detect a grind action
 	}
 
-	// Define the square area for the mortar
-	const float MORTAR_LEFT_X = 420.0f;
-	const float MORTAR_RIGHT_X = 830.0f;
-	const float MORTAR_TOP_Y = 260.0f;
-	const float MORTAR_BOTTOM_Y = 520.0f;
-	// width: 418px;
-	// height: 225px;
-	// top: 268px;
-	// left: 336px;
-
 	// std::cout << "pestleX: " << pestleX << ", pestleY: " << pestleY << std::endl;
 
 	// Check if pestle is within the mortar square
@@ -149,8 +139,8 @@ void DragListener::checkGrindingMotion() {
 	int up = 0;
 	int down = 0;
 	for (float move : pestleMotion) {
-		if (move > 50) down++;   // Downward movement detected
-		if (move < -50) up++;    // Upward movement detected
+		if (move > 45) down++;
+		if (move < -45) up++;
 	}
 	// std::cout << "Grinding action detected!" << " up: " << up << ", down: " << down << std::endl;
 
@@ -161,6 +151,43 @@ void DragListener::checkGrindingMotion() {
 
 		// Clear motion data after successful grind
 		pestleMotion.clear();
+	}
+}
+
+void createTempRenderRequestForItem(Entity item) {
+	if (!registry.renderRequests.has(item)) {
+		if (!registry.items.has(item)) {
+			std::cerr << "Attempted to assign RenderRequest to a non-item entity!" << std::endl;
+			return;
+		}
+
+		Item& itemComp = registry.items.get(item);
+
+		// Find the item texture from ITEM_INFO
+		auto it = ITEM_INFO.find(itemComp.type);
+		if (it == ITEM_INFO.end()) {
+			std::cerr << "No ITEM_INFO found for item type: " << itemComp.name << std::endl;
+			return;
+		}
+
+		const ItemInfo& itemInfo = it->second;
+
+		registry.renderRequests.insert(
+			item,
+			{
+				itemInfo.texture,
+				EFFECT_ASSET_ID::TEXTURED,
+				GEOMETRY_BUFFER_ID::SPRITE,
+				RENDER_LAYER::ITEM
+			});
+
+		if (!registry.motions.has(item)) {
+			Motion& motion = registry.motions.emplace(item);
+			motion.position = { 0, 0 };
+			motion.scale = itemInfo.size;
+		}
+
+		// std::cout << "RenderRequest assigned to item: " << itemComp.name << std::endl;
 	}
 }
 
@@ -321,7 +348,9 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 				ItemSystem::removeItemFromInventory(player, item);
 			}
 			registry.items.get(copy).amount = 1;
-			std::cout << "added ingredient: " << invItem.name << " to mortar" << std::endl;
+			std::cout << "Added ingredient: " << invItem.name << " to mortar" << std::endl;
+
+			createTempRenderRequestForItem(copy);
 
 			PotionSystem::storeIngredientInMortar(m_ui_system->getOpenedMortarPestle(), copy);
 			return;

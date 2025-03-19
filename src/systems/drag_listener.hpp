@@ -65,6 +65,12 @@ private:
 	// The min and max squared magnitudes to consider for stir coords
 	const float MIN_STIR_RADIUS = 50 * 50;
 	const float MAX_STIR_RADIUS = 150 * 150;
+
+	// Define the square area for the mortar
+	const float MORTAR_LEFT_X = 420.0f;
+	const float MORTAR_RIGHT_X = 830.0f;
+	const float MORTAR_TOP_Y = 260.0f;
+	const float MORTAR_BOTTOM_Y = 520.0f;
 };
 
 #endif

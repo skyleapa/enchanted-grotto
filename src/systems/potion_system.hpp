@@ -39,6 +39,8 @@ public:
 
 	static void storeIngredientInMortar(Entity mortar, Entity ingredient);
 
+	void updateMortar(float elapsed_ms);
+
 private:
 	// Base method for recording an action to a cauldron
 	static void recordAction(Entity cauldron, ActionType action, int value);

@@ -392,29 +392,45 @@ void PotionSystem::grindIngredient(Entity mortar) {
 	}
 
 	Ingredient& ing = registry.ingredients.get(ingredient);
-
+	Item& itemComp = registry.items.get(ingredient);
+	
 	// Increase grind level up to a maximum
 	if (ing.grindLevel < 1.0f) {
 		ing.grindLevel += 1;
 		//std::cout << "Ingredient grindlevel increased to " << ing.grindLevel << std::endl;
 	}
 
-	// Check if fully ground and update texture?
+	// Check if fully ground and update texture
 	if (ing.grindLevel >= 1.0f) {
 		std::cout << "Ingredient is fully ground" << std::endl;
-		// registry.items.get(ingredient).texture = TEXTURE_ASSET_ID::GROUND_COFFEE_BEAN;
+
+		// Convert original item type into a new grind type dynamically
+		// std::string original_name = ITEM_INFO.at(itemComp.type).name;
+		// std::string new_texture_name = "GRIND_" + original_name;
+
+		// TODO: draw grind_coffee_bean, 
+		if (registry.renderRequests.has(ingredient)) {
+			registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::MAGICAL_DUST;
+		}
+
+		itemComp.type = ItemType::MAGICAL_DUST; // Change item type
+
+		//std::cout << "New texture set for ingredient: " << (int)registry.renderRequests.get(ingredient).used_texture << std::endl;
+
+		// Start the countdown for moving ingredient to inventory (using respawnTime)
+		itemComp.respawnTime = 800.0f;
 	}
 
-	Entity player = registry.players.entities[0];
-	ItemSystem::addItemToInventory(player, ingredient);
+	// Entity player = registry.players.entities[0];
+	// ItemSystem::addItemToInventory(player, ingredient);
 
-	// Clear mortar items
-	Inventory& minv = registry.inventories.get(mortar);
-	for (Entity item : minv.items) {
-		ItemSystem::destroyItem(item);
-	}
+	// // Clear mortar items
+	// Inventory& minv = registry.inventories.get(mortar);
+	// for (Entity item : minv.items) {
+	// 	ItemSystem::destroyItem(item);
+	// }
 
-	minv.items.clear();
+	// minv.items.clear();
 }
 
 void PotionSystem::storeIngredientInMortar(Entity mortar, Entity ingredient) {
@@ -422,7 +438,7 @@ void PotionSystem::storeIngredientInMortar(Entity mortar, Entity ingredient) {
 		// std::cerr << "Invalid mortar entity" << std::endl;
 		return;
 	}
-	
+
 	Inventory& mortarInventory = registry.inventories.get(mortar);
 
 	// Check if the mortar already has an ingredient
@@ -431,10 +447,69 @@ void PotionSystem::storeIngredientInMortar(Entity mortar, Entity ingredient) {
 		return;
 	}
 
+	const ItemInfo& itemInfo = ITEM_INFO.find(registry.items.get(ingredient).type)->second;
+
+	// Set ingredient to be visible inside the mortar
+	if (!registry.renderRequests.has(ingredient)) {
+		// std::cout << "Adding RenderRequest to ingredient (Entity ID: " << ingredient.id() << ")" << std::endl;
+
+		registry.renderRequests.insert(
+			ingredient,
+			{
+				itemInfo.texture,
+				EFFECT_ASSET_ID::TEXTURED,
+				GEOMETRY_BUFFER_ID::SPRITE,
+				RENDER_LAYER::ITEM
+			}
+		);
+	}
+
 	Item& itemComp = registry.items.get(ingredient);
 	itemComp.isCollectable = true;
 
 	// Add the ingredient to the mortar's inventory
 	mortarInventory.items.push_back(ingredient);
+
+	// Set ingredient position to match mortar's position
+	Motion& mortarMotion = registry.motions.get(mortar);
+	Motion& ingredientMotion = registry.motions.get(ingredient);
+	ingredientMotion.position = { 620.0f, 440.0f };
+	ingredientMotion.scale = mortarMotion.scale * 0.6f;
+	ingredientMotion.angle = 180.0f;
+
 	std::cout << "Ingredient stored in mortar" << std::endl;
+}
+
+void PotionSystem::updateMortar(float elapsed_ms) {
+	for (Entity mortar : registry.mortarAndPestles.entities) {
+		Inventory& mortarInventory = registry.inventories.get(mortar);
+
+		if (mortarInventory.items.empty()) {
+			continue;
+		}
+
+		Entity ingredient = mortarInventory.items[0];
+		if (!registry.items.has(ingredient)) {
+			continue;
+		}
+
+		Item& itemComp = registry.items.get(ingredient);
+
+		// Only update if the item has a countdown running
+		if (itemComp.respawnTime > 0.0f) {
+			itemComp.respawnTime -= elapsed_ms;
+
+			// When time reaches 0, move item to inventory
+			if (itemComp.respawnTime <= 0.0f) {
+				Entity player = registry.players.entities[0];
+				ItemSystem::addItemToInventory(player, ingredient);
+
+				// Clear the mortar inventory
+				mortarInventory.items.clear();
+				ItemSystem::destroyItem(ingredient);
+
+				std::cout << "Ingredient moved to inventory!" << std::endl;
+			}
+		}
+	}
 }

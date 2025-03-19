@@ -377,6 +377,28 @@ void RenderSystem::draw(UISystem* ui_system)
 	// Render ui system first, so it can be faded out
 	ui_system->draw();
 
+	// Render items inside mortars if mortar menu is open
+	if (ui_system->isMortarPestleOpen()) {
+		for (Entity entity : registry.mortarAndPestles.entities) {
+			Inventory& mortarInventory = registry.inventories.get(entity);
+			for (Entity item : mortarInventory.items) {
+				if (registry.renderRequests.has(item)) {
+					drawTexturedMesh(item, projection_2D);
+				}
+			}
+		}
+	} else {
+		// Hide items in mortar when the menu is closed
+		for (Entity entity : registry.mortarAndPestles.entities) {
+			Inventory& mortarInventory = registry.inventories.get(entity);
+			for (Entity item : mortarInventory.items) {
+				if (registry.renderRequests.has(item)) {
+					registry.renderRequests.get(item).is_visible = false;
+				}
+			}
+		}
+	}
+
 	// Fade screen
 	if (registry.screenStates.components[0].is_switching_biome) fadeScreen();
 
