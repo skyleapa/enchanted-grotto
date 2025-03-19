@@ -57,11 +57,6 @@ Entity ItemSystem::createCollectableIngredient(vec2 position, ItemType type, int
 	return item;
 }
 
-void ItemSystem::init() {
-	// Load persistent data - moved to restart_game
-	// loadGameState();
-}
-
 void ItemSystem::step(float elapsed_ms) {
 	// TODO - Update any time-based item effects here, unused for now
 	(void)elapsed_ms;

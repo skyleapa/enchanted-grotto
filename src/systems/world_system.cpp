@@ -540,6 +540,9 @@ void WorldSystem::on_mouse_move(vec2 mouse_position)
 	double x = mouse_position.x;
 	double y = mouse_position.y;
 
+	// Cauldron uses unscaled mouse coords lmao
+	renderer->updateCauldronMouseLoc(x, y);
+
 	// Subtract possible black bar heights
 	GLint viewport_coords[4];
 	glGetIntegerv(GL_VIEWPORT, viewport_coords);
@@ -589,6 +592,12 @@ void WorldSystem::on_window_resize(int w, int h)
 {
 	int fbw, fbh;
 	glfwGetFramebufferSize(window, &fbw, &fbh);
+
+	// This could happen when alt-tabbing from fullscreen
+	if (fbw == 0 || fbh == 0) {
+		return;
+	}
+
 	float scale = 1.0f;
 	int xsize = WINDOW_WIDTH_PX, ysize = WINDOW_HEIGHT_PX;
 	if ((float)w / h > WINDOW_RATIO) {
@@ -603,7 +612,7 @@ void WorldSystem::on_window_resize(int w, int h)
 	int x = (fbw - xsize) / 2;
 	int y = (fbh - ysize) / 2;
 	renderer->setViewportCoords(x, y, xsize, ysize);
-	renderer->updateViewport();
+	renderer->initializeWaterBuffers(false); // Need to redo water sim cause of texture size change
 	m_ui_system->updateWindowSize(scale);
 }
 
@@ -1009,6 +1018,7 @@ void WorldSystem::updateFPS(float elapsed_ms)
 	float avg_frame_time = m_frame_time_sum / 60.0f;
 	if (avg_frame_time > 0) {
 		m_current_fps = 1000.0f / avg_frame_time;
+		renderer->setFPS(m_current_fps);
 	}
 
 	// Update timer for display refresh
