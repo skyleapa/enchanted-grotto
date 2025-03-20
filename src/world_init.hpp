@@ -13,7 +13,7 @@ Entity createPlayer(RenderSystem* renderer, vec2 position);
 
 // Collectable items and interaction textbox
 Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemType type, int amount, bool canRespawn);
-Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity);
+Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity, std::string text = "temp");
 RenderRequest getTextboxRenderRequest(Textbox& textbox);
 
 // forest

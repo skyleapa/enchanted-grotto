@@ -878,25 +878,19 @@ void WorldSystem::update_textbox_visibility()
 		if (foundTextbox)
 		{
 			Textbox& textbox = registry.textboxes.get(textboxEntity);
-			textbox.isVisible = (distance < TEXTBOX_VISIBILITY_RADIUS);
+			bool shouldBeVisible = (distance < TEXTBOX_VISIBILITY_RADIUS);
 
-			RenderRequest renderRequest = getTextboxRenderRequest(textbox);
-
-			if (textbox.isVisible)
+			if (shouldBeVisible)
 			{
-				if (!registry.renderRequests.has(textboxEntity))
-				{
-					registry.renderRequests.insert(textboxEntity, renderRequest);
-				}
-			}
-			else
-			{
-				if (registry.renderRequests.has(textboxEntity))
-				{
-					registry.renderRequests.remove(textboxEntity);
-				}
+				m_ui_system->textboxes[textboxEntity.id()] = textbox; // Add to desired state
 			}
 		}
+	}
+}
+
+void WorldSystem::clearTextboxes() {
+	for (Entity textbox : registry.textboxes.entities) {
+		m_ui_system->removeRmlUITextbox(registry.textboxes.get(textbox).targetItem.id());
 	}
 }
 

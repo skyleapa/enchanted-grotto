@@ -192,6 +192,9 @@ struct Textbox
 {
 	Entity targetItem;		// The item this textbox belongs to
 	bool isVisible = false; // Visibility of the textbox
+	TEXTBOX textbox;
+	std::string text;
+	vec2 pos;
 };
 
 struct Chest {
@@ -460,7 +463,7 @@ const std::unordered_map<ItemType, ItemInfo> ITEM_INFO = {
 			false}},
 	{
 		ItemType::COFFEE_BEANS, {
-			"Coffee Beans",
+			"Coffee Bean",
 			vec2((float)GRID_CELL_HEIGHT_PX * 0.9, (float)GRID_CELL_HEIGHT_PX * 0.9),
 			TEXTURE_ASSET_ID::COFFEE_BEAN,
 			"interactables/coffee_bean.png",

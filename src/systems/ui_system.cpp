@@ -219,6 +219,9 @@ void UISystem::step(float elapsed_ms)
 		// Display inventory
 		updateTutorial();
 
+		// update all the textboxes
+		updateTextboxes();
+
 		// Update cauldron color
 		updateCauldronUI();
 
@@ -485,7 +488,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 					updateFollowMouse();
 					break;
 				}
-        
+
 				// Check if clicking on cauldron water to bottle potion
 				Rml::Element* possibleCauldron = m_context->GetElementAtPoint(mousePos, hovered);
 				if (possibleCauldron && (possibleCauldron->GetId() == "cauldron-water" || possibleCauldron->GetId() == "cauldron")) {
@@ -516,7 +519,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 						SoundSystem::playBottleHighQualityPotionSound((int)SOUND_CHANNEL::MENU, 0);
 						SoundSystem::haltBoilSound();
 					}
-          
+
 					// Reset cauldron water
 					m_renderer->initializeWaterBuffers(true);
 				}
@@ -866,6 +869,118 @@ void UISystem::updateTutorial()
 	}
 	catch (const std::exception& e) {
 		std::cerr << "Exception in UISystem::updateTutorial: " << e.what() << std::endl;
+	}
+}
+
+void UISystem::updateTextboxes()
+{
+	if (!m_initialized || !m_context)
+		return;
+
+	// Create new textboxes that should be visible
+	for (const auto& [id, textbox] : textboxes)
+	{
+		if (m_textbox_documents.find(id) == m_textbox_documents.end())
+		{
+			createRmlUITextbox(id, textbox.text, textbox.pos);
+		}
+	}
+
+	// Remove textboxes that are no longer needed
+	std::vector<int> toRemove;
+	for (const auto& [id, document] : m_textbox_documents)
+	{
+		if (textboxes.find(id) == textboxes.end())
+		{
+			toRemove.push_back(id);
+		}
+	}
+	for (int id : toRemove)
+	{
+		removeRmlUITextbox(id);
+	}
+
+	textboxes.clear();
+}
+
+void UISystem::createRmlUITextbox(int id, std::string text, vec2 pos)
+{
+	if (!m_initialized || !m_context)
+		return;
+
+	try {
+		std::string top_position = std::to_string(pos.y) + "px";
+		std::string left_position = std::to_string(pos.x) + "px";
+
+		std::string textbox_rml = R"(
+			<rml>
+			<head>
+				<style>
+					body { 
+						margin: 0; 
+						padding: 0; 
+						background-color: transparent;
+						pointer-events: none;
+						width: 100%;
+						height: 100%;
+					}
+					div.text { 
+						position: absolute;
+						top: )" + top_position + R"(;
+						left: )" + left_position + R"(;
+						/* transform: translate(-50%, -50%); */
+						text-align: center;
+						font-size: 14px;
+						background-color: #ffffffcc;
+						font-family: Open Sans;
+						padding: 5px;
+						width: auto;
+						white-space: normal;
+						color: #000000;
+						/* border: 3px solid #000000; */
+    					border-radius: 5px;
+					}
+				</style>
+			</head>
+			<body>
+				<div class="text">)" + text + R"(</div>
+			</body>
+			</rml>
+		)";
+
+		Rml::ElementDocument* document = m_context->LoadDocumentFromMemory(textbox_rml.c_str());
+		if (document) {
+			document->Show();
+			m_textbox_documents[id] = document;  // Store the document in the map
+			std::cout << "UISystem::createTextbox created for id: " << id << std::endl;
+		}
+		else {
+			std::cerr << "UISystem::createTextbox failed to be created" << std::endl;
+		}
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::createTextbox: " << e.what() << std::endl;
+	}
+}
+
+void UISystem::removeRmlUITextbox(int id)
+{
+	if (!m_initialized || !m_context)
+		return;
+
+	auto it = m_textbox_documents.find(id);
+	if (it != m_textbox_documents.end())
+	{
+		Rml::ElementDocument* document = it->second;
+		document->Close();
+		m_context->UnloadDocument(document);
+		m_textbox_documents.erase(it);
+
+		std::cout << "UISystem::removeRmlUITextbox removed textbox with ID: " << id << std::endl;
+	}
+	else
+	{
+		std::cerr << "UISystem::removeRmlUITextbox called, but no document exists for ID: " << id << std::endl;
 	}
 }
 

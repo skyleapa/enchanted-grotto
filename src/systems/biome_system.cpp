@@ -69,7 +69,6 @@ void BiomeSystem::step(float elapsed_ms_since_last_update) {
 }
 
 void BiomeSystem::switchBiome(int biome) {
-
 	std::vector<Entity> to_remove;
 	for (auto entity : registry.motions.entities) {
 		if (registry.players.has(entity) || registry.inventories.has(entity)) continue;
