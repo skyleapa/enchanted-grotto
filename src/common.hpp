@@ -32,13 +32,20 @@ inline std::string shader_path(const std::string& name) { return std::string(PRO
 inline std::string textures_path(const std::string& name) { return data_path() + "/textures/" + std::string(name); };
 inline std::string audio_path(const std::string& name) { return data_path() + "/audio/" + std::string(name); };
 inline std::string mesh_path(const std::string& name) { return data_path() + "/meshes/" + std::string(name); };
+inline std::string game_state_path(const std::string& name) { return data_path() + "/game_states/v0/" + std::string(name); };
+
+const std::string GAME_STATE_FILE = "game_state.json";
+
+
+// 0 = lower quality (higher FPS), 1 = higher quality (computer fan go brrr)
+const int WATER_QUALITY_LEVEL = 1;
 
 //
 // game constants
 //
 const int WINDOW_WIDTH_PX = 1250;
 const int WINDOW_HEIGHT_PX = 700;
-const float WINDOW_RATIO = (float) WINDOW_WIDTH_PX / WINDOW_HEIGHT_PX;
+const float WINDOW_RATIO = (float)WINDOW_WIDTH_PX / WINDOW_HEIGHT_PX;
 
 const int GRID_CELL_WIDTH_PX = 50;
 const int GRID_CELL_HEIGHT_PX = 50;
@@ -48,6 +55,9 @@ const float PLAYER_BB_WIDTH = (float)65;
 const float PLAYER_BB_HEIGHT = (float)100;
 const float PlAYER_BB_GROTTO_SIZE_FACTOR = 1.8;
 const float PLAYER_SPEED = (float)200;
+const float PLAYER_HEALTH = (float)100;
+const float PLAYER_DYING = (float)20;
+const float PLAYER_DAMAGE_COOLDOWN = (float)1000;
 
 const float TIME_UPDATE_FACTOR = 0.001f;
 const float THROW_UPDATE_FACTOR = 0.3f;
@@ -99,10 +109,6 @@ const float DESERT_SKULL_HEIGHT = (float)110 * 0.8;
 
 const float DESERT_PAGE_WIDTH = (float)54 * 0.8;
 const float DESERT_PAGE_HEIGHT = (float)37 * 0.8;
-
-const float CAULDRON_WATER_WIDTH = (float)354 * 0.9;
-const float CAULDRON_WATER_HEIGHT = (float)337 * 0.9;
-const vec2 CAULDRON_WATER_POS = vec2(622, 289);
 
 const float ENT_WIDTH = (float)90;
 const float ENT_HEIGHT = (float)130;
@@ -251,8 +257,18 @@ const vec3 DEFAULT_COLOR = vec3(116, 204, 244);
 const float MIN_POTENCY_PERCENTAGE = 0.1;
 const float MIN_DURATION_PERCENTAGE = 0.05;
 
-// Cauldron color settings
+// Cauldron settings
 const int COLOR_FADE_DURATION = 5000;
+const float CAULDRON_D = 316;               // cauldron is a circle, this is diameter
+const vec2 CAULDRON_WATER_POS = vec2(0.4976f, 0.5757f); // center of cauldron relative to window
+const int STIR_FLASH_DURATION = 1000;
+const float WATER_FPS = 120.f;           // The default FPS to normalize water sim to
+    
+// Ladle offset coords for mouse and cauldron center
+const vec2 LADLE_OFFSET = vec2(25, -55);
+
+// The maximum UI degree change (both pos and neg) of the heat knob
+const int MAX_KNOB_DEGREE = 60;
 
 // Recipe penalty settings
 // If potion difficulty > 1, potions are harder to make good quality and vice versa
@@ -280,6 +296,14 @@ enum class TUTORIAL {
 	EXIT_MENU = BOTTLE + 1,
 	COMPLETE = EXIT_MENU + 1
 };
+
+enum class SOUND_CHANNEL {
+	GENERAL = -1, // this indicates choosing any available channel
+	BGM = 0,
+	BOILING = BGM + 1,
+	MENU = BOILING + 1
+};
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
 #endif

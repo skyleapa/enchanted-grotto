@@ -61,6 +61,8 @@ public:
     bool isCauldronOpen(Entity cauldron);
     Entity getOpenedCauldron();
     void setOpenedCauldron(Entity new_cauldron);
+    void cauldronDragUpdate(bool isDown);
+ 
 
     bool openMortarPestle(Entity mortar);
     bool isMortarPestleOpen();

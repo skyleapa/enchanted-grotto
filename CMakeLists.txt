@@ -146,6 +146,24 @@ if (NOT GLFW_FOUND OR NOT SDL2_FOUND)
     endif()
 endif()
 
+# Setup RmlUi - moved outside BUILD_GAME conditional so it's available for tests
+# First we need to make sure freetype exists on windows
+find_package(Freetype)
+if (NOT Freetype_FOUND)
+    set (FREETYPE_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/ext/RmlUi/Dependencies/lib/freetype.lib")
+    set (FREETYPE_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/ext/RmlUi/Dependencies/include")
+endif()
+find_package(Freetype REQUIRED)
+
+# From SimpleGL-3 cmake code
+if(TARGET Freetype AND NOT TARGET Freetype::Freetype)
+    add_library(Freetype::Freetype ALIAS freetype)
+endif()
+
+# Get RmlUi root build folder to find package
+set(RmlUi_ROOT "${CMAKE_SOURCE_DIR}/ext/RmlUi/Build")
+find_package(RmlUi REQUIRED)
+
 if(BUILD_GAME)
     target_include_directories(${PROJECT_NAME} PUBLIC ${GLFW_INCLUDE_DIRS})
     target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
@@ -157,23 +175,6 @@ if(BUILD_GAME)
         target_link_libraries(${PROJECT_NAME} PUBLIC glfw ${CMAKE_DL_LIBS})
     endif()
 
-    # Setup RmlUi
-    # First we need to make sure freetype exists on windows
-    find_package(Freetype)
-    if (NOT Freetype_FOUND)
-        set (FREETYPE_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/ext/RmlUi/Dependencies/lib/freetype.lib")
-        set (FREETYPE_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/ext/RmlUi/Dependencies/include")
-    endif()
-    find_package(Freetype REQUIRED)
-
-    # From SimpleGL-3 cmake code
-    if(TARGET Freetype AND NOT TARGET Freetype::Freetype)
-        add_library(Freetype::Freetype ALIAS freetype)
-    endif()
-
-    # Get RmlUi root build folder to find package
-    set(RmlUi_ROOT "${CMAKE_SOURCE_DIR}/ext/RmlUi/Build")
-    find_package(RmlUi REQUIRED)
     target_link_libraries(${PROJECT_NAME} PUBLIC RmlUi::RmlUi)
 
     # Add Windows-specific configuration

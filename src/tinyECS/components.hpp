@@ -10,6 +10,8 @@ struct Player
 	std::string name;
 	int throw_distance = 150; // pixels
 	float cooldown = 0.f; // defaults to 0, but when ammo is tossed, will have a 1000 ms cooldown
+	float health = PLAYER_HEALTH;
+	float damage_cooldown = PLAYER_DAMAGE_COOLDOWN; // cooldown before player can take damage again to prevent insta death
 };
 
 // All data relevant to the shape and motion of entities
@@ -50,6 +52,7 @@ struct ScreenState
 	int tutorial_state = 0;
 	bool tutorial_step_complete = true;
 	float autosave_timer = AUTOSAVE_TIMER;
+	std::vector<std::string> killed_enemies = {};
 };
 
 // A struct to refer to debugging graphics in the ECS
@@ -144,7 +147,9 @@ struct Cauldron
 	int timeElapsed = 0;              // Time elapsed since water filled and heat knob turned, in ms
 	int timeSinceLastAction = 0;      // Time elapsed since the last action, in ms. -1 means
 	int colorElapsed = 0;             // Time in ms for color updates
+	int stirFlash = 0;                // Time remaining for stir flash
 	std::vector<Action> actions;      // Records player actions
+	Entity water;                     // We technically only need 1 of these globally but this was easier so whatever
 	// If stir quality ever gets added, a penalty can be recorded here
 };
 
@@ -200,6 +205,8 @@ struct Enemy {
 	int state; // uses enum class ENEMY_STATE
 	int can_move;
 	float wander_timer = 10.0f;  // 10-second random movement before returning
+	std::string name; // gets passed into killed_enemies
+	float attack_damage;
 };
 
 struct Ammo {
@@ -310,7 +317,8 @@ enum class TEXTURE_ASSET_ID
 	MUMMY = ENT + 1,
 	POTION = MUMMY + 1,
 	WELCOME_TO_GROTTO = POTION + 1,
-	TEXTURE_COUNT = WELCOME_TO_GROTTO + 1,
+	CAULDRON_WATER = WELCOME_TO_GROTTO + 1,
+	TEXTURE_COUNT = CAULDRON_WATER + 1,
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 
@@ -331,7 +339,11 @@ enum class EFFECT_ASSET_ID
 	TEXTURED = CHICKEN + 1,
 	BACKGROUND = TEXTURED + 1,
 	FADE = BACKGROUND + 1,
-	EFFECT_COUNT = FADE + 1
+	WATER_A = FADE + 1,  // don't add anything between the waters pls pls
+	WATER_B = WATER_A + 1,
+	WATER_C = WATER_B + 1,
+	WATER_FINAL = WATER_C + 1,
+	EFFECT_COUNT = WATER_FINAL + 1
 };
 const int effect_count = (int)EFFECT_ASSET_ID::EFFECT_COUNT;
 
@@ -344,7 +356,8 @@ enum class GEOMETRY_BUFFER_ID
 	SCREEN_TRIANGLE = DEBUG_LINE + 1,
 	BRIDGE_TOP = SCREEN_TRIANGLE + 1,
 	BRIDGE_BOTTOM = BRIDGE_TOP + 1,
-	GEOMETRY_COUNT = BRIDGE_BOTTOM + 1
+	WATER_QUAD = BRIDGE_BOTTOM + 1,
+	GEOMETRY_COUNT = WATER_QUAD + 1
 };
 const int geometry_count = (int)GEOMETRY_BUFFER_ID::GEOMETRY_COUNT;
 
@@ -429,4 +442,9 @@ const std::unordered_map<ItemType, ItemInfo> ITEM_INFO = {
 			TEXTURE_ASSET_ID::MAGICAL_DUST,
 			"interactables/magical_dust.png",
 			true}},
+};
+
+// damage flash only to be applied to player and enemies
+struct DamageFlash {
+	float flash_value = 1.f; // defaults to 0 for no flash, and 1 for red tint
 };

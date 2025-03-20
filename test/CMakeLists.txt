@@ -17,6 +17,7 @@ target_include_directories(test_lib PUBLIC
     ${OPENGL_INCLUDE_DIR}
     ${GLFW_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIRS}
+    ${RmlUi_INCLUDE_DIR}
 )
 
 # Link required libraries
@@ -26,6 +27,7 @@ target_link_libraries(test_lib PUBLIC
     ${SDL2_LIBRARIES}
     ${SDL2MIXER_LIBRARIES}
     glm::glm
+    RmlUi::RmlUi
 )
 
 # Test executable
@@ -53,6 +55,7 @@ target_include_directories(system_tests PRIVATE
     ${OPENGL_INCLUDE_DIR}
     ${GLFW_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIRS}
+    ${RmlUi_INCLUDE_DIR}
 )
 
 # Discover tests

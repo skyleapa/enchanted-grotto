@@ -12,6 +12,7 @@ public:
 	static void RegisterDraggableElement(Rml::Element* element);
 	static void RegisterDragDropElement(Rml::Element* element);
 	static void LinkUISystem(UISystem* ui_system) { m_ui_system = ui_system; }
+	static bool is_boiling; // is the boiling sound playing
 
 protected:
 	virtual void ProcessEvent(Rml::Event& event);
@@ -24,7 +25,7 @@ private:
 	float getHeatDegree(Rml::Vector2f coords, float curDegree);
 	int getHeatLevel(float degree);
 	float getCurrentDegree(Rml::Element* heatknob);
-	void setHeatDegree(Rml::Element* heatknob, float degree);
+	void setHeatDegree(float degree);
 
 	// Ladle functions
 
@@ -36,6 +37,7 @@ private:
 	// Center coord: 625, 285
 	std::pair<float, float> getPolarCoordinates(Rml::Vector2f input);
 	void checkCompletedStir();
+	void endStir(Rml::Element* e);
 
 	void checkGrindingMotion();
 
@@ -55,16 +57,15 @@ private:
 	// The last heat knob coords
 	Rml::Vector2f lastCoords = Rml::Vector2f(0, 0);
 
-	// The maximum degree change (both pos and neg) of the heat knob
-	const int MAX_DEGREE = 60;
-
 	// The center to calculate polar coords from
 	// = center cauldron coords + an offset to account for the ladle size
 	const Rml::Vector2f CAULDRON_CENTER = Rml::Vector2f(625, 285) + Rml::Vector2f(25, -55);
 
 	// The min and max squared magnitudes to consider for stir coords
 	const float MIN_STIR_RADIUS = 50 * 50;
-	const float MAX_STIR_RADIUS = 150 * 150;
+	const float MAX_STIR_RADIUS = 170 * 170;
+
+	bool is_heat_changing = false; // is the dial click playing
 
 	// Define the square area for the mortar
 	const float MORTAR_LEFT_X = 420.0f;

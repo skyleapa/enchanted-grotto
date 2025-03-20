@@ -12,6 +12,10 @@ void PotionSystem::updateCauldrons(float elapsed_ms) {
 			continue;
 		}
 
+		if (cc.stirFlash > 0) {
+			cc.stirFlash -= elapsed_ms;
+		}
+
 		// Don't need to update cauldrons that have no actions
 		if (cc.actions.size() == 0) {
 			continue;
@@ -120,11 +124,17 @@ void PotionSystem::changeHeat(Entity cauldron, int value) {
 }
 
 void PotionSystem::stirCauldron(Entity cauldron) {
+	stirCauldron(cauldron, 1);
+}
+
+void PotionSystem::stirCauldron(Entity cauldron, int amount)
+{
+	registry.cauldrons.get(cauldron).stirFlash = STIR_FLASH_DURATION;
 	Inventory& ci = registry.inventories.get(cauldron);
 	if (ci.items.size() == 0) {
 		return;
 	}
-	recordAction(cauldron, ActionType::STIR, 1);
+	recordAction(cauldron, ActionType::STIR, amount);
 }
 
 Potion PotionSystem::bottlePotion(Entity cauldron) {

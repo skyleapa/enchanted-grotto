@@ -14,6 +14,7 @@
 #include "systems/item_system.hpp"
 #include "systems/potion_system.hpp"
 #include "systems/ui_system.hpp"
+#include "systems/sound_system.hpp"
 
 using Clock = std::chrono::high_resolution_clock;
 
@@ -29,6 +30,7 @@ int main()
 	PotionSystem  potion_system;
 	BiomeSystem   biome_system;
 	UISystem      ui_system;
+	SoundSystem	  sound_system;
 
 	// initialize window
 	GLFWwindow* window = world_system.create_window();
@@ -39,14 +41,13 @@ int main()
 		return EXIT_FAILURE;
 	}
 
-	if (!world_system.start_and_load_sounds()) {
+	if (!sound_system.startAndLoadSounds()) {
 		std::cerr << "ERROR: Failed to start or load sounds." << std::endl;
 	}
 
 	// initialize the main systems
 	renderer_system.init(window);
 	world_system.init(&renderer_system, &biome_system);
-	item_system.init();
 	biome_system.init(&renderer_system);
 
 	// Initialize UI system last (after all other systems) and set reference in world system 
@@ -79,8 +80,8 @@ int main()
 		physics_system.step(elapsed_ms);
 		item_system.step(elapsed_ms);
 		potion_system.updateCauldrons(elapsed_ms);
+		world_system.handle_collisions(elapsed_ms);
 		potion_system.updateMortar(elapsed_ms);
-		world_system.handle_collisions();
 		biome_system.step(elapsed_ms);
 		ui_system.step(elapsed_ms);
 
@@ -89,7 +90,7 @@ int main()
 	}
 
 	// Save game state before exit
-	item_system.saveGameState("game_state.json");
+	item_system.saveGameState();
 
 	return EXIT_SUCCESS;
 }

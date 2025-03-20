@@ -57,11 +57,6 @@ Entity ItemSystem::createCollectableIngredient(vec2 position, ItemType type, int
 	return item;
 }
 
-void ItemSystem::init() {
-	// Load persistent data - moved to restart_game
-	// loadGameState("game_state.json");
-}
-
 void ItemSystem::step(float elapsed_ms) {
 	// TODO - Update any time-based item effects here, unused for now
 	(void)elapsed_ms;
@@ -279,6 +274,19 @@ nlohmann::json ItemSystem::serializeInventory(Entity inventory) {
 	return data;
 }
 
+nlohmann::json ItemSystem::serializeScreenState() {
+	ScreenState& screen = registry.screenStates.components[0];
+
+	nlohmann::json data;
+
+	data["tutorial_state"] = screen.tutorial_state;
+	data["biome"] = screen.biome;
+	data["from_biome"] = screen.from_biome;
+	data["killed_enemies"] = screen.killed_enemies;
+
+	return data;
+}
+
 Entity ItemSystem::deserializeItem(const nlohmann::json& data) {
 	Entity entity;
 
@@ -339,7 +347,7 @@ void ItemSystem::deserializeInventory(Entity inventory, const nlohmann::json& da
 	}
 }
 
-bool ItemSystem::saveGameState(const std::string& filename) {
+bool ItemSystem::saveGameState() {
 	nlohmann::json data;
 	nlohmann::json inventories = nlohmann::json::array();
 	
@@ -360,9 +368,11 @@ bool ItemSystem::saveGameState(const std::string& filename) {
 		inventories.push_back(serializeInventory(inventory));
 	}
 	data["inventories"] = inventories;
+	data["screen_state"] = serializeScreenState();
 	
 	try {
-		std::ofstream file(filename);
+		std::string save_path = game_state_path(GAME_STATE_FILE);
+		std::ofstream file(save_path);
 		// https://json.nlohmann.me/api/basic_json/dump/
 		file << data.dump(4);
 		return true;
@@ -372,9 +382,10 @@ bool ItemSystem::saveGameState(const std::string& filename) {
 	}
 }
 
-bool ItemSystem::loadGameState(const std::string& filename) {
+bool ItemSystem::loadGameState() {
 	try {
-		std::ifstream file(filename);
+		std::string save_path = game_state_path(GAME_STATE_FILE);
+		std::ifstream file(save_path);
 		if (!file.is_open()) {
 			return false;
 		}
@@ -409,9 +420,25 @@ bool ItemSystem::loadGameState(const std::string& filename) {
 			}
 		}
 		
+		if (!data["screen_state"].empty()) {
+			deserializeScreenState(data["screen_state"]);
+		}
+		
 		return true;
 	} catch (const std::exception& e) {
 		std::cerr << "Failed to load game state: " << e.what() << std::endl;
 		return false;
 	}
 } 
+
+void ItemSystem::deserializeScreenState(const nlohmann::json& data) {
+	ScreenState& screen = registry.screenStates.components[0];
+
+	screen.tutorial_state = data["tutorial_state"];
+	screen.switching_to_biome = data["biome"]; // biome switching happens only if switching to biome != biome
+	screen.from_biome = data["from_biome"];
+	for (const auto& enemy : data["killed_enemies"]) {
+		registry.screenStates.components[0].killed_enemies.push_back(enemy);
+	}
+}
+	

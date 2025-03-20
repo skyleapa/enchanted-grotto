@@ -3,6 +3,7 @@
 #include "world_init.hpp"
 #include "common.hpp"
 #include "item_system.hpp"
+#include "sound_system.hpp"
 
 // stlib
 #include <cassert>
@@ -154,7 +155,7 @@ bool WorldSystem::init(RenderSystem* renderer_arg, BiomeSystem* biome_sys)
 	// Mix_PlayMusic(background_music, -1);
 
 	// Set all states to default
-	restart_game();
+	restart_game(false);
 
 	return true;
 }
@@ -185,7 +186,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		screen.autosave_timer -= elapsed_ms_since_last_update;
 		if (screen.autosave_timer <= 0) {
 			screen.autosave_timer = AUTOSAVE_TIMER;
-			ItemSystem::saveGameState("game_state.json");
+			ItemSystem::saveGameState();
 		}
 	}
 
@@ -225,11 +226,11 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 }
 
 // Reset the world state to its initial state
-void WorldSystem::restart_game()
+void WorldSystem::restart_game(bool hard_reset)
 {
 	std::cout << "Restarting..." << std::endl;
 
-	ScreenState& state = registry.screenStates.components[0];
+	ScreenState& screen = registry.screenStates.components[0];
 
 	// Save the player's inventory before clearing if it exists
 	// Entity player_entity;
@@ -273,17 +274,26 @@ void WorldSystem::restart_game()
 		createPlayer(renderer, vec2(GRID_CELL_WIDTH_PX * 17.5, GRID_CELL_HEIGHT_PX * 6.5)); // bring player to front of door));
 	}
 
-	// re-open tutorial
-	state.tutorial_state = (int)TUTORIAL::WELCOME_SCREEN;
-	state.tutorial_step_complete = true;
+	// re-open tutorial, state is loaded from persistence
+	// state.tutorial_step_complete = true;
 
-	ItemSystem::loadGameState("game_state.json"); // load the game state
+	if (hard_reset) {
+		screen.from_biome = (int) BIOME::BLANK;
+		screen.biome = (int) BIOME::BLANK;
+		screen.switching_to_biome = (int) BIOME::GROTTO;
+		screen.tutorial_state = 0;
+		screen.tutorial_step_complete = true;
+		createWelcomeScreen(renderer, vec2(WINDOW_WIDTH_PX / 2, WINDOW_HEIGHT_PX / 2 - 50));
+		screen.killed_enemies = {};
+	} else {
+		ItemSystem::loadGameState(); // load the game state
+	}
 
 	biome_sys->init(renderer);
 
 }
 
-void WorldSystem::handle_collisions()
+void WorldSystem::handle_collisions(float elapsed_ms)
 {
 	// Ensure player exists
 	if (registry.players.entities.empty())
@@ -314,6 +324,7 @@ void WorldSystem::handle_collisions()
 			Enemy& enemy = registry.enemies.get(enemy_entity);
 			enemy.health -= ammo.damage;
 			registry.remove_all_components_of(ammo_entity);
+			SoundSystem::playEnemyOuchSound((int) SOUND_CHANNEL::GENERAL, 0); // play enemy ouch sound
 			if (enemy.health <= 0) {
 				// using can_move for now since ent cannot move, but mummy can
 				if (enemy.can_move == 0) {
@@ -326,16 +337,38 @@ void WorldSystem::handle_collisions()
 					screen.tutorial_step_complete = true;
 					screen.tutorial_state += 1;
 				}
+
+				// add enemy name to killed_enemies for persistence
+				if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), enemy.name) == screen.killed_enemies.end()) {
+					screen.killed_enemies.push_back(enemy.name);
+				}
+				
 				registry.remove_all_components_of(enemy_entity);
 			}
 			continue;
 		}
-		// case where enemy hits player - automatically die
+		// case where enemy hits player
 		else if ((registry.players.has(collision_entity) || registry.players.has(collision.other)) && (registry.enemies.has(collision_entity) || registry.enemies.has(collision.other))) {
-			ItemSystem::loadGameState("game_state.json");
-			screen.is_switching_biome = true;
-			screen.switching_to_biome = (GLuint)BIOME::GROTTO;
-			// load the most recently saved file
+			Entity player_entity = registry.players.has(collision_entity) ? collision_entity : collision.other;
+			Entity enemy_entity = registry.enemies.has(collision_entity) ? collision_entity : collision.other;
+			
+			Player& player = registry.players.get(player_entity);
+
+			if (player.damage_cooldown > 0)	continue;
+			
+			// player flashes red and takes damage equal to enemy's attack
+			if (!registry.damageFlashes.has(player_entity)) registry.damageFlashes.emplace(player_entity);
+			player.health -= registry.enemies.get(enemy_entity).attack_damage;
+			player.damage_cooldown = PLAYER_DAMAGE_COOLDOWN;
+
+			// if player dies, reload from most recent save and respawn in grotto
+			if (player.health <= 0) {
+				std::cout << "player died!" << std::endl;
+				ItemSystem::loadGameState();
+				screen.is_switching_biome = true;
+				screen.switching_to_biome = (GLuint)BIOME::GROTTO;
+				player.health = PLAYER_HEALTH; // reset to max health
+			}
 			continue;
 		}
 		else if ((registry.ammo.has(collision_entity) || registry.ammo.has(collision.other)) && (registry.terrains.has(collision_entity) || registry.terrains.has(collision.other))) {
@@ -445,12 +478,12 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 
 	if (action == GLFW_RELEASE && key == GLFW_KEY_R)
 	{
-		restart_game();
+		restart_game(true);
 	}
 
 	if (action == GLFW_RELEASE && key == GLFW_KEY_P)
 	{
-		ItemSystem::saveGameState("game_state.json");
+		ItemSystem::saveGameState();
 	}
 
 	Entity player = registry.players.entities[0]; // Assume only one player entity
@@ -523,6 +556,9 @@ void WorldSystem::on_mouse_move(vec2 mouse_position)
 	double x = mouse_position.x;
 	double y = mouse_position.y;
 
+	// Cauldron uses unscaled mouse coords lmao
+	renderer->updateCauldronMouseLoc(x, y);
+
 	// Subtract possible black bar heights
 	GLint viewport_coords[4];
 	glGetIntegerv(GL_VIEWPORT, viewport_coords);
@@ -564,7 +600,7 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 		if (m_ui_system != nullptr && (m_ui_system->isCauldronOpen() || m_ui_system->isMortarPestleOpen())) return;
 		if (mouse_pos_x >= BAR_X && mouse_pos_x <= BAR_X + BAR_WIDTH && mouse_pos_y >= BAR_Y && mouse_pos_y <= BAR_Y + BAR_HEIGHT) return;
 		// don't throw ammo if in potion making menu or clicking on inventory
-		throwAmmo(vec2(mouse_pos_x, mouse_pos_y));
+		if (throwAmmo(vec2(mouse_pos_x, mouse_pos_y))) SoundSystem::playThrowSound((int) SOUND_CHANNEL::GENERAL, 0);
 	}
 }
 
@@ -572,6 +608,12 @@ void WorldSystem::on_window_resize(int w, int h)
 {
 	int fbw, fbh;
 	glfwGetFramebufferSize(window, &fbw, &fbh);
+
+	// This could happen when alt-tabbing from fullscreen
+	if (fbw == 0 || fbh == 0) {
+		return;
+	}
+
 	float scale = 1.0f;
 	int xsize = WINDOW_WIDTH_PX, ysize = WINDOW_HEIGHT_PX;
 	if ((float)w / h > WINDOW_RATIO) {
@@ -586,7 +628,7 @@ void WorldSystem::on_window_resize(int w, int h)
 	int x = (fbw - xsize) / 2;
 	int y = (fbh - ysize) / 2;
 	renderer->setViewportCoords(x, y, xsize, ysize);
-	renderer->updateViewport();
+	renderer->initializeWaterBuffers(false); // Need to redo water sim cause of texture size change
 	m_ui_system->updateWindowSize(scale);
 }
 
@@ -646,7 +688,6 @@ void WorldSystem::handle_player_interaction()
 		else if (registry.cauldrons.has(item)) {
 			// don't allow opening if it's currently invisible
 			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
-			std::cout << "found cauldron " << item.id() << std::endl;
 			if (m_ui_system != nullptr)
 			{
 				handle_textbox = m_ui_system->openCauldron(item);
@@ -700,6 +741,7 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 	Item& item_info = registry.items.get(item);
 	if (!ItemSystem::addItemToInventory(player, item))
 		return false;
+	SoundSystem::playCollectItemSound((int) SOUND_CHANNEL::GENERAL, 0);
 
 	// handle fruit collection
 	if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::COLLECT_ITEMS) {
@@ -941,19 +983,26 @@ void WorldSystem::updatePlayerWalkAndAnimation(Entity& player, Motion& player_mo
 			player_comp.cooldown = 0;
 		}
 	}
+
+	// update player's damage cooldown
+	if (player_comp.damage_cooldown >= 0) player_comp.damage_cooldown -= elapsed_ms_since_last_update;
 }
 
-void WorldSystem::throwAmmo(vec2 target) {
-	if (registry.players.entities.empty()) return;
+bool WorldSystem::throwAmmo(vec2 target) {
+	if (registry.players.entities.empty()) return false;
 	Entity player_entity = registry.players.entities[0];
 	Player& player = registry.players.get(player_entity);
 
-	if (player.cooldown > 0.f) std::cout << "on cooldown" << std::endl;
-	if (!registry.inventories.has(player_entity) || player.cooldown > 0.f || !registry.motions.has(player_entity)) return;
+	if (player.cooldown > 0.f) {
+		std::cout << "on cooldown" << std::endl;
+		return false;
+	}
+
+	if (!registry.inventories.has(player_entity) || player.cooldown > 0.f || !registry.motions.has(player_entity)) return false;
 	Inventory& inventory = registry.inventories.get(player_entity);
 	if (inventory.items.size() < inventory.selection + 1) {
 		std::cout << "cannot throw selected item" << std::endl;
-		return;
+		return false;
 	}
 
 	Entity& item_entity = inventory.items[inventory.selection];
@@ -968,7 +1017,10 @@ void WorldSystem::throwAmmo(vec2 target) {
 			}
 		}
 		player.cooldown = 1000.f;
+		return true;
 	}
+
+	return false;
 
 }
 
@@ -1000,6 +1052,7 @@ void WorldSystem::updateFPS(float elapsed_ms)
 	float avg_frame_time = m_frame_time_sum / 60.0f;
 	if (avg_frame_time > 0) {
 		m_current_fps = 1000.0f / avg_frame_time;
+		renderer->setFPS(m_current_fps);
 	}
 
 	// Update timer for display refresh
