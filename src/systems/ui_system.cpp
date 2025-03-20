@@ -528,7 +528,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 			}
 		} while (false);
 
-		// Check for pestle pickup
+		// Check for pestle and ingredient pickup
 		do {
 			if (!isMortarPestleOpen()) {
 				break;
@@ -536,7 +536,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 
 			if (id == "pestle") {
 				Rml::Element* possibleMortar = m_context->GetElementAtPoint(mousePos, hovered);
-				if (possibleMortar && possibleMortar->GetId() == "mortar") {
+				if (possibleMortar && (possibleMortar->GetId() == "mortar" || possibleMortar->GetId() == "mortar_border")) {
 					break;
 				}
 
@@ -1152,6 +1152,16 @@ bool UISystem::openMortarPestle(Entity mortar) {
 					drag: drag;
 					z-index: 10;
 				}
+				#mortar_border {
+					position: absolute;
+					width: 400px;
+					height: 400px;
+					top: 80px;
+					left: 350px;
+					opacity: 0;
+					decorator: image("interactables/mortar_border.png" flip-vertical fill);
+					z-index: 5;
+				}
                 #mortar {
 					position: absolute;
 					width: 418px;
@@ -1165,6 +1175,7 @@ bool UISystem::openMortarPestle(Entity mortar) {
         </head>
         <body>
             <div id="mortar"></div>
+			<div id="mortar_border"></div>
             <div id="pestle"></div>
         </body>
         </rml>
@@ -1177,6 +1188,7 @@ bool UISystem::openMortarPestle(Entity mortar) {
         }
 
         DragListener::RegisterDragDropElement(m_mortar_document->GetElementById("mortar"));
+		DragListener::RegisterDragDropElement(m_mortar_document->GetElementById("mortar_border"));
         DragListener::RegisterDraggableElement(m_mortar_document->GetElementById("pestle"));
 
         m_mortar_document->Show();
