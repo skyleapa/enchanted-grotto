@@ -107,8 +107,8 @@ bool Mesh::loadFromOBJFile(std::string obj_path, std::vector<ColoredVertex>& out
 		max_position = glm::max(max_position, pos.position);
 		min_position = glm::min(min_position, pos.position);
 	}
-	if(abs(max_position.z - min_position.z)<0.001)
-		max_position.z = min_position.z+1; // don't scale z direction when everythin is on one plane
+	if (abs(max_position.z - min_position.z) < 0.001)
+		max_position.z = min_position.z + 1; // don't scale z direction when everythin is on one plane
 
 	vec3 size3d = max_position - min_position;
 	out_size = size3d;

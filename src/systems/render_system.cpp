@@ -164,10 +164,11 @@ void RenderSystem::drawTexturedMesh(Entity entity,
 			GLint damageFlash_uloc = glGetUniformLocation(program, "damage_flash");
 			glUniform1f(damageFlash_uloc, registry.damageFlashes.get(entity).flash_value);
 			gl_has_errors();
-		} else {
+		}
+		else {
 			glUniform1f(isEnemyOrPlayer_uloc, false);
 		}
-		
+
 	}
 	// .obj entities
 	else if (render_request.used_effect == EFFECT_ASSET_ID::CHICKEN || render_request.used_effect == EFFECT_ASSET_ID::EGG)
@@ -420,7 +421,7 @@ void RenderSystem::draw(UISystem* ui_system)
 
 	// Fade screen
 	if (registry.screenStates.components[0].is_switching_biome) fadeScreen();
-	
+
 	// flicker-free display with a double buffer
 	gl_has_errors();
 }
@@ -434,7 +435,7 @@ void RenderSystem::simulate_water(Entity cauldron)
 	float dx = 0.8f;            // smaller seems to make it more accurate
 	float dt = 1.0f;            // how fast time progresses
 	float dyeScale = scale * 2; // how fat the dye is
-	
+
 	// Resolution based on window size
 	vec2 resolution = vec2(frameBufferWidth, frameBufferHeight);
 	vec2 cauldronCenter = vec2(viewport_sizex, viewport_sizey) * CAULDRON_WATER_POS;
@@ -463,7 +464,7 @@ void RenderSystem::simulate_water(Entity cauldron)
 	// Hacky method of drawing without creating component, curtesy of Steph
 	// No renderrequest.isVisible check here, straight up draw the mesh
 	drawTexturedMesh(cc.water, createProjectionMatrix());
-	
+
 	// Adjust dt and dye location based on heat level
 	// Range 1.5 - 3.5
 	if (cc.heatLevel > 0) {
@@ -472,12 +473,12 @@ void RenderSystem::simulate_water(Entity cauldron)
 			iMouse = vec4(cauldronCenter, cauldronCenter.x + 5, cauldronCenter.y + 5);
 		}
 	}
-	
+
 	// Normalize water sim speed to FPS
 	dt *= WATER_FPS / m_fps;
 
 	// Stir flash color. Kinda janky calculation but whatever
-	float flash = max((float) cc.stirFlash / STIR_FLASH_DURATION, 0.f);
+	float flash = max((float)cc.stirFlash / STIR_FLASH_DURATION, 0.f);
 	color.w += flash * 0.5f;
 
 	// Setup effect
@@ -496,13 +497,14 @@ void RenderSystem::simulate_water(Entity cauldron)
 
 	// 2 Jacobi iterations seems to be the sweet spot
 	// Yes curJIterations initializes at 1 don't touch that
-	const int jacobiIterations = 2; 
+	const int jacobiIterations = 2;
 	int curJIterations = 1;
-	while (curEffect <= (GLuint) EFFECT_ASSET_ID::WATER_FINAL) {
-		if (curEffect == (GLuint) EFFECT_ASSET_ID::WATER_FINAL) {
+	while (curEffect <= (GLuint)EFFECT_ASSET_ID::WATER_FINAL) {
+		if (curEffect == (GLuint)EFFECT_ASSET_ID::WATER_FINAL) {
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			glEnable(GL_BLEND);
-		} else {
+		}
+		else {
 			glBindFramebuffer(GL_FRAMEBUFFER, b ? water_buffer_one : water_buffer_two);
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
@@ -516,20 +518,22 @@ void RenderSystem::simulate_water(Entity cauldron)
 		glUniform1f(glGetUniformLocation(program, "maxSqm"), cauldronOuterR * cauldronOuterR);
 		glUniform2fv(glGetUniformLocation(program, "cauldronCoords"), 1, (float*)&cauldronCenter);
 
-		if (curEffect == (GLuint) EFFECT_ASSET_ID::WATER_A) {
+		if (curEffect == (GLuint)EFFECT_ASSET_ID::WATER_A) {
 			glUniform2fv(glGetUniformLocation(program, "iResolution"), 1, (float*)&resolution);
 			glUniform4fv(glGetUniformLocation(program, "iMouse"), 1, (float*)&iMouse);
 			glUniform1f(glGetUniformLocation(program, "dt"), dt);
 			glUniform1f(glGetUniformLocation(program, "crSq"), cauldronR * cauldronR);
 			glUniform1f(glGetUniformLocation(program, "scale"), dyeScale);
-		} else if (curEffect == (GLuint) EFFECT_ASSET_ID::WATER_FINAL) {
+		}
+		else if (curEffect == (GLuint)EFFECT_ASSET_ID::WATER_FINAL) {
 			glUniform2fv(glGetUniformLocation(program, "iResolution"), 1, (float*)&resolution);
 			glUniform4fv(glGetUniformLocation(program, "color"), 1, (float*)&color);
-		} else {
+		}
+		else {
 			glUniform1f(glGetUniformLocation(program, "dx"), dx);
 		}
 		gl_has_errors();
-	
+
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, b ? water_texture_two : water_texture_one);
 
@@ -537,11 +541,12 @@ void RenderSystem::simulate_water(Entity cauldron)
 		gl_has_errors();
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		
+
 		// Keep doing jacobi iterations 
-		if (curEffect == (GLuint) EFFECT_ASSET_ID::WATER_B && curJIterations < jacobiIterations) {
+		if (curEffect == (GLuint)EFFECT_ASSET_ID::WATER_B && curJIterations < jacobiIterations) {
 			curJIterations++;
-		} else {
+		}
+		else {
 			curEffect++;
 		}
 
@@ -651,8 +656,8 @@ mat3 RenderSystem::createProjectionMatrix()
 		{tx, ty, 1.f} };
 }
 
-void RenderSystem::setViewportCoords(int x, int y, int sizex, int sizey) { 
-	scale = (float) sizex / WINDOW_WIDTH_PX;
+void RenderSystem::setViewportCoords(int x, int y, int sizex, int sizey) {
+	scale = (float)sizex / WINDOW_WIDTH_PX;
 	frameBufferWidth = 2 * x + sizex;
 	frameBufferHeight = 2 * y + sizey;
 	viewport_x = x, viewport_y = y, viewport_sizex = sizex, viewport_sizey = sizey;

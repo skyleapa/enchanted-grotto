@@ -73,6 +73,17 @@ public:
     // tutorial
     void updateTutorial();
 
+    // textboxes
+    void updateTextboxes();
+    std::unordered_map<int, Textbox> textboxes;
+
+    void createRmlUITextbox(int id, std::string text, vec2 pos);
+    void removeRmlUITextbox(int id);
+
+    // Health bar methods
+    void createHealthBar();
+    void updateHealthBar();
+
 private:
     GLFWwindow* m_window;
     RenderSystem* m_renderer;
@@ -126,6 +137,9 @@ private:
     // Tutorial variables
     Rml::ElementDocument* m_tutorial_document = nullptr;
 
+    // Textbox variables
+    std::unordered_map<int, Rml::ElementDocument*> m_textbox_documents;  // to store multiple textboxes
+
     const std::unordered_map<int, std::tuple<std::string, std::string, std::string>> tutorial_steps = {
         { (int)TUTORIAL::WELCOME_SCREEN, {
         }},
@@ -165,6 +179,9 @@ private:
     const std::string LADLE_TOP_PX = "45px";
     const std::string BOTTLE_LEFT_PX = "904px";
     const std::string BOTTLE_TOP_PX = "395px";
+
+    // Healthbar variables
+    Rml::ElementDocument* m_healthbar_document = nullptr;
     const std::string PESTLE_LEFT_PX = "800px";
     const std::string PESTLE_TOP_PX = "300px";
 };

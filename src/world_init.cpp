@@ -1,6 +1,7 @@
 #include "world_init.hpp"
 #include "tinyECS/registry.hpp"
 #include "systems/item_system.hpp"
+#include "systems/ui_system.hpp"
 #include <iostream>
 
 
@@ -150,13 +151,25 @@ Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemTy
 	motion.position = position;
 	motion.scale = info.size;
 
-	if (type == ItemType::SAP) {
-		vec2 textbox_position = { position.x + 160.0f, position.y };
-		Entity textbox = createTextbox(renderer, textbox_position, entity);
+	// this dynamically gets the textbox name from ITEM_INFO defined in components.hpp
+	std::string text = "[F] " + info.name;
+
+	// assumption for textbox size (max-width is 150)
+	const float TEXTBOX_WIDTH = 150.f;
+
+	// default position (left of the entity)
+	float textboxX = position.x - 140;
+	float textboxY = position.y - 20;
+
+	// adjust if going off-screen horizontally (don't need vertical adjustment for now)
+	if (textboxX < 0) {
+		textboxX = position.x + 40;
 	}
-	else {
-		Entity textbox = createTextbox(renderer, position, entity);
+	else if (textboxX + TEXTBOX_WIDTH > WINDOW_WIDTH_PX) {
+		textboxX = position.x - TEXTBOX_WIDTH - 20;
 	}
+
+	Entity textbox = createTextbox(renderer, vec2(textboxX, textboxY), entity, text);
 
 	registry.renderRequests.insert(
 		entity,
@@ -168,7 +181,7 @@ Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemTy
 	return entity;
 }
 
-Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity)
+Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity, std::string text)
 {
 	auto entity = Entity();
 
@@ -176,12 +189,14 @@ Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity)
 	Textbox& textbox = registry.textboxes.emplace(entity);
 	textbox.targetItem = itemEntity;
 	textbox.isVisible = false; // Initially hidden
+	textbox.text = text;
+	textbox.pos = position;
 
 	// Store mesh reference
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
 	registry.meshPtrs.emplace(entity, &mesh);
 
-	// Motion component (position it above the item)
+	// // Motion component (position it above the item)
 	auto& motion = registry.motions.emplace(entity);
 	motion.angle = 0.f;
 	motion.velocity = { 0, 0 };
@@ -189,60 +204,6 @@ Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity)
 	motion.scale = vec2(TEXTBOX_WIDTH, -TEXTBOX_HEIGHT);
 
 	return entity;
-}
-
-RenderRequest getTextboxRenderRequest(Textbox& textbox)
-{
-	if (!registry.items.has(textbox.targetItem))
-	{
-		// std::cerr << "ERROR: Target item not found for textbox!" << std::endl;
-		return {};
-	}
-
-	Item& item = registry.items.get(textbox.targetItem);
-
-	// TODO: Use ItemType and a map
-	// Find correct texture based on item type
-	TEXTURE_ASSET_ID texture = TEXTURE_ASSET_ID::TEXTBOX_FRUIT; // placeholder
-	if (item.type == ItemType::MAGICAL_FRUIT)
-	{
-		texture = TEXTURE_ASSET_ID::TEXTBOX_FRUIT;
-	}
-	else if (item.type == ItemType::COFFEE_BEANS)
-	{
-		texture = TEXTURE_ASSET_ID::TEXTBOX_COFFEE_BEAN;
-	}
-	else if (item.type == ItemType::GROTTO_ENTRANCE)
-	{
-		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_GROTTO;
-	}
-	else if (item.type == ItemType::CAULDRON)
-	{
-		texture = TEXTURE_ASSET_ID::TEXTBOX_CAULDRON;
-	}
-	else if (item.type == ItemType::GROTTO_EXIT)
-	{
-		texture = TEXTURE_ASSET_ID::TEXTBOX_GROTTO_EXIT;
-	}
-	else if (item.type == ItemType::FOREST_TO_DESERT_ENTRANCE)
-	{
-		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_DESERT;
-	}
-	else if (item.type == ItemType::DESERT_TO_FOREST_ENTRANCE) {
-		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_FOREST;
-	}
-	else if (item.type == ItemType::SAP) {
-		texture = TEXTURE_ASSET_ID::TEXTBOX_TWIG;
-	}
-	else if (item.type == ItemType::MAGICAL_DUST) {
-		texture = TEXTURE_ASSET_ID::TEXTBOX_MAGICAL_DUST;
-	}
-
-	return {
-		texture,
-		EFFECT_ASSET_ID::TEXTURED,
-		GEOMETRY_BUFFER_ID::SPRITE,
-		RENDER_LAYER::ITEM };
 }
 
 /* ==============================================================================================================
@@ -567,7 +528,7 @@ Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, std::st
 	// Create cauldron
 	auto& cauldron = registry.cauldrons.emplace(entity);
 	cauldron.water = waterEntity;
-	if (create_textbox) createTextbox(renderer, position, entity);
+	if (create_textbox) createTextbox(renderer, position, entity, "[F] Use Cauldron");
 
 	// Give cauldron an inventory
 	auto& inv = registry.inventories.emplace(entity);
@@ -608,7 +569,7 @@ Entity createMortarPestle(RenderSystem* renderer, vec2 position, vec2 scale, std
 	
 	// Create mortar pestle
 	registry.mortarAndPestles.emplace(entity);
-	createTextbox(renderer, position, entity);
+	createTextbox(renderer, position, entity, "[F] Use Mortar & Pestle");
 
 	// Give mortar an inventory
 	auto& inv = registry.inventories.emplace(entity);
@@ -647,7 +608,7 @@ Entity createChest(RenderSystem* renderer, vec2 position, vec2 scale, std::strin
 	motion.position = position;
 	motion.scale = scale;
 
-	// Entity textbox = createTextbox(renderer, position, entity); // not needed for Milestone 1
+	// Entity textbox = createTextbox(renderer, position, entity, "[F] Open Chest"); // not needed for Milestone 1
 
 	registry.renderRequests.insert(
 		entity,
@@ -682,7 +643,7 @@ Entity createRecipeBook(RenderSystem* renderer, vec2 position, vec2 scale, std::
 	motion.position = position;
 	motion.scale = scale;
 
-	// Entity textbox = createTextbox(renderer, position, entity); // not needed for Milestone 1
+	// Entity textbox = createTextbox(renderer, position, entity, "[F] Recipe Book"); // not needed for Milestone 1
 
 	registry.renderRequests.insert(
 		entity,
@@ -1318,7 +1279,9 @@ Entity createForestToGrotto(RenderSystem* renderer, vec2 position, std::string n
 
 	motion.scale = vec2({ GROTTO_ENTRANCE_WIDTH, GROTTO_ENTRANCE_HEIGHT });
 
-	Entity textbox = createTextbox(renderer, vec2({ position.x, position.y + 20 }), entity);
+	Entity textbox = createTextbox(renderer, vec2({ position.x + 40, position.y + 30 }), entity, "[F] Enter Grotto");
+
+	// m_ui_system->createRmlUITextbox(1, "[F] Enter Grotto", vec2(position.x, position.y + 20));
 
 	registry.renderRequests.insert(
 		entity,
@@ -1355,7 +1318,7 @@ Entity createGrottoToForest(RenderSystem* renderer, vec2 position, std::string n
 
 	motion.scale = vec2(190, BOUNDARY_LINE_THICKNESS);
 
-	Entity textbox = createTextbox(renderer, vec2({ position.x, position.y - 50 }), entity);
+	Entity textbox = createTextbox(renderer, vec2({ position.x + 60, position.y - 40 }), entity, "[F] Exit Grotto");
 
 	// registry.renderRequests.insert(
 	// 	entity,
@@ -1392,7 +1355,7 @@ Entity createForestToDesert(RenderSystem* renderer, vec2 position, std::string n
 
 	motion.scale = vec2(DESERT_FOREST_TRANSITION_WIDTH, DESERT_FOREST_TRANSITION_HEIGHT);
 
-	Entity textbox = createTextbox(renderer, vec2({ position.x + GRID_CELL_WIDTH_PX * 4, position.y }), entity);
+	Entity textbox = createTextbox(renderer, vec2({ position.x + 60, position.y - 20 }), entity, "[F] Enter Desert");
 
 	registry.renderRequests.insert(
 		entity,
@@ -1429,7 +1392,7 @@ Entity createDesertToForest(RenderSystem* renderer, vec2 position, std::string n
 
 	motion.scale = vec2(DESERT_FOREST_TRANSITION_WIDTH, DESERT_FOREST_TRANSITION_HEIGHT);
 
-	Entity textbox = createTextbox(renderer, vec2({ position.x , position.y }), entity);
+	Entity textbox = createTextbox(renderer, vec2({ position.x + 40, position.y - 10 }), entity, "[F] Enter Forest");
 
 	registry.renderRequests.insert(
 		entity,
@@ -1465,7 +1428,7 @@ Entity createForestToForestEx(RenderSystem* renderer, vec2 position, std::string
 
 	motion.scale = vec2({ GENERIC_ENTRANCE_WIDTH, GENERIC_ENTRANCE_HEIGHT });
 
-	Entity textbox = createTextbox(renderer, vec2({ position.x, position.y - 80 }), entity);
+	Entity textbox = createTextbox(renderer, vec2({ position.x - 210, position.y - 80 }), entity, "[F] Enter Deep Forest");
 
 	return entity;
 }
@@ -1493,7 +1456,7 @@ Entity createForestExToForest(RenderSystem* renderer, vec2 position, std::string
 
 	motion.scale = vec2({ GENERIC_ENTRANCE_WIDTH, GENERIC_ENTRANCE_HEIGHT });
 
-	Entity textbox = createTextbox(renderer, vec2({ position.x + 130, position.y - 60 }), entity);
+	Entity textbox = createTextbox(renderer, vec2({ position.x, position.y - 100 }), entity, "[F] Enter Forest");
 
 	return entity;
 }
@@ -1522,7 +1485,7 @@ Entity createForestToMushroom(RenderSystem* renderer, vec2 position, std::string
 
 	motion.scale = vec2({ FOREST_TO_MUSHROOM_WIDTH, FOREST_TO_MUSHROOM_HEIGHT });
 
-	Entity textbox = createTextbox(renderer, vec2({ position.x + 210, position.y - 30 }), entity);
+	Entity textbox = createTextbox(renderer, vec2({ position.x + 70, position.y - 20 }), entity, "[F] Enter Shroomlands");
 
 	registry.renderRequests.insert(
 		entity,
@@ -1558,7 +1521,7 @@ Entity createMushroomToForest(RenderSystem* renderer, vec2 position, std::string
 
 	motion.scale = vec2({ GENERIC_ENTRANCE_WIDTH, GENERIC_ENTRANCE_HEIGHT });
 
-	Entity textbox = createTextbox(renderer, vec2({ position.x + 240, position.y }), entity);
+	Entity textbox = createTextbox(renderer, vec2({ position.x + 100, position.y - 20 }), entity, "[F] Enter Forest");
 
 	return entity;
 }
@@ -1586,7 +1549,7 @@ Entity createMushroomToCrystal(RenderSystem* renderer, vec2 position, std::strin
 
 	motion.scale = vec2({ GENERIC_ENTRANCE_WIDTH, GENERIC_ENTRANCE_HEIGHT });
 
-	Entity textbox = createTextbox(renderer, vec2({ position.x, position.y - 60 }), entity);
+	Entity textbox = createTextbox(renderer, vec2({ position.x - 180, position.y - 100 }), entity, "[F] Enter Crystal Caves");
 
 	return entity;
 }
@@ -1614,7 +1577,7 @@ Entity createCrystalToMushroom(RenderSystem* renderer, vec2 position, std::strin
 
 	motion.scale = vec2({ GENERIC_ENTRANCE_WIDTH, GENERIC_ENTRANCE_HEIGHT });
 
-	Entity textbox = createTextbox(renderer, vec2({ position.x + 140, position.y - 60 }), entity);
+	Entity textbox = createTextbox(renderer, vec2({ position.x - 10, position.y - 100 }), entity, "[F] Enter Shroomlands");
 
 	return entity;
 }
@@ -1642,7 +1605,7 @@ Entity createCrystalToForestEx(RenderSystem* renderer, vec2 position, std::strin
 
 	motion.scale = vec2({ GENERIC_ENTRANCE_WIDTH, GENERIC_ENTRANCE_HEIGHT });
 
-	Entity textbox = createTextbox(renderer, vec2({ position.x + 30, position.y }), entity);
+	Entity textbox = createTextbox(renderer, vec2({ position.x + 100, position.y }), entity, "[F] Enter Deep Forest");
 
 	return entity;
 }
@@ -1670,7 +1633,7 @@ Entity createForestExToCrystal(RenderSystem* renderer, vec2 position, std::strin
 
 	motion.scale = vec2({ GENERIC_ENTRANCE_WIDTH, GENERIC_ENTRANCE_HEIGHT });
 
-	Entity textbox = createTextbox(renderer, vec2({ position.x + 150, position.y - 30 }), entity);
+	Entity textbox = createTextbox(renderer, vec2({ position.x + 20, position.y - 40 }), entity, "[F] Enter Crystal Caves");
 
 	return entity;
 }
@@ -1691,6 +1654,10 @@ Entity createEnt(RenderSystem* renderer, vec2 position, int movable, std::string
 	enemy.state = (int)ENEMY_STATE::IDLE;
 	enemy.can_move = movable;
 	enemy.name = name;
+	enemy.attack_damage = 1;
+
+	auto& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 1.0f; // cannot walk past guardian
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -1725,6 +1692,7 @@ Entity createMummy(RenderSystem* renderer, vec2 position, int movable, std::stri
 	enemy.state = (int)ENEMY_STATE::IDLE;
 	enemy.can_move = movable;
 	enemy.name = name;
+	enemy.attack_damage = 30;
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -1753,24 +1721,27 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " fired ammo" << std::endl;
 
-	if (!registry.ammo.has(item_entity)) std::cout << "item isn't in ammo list" << std::endl;
+	if (!registry.ammo.has(item_entity)) std::cout << "Cannot throw this item" << std::endl;
 	if (!registry.motions.has(player_entity) || !registry.ammo.has(item_entity)) return false;
 
-	// Ammo& ammo = registry.ammo.get(item_entity);
 	Ammo& ammo = registry.ammo.emplace(entity);
+
+	// If it's a potion add colour to it
+	if (registry.potions.has(item_entity)) {
+		registry.colors.insert(entity, registry.potions.get(item_entity).color / 255.f);
+	}
+
 	Player& player = registry.players.get(player_entity);
 	Motion& player_motion = registry.motions.get(player_entity);
 	vec2 player_pos = player_motion.position;
 
 	float delta_x = target.x - player_pos.x;
 	float delta_y = target.y - player_pos.y;
-	float distance = sqrt(delta_x * delta_x + delta_y * delta_y); // TODO: use glm::distance instead
-	float unit_x = delta_x / distance;
-	float unit_y = delta_y / distance;
+	float angle = atan2f(delta_y, delta_x);
 
 	auto& motion = registry.motions.emplace(entity);
 	motion.angle = 0.f;
-	motion.velocity = { unit_x, unit_y };
+	motion.velocity = { cosf(angle), sinf(angle) };
 	motion.position = player_pos;
 	motion.scale = vec2({ 50, 50 });
 
@@ -1779,7 +1750,7 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 	if (ammo.damage == 0) {
 		ammo.damage = 25;
 	}
-	ammo.target = { player_pos.x + unit_x * player.throw_distance, player_pos.y + unit_y * player.throw_distance };
+	ammo.target = { player_pos.x + THROW_DISTANCE * cosf(angle), player_pos.y + THROW_DISTANCE * sinf(angle) };
 
 	registry.renderRequests.insert(
 		entity,

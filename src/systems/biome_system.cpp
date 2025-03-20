@@ -69,7 +69,6 @@ void BiomeSystem::step(float elapsed_ms_since_last_update) {
 }
 
 void BiomeSystem::switchBiome(int biome) {
-
 	std::vector<Entity> to_remove;
 	for (auto entity : registry.motions.entities) {
 		if (registry.players.has(entity) || registry.inventories.has(entity)) continue;
@@ -136,7 +135,7 @@ void BiomeSystem::renderPlayerInNewBiome() {
 			// recreate textbox
 			if (registry.motions.has(cauldron)) {
 				Motion& motion = registry.motions.get(cauldron);
-				createTextbox(renderer, motion.position, cauldron);
+				createTextbox(renderer, vec2(motion.position.x + 60, motion.position.y - 40), cauldron, "[F] Use Cauldron");
 			}
 
 		}
@@ -322,7 +321,7 @@ void BiomeSystem::createForest()
 	ScreenState screen = registry.screenStates.components[0];
 	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Ent 1") == screen.killed_enemies.end())
 	{
-		createEnt(renderer, vec2(GRID_CELL_WIDTH_PX * 1.7, GRID_CELL_HEIGHT_PX * 5), 0, "Ent 1");
+		createEnt(renderer, vec2(GRID_CELL_WIDTH_PX * 2.15, GRID_CELL_HEIGHT_PX * 5), 0, "Ent 1");
 	}
 
 	createForestToGrotto(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 1), "Grotto Entrance");

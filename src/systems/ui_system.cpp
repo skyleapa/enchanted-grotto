@@ -127,6 +127,9 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 		// Create the inventory bar
 		createInventoryBar();
 
+		// Create player's health bar
+		createHealthBar();
+
 		m_initialized = true;
 		std::cout << "UISystem::init - Successfully initialized" << std::endl;
 		return true;
@@ -213,11 +216,21 @@ void UISystem::step(float elapsed_ms)
 			createInventoryBar();
 		}
 
+		if (!m_healthbar_document) {
+			createHealthBar();
+		}
+
 		// Update inventory bar
 		updateInventoryBar();
 
-		// Display inventory
+		// Update health bar
+		updateHealthBar();
+
+		// Display tutorial
 		updateTutorial();
+
+		// update all the textboxes
+		updateTextboxes();
 
 		// Update cauldron color
 		updateCauldronUI();
@@ -485,7 +498,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 					updateFollowMouse();
 					break;
 				}
-        
+
 				// Check if clicking on cauldron water to bottle potion
 				Rml::Element* possibleCauldron = m_context->GetElementAtPoint(mousePos, hovered);
 				if (possibleCauldron && (possibleCauldron->GetId() == "cauldron-water" || possibleCauldron->GetId() == "cauldron")) {
@@ -500,7 +513,8 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 						potion.duration,
 						potion.color,
 						potion.quality,
-						potion.effectValue
+						potion.effectValue,
+						1
 					);
 
 					// TODOOO
@@ -516,7 +530,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 						SoundSystem::playBottleHighQualityPotionSound((int)SOUND_CHANNEL::MENU, 0);
 						SoundSystem::haltBoilSound();
 					}
-          
+
 					// Reset cauldron water
 					m_renderer->initializeWaterBuffers(true);
 				}
@@ -641,7 +655,7 @@ void UISystem::updateFPS(float elapsed_ms)
 
 void UISystem::createInventoryBar()
 {
-	if (!m_initialized || !m_context) return;
+	if (!m_context) return;
 
 	try {
 		std::cout << "UISystem::createInventoryBar - Creating inventory bar" << std::endl;
@@ -795,7 +809,8 @@ void UISystem::updateInventoryBar()
                             right: -2px;
                             color: #FFFFFF; 
                             font-size: 14px; 
-                            font-weight: bold;'>
+                            font-weight: bold;
+							font-effect: outline( 1px black );'>
                         )" + std::to_string(item.amount) + R"(
                         </div>)";
 				}
@@ -920,6 +935,118 @@ void UISystem::updateTutorial()
 	}
 	catch (const std::exception& e) {
 		std::cerr << "Exception in UISystem::updateTutorial: " << e.what() << std::endl;
+	}
+}
+
+void UISystem::updateTextboxes()
+{
+	if (!m_initialized || !m_context)
+		return;
+
+	// Create new textboxes that should be visible
+	for (const auto& [id, textbox] : textboxes)
+	{
+		if (m_textbox_documents.find(id) == m_textbox_documents.end())
+		{
+			createRmlUITextbox(id, textbox.text, textbox.pos);
+		}
+	}
+
+	// Remove textboxes that are no longer needed
+	std::vector<int> toRemove;
+	for (const auto& [id, document] : m_textbox_documents)
+	{
+		if (textboxes.find(id) == textboxes.end())
+		{
+			toRemove.push_back(id);
+		}
+	}
+	for (int id : toRemove)
+	{
+		removeRmlUITextbox(id);
+	}
+
+	textboxes.clear();
+}
+
+void UISystem::createRmlUITextbox(int id, std::string text, vec2 pos)
+{
+	if (!m_initialized || !m_context)
+		return;
+
+	try {
+		std::string top_position = std::to_string(pos.y) + "px";
+		std::string left_position = std::to_string(pos.x) + "px";
+
+		std::string textbox_rml = R"(
+			<rml>
+			<head>
+				<style>
+					body { 
+						margin: 0; 
+						padding: 0; 
+						background-color: transparent;
+						pointer-events: none;
+						width: 100%;
+						height: 100%;
+					}
+					div.text { 
+						position: absolute;
+						top: )" + top_position + R"(;
+						left: )" + left_position + R"(;
+						/* transform: translate(-50%, -50%); */
+						text-align: center;
+						font-size: 14px;
+						background-color: #ffffffcc;
+						font-family: Open Sans;
+						padding: 5px;
+						width: auto;
+						max-width: 150px;
+						white-space: normal;
+						color: #000000;
+    					border-radius: 5px;
+					}
+				</style>
+			</head>
+			<body>
+				<div class="text">)" + text + R"(</div>
+			</body>
+			</rml>
+		)";
+
+		Rml::ElementDocument* document = m_context->LoadDocumentFromMemory(textbox_rml.c_str());
+		if (document) {
+			document->Show();
+			m_textbox_documents[id] = document;  // Store the document in the map
+			// std::cout << "UISystem::createTextbox created for id: " << id << std::endl;
+		}
+		else {
+			std::cerr << "UISystem::createTextbox failed to be created" << std::endl;
+		}
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::createTextbox: " << e.what() << std::endl;
+	}
+}
+
+void UISystem::removeRmlUITextbox(int id)
+{
+	if (!m_initialized || !m_context)
+		return;
+
+	auto it = m_textbox_documents.find(id);
+	if (it != m_textbox_documents.end())
+	{
+		Rml::ElementDocument* document = it->second;
+		document->Close();
+		m_context->UnloadDocument(document);
+		m_textbox_documents.erase(it);
+
+		// std::cout << "UISystem::removeRmlUITextbox removed textbox with ID: " << id << std::endl;
+	}
+	else
+	{
+		std::cerr << "UISystem::removeRmlUITextbox called, but no document exists for ID: " << id << std::endl;
 	}
 }
 
@@ -1219,4 +1346,97 @@ Entity UISystem::getOpenedMortarPestle() {
 
 void UISystem::setOpenedMortarPestle(Entity new_mortar_pestle) {
 	openedMortar = new_mortar_pestle;
+}
+
+void UISystem::createHealthBar()
+{
+	if (!m_context) return;
+
+	if (registry.players.entities.size() == 0) {
+		std::cout << "UISystem::createHealthBar - No player to create health bar for" << std::endl;
+		return;
+	}
+
+	try {
+		std::cout << "UISystem::createHealthBar - Creating health bar" << std::endl;
+
+		std::string healthbar_rml = R"(
+			<rml>
+			<head>
+				<style>
+					body {
+						position: absolute;
+						bottom: 10px;
+						left: 97%;
+						width: 20px;
+						height: 180px;
+						background-color: rgba(173, 146, 132, 238);
+						border-width: 2px;
+						border-color: rgb(78, 54, 32);
+						display: block;
+						font-family: Open Sans;
+					}
+
+					progress.vertical {
+						width: 20px;
+						height: 180px;
+						background-color: transparent
+					}
+
+					.healthy fill {
+						background-color:rgb(138, 247, 105);
+					}
+
+					.injured fill {
+						background-color:rgb(246, 221, 97);
+					}
+
+					.dying fill {
+						background-color:rgb(228, 103, 103);
+					}
+
+				</style>
+			</head>
+			<body>
+				<progress id="health-bar" class="vertical" direction="top" max="1"></progress>
+			</body>
+			</rml>)";
+
+		m_healthbar_document = m_context->LoadDocumentFromMemory(healthbar_rml.c_str());
+		if (m_healthbar_document) {
+			m_healthbar_document->Show();
+			std::cout << "UISystem::createHealthBar - Health bar created successfully" << std::endl;
+		}
+		else {
+			std::cerr << "UISystem::createHealthBar - Failed to create healthbar document" << std::endl;
+		}
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::createHealthBar: " << e.what() << std::endl;
+	}
+}
+
+void UISystem::updateHealthBar() {
+	if (!m_initialized || !m_context || !m_healthbar_document) return;
+
+	try {
+		if (registry.players.entities.empty()) return;
+
+		Entity player = registry.players.entities[0]; // Assuming there's only one player
+
+		Rml::Element* healthbar_element = m_healthbar_document->GetElementById("health-bar");
+		float hp_percentage = registry.players.components[0].health / PLAYER_MAX_HEALTH;
+		healthbar_element->SetAttribute("value", hp_percentage);
+
+		if (hp_percentage >= 0.5) {
+			healthbar_element->SetAttribute("class", "vertical healthy");
+		} else if (hp_percentage >= 0.2) {
+			healthbar_element->SetAttribute("class", "vertical injured");
+		} else {
+			healthbar_element->SetAttribute("class", "vertical dying");
+		}
+		
+	} catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::updateHealthBar: " << e.what() << std::endl;
+	}
 }
