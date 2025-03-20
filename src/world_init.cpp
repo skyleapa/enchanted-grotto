@@ -569,7 +569,7 @@ Entity createMortarPestle(RenderSystem* renderer, vec2 position, vec2 scale, std
 	
 	// Create mortar pestle
 	registry.mortarAndPestles.emplace(entity);
-	createTextbox(renderer, position, entity, "[F] Use Mortar & Pestle");
+	createTextbox(renderer, { GRID_CELL_WIDTH_PX * 6.5, GRID_CELL_HEIGHT_PX * 3 }, entity, "[F] Use Mortar & Pestle");
 
 	// Give mortar an inventory
 	auto& inv = registry.inventories.emplace(entity);
