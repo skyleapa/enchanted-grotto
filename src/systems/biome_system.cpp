@@ -135,7 +135,7 @@ void BiomeSystem::renderPlayerInNewBiome() {
 			// recreate textbox
 			if (registry.motions.has(cauldron)) {
 				Motion& motion = registry.motions.get(cauldron);
-				createTextbox(renderer, motion.position, cauldron);
+				createTextbox(renderer, vec2(motion.position.x + 60, motion.position.y - 40), cauldron, "[F] Use Cauldron");
 			}
 
 		}

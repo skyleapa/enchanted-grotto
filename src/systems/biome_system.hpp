@@ -24,17 +24,12 @@ public:
     void createMushroom();
     void createCrystal();
 
-    // Set reference to UI system
-    void setUISystem(UISystem* ui_system) { m_ui_system = ui_system; }
-
     BiomeSystem()
     {
     }
 
 private:
     RenderSystem* renderer;
-    // Pointer to the UI system for passing input events
-    UISystem* m_ui_system = nullptr;
 
     // <position, scale> of boundary lines
     std::map<int, std::vector<std::tuple<vec2, vec2>>> biome_boundaries = {

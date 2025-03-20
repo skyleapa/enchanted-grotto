@@ -51,7 +51,6 @@ public:
 	bool handle_item_pickup(Entity player, Entity item);
 
 	void update_textbox_visibility();
-	void clearTextboxes();
 
 	void handle_item_respawn(float elapsed_ms);
 

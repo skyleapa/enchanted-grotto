@@ -54,7 +54,6 @@ int main()
 	bool ui_initialized = ui_system.init(window, &renderer_system);
 	if (ui_initialized) {
 		world_system.setUISystem(&ui_system);
-		biome_system.setUISystem(&ui_system);
 		glfwSetCharCallback(window, UISystem::charCallback);
 		std::cout << "UI system initialized successfully" << std::endl;
 	}

@@ -758,26 +758,25 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 	// Set a random respawn time (10-15 seconds)
 	item_info.respawnTime = (rand() % 5001 + 10000);
 
-
 	// Hide item by removing motion & render components
-	if (registry.motions.has(item))
-		registry.motions.remove(item);
+	// if (registry.motions.has(item))
+	// 	registry.motions.remove(item);
 
-	if (registry.renderRequests.has(item))
-		registry.renderRequests.remove(item);
+	// if (registry.renderRequests.has(item))
+	// 	registry.renderRequests.remove(item);
 
-	// Hide the textbox
-	for (Entity textbox : registry.textboxes.entities)
-	{
-		if (registry.textboxes.get(textbox).targetItem == item)
-		{
-			registry.textboxes.get(textbox).isVisible = false;
-			if (registry.renderRequests.has(textbox)) {
-				registry.renderRequests.remove(textbox);
-			}
-			break;
-		}
-	}
+	// // Hide the textbox
+	// for (Entity textbox : registry.textboxes.entities)
+	// {
+	// 	if (registry.textboxes.get(textbox).targetItem == item)
+	// 	{
+	// 		registry.textboxes.get(textbox).isVisible = false;
+	// 		if (registry.renderRequests.has(textbox)) {
+	// 			registry.renderRequests.remove(textbox);
+	// 		}
+	// 		break;
+	// 	}
+	// }
 
 	return true;
 }
@@ -830,8 +829,7 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 			Textbox& textboxComp = registry.textboxes.get(textbox);
 			textboxComp.isVisible = false;
 
-			RenderRequest renderRequest = getTextboxRenderRequest(textboxComp);
-			registry.renderRequests.insert(textbox, renderRequest);
+			m_ui_system->textboxes[textbox.id()] = textboxComp;
 			break;
 		}
 
@@ -882,15 +880,9 @@ void WorldSystem::update_textbox_visibility()
 
 			if (shouldBeVisible)
 			{
-				m_ui_system->textboxes[textboxEntity.id()] = textbox; // Add to desired state
+				m_ui_system->textboxes[textboxEntity.id()] = textbox;
 			}
 		}
-	}
-}
-
-void WorldSystem::clearTextboxes() {
-	for (Entity textbox : registry.textboxes.entities) {
-		m_ui_system->removeRmlUITextbox(registry.textboxes.get(textbox).targetItem.id());
 	}
 }
 
