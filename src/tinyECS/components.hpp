@@ -10,6 +10,8 @@ struct Player
 	std::string name;
 	int throw_distance = 150; // pixels
 	float cooldown = 0.f; // defaults to 0, but when ammo is tossed, will have a 1000 ms cooldown
+	float health = PLAYER_HEALTH;
+	float damage_cooldown = PLAYER_DAMAGE_COOLDOWN; // cooldown before player can take damage again to prevent insta death
 };
 
 // All data relevant to the shape and motion of entities
@@ -204,6 +206,7 @@ struct Enemy {
 	int can_move;
 	float wander_timer = 10.0f;  // 10-second random movement before returning
 	std::string name; // gets passed into killed_enemies
+	float attack_damage;
 };
 
 struct Ammo {
@@ -439,4 +442,9 @@ const std::unordered_map<ItemType, ItemInfo> ITEM_INFO = {
 			TEXTURE_ASSET_ID::MAGICAL_DUST,
 			"interactables/magical_dust.png",
 			true}},
+};
+
+// damage flash only to be applied to player and enemies
+struct DamageFlash {
+	float flash_value = 1.f; // defaults to 0 for no flash, and 1 for red tint
 };

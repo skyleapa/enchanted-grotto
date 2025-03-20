@@ -293,7 +293,7 @@ void WorldSystem::restart_game(bool hard_reset)
 
 }
 
-void WorldSystem::handle_collisions()
+void WorldSystem::handle_collisions(float elapsed_ms)
 {
 	// Ensure player exists
 	if (registry.players.entities.empty())
@@ -347,12 +347,28 @@ void WorldSystem::handle_collisions()
 			}
 			continue;
 		}
-		// case where enemy hits player - automatically die
+		// case where enemy hits player
 		else if ((registry.players.has(collision_entity) || registry.players.has(collision.other)) && (registry.enemies.has(collision_entity) || registry.enemies.has(collision.other))) {
-			ItemSystem::loadGameState();
-			screen.is_switching_biome = true;
-			screen.switching_to_biome = (GLuint)BIOME::GROTTO;
-			// load the most recently saved file
+			Entity player_entity = registry.players.has(collision_entity) ? collision_entity : collision.other;
+			Entity enemy_entity = registry.enemies.has(collision_entity) ? collision_entity : collision.other;
+			
+			Player& player = registry.players.get(player_entity);
+
+			if (player.damage_cooldown > 0)	continue;
+			
+			// player flashes red and takes damage equal to enemy's attack
+			if (!registry.damageFlashes.has(player_entity)) registry.damageFlashes.emplace(player_entity);
+			player.health -= registry.enemies.get(enemy_entity).attack_damage;
+			player.damage_cooldown = PLAYER_DAMAGE_COOLDOWN;
+
+			// if player dies, reload from most recent save and respawn in grotto
+			if (player.health <= 0) {
+				std::cout << "player died!" << std::endl;
+				ItemSystem::loadGameState();
+				screen.is_switching_biome = true;
+				screen.switching_to_biome = (GLuint)BIOME::GROTTO;
+				player.health = PLAYER_HEALTH; // reset to max health
+			}
 			continue;
 		}
 		else if ((registry.ammo.has(collision_entity) || registry.ammo.has(collision.other)) && (registry.terrains.has(collision_entity) || registry.terrains.has(collision.other))) {
@@ -952,6 +968,9 @@ void WorldSystem::updatePlayerWalkAndAnimation(Entity& player, Motion& player_mo
 			player_comp.cooldown = 0;
 		}
 	}
+
+	// update player's damage cooldown
+	if (player_comp.damage_cooldown >= 0) player_comp.damage_cooldown -= elapsed_ms_since_last_update;
 }
 
 bool WorldSystem::throwAmmo(vec2 target) {

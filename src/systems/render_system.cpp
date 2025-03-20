@@ -155,6 +155,19 @@ void RenderSystem::drawTexturedMesh(Entity entity,
 
 		glBindTexture(GL_TEXTURE_2D, texture_id);
 		gl_has_errors();
+
+		GLint isEnemyOrPlayer_uloc = glGetUniformLocation(program, "is_enemy_or_player");
+		// If entity has a damage flash component, pass it into the fragment shader to blend the red tint
+		if (registry.damageFlashes.has(entity)) {
+			glUniform1f(isEnemyOrPlayer_uloc, true);
+
+			GLint damageFlash_uloc = glGetUniformLocation(program, "damage_flash");
+			glUniform1f(damageFlash_uloc, registry.damageFlashes.get(entity).flash_value);
+			gl_has_errors();
+		} else {
+			glUniform1f(isEnemyOrPlayer_uloc, false);
+		}
+		
 	}
 	// .obj entities
 	else if (render_request.used_effect == EFFECT_ASSET_ID::CHICKEN || render_request.used_effect == EFFECT_ASSET_ID::EGG)

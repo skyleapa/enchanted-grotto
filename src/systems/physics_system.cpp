@@ -200,6 +200,15 @@ bool genericCollides(const Motion& motion, const Motion& other_motion)
 
 void PhysicsSystem::step(float elapsed_ms)
 {
+	// first update the flash value of any enemies who took damage
+	for (Entity entity : registry.damageFlashes.entities) {
+		DamageFlash& flash = registry.damageFlashes.get(entity);
+		flash.flash_value -= elapsed_ms * TIME_UPDATE_FACTOR; // change this for speed of flash
+		if (flash.flash_value <= 0) {
+			registry.damageFlashes.remove(entity); // remove once flash value goes to 0
+		}
+	}
+
 	// get our one player
 	if (registry.players.entities.empty())
 		return;
@@ -209,6 +218,12 @@ void PhysicsSystem::step(float elapsed_ms)
 		return;
 
 	Motion& player_motion = registry.motions.get(player_entity);
+
+	// Leave this out for now - apply to health bar in the future
+	// // if player's health is below 20, keep flashing red to indicate that they're close to death
+	// if (registry.players.components[0].health <= PLAYER_DYING) {
+	// 	if (!registry.damageFlashes.has(player_entity)) registry.damageFlashes.emplace(player_entity);
+	// }
 
 	for (Entity terrain_entity : registry.terrains.entities)
 	{
@@ -253,6 +268,8 @@ void PhysicsSystem::step(float elapsed_ms)
 
 			if (genericCollides(ammo_motion, enemy_motion)) {
 				registry.collisions.emplace_with_duplicates(ammo_entity, enemy);
+				// enemy flashes red
+				if (!registry.damageFlashes.has(enemy)) registry.damageFlashes.emplace(enemy);
 			}
 		}
 

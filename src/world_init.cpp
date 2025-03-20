@@ -730,6 +730,7 @@ Entity createEnt(RenderSystem* renderer, vec2 position, int movable, std::string
 	enemy.state = (int)ENEMY_STATE::IDLE;
 	enemy.can_move = movable;
 	enemy.name = name;
+	enemy.attack_damage = 5.f; // lower damage since the point is to unlock grotto
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -764,6 +765,7 @@ Entity createMummy(RenderSystem* renderer, vec2 position, int movable, std::stri
 	enemy.state = (int)ENEMY_STATE::IDLE;
 	enemy.can_move = movable;
 	enemy.name = name;
+	enemy.attack_damage = 20.f;
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
