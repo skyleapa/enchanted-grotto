@@ -153,7 +153,23 @@ Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemTy
 
 	// this dynamically gets the textbox name from ITEM_INFO defined in components.hpp
 	std::string text = "[F] " + info.name;
-	Entity textbox = createTextbox(renderer, vec2(position.x - 140, position.y - 20), entity, text);
+
+	// assumption for textbox size (max-width is 150)
+	const float TEXTBOX_WIDTH = 150.f;
+
+	// default position (left of the entity)
+	float textboxX = position.x - 140;
+	float textboxY = position.y - 20;
+
+	// adjust if going off-screen horizontally (don't need vertical adjustment for now)
+	if (textboxX < 0) {
+		textboxX = position.x + 40;
+	}
+	else if (textboxX + TEXTBOX_WIDTH > WINDOW_WIDTH_PX) {
+		textboxX = position.x - TEXTBOX_WIDTH - 20;
+	}
+
+	Entity textbox = createTextbox(renderer, vec2(textboxX, textboxY), entity, text);
 
 	registry.renderRequests.insert(
 		entity,
@@ -1463,7 +1479,7 @@ Entity createForestToMushroom(RenderSystem* renderer, vec2 position, std::string
 
 	motion.scale = vec2({ FOREST_TO_MUSHROOM_WIDTH, FOREST_TO_MUSHROOM_HEIGHT });
 
-	Entity textbox = createTextbox(renderer, vec2({ position.x + 70, position.y - 20 }), entity, "[F] Enter Mushroom Biome");
+	Entity textbox = createTextbox(renderer, vec2({ position.x + 70, position.y - 20 }), entity, "[F] Enter Shroomlands");
 
 	registry.renderRequests.insert(
 		entity,
@@ -1527,7 +1543,7 @@ Entity createMushroomToCrystal(RenderSystem* renderer, vec2 position, std::strin
 
 	motion.scale = vec2({ GENERIC_ENTRANCE_WIDTH, GENERIC_ENTRANCE_HEIGHT });
 
-	Entity textbox = createTextbox(renderer, vec2({ position.x - 180, position.y - 100 }), entity, "[F] Enter Crystal Biome");
+	Entity textbox = createTextbox(renderer, vec2({ position.x - 180, position.y - 100 }), entity, "[F] Enter Crystal Caves");
 
 	return entity;
 }
@@ -1555,7 +1571,7 @@ Entity createCrystalToMushroom(RenderSystem* renderer, vec2 position, std::strin
 
 	motion.scale = vec2({ GENERIC_ENTRANCE_WIDTH, GENERIC_ENTRANCE_HEIGHT });
 
-	Entity textbox = createTextbox(renderer, vec2({ position.x - 10, position.y - 100 }), entity, "[F] Enter Mushroom Biome");
+	Entity textbox = createTextbox(renderer, vec2({ position.x - 10, position.y - 100 }), entity, "[F] Enter Shroomlands");
 
 	return entity;
 }
@@ -1611,7 +1627,7 @@ Entity createForestExToCrystal(RenderSystem* renderer, vec2 position, std::strin
 
 	motion.scale = vec2({ GENERIC_ENTRANCE_WIDTH, GENERIC_ENTRANCE_HEIGHT });
 
-	Entity textbox = createTextbox(renderer, vec2({ position.x + 20, position.y - 40 }), entity, "[F] Enter Crystal Biome");
+	Entity textbox = createTextbox(renderer, vec2({ position.x + 20, position.y - 40 }), entity, "[F] Enter Crystal Caves");
 
 	return entity;
 }

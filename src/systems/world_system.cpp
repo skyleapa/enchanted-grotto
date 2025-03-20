@@ -652,8 +652,9 @@ void WorldSystem::handle_player_interaction()
 	Motion& player_motion = registry.motions.get(player);
 	for (Entity item : registry.items.entities)
 	{
-		if (!registry.items.has(item) || !registry.motions.has(item))
+		if (!registry.motions.has(item)) {
 			continue;
+		}
 
 		Motion& item_motion = registry.motions.get(item);
 		Item& item_info = registry.items.get(item);
@@ -665,8 +666,16 @@ void WorldSystem::handle_player_interaction()
 
 		// If item is not in pickup range, continue
 		float distance = glm::distance(player_motion.position, item_motion.position);
+		// std::cout << "distance: " << distance << "item: " << item_info.name << std::endl;
 		if (distance > ITEM_PICKUP_RADIUS) {
 			continue;
+		}
+
+		// If this is a cauldron and it's invisible, ignore it so if items overlap, we don't get stuck opening cauldron
+		if (registry.cauldrons.has(item)) {
+			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) {
+				continue;
+			}
 		}
 
 		// Handle interaction
