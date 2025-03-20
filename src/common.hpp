@@ -37,6 +37,9 @@ inline std::string game_state_path(const std::string& name) { return data_path()
 const std::string GAME_STATE_FILE = "game_state.json";
 
 
+// 0 = lower quality (higher FPS), 1 = higher quality (computer fan go brrr)
+const int WATER_QUALITY_LEVEL = 1;
+
 //
 // game constants
 //
@@ -52,6 +55,9 @@ const float PLAYER_BB_WIDTH = (float)75;
 const float PLAYER_BB_HEIGHT = (float)110;
 const float PlAYER_BB_GROTTO_SIZE_FACTOR = 1.8;
 const float PLAYER_SPEED = (float)200;
+const float PLAYER_HEALTH = (float)100;
+const float PLAYER_DYING = (float)20;
+const float PLAYER_DAMAGE_COOLDOWN = (float)1000;
 
 const float TIME_UPDATE_FACTOR = 0.001f;
 const float THROW_UPDATE_FACTOR = 0.3f;
@@ -299,8 +305,18 @@ const vec3 DEFAULT_COLOR = vec3(116, 204, 244);
 const float MIN_POTENCY_PERCENTAGE = 0.1;
 const float MIN_DURATION_PERCENTAGE = 0.05;
 
-// Cauldron color settings
+// Cauldron settings
 const int COLOR_FADE_DURATION = 5000;
+const float CAULDRON_D = 316;               // cauldron is a circle, this is diameter
+const vec2 CAULDRON_WATER_POS = vec2(0.4976f, 0.5757f); // center of cauldron relative to window
+const int STIR_FLASH_DURATION = 1000;
+const float WATER_FPS = 120.f;           // The default FPS to normalize water sim to
+    
+// Ladle offset coords for mouse and cauldron center
+const vec2 LADLE_OFFSET = vec2(25, -55);
+
+// The maximum UI degree change (both pos and neg) of the heat knob
+const int MAX_KNOB_DEGREE = 60;
 
 // Recipe penalty settings
 // If potion difficulty > 1, potions are harder to make good quality and vice versa

@@ -1177,6 +1177,7 @@ Entity createCrystal4(RenderSystem* renderer, vec2 position) {
 }
 
 Entity createCrystalMinecart(RenderSystem* renderer, vec2 position) {
+
 	auto entity = Entity();
 
 	Terrain& terrain = registry.terrains.emplace(entity);
@@ -1192,7 +1193,6 @@ Entity createCrystalMinecart(RenderSystem* renderer, vec2 position) {
 	motion.angle = 180.f;
 	motion.velocity = { 0, 0 };
 	motion.position = position;
-
 	motion.scale = vec2({ CRYSTAL_MINECART_WIDTH, CRYSTAL_MINECART_HEIGHT });
 
 	registry.renderRequests.insert(

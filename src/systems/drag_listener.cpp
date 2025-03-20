@@ -33,12 +33,12 @@ float DragListener::getHeatDegree(Rml::Vector2f coords, float curDegree) {
 		ydiff *= -1;
 	}
 	int res = abs(xdiff) > abs(ydiff) ? curDegree + xdiff : curDegree + ydiff;
-	int clippedLow = max(res, -MAX_DEGREE);
-	return min(clippedLow, MAX_DEGREE);
+	int clippedLow = max(res, -MAX_KNOB_DEGREE);
+	return min(clippedLow, MAX_KNOB_DEGREE);
 }
 
 int DragListener::getHeatLevel(float degree) {
-	return (int)((degree + MAX_DEGREE) / 1.2f);
+	return (int) ((degree + MAX_KNOB_DEGREE) / 1.2f);
 }
 
 float DragListener::getCurrentDegree(Rml::Element* heatknob) {
@@ -47,12 +47,10 @@ float DragListener::getCurrentDegree(Rml::Element* heatknob) {
 	return std::stof(rotateStr.substr(7, rotateStr.find("deg")));
 }
 
-void DragListener::setHeatDegree(Rml::Element* heatknob, float degree) {
-	std::string heatTrans = heatknob->GetProperty(Rml::PropertyId::Transform)->Get<Rml::String>();
-	std::string before = heatTrans.substr(0, heatTrans.find("rotate"));
-	std::stringstream s;
-	s << before << "rotate(" << std::to_string(degree) << "deg)";
-	heatknob->SetProperty("transform", s.str());
+void DragListener::setHeatDegree(float degree) {
+	int heatLevel = getHeatLevel(degree);
+	Entity cauldron = m_ui_system->getOpenedCauldron();
+	registry.cauldrons.get(cauldron).heatLevel = heatLevel;
 }
 
 std::pair<float, float> DragListener::getPolarCoordinates(Rml::Vector2f input) {
@@ -124,6 +122,12 @@ void DragListener::checkCompletedStir() {
 	stirCoords.push_back(last);
 }
 
+void DragListener::endStir(Rml::Element* e) {
+	m_ui_system->cauldronDragUpdate(false);
+	e->SetProperty("decorator", "image(\"interactables/spoon_on_table.png\" contain)");
+	stirCoords.clear();
+}
+
 void DragListener::ProcessEvent(Rml::Event& event) {
 	Rml::Element* cur = event.GetCurrentElement();
 	Rml::Vector2f mouseCoords = event.GetUnprojectedMouseScreenPos();
@@ -151,7 +155,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 		if (cur->GetId() == "heat") {
 			float curDegree = getCurrentDegree(cur);
 			float newDegree = getHeatDegree(mouseCoords, curDegree);
-			setHeatDegree(cur, newDegree);
+			setHeatDegree(newDegree);
 			if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::SET_HEAT) {
 				if (newDegree == 60) { // indicating max rotation
 					ScreenState& screen = registry.screenStates.components[0];
@@ -171,7 +175,14 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 
 		// Where all the magic happens
 		if (cur->GetId() == "ladle" && stirCoords.size()) {
-			stirCoords.push_back(getPolarCoordinates(mouseCoords));
+			m_ui_system->cauldronDragUpdate(true);
+			auto coords = getPolarCoordinates(mouseCoords);
+			if (coords.first > MAX_STIR_RADIUS) {
+				endStir(cur);
+				return;
+			}
+			
+			stirCoords.push_back(coords);
 			checkCompletedStir();
 			return;
 		}
@@ -200,9 +211,8 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			return;
 		}
 
-		if (cur->GetId() == "ladle") {
-			cur->SetProperty("decorator", "image(\"interactables/spoon_on_table.png\" contain)");
-			stirCoords.clear();
+		if (cur->GetId() == "ladle" && stirCoords.size()) {
+			endStir(cur);
 			return;
 		}
 	}

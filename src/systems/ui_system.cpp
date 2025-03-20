@@ -485,7 +485,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 					updateFollowMouse();
 					break;
 				}
-
+        
 				// Check if clicking on cauldron water to bottle potion
 				Rml::Element* possibleCauldron = m_context->GetElementAtPoint(mousePos, hovered);
 				if (possibleCauldron && (possibleCauldron->GetId() == "cauldron-water" || possibleCauldron->GetId() == "cauldron")) {
@@ -515,7 +515,10 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 						DragListener::is_boiling = false;
 						SoundSystem::playBottleHighQualityPotionSound((int)SOUND_CHANNEL::MENU, 0);
 						SoundSystem::haltBoilSound();
-					};
+					}
+          
+					// Reset cauldron water
+					m_renderer->initializeWaterBuffers(true);
 				}
 
 				// Reset bottle position
@@ -908,19 +911,19 @@ bool UISystem::openCauldron(Entity cauldron)
 
                 #cauldron-water {
                     position: relative;
-                    width: 319px;
-                    height: 303px;
-                    top: 112px;
-                    left: 241px;
-                    decorator: image("interactables/cauldron_water.png" fill);
+                    width: )" + std::to_string(CAULDRON_D) + R"(px;
+                    height: )" + std::to_string(CAULDRON_D) + R"(px;
+                    height: 316px;
+                    top: 114px;
+                    left: 243px;
                 }
 
                 #cauldron {
                     position: absolute;
-                    width: 319px;
-                    height: 303px;
-                    top: 82px;
-                    left: 404px;
+                    width: )" + std::to_string(CAULDRON_D) + R"(px;
+                    height: )" + std::to_string(CAULDRON_D) + R"(px;
+                    top: 84px;
+                    left: 406px;
                 }
 
                 #ladle {
@@ -983,10 +986,15 @@ void UISystem::updateCauldronUI() {
 		return;
 	}
 
-	// Update color of cauldron
-	Rml::Element* cauldronElement = m_cauldron_document->GetElementById("cauldron-water");
-	vec3& color = registry.cauldrons.get(openedCauldron).color;
-	cauldronElement->SetProperty("image-color", getImageColorProperty(color, 255));
+	// Update heatknob rotation
+	int heat = registry.cauldrons.get(openedCauldron).heatLevel;
+	float degree = heat * (MAX_KNOB_DEGREE * 2 / 100.f) - MAX_KNOB_DEGREE;
+	Rml::Element* heatknob = m_cauldron_document->GetElementById("heat");
+	std::string heatTrans = heatknob->GetProperty(Rml::PropertyId::Transform)->Get<Rml::String>();
+	std::string before = heatTrans.substr(0, heatTrans.find("rotate"));
+	std::stringstream s;
+	s << before << "rotate(" << std::to_string(degree) << "deg)";
+	heatknob->SetProperty("transform", s.str());
 }
 
 std::string UISystem::getImageColorProperty(vec3 color, float alpha) {
@@ -1024,6 +1032,10 @@ Entity UISystem::getOpenedCauldron() {
 
 void UISystem::setOpenedCauldron(Entity new_cauldron) {
 	openedCauldron = new_cauldron;
+}
+
+void UISystem::cauldronDragUpdate(bool isDown) {
+	m_renderer->setIsMouseDragging(isDown);
 }
 
 // Added dummy bool cause vscode was doing some strange error
