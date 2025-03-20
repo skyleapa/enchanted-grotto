@@ -139,6 +139,20 @@ void BiomeSystem::renderPlayerInNewBiome() {
 			}
 
 		}
+
+		for (Entity mortar : registry.mortarAndPestles.entities) {
+			if (registry.renderRequests.has(mortar)) {
+				RenderRequest& rr = registry.renderRequests.get(mortar);
+				rr.is_visible = true;
+				std::cout << "re-rendering mortar" << std::endl;
+			}
+			// recreate textbox
+			if (registry.motions.has(mortar)) {
+				Motion& motion = registry.motions.get(mortar);
+				createTextbox(renderer, { GRID_CELL_WIDTH_PX * 6.5, GRID_CELL_HEIGHT_PX * 3 }, mortar, "[F] Use Mortar & Pestle");
+			}
+
+		}
 	}
 	else if (screen.from_biome == (int)BIOME::GROTTO && screen.biome == (int)BIOME::FOREST) { // through grotto exit into forest
 		player_motion.position = vec2(GROTTO_ENTRANCE_X, GROTTO_ENTRANCE_Y + 50);
@@ -147,6 +161,12 @@ void BiomeSystem::renderPlayerInNewBiome() {
 		for (Entity cauldron : registry.cauldrons.entities) {
 			if (registry.renderRequests.has(cauldron)) {
 				RenderRequest& rr = registry.renderRequests.get(cauldron);
+				rr.is_visible = false;
+			}
+		}
+		for (Entity mortar : registry.mortarAndPestles.entities) {
+			if (registry.renderRequests.has(mortar)) {
+				RenderRequest& rr = registry.renderRequests.get(mortar);
 				rr.is_visible = false;
 			}
 		}
@@ -188,6 +208,48 @@ void BiomeSystem::renderPlayerInNewBiome() {
 	}
 }
 
+void BiomeSystem::createGrotto()
+{
+	// create tutorial screen
+	if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::WELCOME_SCREEN) {
+		createWelcomeScreen(renderer, vec2(WINDOW_WIDTH_PX / 2, WINDOW_HEIGHT_PX / 2 - 50));
+	}
+
+	// positions are according to sample grotto interior
+	for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::GROTTO))
+	{
+		createBoundaryLine(renderer, position, scale);
+	}
+
+	for (const auto& [position, size, rotation, texture, layer] : grotto_static_entity_pos) {
+		createGrottoStaticEntities(renderer, position, size, rotation, texture, layer);
+	}
+
+	createGrottoPoolMesh(renderer, vec2(GRID_CELL_WIDTH_PX * 4.8, GRID_CELL_HEIGHT_PX * 11.9));
+
+	if (registry.cauldrons.entities.size() == 0) {
+		std::cout << "creating cauldron in grotto" << std::endl;
+		Entity new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.50, GRID_CELL_HEIGHT_PX * 6.05 }), vec2({ 150, 220 }), "Cauldron", false);
+		for (Entity cauldron : registry.cauldrons.entities) {
+			if (new_cauldron != cauldron) registry.remove_all_components_of(cauldron);
+		}
+	}
+	// assert(registry.cauldrons.entities.size() == 1); // We should always only have one cauldron for testing purposes
+
+	if (registry.mortarAndPestles.entities.size() == 0) {
+		std::cout << "creating mortar in grotto" << std::endl;
+		Entity new_mortar = createMortarPestle(renderer, vec2({ GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22 }), vec2({ 213, 141 }), "Mortar and Pestle");
+		for (Entity mortar : registry.mortarAndPestles.entities) {
+			if (new_mortar != mortar) registry.remove_all_components_of(mortar);
+		}
+	}
+
+	// createMortarPestle(renderer, vec2({ GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22 }), vec2({ 213, 141 }), "Mortar and Pestle");
+	createRecipeBook(renderer, vec2({ GRID_CELL_WIDTH_PX * 4.15, GRID_CELL_HEIGHT_PX * 5.05 }), vec2({ 108, 160 }), "Recipe Book");
+	createChest(renderer, vec2({ GRID_CELL_WIDTH_PX * 1.35, GRID_CELL_HEIGHT_PX * 5.2 }), vec2({ 100, 150 }), "Chest");
+	createGrottoToForest(renderer, vec2(GRID_CELL_WIDTH_PX * 20.5, GRID_CELL_HEIGHT_PX * 13), "Grotto Exit");
+}
+
 bool BiomeSystem::handleEntranceInteraction(Entity entrance_entity)
 {
 	Entrance& entrance = registry.entrances.get(entrance_entity);
@@ -219,39 +281,6 @@ bool BiomeSystem::handleEntranceInteraction(Entity entrance_entity)
 		state.switching_to_biome = (GLuint)BIOME::CRYSTAL;
 	}
 	return true;
-}
-
-void BiomeSystem::createGrotto()
-{
-	// create tutorial screen
-	if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::WELCOME_SCREEN) {
-		createWelcomeScreen(renderer, vec2(WINDOW_WIDTH_PX / 2, WINDOW_HEIGHT_PX / 2 - 50));
-	}
-
-	// positions are according to sample grotto interior
-	for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::GROTTO))
-	{
-		createBoundaryLine(renderer, position, scale);
-	}
-
-	for (const auto& [position, size, rotation, texture, layer] : grotto_static_entity_pos) {
-		createGrottoStaticEntities(renderer, position, size, rotation, texture, layer);
-	}
-
-	createGrottoPoolMesh(renderer, vec2(GRID_CELL_WIDTH_PX * 4.8, GRID_CELL_HEIGHT_PX * 11.9));
-
-	if (registry.cauldrons.entities.size() == 0) {
-		Entity new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.50, GRID_CELL_HEIGHT_PX * 6.05 }), vec2({ 150, 220 }), "Cauldron", false);
-		for (Entity cauldron : registry.cauldrons.entities) {
-			if (new_cauldron != cauldron) registry.remove_all_components_of(cauldron);
-		}
-	}
-	// assert(registry.cauldrons.entities.size() == 1); // We should always only have one cauldron for testing purposes
-
-	createMortarPestle(renderer, vec2({ GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22 }), vec2({ 213, 141 }), "Mortar and Pestle");
-	createRecipeBook(renderer, vec2({ GRID_CELL_WIDTH_PX * 4.15, GRID_CELL_HEIGHT_PX * 5.05 }), vec2({ 108, 160 }), "Recipe Book");
-	createChest(renderer, vec2({ GRID_CELL_WIDTH_PX * 1.35, GRID_CELL_HEIGHT_PX * 5.2 }), vec2({ 100, 150 }), "Chest");
-	createGrottoToForest(renderer, vec2(GRID_CELL_WIDTH_PX * 20.5, GRID_CELL_HEIGHT_PX * 13), "Grotto Exit");
 }
 
 void BiomeSystem::createForest()

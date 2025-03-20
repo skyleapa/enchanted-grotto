@@ -128,6 +128,80 @@ void DragListener::endStir(Rml::Element* e) {
 	stirCoords.clear();
 }
 
+void DragListener::checkGrindingMotion() {
+	if (pestleMotion.size() < 3) {
+		return;  // Not enough movement to detect a grind action
+	}
+
+	// std::cout << "pestleX: " << pestleX << ", pestleY: " << pestleY << std::endl;
+
+	// Check if pestle is within the mortar square
+	bool inMortar = (pestleX >= MORTAR_LEFT_X && pestleX <= MORTAR_RIGHT_X) &&
+		(pestleY >= MORTAR_TOP_Y && pestleY <= MORTAR_BOTTOM_Y);
+
+	if (!inMortar) {
+		//std::cout << "not in mortar" << std::endl;
+		return;
+	}
+
+	//std::cout << "Pestle in mortar" << std::endl;
+
+	// Check for alternating up and down motion
+	int up = 0;
+	int down = 0;
+	for (float move : pestleMotion) {
+		if (move > 45) down++;
+		if (move < -45) up++;
+	}
+	// std::cout << "Grinding action detected!" << " up: " << up << ", down: " << down << std::endl;
+
+	if (up >= 4 && down >= 4) {
+		// Grinding action detected
+		std::cout << "Grinding done!" << std::endl;
+		PotionSystem::grindIngredient(m_ui_system->getOpenedMortarPestle());
+
+		// Clear motion data after successful grind
+		pestleMotion.clear();
+	}
+}
+
+void createTempRenderRequestForItem(Entity item) {
+	if (!registry.renderRequests.has(item)) {
+		if (!registry.items.has(item)) {
+			std::cerr << "Attempted to assign RenderRequest to a non-item entity!" << std::endl;
+			return;
+		}
+
+		Item& itemComp = registry.items.get(item);
+
+		// Find the item texture from ITEM_INFO
+		auto it = ITEM_INFO.find(itemComp.type);
+		if (it == ITEM_INFO.end()) {
+			std::cerr << "No ITEM_INFO found for item type: " << itemComp.name << std::endl;
+			return;
+		}
+
+		const ItemInfo& itemInfo = it->second;
+
+		registry.renderRequests.insert(
+			item,
+			{
+				itemInfo.texture,
+				EFFECT_ASSET_ID::TEXTURED,
+				GEOMETRY_BUFFER_ID::SPRITE,
+				RENDER_LAYER::ITEM
+			});
+
+		if (!registry.motions.has(item)) {
+			Motion& motion = registry.motions.emplace(item);
+			motion.position = { 0, 0 };
+			motion.scale = itemInfo.size;
+		}
+
+		// std::cout << "RenderRequest assigned to item: " << itemComp.name << std::endl;
+	}
+}
+
 void DragListener::ProcessEvent(Rml::Event& event) {
 	Rml::Element* cur = event.GetCurrentElement();
 	Rml::Vector2f mouseCoords = event.GetUnprojectedMouseScreenPos();
@@ -147,6 +221,20 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 
 			cur->SetProperty("decorator", "image(\"interactables/spoon_in_hand.png\" flip-vertical contain)");
 			stirCoords.push_back(getPolarCoordinates(mouseCoords));
+			return;
+		}
+
+		if (cur->GetId() == "pestle") {
+			Rml::Context* context = cur->GetContext();
+			Rml::Element* possibleMortar = context->GetElementAtPoint(mouseCoords, cur);
+			if (!possibleMortar || possibleMortar->GetId() != "mortar") {
+				event.StopImmediatePropagation();
+				return;
+			}
+	
+			pestleY = mouseCoords.y;
+			pestleX = mouseCoords.x;
+			pestleMotion.clear();
 			return;
 		}
 	}
@@ -186,6 +274,18 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			checkCompletedStir();
 			return;
 		}
+
+		if (cur->GetId() == "pestle") {
+			float deltaY = mouseCoords.y - pestleY;
+			pestleX = mouseCoords.x;
+			pestleY = mouseCoords.y;
+	
+			pestleMotion.push_back(deltaY);
+	
+			// Check if enough vertical movement happened
+			checkGrindingMotion();
+			return;
+		}
 	}
 
 	if (event == "dragend") {
@@ -215,6 +315,11 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			endStir(cur);
 			return;
 		}
+
+		if (cur->GetId() == "pestle") {
+			pestleMotion.clear();
+			return;
+		}
 	}
 
 	if (event == "dragdrop") {
@@ -228,7 +333,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			return;
 		}
 
-		if (!m_ui_system->isCauldronOpen()) {
+		if (!m_ui_system->isCauldronOpen() && !m_ui_system->isMortarPestleOpen()) {
 			return;
 		}
 
@@ -253,6 +358,40 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			registry.items.get(copy).amount = 1;
 			SoundSystem::playDropInCauldronSound((int) SOUND_CHANNEL::MENU, 0);
 			PotionSystem::addIngredient(m_ui_system->getOpenedCauldron(), copy);
+			return;
+		}
+
+		// If item is dragged onto mortar, insert 1 of that ingredient
+		if (cur->GetId() == "mortar") {
+			Inventory& pinv = registry.inventories.get(player);
+			if (selected >= pinv.items.size()) {
+				return;
+			}
+
+			Entity item = pinv.items[selected];
+			if (!registry.ingredients.has(item)) {
+				return;
+			}
+			
+			Item& invItem = registry.items.get(item);
+
+			Ingredient& curItem = registry.ingredients.get(item);
+			if (curItem.grindLevel == -1.0 || curItem.grindLevel == 1.0f) {
+				std::cerr << "Item is not grindable or already grinded" << std::endl;
+				return;
+			}
+
+			Entity copy = ItemSystem::copyItem(item);
+			invItem.amount -= 1;
+			if (invItem.amount <= 0) {
+				ItemSystem::removeItemFromInventory(player, item);
+			}
+			registry.items.get(copy).amount = 1;
+			std::cout << "Added ingredient: " << invItem.name << " to mortar" << std::endl;
+
+			createTempRenderRequestForItem(copy);
+
+			PotionSystem::storeIngredientInMortar(m_ui_system->getOpenedMortarPestle(), copy);
 			return;
 		}
 	}

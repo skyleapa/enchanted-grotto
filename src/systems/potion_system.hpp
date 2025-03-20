@@ -36,6 +36,10 @@ public:
 	// the cauldron is filled (but no other requirements)
 	static Potion bottlePotion(Entity cauldron);
 
+	static void grindIngredient(Entity mortar);
+
+	static void storeIngredientInMortar(Entity mortar, Entity ingredient);
+
 private:
 	// Base method for recording an action to a cauldron
 	static void recordAction(Entity cauldron, ActionType action, int value);

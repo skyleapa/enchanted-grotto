@@ -62,7 +62,14 @@ public:
     Entity getOpenedCauldron();
     void setOpenedCauldron(Entity new_cauldron);
     void cauldronDragUpdate(bool isDown);
-  
+ 
+
+    bool openMortarPestle(Entity mortar);
+    bool isMortarPestleOpen();
+    void closeMortarPestle();
+    Entity getOpenedMortarPestle();
+    void setOpenedMortarPestle(Entity new_mortar_pestle);
+
     // tutorial
     void updateTutorial();
 
@@ -122,6 +129,11 @@ private:
     Rml::Element* heldLadle = nullptr;
     Rml::Element* heldBottle = nullptr;
 
+    // Mortar & Pestle variables
+    Rml::ElementDocument* m_mortar_document = nullptr;
+    Entity openedMortar;
+    Rml::Element* heldPestle = nullptr;
+
     // Tutorial variables
     Rml::ElementDocument* m_tutorial_document = nullptr;
 
@@ -170,4 +182,6 @@ private:
 
     // Healthbar variables
     Rml::ElementDocument* m_healthbar_document = nullptr;
+    const std::string PESTLE_LEFT_PX = "800px";
+    const std::string PESTLE_TOP_PX = "300px";
 };

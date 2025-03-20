@@ -39,11 +39,20 @@ private:
 	void checkCompletedStir();
 	void endStir(Rml::Element* e);
 
+	void checkGrindingMotion();
+
 	// Need to ref back to UI system to get the cauldron
 	static UISystem* m_ui_system;
 
 	// Stir coords, in terms of SQUARED magnitude and angle in RADIANS
 	std::vector<std::pair<float, float>> stirCoords;
+	
+	// Store the X and Y position of pestle
+	float pestleY = 0.0f;
+	float pestleX = 0.0f;
+
+	// Store movement history to detect grinding
+    std::vector<float> pestleMotion; 
 	
 	// The last heat knob coords
 	Rml::Vector2f lastCoords = Rml::Vector2f(0, 0);
@@ -57,6 +66,12 @@ private:
 	const float MAX_STIR_RADIUS = 170 * 170;
 
 	bool is_heat_changing = false; // is the dial click playing
+
+	// Define the square area for the mortar
+	const float MORTAR_LEFT_X = 420.0f;
+	const float MORTAR_RIGHT_X = 830.0f;
+	const float MORTAR_TOP_Y = 260.0f;
+	const float MORTAR_BOTTOM_Y = 520.0f;
 };
 
 #endif

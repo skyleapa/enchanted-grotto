@@ -541,6 +541,60 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 				heldBottle = nullptr;
 			}
 		} while (false);
+
+		// Check for pestle and ingredient pickup
+		do {
+			if (!isMortarPestleOpen()) {
+				break;
+			}
+
+			if (id == "pestle") {
+				Rml::Element* possibleMortar = m_context->GetElementAtPoint(mousePos, hovered);
+				if (possibleMortar && (possibleMortar->GetId() == "mortar" || possibleMortar->GetId() == "mortar_border")) {
+					break;
+				}
+
+				if (heldPestle) {
+					hovered->SetProperty("top", PESTLE_TOP_PX);
+					hovered->SetProperty("left", PESTLE_LEFT_PX);
+					heldPestle = nullptr;
+				}
+				else {
+					heldPestle = hovered;
+					updateFollowMouse();
+				}
+
+				break;
+			}
+
+			if (id == "mortar") {
+				Rml::Element* possibleMortar = m_context->GetElementAtPoint(mousePos, hovered);
+				if (possibleMortar && possibleMortar->GetId() == "mortar") {
+					break;
+				}
+
+				Inventory& mortarInventory = registry.inventories.get(getOpenedMortarPestle());
+				if (!mortarInventory.items.empty()) {
+					Entity ingredient = mortarInventory.items[0];
+		
+					// Check it's fully grinded and pickable
+					if (registry.items.has(ingredient) && registry.items.get(ingredient).isCollectable
+					&& heldPestle == nullptr) {
+						Entity player = registry.players.entities[0];
+		
+						// Move to inventory
+						ItemSystem::addItemToInventory(player, ingredient);
+						std::cout << "Picked up ingredient from mortar" << std::endl;
+
+						// Clear the mortar inventory
+						mortarInventory.items.clear();
+						ItemSystem::destroyItem(ingredient);
+					}
+				}
+
+				break;
+			}
+		} while (false);
 	}
 
 	// Pass the event to RmlUi
@@ -1185,6 +1239,113 @@ void UISystem::updateFollowMouse() {
 		followMouse(heldBottle, false);
 		return;
 	}
+
+	if (heldPestle) {
+		followMouse(heldPestle, false);
+		return;
+	}
+}
+
+bool UISystem::openMortarPestle(Entity mortar) {
+    if (!m_initialized || !m_context) return false;
+    if (m_mortar_document) {
+        m_mortar_document->Show();
+        return true;
+    }
+
+    try {
+        std::cout << "UISystem::openMortarPestle - Creating mortar & pestle UI" << std::endl;
+        std::string mortar_rml = R"(
+        <rml>
+        <head>
+            <style>
+                body {
+                    position: absolute;
+                    display: flex;
+                    top: 30px;
+                    left: 50%;
+                    margin-left: -550px;
+                    width: 1100px;
+                    height: 600px;
+                    decorator: image("interactables/mortar_background_border.png" flip-vertical fill);
+                }
+				#pestle {
+					position: absolute;
+					width: 150px; 
+					height: 200px;
+					top: 300px;
+					left: 800px;
+					decorator: image("interactables/pestle.png" flip-vertical fill);
+					drag: drag;
+					z-index: 10;
+				}
+				#mortar_border {
+					position: absolute;
+					width: 400px;
+					height: 400px;
+					top: 80px;
+					left: 350px;
+					opacity: 0;
+					decorator: image("interactables/mortar_border.png" flip-vertical fill);
+					z-index: 5;
+				}
+                #mortar {
+					position: absolute;
+					width: 418px;
+					height: 225px;
+					top: 268px;
+					left: 336px;
+					decorator: image("interactables/mortar_frontpiece.png" flip-vertical fill);
+					z-index: 20;
+				}
+            </style>
+        </head>
+        <body>
+            <div id="mortar"></div>
+			<div id="mortar_border"></div>
+            <div id="pestle"></div>
+        </body>
+        </rml>
+        )";
+
+        m_mortar_document = m_context->LoadDocumentFromMemory(mortar_rml.c_str());
+        if (!m_mortar_document) {
+            std::cerr << "UISystem::openMortarPestle - Failed to open UI" << std::endl;
+            return false;
+        }
+
+        DragListener::RegisterDragDropElement(m_mortar_document->GetElementById("mortar"));
+		DragListener::RegisterDragDropElement(m_mortar_document->GetElementById("mortar_border"));
+        DragListener::RegisterDraggableElement(m_mortar_document->GetElementById("pestle"));
+
+        m_mortar_document->Show();
+        openedMortar = mortar;
+        std::cout << "UISystem::openMortarPestle - Mortar & Pestle UI created successfully" << std::endl;
+        return true;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Exception in UISystem::openMortarPestle: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool UISystem::isMortarPestleOpen() {
+	return m_mortar_document && m_mortar_document->IsVisible();
+}
+
+void UISystem::closeMortarPestle()
+{
+	if (isMortarPestleOpen()) {
+		m_mortar_document->Hide();
+	}
+}
+
+Entity UISystem::getOpenedMortarPestle() {
+	return openedMortar;
+}
+
+void UISystem::setOpenedMortarPestle(Entity new_mortar_pestle) {
+	openedMortar = new_mortar_pestle;
 }
 
 void UISystem::createHealthBar()

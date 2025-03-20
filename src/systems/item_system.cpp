@@ -92,6 +92,20 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
 			continue;
 		}
 
+		if (registry.ingredients.has(existing) && registry.ingredients.has(item)) {
+			Ingredient& existingIng = registry.ingredients.get(existing);
+			Ingredient& newIng = registry.ingredients.get(item);
+			
+			// std::cout << "Checking grindlevel: existing=" << existingIng.grindLevel 
+			// 		  << ", new=" << newIng.grindLevel << std::endl;
+			
+			if (fabs(existingIng.grindLevel - newIng.grindLevel) > FLT_EPSILON) {
+				// If grind levels are different, do not stack
+				std::cout << "Grind levels do not match, don't stack." << std::endl;
+				continue;
+			}
+		}
+
 		if (existing_item.type == ItemType::POTION) {
 			PotionEffect first = registry.potions.get(existing).effect;
 			PotionEffect second = registry.potions.get(item).effect;
@@ -124,9 +138,12 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
 		Entity copy = copyItem(item);
 		inv.items.push_back(copy);
 	} else {
+		// std::cout << "Pushed new item: " << item_comp.name << std::endl;
 		inv.items.push_back(item);
 	}
 	
+	std::cout << "Added new item: " << item_comp.name << " to inventory." << std::endl;
+
 	return true;
 }
 
@@ -167,13 +184,15 @@ void ItemSystem::swapItems(Entity inventory, int slot1, int slot2) {
 }
 
 Entity ItemSystem::copyItem(Entity toCopy) {
-	Item& item = registry.items.get(toCopy);
+	const Item item = registry.items.get(toCopy);
 	Entity res = Entity();
 	// std::cout << "Entity " << res.id() << " item copy" << std::endl;
-	registry.items.emplace(res, Item(item));
+	registry.items.emplace(res, item);
 	if (registry.ingredients.has(toCopy)) {
+		//std::cout << "Entity " << oldIng.grindLevel << " item copy" << std::endl;
 		auto& oldIng = registry.ingredients.get(toCopy);
 		registry.ingredients.emplace(res, Ingredient(oldIng));
+		// std::cout << "Entity " << oldIng.grindLevel << " item copy" << std::endl;
 	}
 	if (registry.potions.has(toCopy)) {
 		auto& oldPot = registry.potions.get(toCopy);
