@@ -352,11 +352,11 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 		else if ((registry.players.has(collision_entity) || registry.players.has(collision.other)) && (registry.enemies.has(collision_entity) || registry.enemies.has(collision.other))) {
 			Entity player_entity = registry.players.has(collision_entity) ? collision_entity : collision.other;
 			Entity enemy_entity = registry.enemies.has(collision_entity) ? collision_entity : collision.other;
-			
+
 			Player& player = registry.players.get(player_entity);
 
 			if (player.damage_cooldown > 0)	continue;
-			
+
 			// player flashes red and takes damage equal to enemy's attack
 			if (!registry.damageFlashes.has(player_entity)) registry.damageFlashes.emplace(player_entity);
 			player.health -= registry.enemies.get(enemy_entity).attack_damage;
