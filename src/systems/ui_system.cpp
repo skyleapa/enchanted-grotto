@@ -440,6 +440,8 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 	// Check clicks for inventory bar and cauldron
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT) {
 		Rml::Element* hovered = m_context->GetHoverElement();
+		if (!hovered) return;
+
 		std::string id = hovered->GetId();
 		int slotId = getSlotFromId(id);
 

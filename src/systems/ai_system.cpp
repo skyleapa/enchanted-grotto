@@ -9,7 +9,7 @@ void AISystem::step(float elapsed_ms) {
 	{
 		for (Entity enemy : registry.enemies.entities) {
 			if (registry.motions.has(enemy)) {
-				registry.motions.get(enemy).velocity = {0,0};
+				registry.motions.get(enemy).velocity = { 0,0 };
 			}
 		}
 		return;
@@ -82,7 +82,7 @@ void AISystem::moveEnemyTowardsPlayer(Motion& enemy_motion, Motion& player_motio
 void AISystem::moveEnemyRandomly(Motion& enemy_motion, float elapsed_ms) {
 	static bool initialized = false;
 	static glm::vec2 current_direction = glm::vec2(1.0f, 0.0f);
-	static float direction_timer = 0.0f; 
+	static float direction_timer = 0.0f;
 
 	if (!initialized) {
 		srand(time(nullptr));  // Seed random generator once
@@ -186,7 +186,7 @@ bool AISystem::collides(const Motion& player_motion, const Motion& terrain_motio
 		terrain_width_ratio = terrain->width_ratio;
 		terrain_height_ratio = terrain->height_ratio;
 	}
-	
+
 	// gets our bounding boxes for the player and terrain
 	vec4 player_box = get_bounding_box(player_motion, player_width_ratio, player_height_ratio);
 	vec4 terrain_box = get_bounding_box(terrain_motion, terrain_width_ratio, terrain_height_ratio);

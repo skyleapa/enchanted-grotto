@@ -286,7 +286,7 @@ void BiomeSystem::createForest()
 
 	createTree(renderer, vec2(714, 465));
 	createTree(renderer, vec2(857, 540));
-	createTree(renderer, vec2(1107, 465));
+	createTree(renderer, vec2(1080, 500));
 
 	createBush(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5));
 	createBush(renderer, vec2(1100, 292));
@@ -364,7 +364,7 @@ void BiomeSystem::createMushroom()
 	createMushroomBlue(renderer, vec2(170, 440));
 	createMushroomPurple(renderer, vec2(380, 485));
 	createMushroomPink(renderer, vec2(560, 440));
-	createMushroomBlue(renderer, vec2(750, 502));
+	createMushroomBlue(renderer, vec2(750, 515));
 	createMushroomTallBlue(renderer, vec2(1055, 435));
 
 	createMushroomToForest(renderer, vec2(60, 50), "Mushroom To Forest");
