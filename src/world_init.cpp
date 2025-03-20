@@ -1555,7 +1555,7 @@ Entity createCrystalToMushroom(RenderSystem* renderer, vec2 position, std::strin
 
 	motion.scale = vec2({ GENERIC_ENTRANCE_WIDTH, GENERIC_ENTRANCE_HEIGHT });
 
-	Entity textbox = createTextbox(renderer, vec2({ position.x - 10, position.y + 80 }), entity, "[F] Enter Mushroom Biome");
+	Entity textbox = createTextbox(renderer, vec2({ position.x - 10, position.y - 100 }), entity, "[F] Enter Mushroom Biome");
 
 	return entity;
 }

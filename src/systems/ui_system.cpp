@@ -952,7 +952,7 @@ void UISystem::createRmlUITextbox(int id, std::string text, vec2 pos)
 		if (document) {
 			document->Show();
 			m_textbox_documents[id] = document;  // Store the document in the map
-			std::cout << "UISystem::createTextbox created for id: " << id << std::endl;
+			// std::cout << "UISystem::createTextbox created for id: " << id << std::endl;
 		}
 		else {
 			std::cerr << "UISystem::createTextbox failed to be created" << std::endl;
@@ -976,7 +976,7 @@ void UISystem::removeRmlUITextbox(int id)
 		m_context->UnloadDocument(document);
 		m_textbox_documents.erase(it);
 
-		std::cout << "UISystem::removeRmlUITextbox removed textbox with ID: " << id << std::endl;
+		// std::cout << "UISystem::removeRmlUITextbox removed textbox with ID: " << id << std::endl;
 	}
 	else
 	{

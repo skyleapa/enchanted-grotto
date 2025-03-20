@@ -758,26 +758,6 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 	// Set a random respawn time (10-15 seconds)
 	item_info.respawnTime = (rand() % 5001 + 10000);
 
-	// Hide item by removing motion & render components
-	// if (registry.motions.has(item))
-	// 	registry.motions.remove(item);
-
-	// if (registry.renderRequests.has(item))
-	// 	registry.renderRequests.remove(item);
-
-	// // Hide the textbox
-	// for (Entity textbox : registry.textboxes.entities)
-	// {
-	// 	if (registry.textboxes.get(textbox).targetItem == item)
-	// 	{
-	// 		registry.textboxes.get(textbox).isVisible = false;
-	// 		if (registry.renderRequests.has(textbox)) {
-	// 			registry.renderRequests.remove(textbox);
-	// 		}
-	// 		break;
-	// 	}
-	// }
-
 	return true;
 }
 
@@ -878,7 +858,8 @@ void WorldSystem::update_textbox_visibility()
 			Textbox& textbox = registry.textboxes.get(textboxEntity);
 			bool shouldBeVisible = (distance < TEXTBOX_VISIBILITY_RADIUS);
 
-			if (shouldBeVisible)
+			// should not have "open cauldron" textbox while using cauldron
+			if (shouldBeVisible && !m_ui_system->isCauldronOpen())
 			{
 				m_ui_system->textboxes[textboxEntity.id()] = textbox;
 			}
