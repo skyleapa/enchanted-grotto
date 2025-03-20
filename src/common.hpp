@@ -148,7 +148,6 @@ const float CRYSTAL_ROCK_HEIGHT = (float)208;
 
 const float CAULDRON_WATER_WIDTH = (float)354 * 0.9;
 const float CAULDRON_WATER_HEIGHT = (float)337 * 0.9;
-const vec2 CAULDRON_WATER_POS = vec2(622, 289);
 
 const float ENT_WIDTH = (float)90;
 const float ENT_HEIGHT = (float)130;
@@ -311,7 +310,7 @@ const float CAULDRON_D = 316;               // cauldron is a circle, this is dia
 const vec2 CAULDRON_WATER_POS = vec2(0.4976f, 0.5757f); // center of cauldron relative to window
 const int STIR_FLASH_DURATION = 1000;
 const float WATER_FPS = 120.f;           // The default FPS to normalize water sim to
-    
+
 // Ladle offset coords for mouse and cauldron center
 const vec2 LADLE_OFFSET = vec2(25, -55);
 
