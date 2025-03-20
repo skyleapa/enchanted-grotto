@@ -500,7 +500,8 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 						potion.duration,
 						potion.color,
 						potion.quality,
-						potion.effectValue
+						potion.effectValue,
+						1
 					);
 
 					// TODOOO

@@ -1022,6 +1022,9 @@ void WorldSystem::updateThrownAmmo(float elapsed_ms_since_last_update) {
 		if (abs(ammo_motion.position.x - ammo.start_pos.x) > abs(ammo.target.x - ammo.start_pos.x)
 			|| abs(ammo_motion.position.y - ammo.start_pos.y) > abs(ammo.target.y - ammo.start_pos.y))
 			registry.remove_all_components_of(entity);
+		
+		// make ammo rotate
+		ammo_motion.angle += 5.f;
 
 	}
 }

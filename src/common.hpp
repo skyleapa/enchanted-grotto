@@ -351,6 +351,15 @@ enum class SOUND_CHANNEL {
 	MENU = BOILING + 1
 };
 
+const std::vector<PotionEffect> throwable_potions = {
+	PotionEffect::WATER,
+	
+};
+
+const std::vector<PotionEffect> consumable_potions = {
+	PotionEffect::SPEED
+};
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
 #endif

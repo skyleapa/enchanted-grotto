@@ -23,7 +23,7 @@ Entity ItemSystem::createItem(ItemType type, int amount, bool isCollectable, boo
 }
 
 Entity ItemSystem::createIngredient(ItemType type, int amount) {
-	Entity entity = createItem(type, amount, false, true);
+	Entity entity = createItem(type, amount, false, false);
 	
 	// Add ingredient-specific component
 	Ingredient& ingredient = registry.ingredients.emplace(entity);
@@ -32,8 +32,9 @@ Entity ItemSystem::createIngredient(ItemType type, int amount) {
 	return entity;
 }
 
-Entity ItemSystem::createPotion(PotionEffect effect, int duration, const vec3& color, float quality, float effectValue) {
-	Entity entity = createItem(ItemType::POTION, 1, false, false);
+Entity ItemSystem::createPotion(PotionEffect effect, int duration, const vec3& color, float quality, float effectValue, int amount) {
+	bool is_throwable = std::find(throwable_potions.begin(), throwable_potions.end(), effect) != throwable_potions.end();
+	Entity entity = createItem(ItemType::POTION, amount, false, is_throwable, false);
 	
 	// Add potion-specific component
 	Potion& potion = registry.potions.emplace(entity);
@@ -49,7 +50,7 @@ Entity ItemSystem::createPotion(PotionEffect effect, int duration, const vec3& c
 }
 
 Entity ItemSystem::createCollectableIngredient(vec2 position, ItemType type, int amount, bool canRespawn) {
-    Entity item = createItem(type, amount, true, true, canRespawn);
+    Entity item = createItem(type, amount, true, false, canRespawn);
     registry.items.get(item).originalPosition = position;
     Ingredient& ing = registry.ingredients.emplace(item);
     ing.grindLevel = ITEM_INFO.at(type).grindable ? 0.f : -1.f;
@@ -286,7 +287,8 @@ Entity ItemSystem::deserializeItem(const nlohmann::json& data) {
 			pot_data["duration"],
 			vec3(pot_data["color"][0], pot_data["color"][1], pot_data["color"][2]),
 			pot_data["quality"],
-			pot_data["effectValue"]
+			pot_data["effectValue"],
+			data["amount"]
 		);
 	} else {
 		entity = createItem(data["type_id"], data["amount"], false, data["is_ammo"]);

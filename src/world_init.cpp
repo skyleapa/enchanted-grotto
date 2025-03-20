@@ -1747,11 +1747,16 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " fired ammo" << std::endl;
 
-	if (!registry.ammo.has(item_entity)) std::cout << "item isn't in ammo list" << std::endl;
+	if (!registry.ammo.has(item_entity)) std::cout << "Cannot throw this item" << std::endl;
 	if (!registry.motions.has(player_entity) || !registry.ammo.has(item_entity)) return false;
 
-	// Ammo& ammo = registry.ammo.get(item_entity);
 	Ammo& ammo = registry.ammo.emplace(entity);
+
+	// If it's a potion add colour to it
+	if (registry.potions.has(item_entity)) {
+		registry.colors.insert(entity, registry.potions.get(item_entity).color / 255.f);
+	}
+
 	Player& player = registry.players.get(player_entity);
 	Motion& player_motion = registry.motions.get(player_entity);
 	vec2 player_pos = player_motion.position;
