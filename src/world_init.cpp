@@ -1685,6 +1685,10 @@ Entity createEnt(RenderSystem* renderer, vec2 position, int movable, std::string
 	enemy.state = (int)ENEMY_STATE::IDLE;
 	enemy.can_move = movable;
 	enemy.name = name;
+	enemy.attack_damage = 1;
+
+	auto& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 1.0f; // cannot walk past guardian
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -1719,6 +1723,7 @@ Entity createMummy(RenderSystem* renderer, vec2 position, int movable, std::stri
 	enemy.state = (int)ENEMY_STATE::IDLE;
 	enemy.can_move = movable;
 	enemy.name = name;
+	enemy.attack_damage = 30;
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -1747,24 +1752,27 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " fired ammo" << std::endl;
 
-	if (!registry.ammo.has(item_entity)) std::cout << "item isn't in ammo list" << std::endl;
+	if (!registry.ammo.has(item_entity)) std::cout << "Cannot throw this item" << std::endl;
 	if (!registry.motions.has(player_entity) || !registry.ammo.has(item_entity)) return false;
 
-	// Ammo& ammo = registry.ammo.get(item_entity);
 	Ammo& ammo = registry.ammo.emplace(entity);
+
+	// If it's a potion add colour to it
+	if (registry.potions.has(item_entity)) {
+		registry.colors.insert(entity, registry.potions.get(item_entity).color / 255.f);
+	}
+
 	Player& player = registry.players.get(player_entity);
 	Motion& player_motion = registry.motions.get(player_entity);
 	vec2 player_pos = player_motion.position;
 
 	float delta_x = target.x - player_pos.x;
 	float delta_y = target.y - player_pos.y;
-	float distance = sqrt(delta_x * delta_x + delta_y * delta_y); // TODO: use glm::distance instead
-	float unit_x = delta_x / distance;
-	float unit_y = delta_y / distance;
+	float angle = atan2f(delta_y, delta_x);
 
 	auto& motion = registry.motions.emplace(entity);
 	motion.angle = 0.f;
-	motion.velocity = { unit_x, unit_y };
+	motion.velocity = { cosf(angle), sinf(angle) };
 	motion.position = player_pos;
 	motion.scale = vec2({ 50, 50 });
 
@@ -1773,7 +1781,7 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 	if (ammo.damage == 0) {
 		ammo.damage = 25;
 	}
-	ammo.target = { player_pos.x + unit_x * player.throw_distance, player_pos.y + unit_y * player.throw_distance };
+	ammo.target = { player_pos.x + THROW_DISTANCE * cosf(angle), player_pos.y + THROW_DISTANCE * sinf(angle) };
 
 	registry.renderRequests.insert(
 		entity,

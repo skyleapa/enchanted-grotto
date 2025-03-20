@@ -365,10 +365,16 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 			// if player dies, reload from most recent save and respawn in grotto
 			if (player.health <= 0) {
 				std::cout << "player died!" << std::endl;
+				GLuint last_biome = screen.biome; // this is the biome that the player died in
 				ItemSystem::loadGameState();
 				screen.is_switching_biome = true;
 				screen.switching_to_biome = (GLuint)BIOME::GROTTO;
-				player.health = PLAYER_HEALTH; // reset to max health
+				screen.from_biome = (GLuint)BIOME::GROTTO;
+				// since we don't save the game state upon dying, load game state does not necessarily have the updated data as to where the player died
+				// we set screen.from_biome and screen.biome to the same from_biome on reload so we need to overide the biome with the latest one
+				screen.biome = last_biome;
+				screen.fade_status = 0;
+				player.health = PLAYER_MAX_HEALTH; // reset to max health
 			}
 			continue;
 		}
@@ -1002,7 +1008,7 @@ bool WorldSystem::throwAmmo(vec2 target) {
 				ItemSystem::removeItemFromInventory(player_entity, item_entity);
 			}
 		}
-		player.cooldown = 1000.f;
+		player.cooldown = 500.f;
 		return true;
 	}
 
@@ -1022,6 +1028,9 @@ void WorldSystem::updateThrownAmmo(float elapsed_ms_since_last_update) {
 		if (abs(ammo_motion.position.x - ammo.start_pos.x) > abs(ammo.target.x - ammo.start_pos.x)
 			|| abs(ammo_motion.position.y - ammo.start_pos.y) > abs(ammo.target.y - ammo.start_pos.y))
 			registry.remove_all_components_of(entity);
+		
+		// make ammo rotate
+		ammo_motion.angle += 5.f;
 
 	}
 }
