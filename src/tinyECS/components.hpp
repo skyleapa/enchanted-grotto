@@ -149,6 +149,7 @@ struct Cauldron
 	int stirFlash = 0;                // Time remaining for stir flash
 	std::vector<Action> actions;      // Records player actions
 	Entity water;                     // We technically only need 1 of these globally but this was easier so whatever
+	bool is_boiling = false;
 	// If stir quality ever gets added, a penalty can be recorded here
 };
 

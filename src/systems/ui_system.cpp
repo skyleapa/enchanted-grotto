@@ -526,7 +526,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 
 					if (ItemSystem::addItemToInventory(player, potionItem)) {
 						// stop the boiling sound then bottle the potion
-						DragListener::is_boiling = false;
+						registry.cauldrons.get(getOpenedCauldron()).is_boiling = false;
 						SoundSystem::playBottleHighQualityPotionSound((int)SOUND_CHANNEL::MENU, 0);
 						SoundSystem::haltBoilSound();
 					}
@@ -1056,7 +1056,6 @@ bool UISystem::openCauldron(Entity cauldron)
 	if (m_cauldron_document) {
 		m_cauldron_document->Show();
 		SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
-		if (DragListener::is_boiling) SoundSystem::continueBoilSound((int)SOUND_CHANNEL::BOILING, -1); // continue boiling if it was boiling before leaving menu
 		return true;
 	}
 
@@ -1196,7 +1195,6 @@ void UISystem::closeCauldron()
 {
 	if (isCauldronOpen()) {
 		m_cauldron_document->Hide();
-		SoundSystem::haltBoilSound();
 		SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
 		// handle exit menu tutorial
 		if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::EXIT_MENU) {

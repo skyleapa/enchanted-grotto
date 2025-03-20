@@ -3,6 +3,7 @@
 #include "physics_system.hpp"
 #include "item_system.hpp"
 #include "world_init.hpp"
+#include "sound_system.hpp"
 #include <iostream>
 
 #include <vector>
@@ -85,6 +86,9 @@ void BiomeSystem::switchBiome(int biome) {
 		registry.remove_all_components_of(entity);
 	}
 
+	// halt any boiling sounds first
+	SoundSystem::haltBoilSound();
+
 	if (biome == (GLuint)BIOME::FOREST) {
 		createForest();
 	}
@@ -93,6 +97,10 @@ void BiomeSystem::switchBiome(int biome) {
 	}
 	else if (biome == (GLuint)BIOME::GROTTO) {
 		createGrotto();
+		// continue boiling if it was boiling before leaving grotto, assumes we only have 1 cauldron enttity
+		if (registry.cauldrons.entities.size() > 0) {
+			if (registry.cauldrons.components[0].is_boiling) SoundSystem::playBoilSound((int) SOUND_CHANNEL::BOILING, -1);
+		}
 	}
 	else if (biome == (GLuint)BIOME::DESERT) {
 		createDesert();
@@ -148,7 +156,6 @@ void BiomeSystem::renderPlayerInNewBiome() {
 			}
 			// recreate textbox
 			if (registry.motions.has(mortar)) {
-				Motion& motion = registry.motions.get(mortar);
 				createTextbox(renderer, { GRID_CELL_WIDTH_PX * 6.5, GRID_CELL_HEIGHT_PX * 3 }, mortar, "[F] Use Mortar & Pestle");
 			}
 
