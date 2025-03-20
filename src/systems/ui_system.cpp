@@ -552,6 +552,33 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 
 				break;
 			}
+
+			if (id == "mortar") {
+				Rml::Element* possibleMortar = m_context->GetElementAtPoint(mousePos, hovered);
+				if (possibleMortar && possibleMortar->GetId() == "mortar") {
+					break;
+				}
+
+				Inventory& mortarInventory = registry.inventories.get(getOpenedMortarPestle());
+				if (!mortarInventory.items.empty()) {
+					Entity ingredient = mortarInventory.items[0];
+		
+					// Check it's fully grinded and pickable
+					if (registry.items.has(ingredient) && registry.items.get(ingredient).isCollectable) {
+						Entity player = registry.players.entities[0];
+		
+						// Move to inventory
+						ItemSystem::addItemToInventory(player, ingredient);
+						std::cout << "Picked up ingredient from mortar" << std::endl;
+
+						// Clear the mortar inventory
+						mortarInventory.items.clear();
+						ItemSystem::destroyItem(ingredient);
+					}
+				}
+
+				break;
+			}
 		} while (false);
 	}
 

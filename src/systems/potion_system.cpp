@@ -428,7 +428,11 @@ void PotionSystem::grindIngredient(Entity mortar) {
 		//std::cout << "New texture set for ingredient: " << (int)registry.renderRequests.get(ingredient).used_texture << std::endl;
 
 		// Start the countdown for moving ingredient to inventory (using respawnTime)
-		itemComp.respawnTime = 800.0f;
+		//itemComp.respawnTime = 800.0f;
+
+		itemComp.isCollectable = true;
+
+		std::cout << "Grinded ingredient can now be picked up" << std::endl;
 	}
 
 	// Entity player = registry.players.entities[0];
@@ -488,38 +492,4 @@ void PotionSystem::storeIngredientInMortar(Entity mortar, Entity ingredient) {
 	ingredientMotion.angle = 180.0f;
 
 	std::cout << "Ingredient stored in mortar" << std::endl;
-}
-
-void PotionSystem::updateMortar(float elapsed_ms) {
-	for (Entity mortar : registry.mortarAndPestles.entities) {
-		Inventory& mortarInventory = registry.inventories.get(mortar);
-
-		if (mortarInventory.items.empty()) {
-			continue;
-		}
-
-		Entity ingredient = mortarInventory.items[0];
-		if (!registry.items.has(ingredient)) {
-			continue;
-		}
-
-		Item& itemComp = registry.items.get(ingredient);
-
-		// Only update if the item has a countdown running
-		if (itemComp.respawnTime > 0.0f) {
-			itemComp.respawnTime -= elapsed_ms;
-
-			// When time reaches 0, move item to inventory
-			if (itemComp.respawnTime <= 0.0f) {
-				Entity player = registry.players.entities[0];
-				ItemSystem::addItemToInventory(player, ingredient);
-
-				// Clear the mortar inventory
-				mortarInventory.items.clear();
-				ItemSystem::destroyItem(ingredient);
-
-				std::cout << "Ingredient moved to inventory!" << std::endl;
-			}
-		}
-	}
 }

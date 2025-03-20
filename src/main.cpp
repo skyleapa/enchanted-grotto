@@ -81,7 +81,6 @@ int main()
 		item_system.step(elapsed_ms);
 		potion_system.updateCauldrons(elapsed_ms);
 		world_system.handle_collisions(elapsed_ms);
-		potion_system.updateMortar(elapsed_ms);
 		biome_system.step(elapsed_ms);
 		ui_system.step(elapsed_ms);
 
