@@ -434,17 +434,6 @@ void PotionSystem::grindIngredient(Entity mortar) {
 
 		std::cout << "Grinded ingredient can now be picked up" << std::endl;
 	}
-
-	// Entity player = registry.players.entities[0];
-	// ItemSystem::addItemToInventory(player, ingredient);
-
-	// // Clear mortar items
-	// Inventory& minv = registry.inventories.get(mortar);
-	// for (Entity item : minv.items) {
-	// 	ItemSystem::destroyItem(item);
-	// }
-
-	// minv.items.clear();
 }
 
 void PotionSystem::storeIngredientInMortar(Entity mortar, Entity ingredient) {

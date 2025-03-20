@@ -564,7 +564,8 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 					Entity ingredient = mortarInventory.items[0];
 		
 					// Check it's fully grinded and pickable
-					if (registry.items.has(ingredient) && registry.items.get(ingredient).isCollectable) {
+					if (registry.items.has(ingredient) && registry.items.get(ingredient).isCollectable
+					&& heldPestle == nullptr) {
 						Entity player = registry.players.entities[0];
 		
 						// Move to inventory

@@ -605,8 +605,6 @@ Entity createMortarPestle(RenderSystem* renderer, vec2 position, vec2 scale, std
 	motion.velocity = { 0, 0 };
 	motion.position = position;
 	motion.scale = scale;
-
-	// Entity textbox = createTextbox(renderer, position, entity); // not needed for Milestone 1
 	
 	// Create mortar pestle
 	registry.mortarAndPestles.emplace(entity);
