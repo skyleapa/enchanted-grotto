@@ -160,6 +160,8 @@ const float FOLLOWING_RADIUS = (float)300;  // Enemy stops attacking if outside 
 
 const float ENEMY_SPEED = (float)110;
 
+const int THROW_DISTANCE = 300; // Player throw dist in pixels
+
 // Inventory bar 
 const float BAR_WIDTH = (float)450.0f;
 const float BAR_HEIGHT = (float)60.0f;

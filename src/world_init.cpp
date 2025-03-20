@@ -1768,13 +1768,11 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 
 	float delta_x = target.x - player_pos.x;
 	float delta_y = target.y - player_pos.y;
-	float distance = sqrt(delta_x * delta_x + delta_y * delta_y); // TODO: use glm::distance instead
-	float unit_x = delta_x / distance;
-	float unit_y = delta_y / distance;
+	float angle = atan2f(delta_y, delta_x);
 
 	auto& motion = registry.motions.emplace(entity);
 	motion.angle = 0.f;
-	motion.velocity = { unit_x, unit_y };
+	motion.velocity = { cosf(angle), sinf(angle) };
 	motion.position = player_pos;
 	motion.scale = vec2({ 50, 50 });
 
@@ -1783,7 +1781,7 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 	if (ammo.damage == 0) {
 		ammo.damage = 25;
 	}
-	ammo.target = { player_pos.x + unit_x * player.throw_distance, player_pos.y + unit_y * player.throw_distance };
+	ammo.target = { player_pos.x + THROW_DISTANCE * cosf(angle), player_pos.y + THROW_DISTANCE * sinf(angle) };
 
 	registry.renderRequests.insert(
 		entity,
