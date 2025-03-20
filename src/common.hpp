@@ -51,8 +51,8 @@ const int GRID_CELL_WIDTH_PX = 50;
 const int GRID_CELL_HEIGHT_PX = 50;
 const int GRID_LINE_WIDTH_PX = 2;
 
-const float PLAYER_BB_WIDTH = (float)65;
-const float PLAYER_BB_HEIGHT = (float)100;
+const float PLAYER_BB_WIDTH = (float)75;
+const float PLAYER_BB_HEIGHT = (float)110;
 const float PlAYER_BB_GROTTO_SIZE_FACTOR = 1.8;
 const float PLAYER_SPEED = (float)200;
 const float PLAYER_HEALTH = (float)100;
@@ -63,8 +63,8 @@ const float TIME_UPDATE_FACTOR = 0.001f;
 const float THROW_UPDATE_FACTOR = 0.3f;
 const float AUTOSAVE_TIMER = 1000.f * 60; // every 60 seconds
 
-const float TREE_WIDTH = (float)GRID_CELL_WIDTH_PX * 4;
-const float TREE_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 4;
+const float TREE_WIDTH = (float)165;
+const float TREE_HEIGHT = (float)200;
 
 const float FOREST_RIVER_ABOVE_WIDTH = (float)200;
 const float FOREST_RIVER_ABOVE_HEIGHT = (float)395;
@@ -101,14 +101,53 @@ const float DESERT_TREE_HEIGHT = (float)284 * 0.8;
 const float DESERT_CACTUS_WIDTH = (float)164 * 0.8;
 const float DESERT_CACTUS_HEIGHT = (float)196 * 0.8;
 
-const float DESERT_FOREST_TRANSITION_WIDTH = (float)140 * 1.1;
-const float DESERT_FOREST_TRANSITION_HEIGHT = (float)153 * 1.1;
+const float DESERT_FOREST_TRANSITION_WIDTH = (float)140;
+const float DESERT_FOREST_TRANSITION_HEIGHT = (float)153;
 
 const float DESERT_SKULL_WIDTH = (float)160 * 0.8;
 const float DESERT_SKULL_HEIGHT = (float)110 * 0.8;
 
 const float DESERT_PAGE_WIDTH = (float)54 * 0.8;
 const float DESERT_PAGE_HEIGHT = (float)37 * 0.8;
+
+const float FOREST_TO_MUSHROOM_WIDTH = (float)132;
+const float FOREST_TO_MUSHROOM_HEIGHT = (float)96;
+
+const float GENERIC_ENTRANCE_WIDTH = (float)100;
+const float GENERIC_ENTRANCE_HEIGHT = (float)100;
+
+const float MUSHROOM_ACID_LAKE_WIDTH = (float)828;
+const float MUSHROOM_ACID_LAKE_HEIGHT = (float)233;
+
+const float MUSHROOM_WIDTH = (float)230;
+const float MUSHROOM_HEIGHT = (float)191;
+
+const float MUSHROOM_TALL_WIDTH = (float)230;
+const float MUSHROOM_TALL_HEIGHT = (float)285;
+
+const float CRYSTAL_1_WIDTH = (float)148;
+const float CRYSTAL_1_HEIGHT = (float)211;
+
+const float CRYSTAL_2_WIDTH = (float)169;
+const float CRYSTAL_2_HEIGHT = (float)234;
+
+const float CRYSTAL_3_WIDTH = (float)104;
+const float CRYSTAL_3_HEIGHT = (float)219;
+
+const float CRYSTAL_4_WIDTH = (float)72;
+const float CRYSTAL_4_HEIGHT = (float)92;
+
+const float CRYSTAL_MINECART_WIDTH = (float)172;
+const float CRYSTAL_MINECART_HEIGHT = (float)148;
+
+const float CRYSTAL_PAGE_WIDTH = (float)19;
+const float CRYSTAL_PAGE_HEIGHT = (float)19;
+
+const float CRYSTAL_ROCK_WIDTH = (float)153;
+const float CRYSTAL_ROCK_HEIGHT = (float)208;
+
+const float CAULDRON_WATER_WIDTH = (float)354 * 0.9;
+const float CAULDRON_WATER_HEIGHT = (float)337 * 0.9;
 
 const float ENT_WIDTH = (float)90;
 const float ENT_HEIGHT = (float)130;
@@ -151,9 +190,17 @@ enum class ItemType
 	CHEST = MORTAR_PESTLE + 1,
 	RECIPE_BOOK = CHEST + 1,
 	GROTTO_EXIT = RECIPE_BOOK + 1,
-	DESERT_ENTRANCE = GROTTO_EXIT + 1,
-	FOREST_ENTRANCE = DESERT_ENTRANCE + 1,
-	SAP = FOREST_ENTRANCE + 1,
+	FOREST_TO_FOREST_EX_ENTRANCE = GROTTO_EXIT + 1,
+	FOREST_EX_TO_FOREST_ENTRANCE = FOREST_TO_FOREST_EX_ENTRANCE + 1,
+	FOREST_TO_DESERT_ENTRANCE = FOREST_EX_TO_FOREST_ENTRANCE + 1,
+	DESERT_TO_FOREST_ENTRANCE = FOREST_TO_DESERT_ENTRANCE + 1,
+	FOREST_TO_MUSHROOM_ENTRANCE = DESERT_TO_FOREST_ENTRANCE + 1,
+	MUSHROOM_TO_FOREST_ENTRANCE = FOREST_TO_MUSHROOM_ENTRANCE + 1,
+	MUSHROOM_TO_CRYSTAL_ENTRANCE = MUSHROOM_TO_FOREST_ENTRANCE + 1,
+	CRYSTAL_TO_MUSHROOM_ENTRANCE = MUSHROOM_TO_CRYSTAL_ENTRANCE + 1,
+	CRYSTAL_TO_FOREST_EX_ENTRANCE = CRYSTAL_TO_MUSHROOM_ENTRANCE + 1,
+	FOREST_EX_TO_CRYSTAL_ENTRANCE = CRYSTAL_TO_FOREST_EX_ENTRANCE + 1,
+	SAP = FOREST_EX_TO_CRYSTAL_ENTRANCE + 1,
 	MAGICAL_DUST = SAP + 1
 };
 
@@ -263,7 +310,7 @@ const float CAULDRON_D = 316;               // cauldron is a circle, this is dia
 const vec2 CAULDRON_WATER_POS = vec2(0.4976f, 0.5757f); // center of cauldron relative to window
 const int STIR_FLASH_DURATION = 1000;
 const float WATER_FPS = 120.f;           // The default FPS to normalize water sim to
-    
+
 // Ladle offset coords for mouse and cauldron center
 const vec2 LADLE_OFFSET = vec2(25, -55);
 

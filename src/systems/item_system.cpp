@@ -417,6 +417,7 @@ void ItemSystem::deserializeScreenState(const nlohmann::json& data) {
 
 	screen.tutorial_state = data["tutorial_state"];
 	screen.switching_to_biome = data["biome"]; // biome switching happens only if switching to biome != biome
+	screen.biome = data["from_biome"];
 	screen.from_biome = data["from_biome"];
 	for (const auto& enemy : data["killed_enemies"]) {
 		registry.screenStates.components[0].killed_enemies.push_back(enemy);
