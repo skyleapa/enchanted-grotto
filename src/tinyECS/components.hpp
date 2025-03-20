@@ -191,6 +191,8 @@ struct Textbox
 {
 	Entity targetItem;		// The item this textbox belongs to
 	bool isVisible = false; // Visibility of the textbox
+	std::string text;
+	vec2 pos;
 };
 
 struct Chest {
@@ -337,19 +339,8 @@ enum class TEXTURE_ASSET_ID
 	SAP = COFFEE_BEAN + 1,
 	MAGICAL_DUST = SAP + 1,
 
-	// textboxes
-	TEXTBOX_FRUIT = MAGICAL_DUST + 1,
-	TEXTBOX_COFFEE_BEAN = TEXTBOX_FRUIT + 1,
-	TEXTBOX_ENTER_GROTTO = TEXTBOX_COFFEE_BEAN + 1,
-	TEXTBOX_GROTTO_EXIT = TEXTBOX_ENTER_GROTTO + 1,
-	TEXTBOX_CAULDRON = TEXTBOX_GROTTO_EXIT + 1,
-	TEXTBOX_ENTER_DESERT = TEXTBOX_CAULDRON + 1,
-	TEXTBOX_ENTER_FOREST = TEXTBOX_ENTER_DESERT + 1,
-	TEXTBOX_TWIG = TEXTBOX_ENTER_FOREST + 1,
-	TEXTBOX_MAGICAL_DUST = TEXTBOX_TWIG + 1,
-
 	// enemies
-	ENT = TEXTBOX_MAGICAL_DUST + 1,
+	ENT = MAGICAL_DUST + 1,
 	MUMMY = ENT + 1,
 
 	// extras
@@ -459,7 +450,7 @@ const std::unordered_map<ItemType, ItemInfo> ITEM_INFO = {
 			false}},
 	{
 		ItemType::COFFEE_BEANS, {
-			"Coffee Beans",
+			"Coffee Bean",
 			vec2((float)GRID_CELL_HEIGHT_PX * 0.9, (float)GRID_CELL_HEIGHT_PX * 0.9),
 			TEXTURE_ASSET_ID::COFFEE_BEAN,
 			"interactables/coffee_bean.png",

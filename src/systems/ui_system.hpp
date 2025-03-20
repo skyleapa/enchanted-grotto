@@ -62,9 +62,16 @@ public:
     Entity getOpenedCauldron();
     void setOpenedCauldron(Entity new_cauldron);
     void cauldronDragUpdate(bool isDown);
- 
-    // Tutorial
+  
+    // tutorial
     void updateTutorial();
+
+    // textboxes
+    void updateTextboxes();
+    std::unordered_map<int, Textbox> textboxes;
+
+    void createRmlUITextbox(int id, std::string text, vec2 pos);
+    void removeRmlUITextbox(int id);
 
     // Health bar methods
     void createHealthBar();
@@ -117,6 +124,9 @@ private:
 
     // Tutorial variables
     Rml::ElementDocument* m_tutorial_document = nullptr;
+
+    // Textbox variables
+    std::unordered_map<int, Rml::ElementDocument*> m_textbox_documents;  // to store multiple textboxes
 
     const std::unordered_map<int, std::tuple<std::string, std::string, std::string>> tutorial_steps = {
         { (int)TUTORIAL::WELCOME_SCREEN, {

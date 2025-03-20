@@ -658,8 +658,9 @@ void WorldSystem::handle_player_interaction()
 	Motion& player_motion = registry.motions.get(player);
 	for (Entity item : registry.items.entities)
 	{
-		if (!registry.items.has(item) || !registry.motions.has(item))
+		if (!registry.motions.has(item)) {
 			continue;
+		}
 
 		Motion& item_motion = registry.motions.get(item);
 		Item& item_info = registry.items.get(item);
@@ -671,8 +672,16 @@ void WorldSystem::handle_player_interaction()
 
 		// If item is not in pickup range, continue
 		float distance = glm::distance(player_motion.position, item_motion.position);
+		// std::cout << "distance: " << distance << "item: " << item_info.name << std::endl;
 		if (distance > ITEM_PICKUP_RADIUS) {
 			continue;
+		}
+
+		// If this is a cauldron and it's invisible, ignore it so if items overlap, we don't get stuck opening cauldron
+		if (registry.cauldrons.has(item)) {
+			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) {
+				continue;
+			}
 		}
 
 		// Handle interaction
@@ -764,27 +773,6 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 	// Set a random respawn time (10-15 seconds)
 	item_info.respawnTime = (rand() % 5001 + 10000);
 
-
-	// Hide item by removing motion & render components
-	if (registry.motions.has(item))
-		registry.motions.remove(item);
-
-	if (registry.renderRequests.has(item))
-		registry.renderRequests.remove(item);
-
-	// Hide the textbox
-	for (Entity textbox : registry.textboxes.entities)
-	{
-		if (registry.textboxes.get(textbox).targetItem == item)
-		{
-			registry.textboxes.get(textbox).isVisible = false;
-			if (registry.renderRequests.has(textbox)) {
-				registry.renderRequests.remove(textbox);
-			}
-			break;
-		}
-	}
-
 	return true;
 }
 
@@ -836,8 +824,7 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 			Textbox& textboxComp = registry.textboxes.get(textbox);
 			textboxComp.isVisible = false;
 
-			RenderRequest renderRequest = getTextboxRenderRequest(textboxComp);
-			registry.renderRequests.insert(textbox, renderRequest);
+			m_ui_system->textboxes[textbox.id()] = textboxComp;
 			break;
 		}
 
@@ -884,23 +871,12 @@ void WorldSystem::update_textbox_visibility()
 		if (foundTextbox)
 		{
 			Textbox& textbox = registry.textboxes.get(textboxEntity);
-			textbox.isVisible = (distance < TEXTBOX_VISIBILITY_RADIUS);
+			bool shouldBeVisible = (distance < TEXTBOX_VISIBILITY_RADIUS);
 
-			RenderRequest renderRequest = getTextboxRenderRequest(textbox);
-
-			if (textbox.isVisible)
+			// should not have "open cauldron" textbox while using cauldron
+			if (shouldBeVisible && !m_ui_system->isCauldronOpen())
 			{
-				if (!registry.renderRequests.has(textboxEntity))
-				{
-					registry.renderRequests.insert(textboxEntity, renderRequest);
-				}
-			}
-			else
-			{
-				if (registry.renderRequests.has(textboxEntity))
-				{
-					registry.renderRequests.remove(textboxEntity);
-				}
+				m_ui_system->textboxes[textboxEntity.id()] = textbox;
 			}
 		}
 	}

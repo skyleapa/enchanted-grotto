@@ -69,7 +69,6 @@ void BiomeSystem::step(float elapsed_ms_since_last_update) {
 }
 
 void BiomeSystem::switchBiome(int biome) {
-
 	std::vector<Entity> to_remove;
 	for (auto entity : registry.motions.entities) {
 		if (registry.players.has(entity) || registry.inventories.has(entity)) continue;
@@ -136,7 +135,7 @@ void BiomeSystem::renderPlayerInNewBiome() {
 			// recreate textbox
 			if (registry.motions.has(cauldron)) {
 				Motion& motion = registry.motions.get(cauldron);
-				createTextbox(renderer, motion.position, cauldron);
+				createTextbox(renderer, vec2(motion.position.x + 60, motion.position.y - 40), cauldron, "[F] Use Cauldron");
 			}
 
 		}
