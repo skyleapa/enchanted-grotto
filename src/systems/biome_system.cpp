@@ -149,7 +149,7 @@ void BiomeSystem::renderPlayerInNewBiome() {
 			// recreate textbox
 			if (registry.motions.has(mortar)) {
 				Motion& motion = registry.motions.get(mortar);
-				createTextbox(renderer, motion.position, mortar);
+				createTextbox(renderer, { GRID_CELL_WIDTH_PX * 6.5, GRID_CELL_HEIGHT_PX * 3 }, mortar, "[F] Use Mortar & Pestle");
 			}
 
 		}
