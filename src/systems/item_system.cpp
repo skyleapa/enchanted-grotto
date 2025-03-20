@@ -183,10 +183,10 @@ void ItemSystem::swapItems(Entity inventory, int slot1, int slot2) {
 }
 
 Entity ItemSystem::copyItem(Entity toCopy) {
-	Item& item = registry.items.get(toCopy);
+	const Item item = registry.items.get(toCopy);
 	Entity res = Entity();
 	// std::cout << "Entity " << res.id() << " item copy" << std::endl;
-	registry.items.emplace(res, Item(item));
+	registry.items.emplace(res, item);
 	if (registry.ingredients.has(toCopy)) {
 		//std::cout << "Entity " << oldIng.grindLevel << " item copy" << std::endl;
 		auto& oldIng = registry.ingredients.get(toCopy);
@@ -436,6 +436,7 @@ void ItemSystem::deserializeScreenState(const nlohmann::json& data) {
 
 	screen.tutorial_state = data["tutorial_state"];
 	screen.switching_to_biome = data["biome"]; // biome switching happens only if switching to biome != biome
+	screen.biome = data["from_biome"];
 	screen.from_biome = data["from_biome"];
 	for (const auto& enemy : data["killed_enemies"]) {
 		registry.screenStates.components[0].killed_enemies.push_back(enemy);

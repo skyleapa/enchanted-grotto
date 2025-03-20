@@ -86,16 +86,23 @@ void BiomeSystem::switchBiome(int biome) {
 		registry.remove_all_components_of(entity);
 	}
 
-	if (biome == (GLuint)BIOME::FOREST)
-	{
+	if (biome == (GLuint)BIOME::FOREST) {
 		createForest();
 	}
-	else if (biome == (GLuint)BIOME::GROTTO)
-	{
+	else if (biome == (GLuint)BIOME::FOREST_EX) {
+		createForestEx();
+	}
+	else if (biome == (GLuint)BIOME::GROTTO) {
 		createGrotto();
 	}
 	else if (biome == (GLuint)BIOME::DESERT) {
 		createDesert();
+	}
+	else if (biome == (GLuint)BIOME::MUSHROOM) {
+		createMushroom();
+	}
+	else if (biome == (GLuint)BIOME::CRYSTAL) {
+		createCrystal();
 	}
 
 	renderPlayerInNewBiome();
@@ -165,66 +172,41 @@ void BiomeSystem::renderPlayerInNewBiome() {
 			}
 		}
 	}
+	// between forest and forest expansion
+	else if (screen.from_biome == (int)BIOME::FOREST && screen.biome == (int)BIOME::FOREST_EX) {
+		player_motion.position = vec2(60, 450);
+	}
+	else if (screen.from_biome == (int)BIOME::FOREST_EX && screen.biome == (int)BIOME::FOREST) {
+		player_motion.position = vec2(1150, 430);
+	}
+	// between forest and desert
 	else if (screen.from_biome == (int)BIOME::FOREST && screen.biome == (int)BIOME::DESERT) {
 		player_motion.position = vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 12);
 	}
 	else if (screen.from_biome == (int)BIOME::DESERT && screen.biome == (int)BIOME::FOREST) {
 		player_motion.position = vec2(GRID_CELL_WIDTH_PX * 2, GRID_CELL_HEIGHT_PX * 2);
 	}
-}
-
-void BiomeSystem::createForest()
-{
-	// create boundaries
-	for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::FOREST))
-	{
-		create_boundary_line(renderer, position, scale);
+	// between forest and mushroom
+	else if (screen.from_biome == (int)BIOME::FOREST && screen.biome == (int)BIOME::MUSHROOM) {
+		player_motion.position = vec2(100, 70);
 	}
-
-	// create forest bridge
-	createForestBridge(renderer, vec2(307, 485));
-	createForestBridgeTop(renderer, vec2(307, 425));
-	createForestBridgeBottom(renderer, vec2(309, 545));
-
-	// NOTE: leaving this in for debugging vertices of meshes for the future
-	/*
-		Entity terrain_entity = createForestBridgeTop(renderer, vec2(700, 400));
-		Mesh* mesh = registry.meshPtrs.get(terrain_entity);
-		Motion motion = registry.motions.get(terrain_entity);
-		std::vector<vec2> transformed_vertices = PhysicsSystem::get_transformed_vertices(*mesh, motion);
-
-		for (vec2 vertex : transformed_vertices) {
-			createCoffeeBean(renderer, vertex, "vertex bean", 1);
-		}
-	*/
-
-	// create forest river
-	createForestRiver(renderer, vec2(307, 0));
-
-	// create trees
-	createTree(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 3));
-	createTree(renderer, vec2(GRID_CELL_WIDTH_PX * 19, GRID_CELL_HEIGHT_PX * 10));
-	createTree(renderer, vec2(GRID_CELL_WIDTH_PX * 23, GRID_CELL_HEIGHT_PX * 11));
-
-	createGrottoEntrance(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 1), 7, "Grotto Entrance");
-
-	createBush(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 12));
-
-	createCollectableIngredient(renderer, vec2(GRID_CELL_WIDTH_PX * 10, GRID_CELL_HEIGHT_PX * 3), ItemType::MAGICAL_FRUIT, 1, true);
-	createCollectableIngredient(renderer, vec2(GRID_CELL_WIDTH_PX * 19, GRID_CELL_HEIGHT_PX * 10), ItemType::MAGICAL_FRUIT, 1, true);
-	createCollectableIngredient(renderer, vec2(GRID_CELL_WIDTH_PX * 23, GRID_CELL_HEIGHT_PX * 11), ItemType::MAGICAL_FRUIT, 1, true);
-
-	createCollectableIngredient(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5), ItemType::COFFEE_BEANS, 1, true);
-	createCollectableIngredient(renderer, vec2(GRID_CELL_WIDTH_PX * 9.9, GRID_CELL_HEIGHT_PX * 12.1), ItemType::COFFEE_BEANS, 1, true);
-	createCollectableIngredient(renderer, vec2(GRID_CELL_WIDTH_PX * 12, GRID_CELL_HEIGHT_PX * 12.7), ItemType::COFFEE_BEANS, 1, true);
-
-	ScreenState screen = registry.screenStates.components[0];
-	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Ent 1") == screen.killed_enemies.end())
-	{
-		createEnt(renderer, vec2(GRID_CELL_WIDTH_PX * 1.7, GRID_CELL_HEIGHT_PX * 5), 0, "Ent 1");
+	else if (screen.from_biome == (int)BIOME::MUSHROOM && screen.biome == (int)BIOME::FOREST) {
+		player_motion.position = vec2(100, 620);
 	}
-	
-	createDesertEntrance(renderer, vec2(GRID_CELL_WIDTH_PX * 2.1, GRID_CELL_HEIGHT_PX * 1.7), 7, "Desert Entrance");
+	// between mushroom and crystal
+	else if (screen.from_biome == (int)BIOME::MUSHROOM && screen.biome == (int)BIOME::CRYSTAL) {
+		player_motion.position = vec2(70, 200);
+	}
+	else if (screen.from_biome == (int)BIOME::CRYSTAL && screen.biome == (int)BIOME::MUSHROOM) {
+		player_motion.position = vec2(1130, 200);
+	}
+	// between crystal and forest ex
+	else if (screen.from_biome == (int)BIOME::CRYSTAL && screen.biome == (int)BIOME::FOREST_EX) {
+		player_motion.position = vec2(900, 610);
+	}
+	else if (screen.from_biome == (int)BIOME::FOREST_EX && screen.biome == (int)BIOME::CRYSTAL) {
+		player_motion.position = vec2(960, 90);
+	}
 }
 
 void BiomeSystem::createGrotto()
@@ -237,16 +219,18 @@ void BiomeSystem::createGrotto()
 	// positions are according to sample grotto interior
 	for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::GROTTO))
 	{
-		create_boundary_line(renderer, position, scale);
+		createBoundaryLine(renderer, position, scale);
 	}
 
 	for (const auto& [position, size, rotation, texture, layer] : grotto_static_entity_pos) {
-		create_grotto_static_entities(renderer, position, size, rotation, texture, layer);
+		createGrottoStaticEntities(renderer, position, size, rotation, texture, layer);
 	}
+
+	createGrottoPoolMesh(renderer, vec2(GRID_CELL_WIDTH_PX * 4.8, GRID_CELL_HEIGHT_PX * 11.9));
 
 	if (registry.cauldrons.entities.size() == 0) {
 		std::cout << "creating cauldron in grotto" << std::endl;
-		Entity new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.50, GRID_CELL_HEIGHT_PX * 6.05 }), vec2({ 150, 220 }), 8, "Cauldron", false);
+		Entity new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.50, GRID_CELL_HEIGHT_PX * 6.05 }), vec2({ 150, 220 }), "Cauldron", false);
 		for (Entity cauldron : registry.cauldrons.entities) {
 			if (new_cauldron != cauldron) registry.remove_all_components_of(cauldron);
 		}
@@ -255,16 +239,16 @@ void BiomeSystem::createGrotto()
 
 	if (registry.mortarAndPestles.entities.size() == 0) {
 		std::cout << "creating mortar in grotto" << std::endl;
-		Entity new_mortar = createMortarPestle(renderer, vec2({ GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22 }), vec2({ 213, 141 }), 9, "Mortar and Pestle");
+		Entity new_mortar = createMortarPestle(renderer, vec2({ GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22 }), vec2({ 213, 141 }), "Mortar and Pestle");
 		for (Entity mortar : registry.mortarAndPestles.entities) {
 			if (new_mortar != mortar) registry.remove_all_components_of(mortar);
 		}
 	}
 
-	//createMortarPestle(renderer, vec2({ GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22 }), vec2({ 213, 141 }), 9, "Mortar and Pestle");
-	createRecipeBook(renderer, vec2({ GRID_CELL_WIDTH_PX * 4.15, GRID_CELL_HEIGHT_PX * 5.05 }), vec2({ 108, 160 }), 10, "Recipe Book");
-	createChest(renderer, vec2({ GRID_CELL_WIDTH_PX * 1.35, GRID_CELL_HEIGHT_PX * 5.2 }), vec2({ 100, 150 }), 11, "Chest");
-	createGrottoExit(renderer, vec2(GRID_CELL_WIDTH_PX * 20.5, GRID_CELL_HEIGHT_PX * 13), 12, "Grotto Exit");
+	// createMortarPestle(renderer, vec2({ GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22 }), vec2({ 213, 141 }), "Mortar and Pestle");
+	createRecipeBook(renderer, vec2({ GRID_CELL_WIDTH_PX * 4.15, GRID_CELL_HEIGHT_PX * 5.05 }), vec2({ 108, 160 }), "Recipe Book");
+	createChest(renderer, vec2({ GRID_CELL_WIDTH_PX * 1.35, GRID_CELL_HEIGHT_PX * 5.2 }), vec2({ 100, 150 }), "Chest");
+	createGrottoToForest(renderer, vec2(GRID_CELL_WIDTH_PX * 20.5, GRID_CELL_HEIGHT_PX * 13), "Grotto Exit");
 }
 
 bool BiomeSystem::handleEntranceInteraction(Entity entrance_entity)
@@ -281,28 +265,108 @@ bool BiomeSystem::handleEntranceInteraction(Entity entrance_entity)
 		state.is_switching_biome = true;
 		state.switching_to_biome = (GLuint)BIOME::FOREST;
 	}
+	else if (entrance.target_biome == (GLuint)BIOME::FOREST_EX) {
+		state.is_switching_biome = true;
+		state.switching_to_biome = (GLuint)BIOME::FOREST_EX;
+	}
 	else if (entrance.target_biome == (GLuint)BIOME::DESERT) {
 		state.is_switching_biome = true;
 		state.switching_to_biome = (GLuint)BIOME::DESERT;
 	}
+	else if (entrance.target_biome == (GLuint)BIOME::MUSHROOM) {
+		state.is_switching_biome = true;
+		state.switching_to_biome = (GLuint)BIOME::MUSHROOM;
+	}
+	else if (entrance.target_biome == (GLuint)BIOME::CRYSTAL) {
+		state.is_switching_biome = true;
+		state.switching_to_biome = (GLuint)BIOME::CRYSTAL;
+	}
 	return true;
+}
+
+void BiomeSystem::createForest()
+{
+	for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::FOREST))
+	{
+		createBoundaryLine(renderer, position, scale);
+	}
+
+	createForestBridge(renderer, vec2(307, 485));
+	createForestBridgeTop(renderer, vec2(307, 425));
+	createForestBridgeBottom(renderer, vec2(309, 545));
+
+	// NOTE: leaving this in for debugging vertices of meshes for the future
+	/*
+		Entity terrain_entity = createMushroomAcidLakeMesh(renderer, vec2(670, 117));
+		Mesh* mesh = registry.meshPtrs.get(terrain_entity);
+		Motion motion = registry.motions.get(terrain_entity);
+		std::vector<vec2> transformed_vertices = PhysicsSystem::get_transformed_vertices(*mesh, motion);
+
+		for (vec2 vertex : transformed_vertices) {
+			createCollectableIngredient(renderer, vertex, ItemType::COFFEE_BEANS, 1, true);
+		}
+	*/
+
+	createForestRiver(renderer, vec2(307, 0));
+
+	createTree(renderer, vec2(530, 330));
+	createTree(renderer, vec2(703, 165));
+
+	createTree(renderer, vec2(714, 465));
+	createTree(renderer, vec2(857, 540));
+	createTree(renderer, vec2(1080, 500));
+
+	createBush(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5));
+	createBush(renderer, vec2(1100, 292));
+
+	ScreenState screen = registry.screenStates.components[0];
+	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Ent 1") == screen.killed_enemies.end())
+	{
+		createEnt(renderer, vec2(GRID_CELL_WIDTH_PX * 1.7, GRID_CELL_HEIGHT_PX * 5), 0, "Ent 1");
+	}
+
+	createForestToGrotto(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 1), "Grotto Entrance");
+	createForestToDesert(renderer, vec2(GRID_CELL_WIDTH_PX * 2.1, GRID_CELL_HEIGHT_PX * 1.2), "Desert Entrance");
+	createForestToMushroom(renderer, vec2(GRID_CELL_WIDTH_PX * 2.1, WINDOW_HEIGHT_PX - 40), "Mushroom Entrance");
+	createForestToForestEx(renderer, vec2(WINDOW_WIDTH_PX, 470), "Forest Ex Entrance");
+}
+
+void BiomeSystem::createForestEx()
+{
+	for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::FOREST_EX))
+	{
+		createBoundaryLine(renderer, position, scale);
+	}
+
+	createTree(renderer, vec2(130, 130));
+	createTree(renderer, vec2(157, 540));
+	createTree(renderer, vec2(216, 240));
+	createTree(renderer, vec2(403, 180));
+	createTree(renderer, vec2(504, 535));
+	createTree(renderer, vec2(857, 140));
+	createTree(renderer, vec2(1120, 280));
+	createTree(renderer, vec2(1080, 535));
+
+	createBush(renderer, vec2(920, 392));
+
+	createForestExToForest(renderer, vec2(50, 470), "Forest Ex to Forest");
+	createForestExToCrystal(renderer, vec2(930, 665), "Forest Ex to Crystal");
 }
 
 void BiomeSystem::createDesert()
 {
 	// positions are according to sample desert
-	for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::DESERT)) // desert
+	for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::DESERT))
 	{
-		create_boundary_line(renderer, position, scale);
+		createBoundaryLine(renderer, position, scale);
 	}
 
-	createDesertExit(renderer, vec2(GRID_CELL_WIDTH_PX * 20.3, GRID_CELL_HEIGHT_PX * 12.9), 8, "Desert Exit");
+	createDesertToForest(renderer, vec2(GRID_CELL_WIDTH_PX * 20.3, GRID_CELL_HEIGHT_PX * 12.9), "Desert Exit");
 	createDesertTree(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 3.9));
 	createDesertCactus(renderer, vec2(GRID_CELL_WIDTH_PX * 4.1, GRID_CELL_HEIGHT_PX * 6.2));
-	createDesertRiver(renderer, vec2(GRID_CELL_WIDTH_PX * 24, WINDOW_HEIGHT_PX / 2));
+	createDesertRiver(renderer, vec2(1190, WINDOW_HEIGHT_PX / 2));
 	createDesertPage(renderer, vec2(GRID_CELL_WIDTH_PX * 13.5, GRID_CELL_HEIGHT_PX * 3.2));
 	createDesertSkull(renderer, vec2(GRID_CELL_WIDTH_PX * 13.7, GRID_CELL_HEIGHT_PX * 10.9));
-
 
 	ScreenState screen = registry.screenStates.components[0];
 	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Mummy 1") == screen.killed_enemies.end())
@@ -312,6 +376,45 @@ void BiomeSystem::createDesert()
 	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Mummy 2") == screen.killed_enemies.end()) {
 		createMummy(renderer, vec2(GRID_CELL_WIDTH_PX * 4, GRID_CELL_HEIGHT_PX * 8), 1, "Mummy 2");
 	}
+}
 
+void BiomeSystem::createMushroom()
+{
+	for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::MUSHROOM))
+	{
+		createBoundaryLine(renderer, position, scale);
+	}
 
+	createMushroomAcidLake(renderer, vec2(670, 117));
+	createMushroomAcidLakeMesh(renderer, vec2(670, 117));
+
+	createMushRoomTallPink(renderer, vec2(320, 160));
+	createMushroomBlue(renderer, vec2(170, 440));
+	createMushroomPurple(renderer, vec2(380, 485));
+	createMushroomPink(renderer, vec2(560, 440));
+	createMushroomBlue(renderer, vec2(750, 515));
+	createMushroomTallBlue(renderer, vec2(1055, 435));
+
+	createMushroomToForest(renderer, vec2(60, 50), "Mushroom To Forest");
+	createMushroomToCrystal(renderer, vec2(1220, 200), "Mushroom to Crystal");
+}
+
+void BiomeSystem::createCrystal()
+{
+	for (const auto& [position, scale] : biome_boundaries.at((int)BIOME::CRYSTAL))
+	{
+		createBoundaryLine(renderer, position, scale);
+	}
+
+	createCrystal1(renderer, vec2(1100, 240));
+	createCrystal2(renderer, vec2(175, 490));
+	createCrystal3(renderer, vec2(340, 170));
+	createCrystal4(renderer, vec2(100, 92));
+
+	createCrystalMinecart(renderer, vec2(986, 530));
+	createCrystalRock(renderer, vec2(639, 262));
+	createCrystalPage(renderer, vec2(966, 510));
+
+	createCrystalToMushroom(renderer, vec2(50, 200), "Crystal To Mushroom");
+	createCrystalToForestEx(renderer, vec2(930, 30), "Crystal to Forest Ex");
 }

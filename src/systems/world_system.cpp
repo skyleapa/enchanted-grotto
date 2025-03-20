@@ -278,14 +278,15 @@ void WorldSystem::restart_game(bool hard_reset)
 	// state.tutorial_step_complete = true;
 
 	if (hard_reset) {
-		screen.from_biome = (int) BIOME::BLANK;
-		screen.biome = (int) BIOME::BLANK;
-		screen.switching_to_biome = (int) BIOME::GROTTO;
+		screen.from_biome = (int)BIOME::BLANK;
+		screen.biome = (int)BIOME::BLANK;
+		screen.switching_to_biome = (int)BIOME::GROTTO;
 		screen.tutorial_state = 0;
 		screen.tutorial_step_complete = true;
 		createWelcomeScreen(renderer, vec2(WINDOW_WIDTH_PX / 2, WINDOW_HEIGHT_PX / 2 - 50));
 		screen.killed_enemies = {};
-	} else {
+	}
+	else {
 		ItemSystem::loadGameState(); // load the game state
 	}
 
@@ -324,7 +325,7 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 			Enemy& enemy = registry.enemies.get(enemy_entity);
 			enemy.health -= ammo.damage;
 			registry.remove_all_components_of(ammo_entity);
-			SoundSystem::playEnemyOuchSound((int) SOUND_CHANNEL::GENERAL, 0); // play enemy ouch sound
+			SoundSystem::playEnemyOuchSound((int)SOUND_CHANNEL::GENERAL, 0); // play enemy ouch sound
 			if (enemy.health <= 0) {
 				// using can_move for now since ent cannot move, but mummy can
 				if (enemy.can_move == 0) {
@@ -342,7 +343,7 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 				if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), enemy.name) == screen.killed_enemies.end()) {
 					screen.killed_enemies.push_back(enemy.name);
 				}
-				
+
 				registry.remove_all_components_of(enemy_entity);
 			}
 			continue;
@@ -351,11 +352,11 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 		else if ((registry.players.has(collision_entity) || registry.players.has(collision.other)) && (registry.enemies.has(collision_entity) || registry.enemies.has(collision.other))) {
 			Entity player_entity = registry.players.has(collision_entity) ? collision_entity : collision.other;
 			Entity enemy_entity = registry.enemies.has(collision_entity) ? collision_entity : collision.other;
-			
+
 			Player& player = registry.players.get(player_entity);
 
 			if (player.damage_cooldown > 0)	continue;
-			
+
 			// player flashes red and takes damage equal to enemy's attack
 			if (!registry.damageFlashes.has(player_entity)) registry.damageFlashes.emplace(player_entity);
 			player.health -= registry.enemies.get(enemy_entity).attack_damage;
@@ -600,7 +601,7 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 		if (m_ui_system != nullptr && (m_ui_system->isCauldronOpen() || m_ui_system->isMortarPestleOpen())) return;
 		if (mouse_pos_x >= BAR_X && mouse_pos_x <= BAR_X + BAR_WIDTH && mouse_pos_y >= BAR_Y && mouse_pos_y <= BAR_Y + BAR_HEIGHT) return;
 		// don't throw ammo if in potion making menu or clicking on inventory
-		if (throwAmmo(vec2(mouse_pos_x, mouse_pos_y))) SoundSystem::playThrowSound((int) SOUND_CHANNEL::GENERAL, 0);
+		if (throwAmmo(vec2(mouse_pos_x, mouse_pos_y))) SoundSystem::playThrowSound((int)SOUND_CHANNEL::GENERAL, 0);
 	}
 }
 
@@ -741,7 +742,7 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 	Item& item_info = registry.items.get(item);
 	if (!ItemSystem::addItemToInventory(player, item))
 		return false;
-	SoundSystem::playCollectItemSound((int) SOUND_CHANNEL::GENERAL, 0);
+	SoundSystem::playCollectItemSound((int)SOUND_CHANNEL::GENERAL, 0);
 
 	// handle fruit collection
 	if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::COLLECT_ITEMS) {

@@ -28,6 +28,8 @@ class RenderSystem {
 		// specify meshes of other assets here
 		std::pair<GEOMETRY_BUFFER_ID, std::string>(GEOMETRY_BUFFER_ID::BRIDGE_TOP, mesh_path("bridge_top.obj")),
 		std::pair<GEOMETRY_BUFFER_ID, std::string>(GEOMETRY_BUFFER_ID::BRIDGE_BOTTOM, mesh_path("bridge_bottom.obj")),
+		std::pair<GEOMETRY_BUFFER_ID, std::string>(GEOMETRY_BUFFER_ID::GROTTO_POOL, mesh_path("grotto_pool.obj")),
+		std::pair<GEOMETRY_BUFFER_ID, std::string>(GEOMETRY_BUFFER_ID::MUSHROOM_ACID_LAKE, mesh_path("mushroom_acid_lake.obj")),
 	};
 
 	// Make sure these paths remain in sync with the associated enumerators (see TEXTURE_ASSET_ID).
@@ -56,7 +58,9 @@ class RenderSystem {
 		textures_path("terrain/forest/forest_river_bottom.png"),
 		textures_path("backgrounds/forest_bg.png"),
 		textures_path("terrain/forest/forest_to_desert.png"),
+		textures_path("terrain/forest/forest_to_mushroom.png"),
 		textures_path("terrain/forest/tree_1.png"),
+		textures_path("backgrounds/forest_ex_bg.png"),
 		textures_path("terrain/forest/grotto_entrance.png"),
 		textures_path("backgrounds/grotto_bg.png"),
 		textures_path("terrain/grotto/grotto_carpet.png"),
@@ -74,6 +78,21 @@ class RenderSystem {
 		textures_path("terrain/desert/desert_tree.png"),
 		textures_path("terrain/desert/desert_to_forest.png"),
 		textures_path("terrain/desert/desert_sand_pile_page.png"),
+		textures_path("backgrounds/mushroom_bg.png"),
+		textures_path("terrain/mushroom/mushroom_acid_lake.png"),
+		textures_path("terrain/mushroom/mushroom_blue.png"),
+		textures_path("terrain/mushroom/mushroom_pink.png"),
+		textures_path("terrain/mushroom/mushroom_purple.png"),
+		textures_path("terrain/mushroom/mushroom_tall_blue.png"),
+		textures_path("terrain/mushroom/mushroom_tall_pink.png"),
+		textures_path("backgrounds/crystal_bg.png"),
+		textures_path("terrain/crystal/crystal_1.png"),
+		textures_path("terrain/crystal/crystal_2.png"),
+		textures_path("terrain/crystal/crystal_3.png"),
+		textures_path("terrain/crystal/crystal_4.png"),
+		textures_path("terrain/crystal/crystal_minecart.png"),
+		textures_path("terrain/crystal/crystal_page.png"),
+		textures_path("terrain/crystal/crystal_rock.png"),
 		textures_path("terrain/boundary_transparent.png"),
 		textures_path("terrain/forest/bush.png"),
 		textures_path("interactables/magical_fruit.png"),
@@ -194,7 +213,7 @@ private:
 	GLuint frame_buffer;
 	GLuint off_screen_render_buffer_color;
 	GLuint off_screen_render_buffer_depth;
-	
+
 	// Water stuff
 	GLuint water_buffer_one;
 	GLuint water_buffer_two;

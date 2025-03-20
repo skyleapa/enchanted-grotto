@@ -3,6 +3,60 @@
 #include "systems/item_system.hpp"
 #include <iostream>
 
+
+Entity createGridLine(vec2 start_pos, vec2 end_pos)
+{
+	Entity entity = Entity();
+	// std::cout << "Entity " << entity.id() << " gridline" << std::endl;
+
+	GridLine& gridLine = registry.gridLines.emplace(entity);
+	gridLine.start_pos = start_pos;
+	gridLine.end_pos = end_pos;
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::TEXTURE_COUNT,
+			EFFECT_ASSET_ID::EGG,
+			GEOMETRY_BUFFER_ID::DEBUG_LINE,
+			RENDER_LAYER::BACKGROUND,
+		});
+
+	registry.colors.insert(
+		entity,
+		glm::vec3(0.1f, 0.1f, 0.1f));
+
+	return entity;
+}
+
+Entity createBoundaryLine(RenderSystem* renderer, vec2 position, vec2 scale)
+{
+	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " boundary line" << std::endl;
+
+	auto& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 1.0f; // cannot walk past boundaries
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0;
+	motion.velocity = { 0.0f, 0.0f };
+	motion.position = position;
+	motion.scale = scale;
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::BOUNDARY_LINE,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::STRUCTURE,
+		 1 });
+
+	return entity;
+}
+
 Entity createWelcomeScreen(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
@@ -26,61 +80,6 @@ Entity createWelcomeScreen(RenderSystem* renderer, vec2 position)
 		 EFFECT_ASSET_ID::TEXTURED,
 		 GEOMETRY_BUFFER_ID::SPRITE,
 		 RENDER_LAYER::UI });
-
-	return entity;
-}
-
-Entity createTree(RenderSystem* renderer, vec2 position)
-{
-	auto entity = Entity();
-	// std::cout << "Entity " << entity.id() << " tree" << std::endl;
-	Terrain& terrain = registry.terrains.emplace(entity);
-	terrain.collision_setting = 0.0f;
-	terrain.height_ratio = 0.1f;
-	terrain.width_ratio = 0.2f;
-
-	// store a reference to the potentially re-used mesh object
-	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
-	registry.meshPtrs.emplace(entity, &mesh);
-
-	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 180.f;
-	motion.velocity = { 0, 0 };
-	motion.position = position;
-
-	motion.scale = vec2({ TREE_WIDTH, TREE_HEIGHT });
-
-	registry.renderRequests.insert(
-		entity,
-		{ TEXTURE_ASSET_ID::TREE,
-		 EFFECT_ASSET_ID::TEXTURED,
-		 GEOMETRY_BUFFER_ID::SPRITE,
-		 RENDER_LAYER::TERRAIN });
-
-	return entity;
-}
-
-Entity createGridLine(vec2 start_pos, vec2 end_pos)
-{
-	Entity entity = Entity();
-	// std::cout << "Entity " << entity.id() << " gridline" << std::endl;
-
-	GridLine& gridLine = registry.gridLines.emplace(entity);
-	gridLine.start_pos = start_pos;
-	gridLine.end_pos = end_pos;
-
-	registry.renderRequests.insert(
-		entity,
-		{
-			TEXTURE_ASSET_ID::TEXTURE_COUNT,
-			EFFECT_ASSET_ID::EGG,
-			GEOMETRY_BUFFER_ID::DEBUG_LINE,
-			RENDER_LAYER::BACKGROUND,
-		});
-
-	registry.colors.insert(
-		entity,
-		glm::vec3(0.1f, 0.1f, 0.1f));
 
 	return entity;
 }
@@ -126,6 +125,194 @@ Entity createPlayer(RenderSystem* renderer, vec2 position)
 		 EFFECT_ASSET_ID::TEXTURED,
 		 GEOMETRY_BUFFER_ID::SPRITE,
 		 RENDER_LAYER::PLAYER });
+
+	return entity;
+}
+
+/* ==============================================================================================================
+	Collectable items and interaction textbox
+============================================================================================================== */
+
+Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemType type, int amount, bool canRespawn)
+{
+	assert(ITEM_INFO.count(type) && "Tried to create an item that has no info!");
+	ItemInfo info = ITEM_INFO.at(type);
+	auto entity = ItemSystem::createCollectableIngredient(position, type, amount, canRespawn);
+
+	// Mesh
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	// Create motion
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+	motion.scale = info.size;
+
+	if (type == ItemType::SAP) {
+		vec2 textbox_position = { position.x + 160.0f, position.y };
+		Entity textbox = createTextbox(renderer, textbox_position, entity);
+	}
+	else {
+		Entity textbox = createTextbox(renderer, position, entity);
+	}
+
+	registry.renderRequests.insert(
+		entity,
+		{ info.texture,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::ITEM });
+
+	return entity;
+}
+
+Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity)
+{
+	auto entity = Entity();
+
+	// Create a Textbox component
+	Textbox& textbox = registry.textboxes.emplace(entity);
+	textbox.targetItem = itemEntity;
+	textbox.isVisible = false; // Initially hidden
+
+	// Store mesh reference
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	// Motion component (position it above the item)
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position + vec2(-TEXTBOX_WIDTH / 2, 0);
+	motion.scale = vec2(TEXTBOX_WIDTH, -TEXTBOX_HEIGHT);
+
+	return entity;
+}
+
+RenderRequest getTextboxRenderRequest(Textbox& textbox)
+{
+	if (!registry.items.has(textbox.targetItem))
+	{
+		// std::cerr << "ERROR: Target item not found for textbox!" << std::endl;
+		return {};
+	}
+
+	Item& item = registry.items.get(textbox.targetItem);
+
+	// TODO: Use ItemType and a map
+	// Find correct texture based on item type
+	TEXTURE_ASSET_ID texture = TEXTURE_ASSET_ID::TEXTBOX_FRUIT; // placeholder
+	if (item.type == ItemType::MAGICAL_FRUIT)
+	{
+		texture = TEXTURE_ASSET_ID::TEXTBOX_FRUIT;
+	}
+	else if (item.type == ItemType::COFFEE_BEANS)
+	{
+		texture = TEXTURE_ASSET_ID::TEXTBOX_COFFEE_BEAN;
+	}
+	else if (item.type == ItemType::GROTTO_ENTRANCE)
+	{
+		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_GROTTO;
+	}
+	else if (item.type == ItemType::CAULDRON)
+	{
+		texture = TEXTURE_ASSET_ID::TEXTBOX_CAULDRON;
+	}
+	else if (item.type == ItemType::GROTTO_EXIT)
+	{
+		texture = TEXTURE_ASSET_ID::TEXTBOX_GROTTO_EXIT;
+	}
+	else if (item.type == ItemType::FOREST_TO_DESERT_ENTRANCE)
+	{
+		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_DESERT;
+	}
+	else if (item.type == ItemType::DESERT_TO_FOREST_ENTRANCE) {
+		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_FOREST;
+	}
+	else if (item.type == ItemType::SAP) {
+		texture = TEXTURE_ASSET_ID::TEXTBOX_TWIG;
+	}
+	else if (item.type == ItemType::MAGICAL_DUST) {
+		texture = TEXTURE_ASSET_ID::TEXTBOX_MAGICAL_DUST;
+	}
+
+	return {
+		texture,
+		EFFECT_ASSET_ID::TEXTURED,
+		GEOMETRY_BUFFER_ID::SPRITE,
+		RENDER_LAYER::ITEM };
+}
+
+/* ==============================================================================================================
+	Forest Creation
+============================================================================================================== */
+
+Entity createBush(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " bush" << std::endl;
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.height_ratio = 0.35f;
+	terrain.width_ratio = 0.55f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ BUSH_WIDTH, BUSH_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::BUSH,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN });
+
+	// create coffee beans on bush
+	createCollectableIngredient(renderer, vec2(position.x - 30, position.y - 12), ItemType::COFFEE_BEANS, 1, true);
+	createCollectableIngredient(renderer, vec2(position.x + 38, position.y - 10), ItemType::COFFEE_BEANS, 1, true);
+	createCollectableIngredient(renderer, vec2(position.x + 10, position.y + 25), ItemType::COFFEE_BEANS, 1, true);
+
+	return entity;
+}
+
+Entity createTree(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " tree" << std::endl;
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.height_ratio = 0.1f;
+	terrain.width_ratio = 0.2f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ TREE_WIDTH, TREE_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::TREE,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN });
+
+	// create magical fruit that spawns on tree
+	createCollectableIngredient(renderer, vec2(position.x, position.y - 30), ItemType::MAGICAL_FRUIT, 1, true);
 
 	return entity;
 }
@@ -185,7 +372,6 @@ Entity createForestBridgeTop(RenderSystem* renderer, vec2 position)
 
 	return entity;
 }
-
 
 Entity createForestBridgeBottom(RenderSystem* renderer, vec2 position)
 {
@@ -271,7 +457,11 @@ Entity createForestRiver(RenderSystem* renderer, vec2 position)
 	return entity1;
 }
 
-Entity create_grotto_static_entities(RenderSystem* renderer, vec2 position, vec2 scale, float angle, GLuint texture_asset_id, float can_collide)
+/* ==============================================================================================================
+	Grotto Creation
+============================================================================================================== */
+
+Entity createGrottoStaticEntities(RenderSystem* renderer, vec2 position, vec2 scale, float angle, GLuint texture_asset_id, float can_collide)
 {
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " static grotto entity" << std::endl;
@@ -303,138 +493,36 @@ Entity create_grotto_static_entities(RenderSystem* renderer, vec2 position, vec2
 	return entity;
 }
 
-Entity create_boundary_line(RenderSystem* renderer, vec2 position, vec2 scale)
+Entity createGrottoPoolMesh(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
-	// std::cout << "Entity " << entity.id() << " boundary line" << std::endl;
-
 	auto& terrain = registry.terrains.emplace(entity);
-	terrain.collision_setting = 1.0f; // cannot walk past boundaries
+	terrain.collision_setting = 3.0f; // using mesh for collision
 
-	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::GROTTO_POOL);
 	registry.meshPtrs.emplace(entity, &mesh);
 
 	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 0;
+	motion.angle = 0.f;
 	motion.velocity = { 0.0f, 0.0f };
 	motion.position = position;
-	motion.scale = scale;
+
+	motion.scale = vec2({ 510, 195 });
 
 	registry.renderRequests.insert(
 		entity,
-		{ TEXTURE_ASSET_ID::BOUNDARY_LINE,
-		 EFFECT_ASSET_ID::TEXTURED,
-		 GEOMETRY_BUFFER_ID::SPRITE,
-		 RENDER_LAYER::STRUCTURE,
-		 1 });
+		{
+			TEXTURE_ASSET_ID::TEXTURE_COUNT, // texture count, doesn't use mesh
+			EFFECT_ASSET_ID::CHICKEN,
+			GEOMETRY_BUFFER_ID::GROTTO_POOL,
+			RENDER_LAYER::STRUCTURE,
+			1
+		});
 
 	return entity;
 }
 
-Entity createGrottoEntrance(RenderSystem* renderer, vec2 position, int id, std::string name)
-{
-	auto entity = Entity();
-	// std::cout << "Entity " << entity.id() << " grotto entrance" << std::endl;
-
-	Entrance& entrance = registry.entrances.emplace(entity);
-	entrance.target_biome = (GLuint)BIOME::GROTTO;
-
-	Item& item = registry.items.emplace(entity);
-	item.type = ItemType::GROTTO_ENTRANCE;
-	item.name = name;
-	item.isCollectable = false;
-	item.amount = 1;
-
-	// store a reference to the potentially re-used mesh object
-	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
-	registry.meshPtrs.emplace(entity, &mesh);
-
-	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 180.f;
-	motion.velocity = { 0, 0 };
-	motion.position = position;
-
-	motion.scale = vec2({ GROTTO_ENTRANCE_WIDTH, GROTTO_ENTRANCE_HEIGHT });
-
-	Entity textbox = createTextbox(renderer, vec2({ position.x, position.y + 20 }), entity);
-
-	registry.renderRequests.insert(
-		entity,
-		{ TEXTURE_ASSET_ID::GROTTO_ENTRANCE,
-		 EFFECT_ASSET_ID::TEXTURED,
-		 GEOMETRY_BUFFER_ID::SPRITE,
-		 RENDER_LAYER::STRUCTURE,
-		 0 });
-
-	return entity;
-}
-
-Entity createBush(RenderSystem* renderer, vec2 position)
-{
-	auto entity = Entity();
-	// std::cout << "Entity " << entity.id() << " bush" << std::endl;
-	Terrain& terrain = registry.terrains.emplace(entity);
-	terrain.collision_setting = 0.0f;
-	terrain.height_ratio = 0.35f;
-	terrain.width_ratio = 0.55f;
-
-	// store a reference to the potentially re-used mesh object
-	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
-	registry.meshPtrs.emplace(entity, &mesh);
-
-	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 180.f;
-	motion.velocity = { 0, 0 };
-	motion.position = position;
-
-	motion.scale = vec2({ BUSH_WIDTH, BUSH_HEIGHT });
-
-	registry.renderRequests.insert(
-		entity,
-		{ TEXTURE_ASSET_ID::BUSH,
-		 EFFECT_ASSET_ID::TEXTURED,
-		 GEOMETRY_BUFFER_ID::SPRITE,
-		 RENDER_LAYER::TERRAIN });
-
-	return entity;
-}
-
-Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemType type, int amount, bool canRespawn)
-{
-	assert(ITEM_INFO.count(type) && "Tried to create an item that has no info!");
-	ItemInfo info = ITEM_INFO.at(type);
-	auto entity = ItemSystem::createCollectableIngredient(position, type, amount, canRespawn);
-
-	// Mesh
-	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
-	registry.meshPtrs.emplace(entity, &mesh);
-
-	// Create motion
-	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 180.f;
-	motion.velocity = { 0, 0 };
-	motion.position = position;
-	motion.scale = info.size;
-
-	if (type == ItemType::SAP) {
-		vec2 textbox_position = { position.x + 160.0f, position.y };
-		Entity textbox = createTextbox(renderer, textbox_position, entity);
-	}
-	else {
-		Entity textbox = createTextbox(renderer, position, entity);
-	}
-
-	registry.renderRequests.insert(
-		entity,
-		{ info.texture,
-		 EFFECT_ASSET_ID::TEXTURED,
-		 GEOMETRY_BUFFER_ID::SPRITE,
-		 RENDER_LAYER::ITEM });
-
-	return entity;
-}
-
-Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name, bool create_textbox = false)
+Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, std::string name, bool create_textbox = false)
 {
 	// Create simple cauldron water entity
 	auto waterEntity = Entity();
@@ -497,7 +585,7 @@ Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, int id,
 	return entity;
 }
 
-Entity createMortarPestle(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name)
+Entity createMortarPestle(RenderSystem* renderer, vec2 position, vec2 scale, std::string name)
 {
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " mortar and pestle" << std::endl;
@@ -540,7 +628,7 @@ Entity createMortarPestle(RenderSystem* renderer, vec2 position, vec2 scale, int
 	return entity;
 }
 
-Entity createChest(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name)
+Entity createChest(RenderSystem* renderer, vec2 position, vec2 scale, std::string name)
 {
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " chest" << std::endl;
@@ -575,7 +663,7 @@ Entity createChest(RenderSystem* renderer, vec2 position, vec2 scale, int id, st
 	return entity;
 }
 
-Entity createRecipeBook(RenderSystem* renderer, vec2 position, vec2 scale, int id, std::string name)
+Entity createRecipeBook(RenderSystem* renderer, vec2 position, vec2 scale, std::string name)
 {
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " recipe book" << std::endl;
@@ -610,313 +698,9 @@ Entity createRecipeBook(RenderSystem* renderer, vec2 position, vec2 scale, int i
 	return entity;
 }
 
-
-Entity createGrottoExit(RenderSystem* renderer, vec2 position, int id, std::string name)
-{
-	auto entity = Entity();
-	// std::cout << "Entity " << entity.id() << " grotto exit" << std::endl;
-
-	Entrance& entrance = registry.entrances.emplace(entity);
-	entrance.target_biome = (GLuint)BIOME::FOREST;
-
-	Item& item = registry.items.emplace(entity);
-	item.type = ItemType::GROTTO_EXIT;
-	item.name = name;
-	item.isCollectable = false;
-	item.amount = 1;
-
-	// store a reference to the potentially re-used mesh object
-	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
-	registry.meshPtrs.emplace(entity, &mesh);
-
-	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 180.f;
-	motion.velocity = { 0, 0 };
-	motion.position = position;
-
-	motion.scale = vec2(190, BOUNDARY_LINE_THICKNESS);
-
-	Entity textbox = createTextbox(renderer, vec2({ position.x, position.y - 50 }), entity);
-
-	registry.renderRequests.insert(
-		entity,
-		{ TEXTURE_ASSET_ID::BOUNDARY_LINE, // because door is drawn into biome so just have the placement set for rendering
-		 EFFECT_ASSET_ID::TEXTURED,
-		 GEOMETRY_BUFFER_ID::SPRITE,
-		 RENDER_LAYER::STRUCTURE,
-		 0 });
-
-	return entity;
-}
-
-Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity)
-{
-	auto entity = Entity();
-
-	// Create a Textbox component
-	Textbox& textbox = registry.textboxes.emplace(entity);
-	textbox.targetItem = itemEntity;
-	textbox.isVisible = false; // Initially hidden
-
-	// Store mesh reference
-	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
-	registry.meshPtrs.emplace(entity, &mesh);
-
-	// Motion component (position it above the item)
-	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 0.f;
-	motion.velocity = { 0, 0 };
-	motion.position = position + vec2(-TEXTBOX_WIDTH / 2, 0);
-	motion.scale = vec2(TEXTBOX_WIDTH, -TEXTBOX_HEIGHT);
-
-	return entity;
-}
-
-RenderRequest getTextboxRenderRequest(Textbox& textbox)
-{
-	if (!registry.items.has(textbox.targetItem))
-	{
-		// std::cerr << "ERROR: Target item not found for textbox!" << std::endl;
-		return {};
-	}
-
-	Item& item = registry.items.get(textbox.targetItem);
-
-	// TODO: Use ItemType and a map
-	// Find correct texture based on item type
-	TEXTURE_ASSET_ID texture = TEXTURE_ASSET_ID::TEXTBOX_FRUIT; // placeholder
-	if (item.type == ItemType::MAGICAL_FRUIT)
-	{
-		texture = TEXTURE_ASSET_ID::TEXTBOX_FRUIT;
-	}
-	else if (item.type == ItemType::COFFEE_BEANS)
-	{
-		texture = TEXTURE_ASSET_ID::TEXTBOX_COFFEE_BEAN;
-	}
-	else if (item.type == ItemType::GROTTO_ENTRANCE)
-	{
-		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_GROTTO;
-	}
-	else if (item.type == ItemType::CAULDRON)
-	{
-		texture = TEXTURE_ASSET_ID::TEXTBOX_CAULDRON;
-	}
-	else if (item.type == ItemType::GROTTO_EXIT)
-	{
-		texture = TEXTURE_ASSET_ID::TEXTBOX_GROTTO_EXIT;
-	}
-	else if (item.type == ItemType::DESERT_ENTRANCE)
-	{
-		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_DESERT;
-	}
-	else if (item.type == ItemType::FOREST_ENTRANCE) {
-		texture = TEXTURE_ASSET_ID::TEXTBOX_ENTER_FOREST;
-	}
-	else if (item.type == ItemType::SAP) {
-		texture = TEXTURE_ASSET_ID::TEXTBOX_TWIG;
-	}
-	else if (item.type == ItemType::MAGICAL_DUST) {
-		texture = TEXTURE_ASSET_ID::TEXTBOX_MAGICAL_DUST;
-	}
-
-	return {
-		texture,
-		EFFECT_ASSET_ID::TEXTURED,
-		GEOMETRY_BUFFER_ID::SPRITE,
-		RENDER_LAYER::ITEM };
-}
-
-Entity createEnt(RenderSystem* renderer, vec2 position, int movable, std::string name) {
-
-	auto entity = Entity();
-	// std::cout << "Entity " << entity.id() << " ent" << std::endl;
-
-	Enemy& enemy = registry.enemies.emplace(entity);
-	enemy.attack_radius = 5;
-	enemy.health = 75;
-	enemy.start_pos = position;
-	enemy.state = (int)ENEMY_STATE::IDLE;
-	enemy.can_move = movable;
-	enemy.name = name;
-	enemy.attack_damage = 5.f; // lower damage since the point is to unlock grotto
-
-	// store a reference to the potentially re-used mesh object
-	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
-	registry.meshPtrs.emplace(entity, &mesh);
-
-	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 180.f;
-	motion.velocity = { 0, 0 };
-	motion.position = position;
-	motion.scale = vec2({ ENT_WIDTH, ENT_HEIGHT });
-
-	registry.renderRequests.insert(
-		entity,
-		{
-			TEXTURE_ASSET_ID::ENT,
-			EFFECT_ASSET_ID::TEXTURED,
-			GEOMETRY_BUFFER_ID::SPRITE,
-			RENDER_LAYER::TERRAIN,
-		});
-
-	return entity;
-}
-
-Entity createMummy(RenderSystem* renderer, vec2 position, int movable, std::string name) {
-	auto entity = Entity();
-	// std::cout << "Entity " << entity.id() << " mummy" << std::endl;
-
-	Enemy& enemy = registry.enemies.emplace(entity);
-	enemy.attack_radius = 5;
-	enemy.health = 100;
-	enemy.start_pos = position;
-	enemy.state = (int)ENEMY_STATE::IDLE;
-	enemy.can_move = movable;
-	enemy.name = name;
-	enemy.attack_damage = 20.f;
-
-	// store a reference to the potentially re-used mesh object
-	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
-	registry.meshPtrs.emplace(entity, &mesh);
-
-	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 180.f;
-	motion.velocity = { 0, 0 };
-	motion.position = position;
-	motion.scale = vec2({ MUMMY_WIDTH, MUMMY_HEIGHT });
-
-	registry.renderRequests.insert(
-		entity,
-		{
-			TEXTURE_ASSET_ID::MUMMY,
-			EFFECT_ASSET_ID::TEXTURED,
-			GEOMETRY_BUFFER_ID::SPRITE,
-			RENDER_LAYER::TERRAIN,
-		});
-
-	return entity;
-}
-
-bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, Entity& player_entity) {
-
-	auto entity = Entity();
-	// std::cout << "Entity " << entity.id() << " fired ammo" << std::endl;
-
-	if (!registry.ammo.has(item_entity)) std::cout << "item isn't in ammo list" << std::endl;
-	if (!registry.motions.has(player_entity) || !registry.ammo.has(item_entity)) return false;
-
-	// Ammo& ammo = registry.ammo.get(item_entity);
-	Ammo& ammo = registry.ammo.emplace(entity);
-	Player& player = registry.players.get(player_entity);
-	Motion& player_motion = registry.motions.get(player_entity);
-	vec2 player_pos = player_motion.position;
-
-	float delta_x = target.x - player_pos.x;
-	float delta_y = target.y - player_pos.y;
-	float distance = sqrt(delta_x * delta_x + delta_y * delta_y); // TODO: use glm::distance instead
-	float unit_x = delta_x / distance;
-	float unit_y = delta_y / distance;
-
-	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 0.f;
-	motion.velocity = { unit_x, unit_y };
-	motion.position = player_pos;
-	motion.scale = vec2({ 50, 50 });
-
-	ammo.is_fired = true;
-	ammo.start_pos = player_motion.position;
-	if (ammo.damage == 0) {
-		ammo.damage = 25;
-	}
-	ammo.target = { player_pos.x + unit_x * player.throw_distance, player_pos.y + unit_y * player.throw_distance };
-
-	registry.renderRequests.insert(
-		entity,
-		{
-			ITEM_INFO.at(registry.items.get(item_entity).type).texture,
-			EFFECT_ASSET_ID::TEXTURED,
-			GEOMETRY_BUFFER_ID::SPRITE,
-			RENDER_LAYER::ITEM,
-		});
-
-	return true;
-}
-
-Entity createDesertEntrance(RenderSystem* renderer, vec2 position, int id, std::string name)
-{
-	auto entity = Entity();
-	// std::cout << "Entity " << entity.id() << " desert entrance" << std::endl;
-
-	Entrance& entrance = registry.entrances.emplace(entity);
-	entrance.target_biome = (GLuint)BIOME::DESERT;
-
-	Item& item = registry.items.emplace(entity);
-	item.type = ItemType::DESERT_ENTRANCE;
-	item.name = name;
-	item.isCollectable = false;
-	item.amount = 1;
-
-	// store a reference to the potentially re-used mesh object
-	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
-	registry.meshPtrs.emplace(entity, &mesh);
-
-	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 0.f;
-	motion.velocity = { 0, 0 };
-	motion.position = position;
-
-	motion.scale = vec2(DESERT_FOREST_TRANSITION_WIDTH, DESERT_FOREST_TRANSITION_HEIGHT);
-
-	Entity textbox = createTextbox(renderer, vec2({ position.x + GRID_CELL_WIDTH_PX * 4, position.y }), entity);
-
-	registry.renderRequests.insert(
-		entity,
-		{ TEXTURE_ASSET_ID::DESERT_TO_FOREST, // drawn into biome so just have the placement set for rendering
-		 EFFECT_ASSET_ID::TEXTURED,
-		 GEOMETRY_BUFFER_ID::SPRITE,
-		 RENDER_LAYER::STRUCTURE,
-		 0 });
-
-	return entity;
-}
-
-Entity createDesertExit(RenderSystem* renderer, vec2 position, int id, std::string name)
-{
-	auto entity = Entity();
-	// std::cout << "Entity " << entity.id() << " desert exit" << std::endl;
-
-	Entrance& entrance = registry.entrances.emplace(entity);
-	entrance.target_biome = (GLuint)BIOME::FOREST;
-
-	Item& item = registry.items.emplace(entity);
-	item.type = ItemType::FOREST_ENTRANCE;
-	item.name = name;
-	item.isCollectable = false;
-	item.amount = 1;
-
-	// store a reference to the potentially re-used mesh object
-	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
-	registry.meshPtrs.emplace(entity, &mesh);
-
-	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 0.f;
-	motion.velocity = { 0, 0 };
-	motion.position = position;
-
-	motion.scale = vec2(DESERT_FOREST_TRANSITION_WIDTH, DESERT_FOREST_TRANSITION_HEIGHT);
-
-	Entity textbox = createTextbox(renderer, vec2({ position.x , position.y }), entity);
-
-	registry.renderRequests.insert(
-		entity,
-		{ TEXTURE_ASSET_ID::FOREST_TO_DESERT, // drawn into biome so just have the placement set for rendering
-		 EFFECT_ASSET_ID::TEXTURED,
-		 GEOMETRY_BUFFER_ID::SPRITE,
-		 RENDER_LAYER::STRUCTURE,
-		 0 });
-
-	return entity;
-}
+/* ==============================================================================================================
+	Desert Creation
+============================================================================================================== */
 
 Entity createDesertTree(RenderSystem* renderer, vec2 position)
 {
@@ -1094,4 +878,919 @@ Entity createDesertSkull(RenderSystem* renderer, vec2 position) {
 		 1 });
 
 	return entity;
+}
+
+/* ==============================================================================================================
+	Mushroom Biome Creation
+============================================================================================================== */
+
+Entity createMushroomAcidLake(RenderSystem* renderer, vec2 position) {
+	auto entity = Entity();
+
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 2.0f; // 2 as we're using a mesh for collisions
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ MUSHROOM_ACID_LAKE_WIDTH, MUSHROOM_ACID_LAKE_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::MUSHROOM_ACID_LAKE,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::STRUCTURE,
+		});
+
+	return entity;
+}
+
+Entity createMushroomAcidLakeMesh(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+	auto& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 3.0f; // using mesh for collision
+
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::MUSHROOM_ACID_LAKE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0.0f, 0.0f };
+	motion.position = position;
+
+	motion.scale = vec2({ MUSHROOM_ACID_LAKE_WIDTH - 20, MUSHROOM_ACID_LAKE_HEIGHT - 20 });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::TEXTURE_COUNT, // texture count, doesn't use mesh
+			EFFECT_ASSET_ID::CHICKEN,
+			GEOMETRY_BUFFER_ID::MUSHROOM_ACID_LAKE,
+			RENDER_LAYER::STRUCTURE,
+			1
+		});
+
+	return entity;
+}
+
+Entity createMushroomBlue(RenderSystem* renderer, vec2 position) {
+	auto entity = Entity();
+
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.width_ratio = 0.2f;
+	terrain.height_ratio = 0.1f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ MUSHROOM_WIDTH, MUSHROOM_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::MUSHROOM_BLUE,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN });
+
+	return entity;
+}
+
+Entity createMushroomPink(RenderSystem* renderer, vec2 position) {
+	auto entity = Entity();
+
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.width_ratio = 0.2f;
+	terrain.height_ratio = 0.1f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ MUSHROOM_WIDTH, MUSHROOM_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::MUSHROOM_PINK,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN });
+
+	return entity;
+}
+
+Entity createMushroomPurple(RenderSystem* renderer, vec2 position) {
+	auto entity = Entity();
+
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.width_ratio = 0.2f;
+	terrain.height_ratio = 0.1f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ MUSHROOM_WIDTH, MUSHROOM_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::MUSHROOM_PURPLE,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN });
+
+	return entity;
+}
+
+Entity createMushroomTallBlue(RenderSystem* renderer, vec2 position) {
+	auto entity = Entity();
+
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.width_ratio = 0.1f;
+	terrain.height_ratio = 0.1f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ MUSHROOM_TALL_WIDTH, MUSHROOM_TALL_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::MUSHROOM_TALL_BLUE,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN });
+
+	return entity;
+}
+
+Entity createMushRoomTallPink(RenderSystem* renderer, vec2 position) {
+	auto entity = Entity();
+
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.width_ratio = 0.1f;
+	terrain.height_ratio = 0.1f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ MUSHROOM_TALL_WIDTH, MUSHROOM_TALL_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::MUSHROOM_TALL_PINK,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN });
+
+	return entity;
+}
+
+/* ==============================================================================================================
+	Crystal Biome Creation
+============================================================================================================== */
+
+Entity createCrystal1(RenderSystem* renderer, vec2 position) {
+	auto entity = Entity();
+
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.width_ratio = 0.4f;
+	terrain.height_ratio = 0.2f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ CRYSTAL_1_WIDTH, CRYSTAL_1_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::CRYSTAL_1,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN });
+
+	return entity;
+}
+
+Entity createCrystal2(RenderSystem* renderer, vec2 position) {
+	auto entity = Entity();
+
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.width_ratio = 0.65f;
+	terrain.height_ratio = 0.2f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ CRYSTAL_2_WIDTH, CRYSTAL_2_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::CRYSTAL_2,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN });
+
+	return entity;
+}
+
+Entity createCrystal3(RenderSystem* renderer, vec2 position) {
+	auto entity = Entity();
+
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.width_ratio = 0.4f;
+	terrain.height_ratio = 0.2f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ CRYSTAL_3_WIDTH, CRYSTAL_3_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::CRYSTAL_3,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN });
+
+	return entity;
+}
+
+Entity createCrystal4(RenderSystem* renderer, vec2 position) {
+	auto entity = Entity();
+
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.width_ratio = 0.4f;
+	terrain.height_ratio = 0.2f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ CRYSTAL_4_WIDTH, CRYSTAL_4_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::CRYSTAL_4,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN });
+
+	return entity;
+}
+
+Entity createCrystalMinecart(RenderSystem* renderer, vec2 position) {
+
+	auto entity = Entity();
+
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.width_ratio = 0.9f;
+	terrain.height_ratio = 0.5f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+	motion.scale = vec2({ CRYSTAL_MINECART_WIDTH, CRYSTAL_MINECART_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::CRYSTAL_MINECART,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN });
+
+	return entity;
+}
+
+Entity createCrystalPage(RenderSystem* renderer, vec2 position) {
+	auto entity = Entity();
+
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 2.0f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ CRYSTAL_PAGE_WIDTH, CRYSTAL_PAGE_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::CRYSTAL_PAGE,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::ITEM,
+		 0 });
+
+	return entity;
+}
+
+Entity createCrystalRock(RenderSystem* renderer, vec2 position) {
+	auto entity = Entity();
+
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.width_ratio = 0.8f;
+	terrain.height_ratio = 0.2f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ CRYSTAL_ROCK_WIDTH, CRYSTAL_ROCK_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::CRYSTAL_ROCK,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN });
+
+	return entity;
+}
+
+/* ==============================================================================================================
+	Entering and transition between biomes
+============================================================================================================== */
+
+Entity createForestToGrotto(RenderSystem* renderer, vec2 position, std::string name)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::GROTTO;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::GROTTO_ENTRANCE;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ GROTTO_ENTRANCE_WIDTH, GROTTO_ENTRANCE_HEIGHT });
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x, position.y + 20 }), entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::GROTTO_ENTRANCE,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::STRUCTURE,
+		 0 });
+
+	return entity;
+}
+
+Entity createGrottoToForest(RenderSystem* renderer, vec2 position, std::string name)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::FOREST;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::GROTTO_EXIT;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2(190, BOUNDARY_LINE_THICKNESS);
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x, position.y - 50 }), entity);
+
+	// registry.renderRequests.insert(
+	// 	entity,
+	// 	{ TEXTURE_ASSET_ID::BOUNDARY_LINE, // because door is drawn into biome so just have the placement set for rendering
+	// 	 EFFECT_ASSET_ID::TEXTURED,
+	// 	 GEOMETRY_BUFFER_ID::SPRITE,
+	// 	 RENDER_LAYER::STRUCTURE,
+	// 	 0 });
+
+	return entity;
+}
+
+Entity createForestToDesert(RenderSystem* renderer, vec2 position, std::string name)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::DESERT;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::FOREST_TO_DESERT_ENTRANCE;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2(DESERT_FOREST_TRANSITION_WIDTH, DESERT_FOREST_TRANSITION_HEIGHT);
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x + GRID_CELL_WIDTH_PX * 4, position.y }), entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::DESERT_TO_FOREST, // drawn into biome so just have the placement set for rendering
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::STRUCTURE,
+		 0 });
+
+	return entity;
+}
+
+Entity createDesertToForest(RenderSystem* renderer, vec2 position, std::string name)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::FOREST;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::DESERT_TO_FOREST_ENTRANCE;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2(DESERT_FOREST_TRANSITION_WIDTH, DESERT_FOREST_TRANSITION_HEIGHT);
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x , position.y }), entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::FOREST_TO_DESERT, // drawn into biome so just have the placement set for rendering
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::STRUCTURE,
+		 0 });
+
+	return entity;
+}
+
+Entity createForestToForestEx(RenderSystem* renderer, vec2 position, std::string name)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::FOREST_EX;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::FOREST_TO_FOREST_EX_ENTRANCE;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ GENERIC_ENTRANCE_WIDTH, GENERIC_ENTRANCE_HEIGHT });
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x, position.y - 80 }), entity);
+
+	return entity;
+}
+
+Entity createForestExToForest(RenderSystem* renderer, vec2 position, std::string name)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::FOREST;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::FOREST_EX_TO_FOREST_ENTRANCE;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ GENERIC_ENTRANCE_WIDTH, GENERIC_ENTRANCE_HEIGHT });
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x + 130, position.y - 60 }), entity);
+
+	return entity;
+}
+
+Entity createForestToMushroom(RenderSystem* renderer, vec2 position, std::string name)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::MUSHROOM;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::FOREST_TO_MUSHROOM_ENTRANCE;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.velocity = { 0, 0 };
+	motion.angle = 180.f;
+	motion.position = position;
+
+	motion.scale = vec2({ FOREST_TO_MUSHROOM_WIDTH, FOREST_TO_MUSHROOM_HEIGHT });
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x + 210, position.y - 30 }), entity);
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::FOREST_TO_MUSHROOM,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::STRUCTURE,
+		 0 });
+
+	return entity;
+}
+
+Entity createMushroomToForest(RenderSystem* renderer, vec2 position, std::string name)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::FOREST;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::MUSHROOM_TO_FOREST_ENTRANCE;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ GENERIC_ENTRANCE_WIDTH, GENERIC_ENTRANCE_HEIGHT });
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x + 240, position.y }), entity);
+
+	return entity;
+}
+
+Entity createMushroomToCrystal(RenderSystem* renderer, vec2 position, std::string name)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::CRYSTAL;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::MUSHROOM_TO_CRYSTAL_ENTRANCE;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ GENERIC_ENTRANCE_WIDTH, GENERIC_ENTRANCE_HEIGHT });
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x, position.y - 60 }), entity);
+
+	return entity;
+}
+
+Entity createCrystalToMushroom(RenderSystem* renderer, vec2 position, std::string name)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::MUSHROOM;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::CRYSTAL_TO_MUSHROOM_ENTRANCE;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ GENERIC_ENTRANCE_WIDTH, GENERIC_ENTRANCE_HEIGHT });
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x + 140, position.y - 60 }), entity);
+
+	return entity;
+}
+
+Entity createCrystalToForestEx(RenderSystem* renderer, vec2 position, std::string name)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::FOREST_EX;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::CRYSTAL_TO_FOREST_EX_ENTRANCE;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ GENERIC_ENTRANCE_WIDTH, GENERIC_ENTRANCE_HEIGHT });
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x + 30, position.y }), entity);
+
+	return entity;
+}
+
+Entity createForestExToCrystal(RenderSystem* renderer, vec2 position, std::string name)
+{
+	auto entity = Entity();
+
+	Entrance& entrance = registry.entrances.emplace(entity);
+	entrance.target_biome = (GLuint)BIOME::CRYSTAL;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::FOREST_EX_TO_CRYSTAL_ENTRANCE;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ GENERIC_ENTRANCE_WIDTH, GENERIC_ENTRANCE_HEIGHT });
+
+	Entity textbox = createTextbox(renderer, vec2({ position.x + 150, position.y - 30 }), entity);
+
+	return entity;
+}
+
+/* ==============================================================================================================
+	Combat Creation
+============================================================================================================== */
+
+Entity createEnt(RenderSystem* renderer, vec2 position, int movable, std::string name) {
+
+	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " ent" << std::endl;
+
+	Enemy& enemy = registry.enemies.emplace(entity);
+	enemy.attack_radius = 5;
+	enemy.health = 75;
+	enemy.start_pos = position;
+	enemy.state = (int)ENEMY_STATE::IDLE;
+	enemy.can_move = movable;
+	enemy.name = name;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+	motion.scale = vec2({ ENT_WIDTH, ENT_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::ENT,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::TERRAIN,
+		});
+
+	return entity;
+}
+
+Entity createMummy(RenderSystem* renderer, vec2 position, int movable, std::string name) {
+	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " mummy" << std::endl;
+
+	Enemy& enemy = registry.enemies.emplace(entity);
+	enemy.attack_radius = 5;
+	enemy.health = 100;
+	enemy.start_pos = position;
+	enemy.state = (int)ENEMY_STATE::IDLE;
+	enemy.can_move = movable;
+	enemy.name = name;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+	motion.scale = vec2({ MUMMY_WIDTH, MUMMY_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::MUMMY,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::TERRAIN,
+		});
+
+	return entity;
+}
+
+bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, Entity& player_entity) {
+
+	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " fired ammo" << std::endl;
+
+	if (!registry.ammo.has(item_entity)) std::cout << "item isn't in ammo list" << std::endl;
+	if (!registry.motions.has(player_entity) || !registry.ammo.has(item_entity)) return false;
+
+	// Ammo& ammo = registry.ammo.get(item_entity);
+	Ammo& ammo = registry.ammo.emplace(entity);
+	Player& player = registry.players.get(player_entity);
+	Motion& player_motion = registry.motions.get(player_entity);
+	vec2 player_pos = player_motion.position;
+
+	float delta_x = target.x - player_pos.x;
+	float delta_y = target.y - player_pos.y;
+	float distance = sqrt(delta_x * delta_x + delta_y * delta_y); // TODO: use glm::distance instead
+	float unit_x = delta_x / distance;
+	float unit_y = delta_y / distance;
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 0.f;
+	motion.velocity = { unit_x, unit_y };
+	motion.position = player_pos;
+	motion.scale = vec2({ 50, 50 });
+
+	ammo.is_fired = true;
+	ammo.start_pos = player_motion.position;
+	if (ammo.damage == 0) {
+		ammo.damage = 25;
+	}
+	ammo.target = { player_pos.x + unit_x * player.throw_distance, player_pos.y + unit_y * player.throw_distance };
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			ITEM_INFO.at(registry.items.get(item_entity).type).texture,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::ITEM,
+		});
+
+	return true;
 }
