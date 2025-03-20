@@ -1139,7 +1139,7 @@ bool UISystem::openMortarPestle(Entity mortar) {
                     margin-left: -550px;
                     width: 1100px;
                     height: 600px;
-                    decorator: image("interactables/mortar_background.png" flip-vertical fill);
+                    decorator: image("interactables/mortar_background_border.png" flip-vertical fill);
                 }
 				#pestle {
 					position: absolute;
