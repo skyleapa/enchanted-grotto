@@ -157,7 +157,7 @@ void BiomeSystem::renderPlayerInNewBiome() {
 		player_motion.position = vec2(60, 450);
 	}
 	else if (screen.from_biome == (int)BIOME::FOREST_EX && screen.biome == (int)BIOME::FOREST) {
-		player_motion.position = vec2(1200, 470);
+		player_motion.position = vec2(1150, 430);
 	}
 	// between forest and desert
 	else if (screen.from_biome == (int)BIOME::FOREST && screen.biome == (int)BIOME::DESERT) {
