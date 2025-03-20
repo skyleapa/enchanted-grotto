@@ -63,8 +63,12 @@ public:
     void setOpenedCauldron(Entity new_cauldron);
     void cauldronDragUpdate(bool isDown);
  
-    // tutorial
+    // Tutorial
     void updateTutorial();
+
+    // Health bar methods
+    void createHealthBar();
+    void updateHealthBar();
 
 private:
     GLFWwindow* m_window;
@@ -153,4 +157,7 @@ private:
     const std::string LADLE_TOP_PX = "45px";
     const std::string BOTTLE_LEFT_PX = "904px";
     const std::string BOTTLE_TOP_PX = "395px";
+
+    // Healthbar variables
+    Rml::ElementDocument* m_healthbar_document = nullptr;
 };

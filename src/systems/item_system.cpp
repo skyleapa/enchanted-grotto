@@ -352,6 +352,9 @@ bool ItemSystem::saveGameState() {
 	}
 	data["inventories"] = inventories;
 	data["screen_state"] = serializeScreenState();
+	if (registry.players.size() > 0) {
+		data["player_health"] = registry.players.components[0].health;
+	}
 	
 	try {
 		std::string save_path = game_state_path(GAME_STATE_FILE);
@@ -405,6 +408,10 @@ bool ItemSystem::loadGameState() {
 		
 		if (!data["screen_state"].empty()) {
 			deserializeScreenState(data["screen_state"]);
+		}
+
+		if (!data["player_health"].empty()) {
+			registry.players.get(player).health = data["player_health"];
 		}
 		
 		return true;

@@ -1685,6 +1685,10 @@ Entity createEnt(RenderSystem* renderer, vec2 position, int movable, std::string
 	enemy.state = (int)ENEMY_STATE::IDLE;
 	enemy.can_move = movable;
 	enemy.name = name;
+	enemy.attack_damage = 1;
+
+	auto& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 1.0f; // cannot walk past guardian
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -1719,6 +1723,7 @@ Entity createMummy(RenderSystem* renderer, vec2 position, int movable, std::stri
 	enemy.state = (int)ENEMY_STATE::IDLE;
 	enemy.can_move = movable;
 	enemy.name = name;
+	enemy.attack_damage = 30;
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);

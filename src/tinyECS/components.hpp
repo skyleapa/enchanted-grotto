@@ -10,7 +10,7 @@ struct Player
 	std::string name;
 	int throw_distance = 150; // pixels
 	float cooldown = 0.f; // defaults to 0, but when ammo is tossed, will have a 1000 ms cooldown
-	float health = PLAYER_HEALTH;
+	float health = PLAYER_MAX_HEALTH;
 	float damage_cooldown = PLAYER_DAMAGE_COOLDOWN; // cooldown before player can take damage again to prevent insta death
 };
 
