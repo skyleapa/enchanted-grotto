@@ -127,6 +127,9 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 		// Create the inventory bar
 		createInventoryBar();
 
+		// Create player's health bar
+		createHealthBar();
+
 		m_initialized = true;
 		std::cout << "UISystem::init - Successfully initialized" << std::endl;
 		return true;
@@ -213,10 +216,17 @@ void UISystem::step(float elapsed_ms)
 			createInventoryBar();
 		}
 
+		if (!m_healthbar_document) {
+			createHealthBar();
+		}
+
 		// Update inventory bar
 		updateInventoryBar();
 
-		// Display inventory
+		// Update health bar
+		updateHealthBar();
+
+		// Display tutorial
 		updateTutorial();
 
 		// update all the textboxes
@@ -503,7 +513,8 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 						potion.duration,
 						potion.color,
 						potion.quality,
-						potion.effectValue
+						potion.effectValue,
+						1
 					);
 
 					// TODOOO
@@ -590,7 +601,7 @@ void UISystem::updateFPS(float elapsed_ms)
 
 void UISystem::createInventoryBar()
 {
-	if (!m_initialized || !m_context) return;
+	if (!m_context) return;
 
 	try {
 		std::cout << "UISystem::createInventoryBar - Creating inventory bar" << std::endl;
@@ -744,7 +755,8 @@ void UISystem::updateInventoryBar()
                             right: -2px;
                             color: #FFFFFF; 
                             font-size: 14px; 
-                            font-weight: bold;'>
+                            font-weight: bold;
+							font-effect: outline( 1px black );'>
                         )" + std::to_string(item.amount) + R"(
                         </div>)";
 				}
@@ -1172,5 +1184,98 @@ void UISystem::updateFollowMouse() {
 	if (heldBottle) {
 		followMouse(heldBottle, false);
 		return;
+	}
+}
+
+void UISystem::createHealthBar()
+{
+	if (!m_context) return;
+
+	if (registry.players.entities.size() == 0) {
+		std::cout << "UISystem::createHealthBar - No player to create health bar for" << std::endl;
+		return;
+	}
+
+	try {
+		std::cout << "UISystem::createHealthBar - Creating health bar" << std::endl;
+
+		std::string healthbar_rml = R"(
+			<rml>
+			<head>
+				<style>
+					body {
+						position: absolute;
+						bottom: 10px;
+						left: 97%;
+						width: 20px;
+						height: 180px;
+						background-color: rgba(173, 146, 132, 238);
+						border-width: 2px;
+						border-color: rgb(78, 54, 32);
+						display: block;
+						font-family: Open Sans;
+					}
+
+					progress.vertical {
+						width: 20px;
+						height: 180px;
+						background-color: transparent
+					}
+
+					.healthy fill {
+						background-color:rgb(138, 247, 105);
+					}
+
+					.injured fill {
+						background-color:rgb(246, 221, 97);
+					}
+
+					.dying fill {
+						background-color:rgb(228, 103, 103);
+					}
+
+				</style>
+			</head>
+			<body>
+				<progress id="health-bar" class="vertical" direction="top" max="1"></progress>
+			</body>
+			</rml>)";
+
+		m_healthbar_document = m_context->LoadDocumentFromMemory(healthbar_rml.c_str());
+		if (m_healthbar_document) {
+			m_healthbar_document->Show();
+			std::cout << "UISystem::createHealthBar - Health bar created successfully" << std::endl;
+		}
+		else {
+			std::cerr << "UISystem::createHealthBar - Failed to create healthbar document" << std::endl;
+		}
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::createHealthBar: " << e.what() << std::endl;
+	}
+}
+
+void UISystem::updateHealthBar() {
+	if (!m_initialized || !m_context || !m_healthbar_document) return;
+
+	try {
+		if (registry.players.entities.empty()) return;
+
+		Entity player = registry.players.entities[0]; // Assuming there's only one player
+
+		Rml::Element* healthbar_element = m_healthbar_document->GetElementById("health-bar");
+		float hp_percentage = registry.players.components[0].health / PLAYER_MAX_HEALTH;
+		healthbar_element->SetAttribute("value", hp_percentage);
+
+		if (hp_percentage >= 0.5) {
+			healthbar_element->SetAttribute("class", "vertical healthy");
+		} else if (hp_percentage >= 0.2) {
+			healthbar_element->SetAttribute("class", "vertical injured");
+		} else {
+			healthbar_element->SetAttribute("class", "vertical dying");
+		}
+		
+	} catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::updateHealthBar: " << e.what() << std::endl;
 	}
 }

@@ -241,7 +241,6 @@ void BiomeSystem::createGrotto()
 	createGrottoPoolMesh(renderer, vec2(GRID_CELL_WIDTH_PX * 4.8, GRID_CELL_HEIGHT_PX * 11.9));
 
 	if (registry.cauldrons.entities.size() == 0) {
-		std::cout << "creating cauldron in grotto" << std::endl;
 		Entity new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.50, GRID_CELL_HEIGHT_PX * 6.05 }), vec2({ 150, 220 }), "Cauldron", false);
 		for (Entity cauldron : registry.cauldrons.entities) {
 			if (new_cauldron != cauldron) registry.remove_all_components_of(cauldron);
@@ -293,7 +292,7 @@ void BiomeSystem::createForest()
 	ScreenState screen = registry.screenStates.components[0];
 	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Ent 1") == screen.killed_enemies.end())
 	{
-		createEnt(renderer, vec2(GRID_CELL_WIDTH_PX * 1.7, GRID_CELL_HEIGHT_PX * 5), 0, "Ent 1");
+		createEnt(renderer, vec2(GRID_CELL_WIDTH_PX * 2.15, GRID_CELL_HEIGHT_PX * 5), 0, "Ent 1");
 	}
 
 	createForestToGrotto(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 1), "Grotto Entrance");

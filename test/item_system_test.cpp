@@ -39,7 +39,7 @@ TEST_F(ItemSystemTest, ItemCreation) {
     EXPECT_FALSE(registry.items.get(ingredient).isCollectable);
     
     // Test potion
-    Entity potion = ItemSystem::createPotion(PotionEffect::SPEED, 30, vec3(1,0,0), 0.8f, 3.0f);
+    Entity potion = ItemSystem::createPotion(PotionEffect::SPEED, 30, vec3(1,0,0), 0.8f, 3.0f, 1);
     ASSERT_TRUE(registry.items.has(potion));
     ASSERT_TRUE(registry.potions.has(potion));
     Potion& pot = registry.potions.get(potion);
@@ -100,7 +100,7 @@ TEST_F(ItemSystemTest, Serialization) {
     inventory.capacity = 10;
     
     Entity item = ItemSystem::createItem(ItemType::COFFEE_BEANS, 5);
-    Entity potion = ItemSystem::createPotion(PotionEffect::SPEED, 30, vec3(1,0,0), 0.9f, 3.0f);
+    Entity potion = ItemSystem::createPotion(PotionEffect::SPEED, 30, vec3(1,0,0), 0.9f, 3.0f, 1);
     Entity ingredient = ItemSystem::createIngredient(ItemType::MAGICAL_FRUIT, 2);
     
     EXPECT_TRUE(item_system.addItemToInventory(inv, item));
@@ -217,7 +217,7 @@ TEST_F(ItemSystemTest, DifferentInventoryTypes) {
     Inventory& chest_inventory = registry.inventories.emplace(chest_inv);
     registry.chests.emplace(chest_inv);  // Add chest component
     chest_inventory.capacity = 15;
-    Entity chest_item = ItemSystem::createPotion(PotionEffect::SPEED, 30, vec3(1,0,0), 0.8f, 3.0f);
+    Entity chest_item = ItemSystem::createPotion(PotionEffect::SPEED, 30, vec3(1,0,0), 0.8f, 3.0f, 1);
     EXPECT_TRUE(item_system.addItemToInventory(chest_inv, chest_item));
     
     // Save state
