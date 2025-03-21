@@ -185,8 +185,8 @@ enum class ItemType
 {
 	POTION = 0,
 	COFFEE_BEANS = POTION + 1,
-	MAGICAL_FRUIT = COFFEE_BEANS + 1,
-	GROTTO_ENTRANCE = MAGICAL_FRUIT + 1,
+	GALEFRUIT = COFFEE_BEANS + 1,
+	GROTTO_ENTRANCE = GALEFRUIT + 1,
 	CAULDRON = GROTTO_ENTRANCE + 1,
 	MORTAR_PESTLE = CAULDRON + 1,
 	CHEST = MORTAR_PESTLE + 1,
@@ -203,7 +203,20 @@ enum class ItemType
 	CRYSTAL_TO_FOREST_EX_ENTRANCE = CRYSTAL_TO_MUSHROOM_ENTRANCE + 1,
 	FOREST_EX_TO_CRYSTAL_ENTRANCE = CRYSTAL_TO_FOREST_EX_ENTRANCE + 1,
 	SAP = FOREST_EX_TO_CRYSTAL_ENTRANCE + 1,
-	MAGICAL_DUST = SAP + 1
+	MAGICAL_DUST = SAP + 1,
+	EVERFERN = MAGICAL_DUST + 1,
+	BLIGHTLEAF = EVERFERN + 1,
+	STORM_BARK = BLIGHTLEAF + 1,
+	MUMMY_BANDAGES = STORM_BARK + 1,
+	PETRIFIED_BONE = MUMMY_BANDAGES + 1,
+	HEALING_LILY = PETRIFIED_BONE + 1,
+	CACTUS_PULP = HEALING_LILY + 1,
+	CACTUS_EXTRACT = CACTUS_PULP + 1,
+	GLOWSHROOM = CACTUS_EXTRACT + 1,
+	DOOMSPORE = GLOWSHROOM + 1,
+	CRYSTAL_SHARD = DOOMSPORE + 1,
+	QUARTZMELON = CRYSTAL_SHARD + 1,
+	CRYSTABLOOM = QUARTZMELON + 1
 };
 
 // Potion Types and names
@@ -213,17 +226,50 @@ enum class ItemType
 // FAILED: A potion that did not match any of the ingredients listed in any recipe
 // WATER: When a player bottles a cauldron that doesn't have any ingredients
 // SPEED: Increases player speed. Value is the speed multiplier - 1
+// HEALTH: Restores player health points
+// DAMAGE: Causes damage to enemies when thrown
+// MOLOTOV: Damages enemies in an area over time (fire effect)
+// REGEN: Regenerates player health over time
+// TENACITY: Increases inventory capacity
+// POISON: Creates poisonous area when thrown
+// RESISTANCE: Reduces damage taken by player
+// SATURATION: Increases potency of other potions
+// ALKALESCENCE: Reacts with acidic substances
+// CLARITY: Reveals hidden objects or ingredients
+// REJUVENATION: Master potion with ultimate healing properties
 enum class PotionEffect
 {
 	FAILED = 0,
 	WATER = FAILED + 1,
-	SPEED = WATER + 1
+	SPEED = WATER + 1,
+	HEALTH = SPEED + 1,
+	DAMAGE = HEALTH + 1,
+	MOLOTOV = DAMAGE + 1,
+	REGEN = MOLOTOV + 1,
+	TENACITY = REGEN + 1,
+	POISON = TENACITY + 1,
+	RESISTANCE = POISON + 1,
+	SATURATION = RESISTANCE + 1,
+	ALKALESCENCE = SATURATION + 1,
+	CLARITY = ALKALESCENCE + 1,
+	REJUVENATION = CLARITY + 1
 };
 
 const std::unordered_map<PotionEffect, std::string> EFFECT_NAMES = {
 	{PotionEffect::FAILED, "Failed"},
 	{PotionEffect::WATER, "Water"},
-	{PotionEffect::SPEED, "Speed"}
+	{PotionEffect::SPEED, "Speed"},
+	{PotionEffect::HEALTH, "Health"},
+	{PotionEffect::DAMAGE, "Damage"},
+	{PotionEffect::MOLOTOV, "Molotov"},
+	{PotionEffect::REGEN, "Regen"},
+	{PotionEffect::TENACITY, "Tenacity"},
+	{PotionEffect::POISON, "Poison"},
+	{PotionEffect::RESISTANCE, "Resistance"},
+	{PotionEffect::SATURATION, "Saturation"},
+	{PotionEffect::ALKALESCENCE, "Alkalescence"},
+	{PotionEffect::CLARITY, "Clarity"},
+	{PotionEffect::REJUVENATION, "Rejuvenation"}
 };
 
 // Action types
@@ -272,20 +318,246 @@ struct Recipe
 const std::vector<Recipe> RECIPES = {
 	{
 		PotionEffect::SPEED,
-		3.0f,  // highestQualityEffect
-		180,   // highestQualityDuration
-		vec3(255, 157, 35), // finalPotionColor
+		3.5f,  // highestQualityEffect - maximum speed multiplier
+		150,   // highestQualityDuration - maximum duration in seconds
+		vec3(255, 157, 35), // finalPotionColor - green-ish color
 		{
-			{ ItemType::COFFEE_BEANS, 5, 1.0f }, // ingredients
-			{ ItemType::MAGICAL_FRUIT, 3, 0.0f }
+			{ ItemType::COFFEE_BEANS, 2, 0.0f }, // ingredients (renamed to Swiftbeans in display)
+			{ ItemType::GALEFRUIT, 2, 0.0f }  // ingredients (using the new GALEFRUIT type)
 		},
 		{
-			{ ActionType::MODIFY_HEAT, 100 }, // steps
-			{ ActionType::WAIT, 2 },
-			{ ActionType::ADD_INGREDIENT, 0 },
-			{ ActionType::ADD_INGREDIENT, 1 },
-			{ ActionType::STIR, 3 },
-			{ ActionType::WAIT, 6 }
+			{ ActionType::MODIFY_HEAT, 100 }, // high heat
+			{ ActionType::WAIT, 2 },          // wait 10 seconds
+			{ ActionType::ADD_INGREDIENT, 0 }, // add swiftbeans
+			{ ActionType::ADD_INGREDIENT, 1 }, // add galefruit
+			{ ActionType::STIR, 3 },          // stir 3 times
+			{ ActionType::WAIT, 6 }           // wait 30 seconds
+		}
+	},
+	{
+		PotionEffect::HEALTH,
+		40.0f,  // highestQualityEffect - maximum health restored
+		0,      // highestQualityDuration - instant effect, no duration
+		vec3(220, 0, 0), // finalPotionColor - red color
+		{
+			{ ItemType::EVERFERN, 3, 0.0f } // ingredients
+		},
+		{
+			{ ActionType::MODIFY_HEAT, 50 },  // medium heat
+			{ ActionType::WAIT, 1 },          // wait 5 seconds
+			{ ActionType::ADD_INGREDIENT, 0 }, // add everfern
+			{ ActionType::STIR, 3 },          // stir 3 times
+			{ ActionType::WAIT, 4 }           // wait 20 seconds
+		}
+	},
+	{
+		PotionEffect::DAMAGE,
+		50.0f,  // highestQualityEffect - maximum damage to enemies
+		0,      // highestQualityDuration - instant effect, no duration
+		vec3(100, 0, 100), // finalPotionColor - purple color
+		{
+			{ ItemType::BLIGHTLEAF, 2, 0.0f }, // ingredients
+			{ ItemType::STORM_BARK, 1, 0.0f }  // ingredients
+		},
+		{
+			{ ActionType::MODIFY_HEAT, 100 }, // high heat
+			{ ActionType::ADD_INGREDIENT, 0 }, // add blightleaf
+			{ ActionType::WAIT, 2 },          // wait 10 seconds
+			{ ActionType::ADD_INGREDIENT, 1 }, // add storm bark
+			{ ActionType::STIR, 2 },          // stir 2 times
+			{ ActionType::WAIT, 3 }           // wait 15 seconds
+		}
+	},
+	{
+		PotionEffect::MOLOTOV,
+		25.0f,  // highestQualityEffect - burn damage per second
+		25,     // highestQualityDuration - burn duration in seconds
+		vec3(255, 100, 0), // finalPotionColor - orange/fire color
+		{
+			{ ItemType::POTION, 1, 0.0f },       // TODO: 1x damage potion
+			{ ItemType::MUMMY_BANDAGES, 2, 0.0f }, // ingredients
+			{ ItemType::PETRIFIED_BONE, 4, 1.0f }  // ingredients (must be ground)
+		},
+		{
+			{ ActionType::MODIFY_HEAT, 25 },  // low heat
+			{ ActionType::ADD_INGREDIENT, 0 }, // add damage potion
+			{ ActionType::ADD_INGREDIENT, 1 }, // add mummy bandages
+			{ ActionType::STIR, 2 },          // stir 2 times
+			{ ActionType::ADD_INGREDIENT, 2 }, // add petrified bones
+			{ ActionType::STIR, 2 },          // stir 2 times
+			{ ActionType::WAIT, 4 }           // wait 20 seconds
+		}
+	},
+	{
+		PotionEffect::REGEN,
+		5.0f,   // highestQualityEffect - health regen per second
+		30,     // highestQualityDuration - regen duration in seconds
+		vec3(200, 50, 50), // finalPotionColor - pink-red color
+		{
+			{ ItemType::POTION, 1, 0.0f },       // TODO: 1x health potion
+			{ ItemType::HEALING_LILY, 2, 0.0f }, // ingredients
+			{ ItemType::EVERFERN, 1, 0.0f }     // ingredients
+		},
+		{
+			{ ActionType::MODIFY_HEAT, 50 },  // medium heat
+			{ ActionType::ADD_INGREDIENT, 0 }, // add health potion
+			{ ActionType::ADD_INGREDIENT, 1 }, // add healing lily
+			{ ActionType::STIR, 2 },          // stir 2 times
+			{ ActionType::ADD_INGREDIENT, 2 }, // add everfern
+			{ ActionType::WAIT, 3 },          // wait 15 seconds
+			{ ActionType::STIR, 2 },          // stir 2 times
+			{ ActionType::WAIT, 3 }           // wait 15 seconds
+		}
+	},
+	{
+		PotionEffect::TENACITY,
+		3.0f,   // highestQualityEffect - additional inventory slots
+		0,      // highestQualityDuration - permanent effect
+		vec3(75, 150, 75), // finalPotionColor - green color
+		{
+			{ ItemType::CACTUS_EXTRACT, 1, 0.0f }, // ingredients
+			{ ItemType::POTION, 2, 0.0f },         // 2x regen potion
+			{ ItemType::PETRIFIED_BONE, 2, 0.0f }  // ingredients
+		},
+		{
+			{ ActionType::MODIFY_HEAT, 25 },  // low heat
+			{ ActionType::ADD_INGREDIENT, 0 }, // add cactus extract
+			{ ActionType::WAIT, 1 },          // wait 5 seconds
+			{ ActionType::ADD_INGREDIENT, 1 }, // add regen potions
+			{ ActionType::ADD_INGREDIENT, 2 }, // add petrified bones
+			{ ActionType::STIR, 4 },          // stir 4 times
+			{ ActionType::WAIT, 4 }           // wait 20 seconds
+		}
+	},
+	{
+		PotionEffect::POISON,
+		8.0f,   // highestQualityEffect - poison damage per second
+		20,     // highestQualityDuration - poison duration in seconds
+		vec3(0, 150, 0), // finalPotionColor - green color
+		{
+			{ ItemType::POTION, 1, 0.0f },        // TODO:1x damage potion
+			{ ItemType::BLIGHTLEAF, 2, 0.0f },    // ingredients
+			{ ItemType::DOOMSPORE, 2, 0.0f }      // ingredients
+		},
+		{
+			{ ActionType::MODIFY_HEAT, 50 },  // medium heat
+			{ ActionType::ADD_INGREDIENT, 0 }, // add damage potion
+			{ ActionType::ADD_INGREDIENT, 1 }, // add blightleaf
+			{ ActionType::WAIT, 1 },          // wait 5 seconds
+			{ ActionType::ADD_INGREDIENT, 2 }, // add doomspores
+			{ ActionType::STIR, 3 },          // stir 3 times
+			{ ActionType::WAIT, 5 }           // wait 25 seconds
+		}
+	},
+	{
+		PotionEffect::RESISTANCE,
+		0.5f,   // highestQualityEffect - damage reduction multiplier (0.5 = 50% reduced damage)
+		30,     // highestQualityDuration - resistance duration in seconds
+		vec3(150, 150, 150), // finalPotionColor - silver/gray color
+		{
+			{ ItemType::CRYSTAL_SHARD, 2, 0.0f }, // ingredients
+			{ ItemType::CACTUS_EXTRACT, 3, 0.0f } // ingredients
+		},
+		{
+			{ ActionType::MODIFY_HEAT, 100 }, // high heat
+			{ ActionType::ADD_INGREDIENT, 0 }, // add crystal shards
+			{ ActionType::WAIT, 2 },          // wait 10 seconds
+			{ ActionType::ADD_INGREDIENT, 1 }, // add cactus extract
+			{ ActionType::STIR, 5 },          // stir 5 times
+			{ ActionType::WAIT, 6 }           // wait 30 seconds
+		}
+	},
+	{
+		PotionEffect::SATURATION,
+		2.0f,   // highestQualityEffect - potion effect multiplier (2x at max quality)
+		300,    // highestQualityDuration - duration in seconds
+		vec3(200, 100, 200), // finalPotionColor - purple/pink color
+		{
+			{ ItemType::GALEFRUIT, 2, 0.0f },   // ingredients
+			{ ItemType::STORM_BARK, 2, 0.0f },  // ingredients
+			{ ItemType::EVERFERN, 1, 0.0f }     // ingredients
+		},
+		{
+			{ ActionType::MODIFY_HEAT, 50 },  // medium heat
+			{ ActionType::ADD_INGREDIENT, 1 }, // add storm bark
+			{ ActionType::WAIT, 2 },          // wait 10 seconds
+			{ ActionType::ADD_INGREDIENT, 2 }, // add everfern
+			{ ActionType::STIR, 2 },          // stir 2 times
+			{ ActionType::WAIT, 2 },          // wait 10 seconds
+			{ ActionType::ADD_INGREDIENT, 0 }, // add galefruit
+			{ ActionType::STIR, 3 },          // stir 3 times
+			{ ActionType::WAIT, 5 }           // wait 25 seconds
+		}
+	},
+	{
+		PotionEffect::ALKALESCENCE,
+		10.0f,  // highestQualityEffect - reactive strength
+		20,     // highestQualityDuration - duration in seconds
+		vec3(200, 200, 255), // finalPotionColor - light blue color
+		{
+			{ ItemType::CACTUS_EXTRACT, 1, 0.0f }, // ingredients
+			{ ItemType::COFFEE_BEANS, 3, 0.0f },    // ingredients (swiftbean)
+			{ ItemType::STORM_BARK, 1, 0.0f }      // ingredients
+		},
+		{
+			{ ActionType::MODIFY_HEAT, 100 }, // high heat
+			{ ActionType::ADD_INGREDIENT, 0 }, // add cactus extract
+			{ ActionType::WAIT, 2 },          // wait 10 seconds
+			{ ActionType::ADD_INGREDIENT, 1 }, // add swiftbean
+			{ ActionType::STIR, 4 },          // stir 4 times
+			{ ActionType::WAIT, 2 },          // wait 10 seconds
+			{ ActionType::ADD_INGREDIENT, 2 }, // add storm bark
+			{ ActionType::STIR, 2 },          // stir 2 times
+			{ ActionType::WAIT, 4 }           // wait 20 seconds
+		}
+	},
+	{
+		PotionEffect::CLARITY,
+		30.0f,  // highestQualityEffect - visibility duration
+		60,     // highestQualityDuration - duration in seconds
+		vec3(220, 220, 100), // finalPotionColor - yellow color
+		{
+			{ ItemType::STORM_BARK, 2, 0.0f },  // ingredients
+			{ ItemType::GLOWSHROOM, 3, 0.0f },  // ingredients
+			{ ItemType::GALEFRUIT, 1, 0.0f }    // ingredients
+		},
+		{
+			{ ActionType::MODIFY_HEAT, 25 },  // low heat
+			{ ActionType::ADD_INGREDIENT, 0 }, // add storm bark
+			{ ActionType::WAIT, 1 },          // wait 5 seconds
+			{ ActionType::ADD_INGREDIENT, 1 }, // add glowshroom
+			{ ActionType::STIR, 3 },          // stir 3 times
+			{ ActionType::WAIT, 2 },          // wait 10 seconds
+			{ ActionType::ADD_INGREDIENT, 2 }, // add galefruit
+			{ ActionType::STIR, 2 },          // stir 2 times
+			{ ActionType::WAIT, 3 }           // wait 15 seconds
+		}
+	},
+	{
+		PotionEffect::REJUVENATION,
+		100.0f, // highestQualityEffect - ultimate healing power
+		60,     // highestQualityDuration - duration in seconds
+		vec3(255, 215, 0),  // finalPotionColor - golden color
+		{
+			{ ItemType::QUARTZMELON, 1, 0.0f },   // ingredients
+			{ ItemType::CRYSTAL_SHARD, 1, 0.0f }, // ingredients (will be meph later)
+			{ ItemType::BLIGHTLEAF, 1, 0.0f },    // ingredients
+			{ ItemType::HEALING_LILY, 1, 0.0f },  // ingredients
+			{ ItemType::GLOWSHROOM, 2, 0.0f },    // ingredients
+			{ ItemType::POTION, 1, 0.0f }         // TODO: 1x regen potion
+		},
+		{
+			{ ActionType::MODIFY_HEAT, 50 },  // medium heat
+			{ ActionType::ADD_INGREDIENT, 0 }, // add quartzmelon
+			{ ActionType::ADD_INGREDIENT, 1 }, // add crystal shard
+			{ ActionType::WAIT, 2 },          // wait 10 seconds
+			{ ActionType::ADD_INGREDIENT, 2 }, // add blightleaf
+			{ ActionType::ADD_INGREDIENT, 3 }, // add healing lily
+			{ ActionType::STIR, 3 },          // stir 3 times
+			{ ActionType::ADD_INGREDIENT, 4 }, // add glowshroom
+			{ ActionType::ADD_INGREDIENT, 5 }, // add regen potion
+			{ ActionType::STIR, 4 },          // stir 4 times
+			{ ActionType::WAIT, 6 }           // wait 30 seconds
 		}
 	}
 };
@@ -355,11 +627,20 @@ enum class SOUND_CHANNEL {
 
 const std::vector<PotionEffect> throwable_potions = {
 	PotionEffect::WATER,
-	
+	PotionEffect::DAMAGE,
+	PotionEffect::MOLOTOV,
+	PotionEffect::POISON,
+	PotionEffect::CLARITY
 };
 
 const std::vector<PotionEffect> consumable_potions = {
-	PotionEffect::SPEED
+	PotionEffect::SPEED,
+	PotionEffect::HEALTH,
+	PotionEffect::REGEN,
+	PotionEffect::TENACITY,
+	PotionEffect::RESISTANCE,
+	PotionEffect::SATURATION,
+	PotionEffect::REJUVENATION
 };
 
 #ifndef M_PI

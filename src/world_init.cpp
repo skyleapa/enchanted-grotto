@@ -273,7 +273,7 @@ Entity createTree(RenderSystem* renderer, vec2 position)
 		 RENDER_LAYER::TERRAIN });
 
 	// create magical fruit that spawns on tree
-	createCollectableIngredient(renderer, vec2(position.x, position.y - 30), ItemType::MAGICAL_FRUIT, 1, true);
+	createCollectableIngredient(renderer, vec2(position.x, position.y - 30), ItemType::GALEFRUIT, 1, true);
 
 	return entity;
 }

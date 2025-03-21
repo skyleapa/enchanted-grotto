@@ -342,9 +342,22 @@ enum class TEXTURE_ASSET_ID
 	COFFEE_BEAN = FRUIT + 1,
 	SAP = COFFEE_BEAN + 1,
 	MAGICAL_DUST = SAP + 1,
+	EVERFERN = MAGICAL_DUST + 1,
+	BLIGHTLEAF = EVERFERN + 1,
+	STORM_BARK = BLIGHTLEAF + 1,
+	GALEFRUIT = STORM_BARK + 1,
+	MUMMY_BANDAGE = GALEFRUIT + 1,
+	PETRIFIED_BONE = MUMMY_BANDAGE + 1,
+	HEALING_LILY = PETRIFIED_BONE + 1,
+	CACTUS_PULP = HEALING_LILY + 1,
+	GLOWSHROOM = CACTUS_PULP + 1,
+	DOOMSPORE = GLOWSHROOM + 1,
+	CRYSTABLOOM = DOOMSPORE + 1,
+	CRYSTAL_SHARD = CRYSTABLOOM + 1,
+	QUARTZMELON = CRYSTAL_SHARD + 1,
 
 	// enemies
-	ENT = MAGICAL_DUST + 1,
+	ENT = QUARTZMELON + 1,
 	MUMMY = ENT + 1,
 
 	// extras
@@ -454,17 +467,17 @@ const std::unordered_map<ItemType, ItemInfo> ITEM_INFO = {
 			false}},
 	{
 		ItemType::COFFEE_BEANS, {
-			"Coffee Bean",
+			"Swiftbean",
 			vec2((float)GRID_CELL_HEIGHT_PX * 0.9, (float)GRID_CELL_HEIGHT_PX * 0.9),
 			TEXTURE_ASSET_ID::COFFEE_BEAN,
 			"interactables/coffee_bean.png",
 			true}},
 	{
-		ItemType::MAGICAL_FRUIT, {
-			"Magical Fruit",
+		ItemType::GALEFRUIT, {
+			"Galefruit",
 			vec2((float)GRID_CELL_WIDTH_PX * 1.5, (float)GRID_CELL_HEIGHT_PX * 1.8),
-			TEXTURE_ASSET_ID::FRUIT,
-			"interactables/magical_fruit.png",
+			TEXTURE_ASSET_ID::GALEFRUIT,
+			"interactables/galefruit.png",
 			false}},
 	{
 		ItemType::SAP, {
@@ -480,6 +493,97 @@ const std::unordered_map<ItemType, ItemInfo> ITEM_INFO = {
 			TEXTURE_ASSET_ID::MAGICAL_DUST,
 			"interactables/magical_dust.png",
 			true}},
+	{
+		ItemType::EVERFERN, {
+			"Everfern",
+			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
+			TEXTURE_ASSET_ID::EVERFERN,
+			"interactables/everfern.png",
+			false}},
+	{
+		ItemType::BLIGHTLEAF, {
+			"Blightleaf",
+			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
+			TEXTURE_ASSET_ID::BLIGHTLEAF,
+			"interactables/blightleaf.png",
+			false}},
+	{
+		ItemType::STORM_BARK, {
+			"Storm Bark",
+			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
+			TEXTURE_ASSET_ID::STORM_BARK,
+			"interactables/storm_bark.png",
+			false}},
+	{
+		ItemType::MUMMY_BANDAGES, {
+			"Mummy Bandages",
+			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
+			TEXTURE_ASSET_ID::MUMMY_BANDAGE,
+			"interactables/mummy_bandage.png",
+			true}},
+	{
+		ItemType::PETRIFIED_BONE, {
+			"Petrified Bone",
+			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
+			TEXTURE_ASSET_ID::PETRIFIED_BONE,
+			"interactables/petrified_bone.png",
+			true}},
+	{
+		ItemType::HEALING_LILY, {
+			"Healing Lily",
+			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
+			TEXTURE_ASSET_ID::HEALING_LILY,
+			"interactables/healing_lily.png",
+			false}},
+	{
+		ItemType::CACTUS_PULP, {
+			"Cactus Pulp",
+			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
+			TEXTURE_ASSET_ID::CACTUS_PULP,
+			"interactables/cactus_pulp.png",
+			true}},
+	{
+		ItemType::CACTUS_EXTRACT, {
+			"Cactus Extract",
+			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
+			TEXTURE_ASSET_ID::CACTUS_PULP, // Reusing CACTUS_PULP for extract
+			"interactables/cactus_pulp.png",
+			false}},
+	{
+		ItemType::GLOWSHROOM, {
+			"Glowshroom",
+			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
+			TEXTURE_ASSET_ID::GLOWSHROOM,
+			"interactables/glowshroom.png",
+			false}},
+	{
+		ItemType::DOOMSPORE, {
+			"Doomspore",
+			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
+			TEXTURE_ASSET_ID::DOOMSPORE,
+			"interactables/doomspore.png",
+			false}},
+	{
+		ItemType::CRYSTAL_SHARD, {
+			"Crystal Shard",
+			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
+			TEXTURE_ASSET_ID::CRYSTAL_SHARD,
+			"interactables/crystal_shard.png",
+			false}},
+	{
+		ItemType::QUARTZMELON, {
+			"Quartzmelon",
+			vec2((float)GRID_CELL_WIDTH_PX * 1.5, (float)GRID_CELL_HEIGHT_PX * 1.8),
+			TEXTURE_ASSET_ID::QUARTZMELON,
+			"interactables/quartzmelon.png",
+			false}},
+	{
+		ItemType::CRYSTABLOOM, {
+			"Crystabloom",
+			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
+			TEXTURE_ASSET_ID::CRYSTABLOOM,
+			"interactables/crystabloom.png",
+			false}},
 };
 
 // damage flash only to be applied to player and enemies

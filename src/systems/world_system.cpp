@@ -767,7 +767,7 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 		for (Entity& entity : inventory.items) {
 			if (!registry.items.has(entity)) continue;
 			Item& item = registry.items.get(entity);
-			if (item.type == ItemType::MAGICAL_FRUIT) {
+			if (item.type == ItemType::GALEFRUIT) {
 				if (item.amount >= 6) {
 					collected_fruits = true;
 				}
