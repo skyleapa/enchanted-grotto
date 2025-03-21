@@ -1522,7 +1522,7 @@ bool UISystem::openRecipeBook(Entity recipe_book)
                         font-weight: bold;
                         color: #5c3e23;
                         transition: background-color 0.2s;
-						font-family: Caveat;
+						font-family: Open Sans;
                     }
                     .close-button:hover {
                         background-color: #c1834e;
@@ -1545,7 +1545,7 @@ bool UISystem::openRecipeBook(Entity recipe_book)
                         font-size: 18px;
                         font-weight: bold;
                         color: #5c3e23;
-                        font-family: Caveat;
+                        font-family: Open Sans;
                     }
                     .left-page {
                         position: absolute;
@@ -1556,7 +1556,7 @@ bool UISystem::openRecipeBook(Entity recipe_book)
                         overflow-y: auto;
                         font-size: 16px;
                         color: black;
-                        font-family: Caveat;
+                        font-family: Open Sans;
                         padding-right: 10px;
                     }
                     .right-page {
