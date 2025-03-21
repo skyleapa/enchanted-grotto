@@ -155,6 +155,15 @@ const float ENT_HEIGHT = (float)130;
 const float MUMMY_WIDTH = (float)45;
 const float MUMMY_HEIGHT = (float)85;
 
+const float DESERT_GUARDIAN_WIDTH = (float)160;
+const float DESERT_GUARDIAN_HEIGHT = (float)150;
+
+const float MUSHROOM_GUARDIAN_WIDTH = (float)160;
+const float MUSHROOM_GUARDIAN_HEIGHT = (float)150;
+
+const float CRYSTAL_GUARDIAN_WIDTH = (float)140;
+const float CRYSTAL_GUARDIAN_HEIGHT = (float)160;
+
 const float DETECTION_RADIUS = (float)200;  // Enemy starts moving & attacking
 const float FOLLOWING_RADIUS = (float)300;  // Enemy stops attacking if outside this
 

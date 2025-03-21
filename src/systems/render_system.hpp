@@ -120,6 +120,9 @@ class RenderSystem {
 		textures_path("interactables/glowspore.png"),
 		textures_path("enemies/ent.png"),
 		textures_path("enemies/mummy.png"),
+		textures_path("enemies/guardian_desert.png"),
+		textures_path("enemies/guardian_shroomland.png"),
+		textures_path("enemies/guardian_crystal.png"),
 		textures_path("interactables/potion_item.png"),
 		textures_path("welcome_to_grotto.png"),
 		textures_path("interactables/cauldron_water.png")

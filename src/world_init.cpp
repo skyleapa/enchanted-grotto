@@ -1721,6 +1721,123 @@ Entity createMummy(RenderSystem* renderer, vec2 position, int movable, std::stri
 	return entity;
 }
 
+Entity createGuardianDesert(RenderSystem* renderer, vec2 position, int movable, std::string name) {
+
+	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " ent" << std::endl;
+
+	Enemy& enemy = registry.enemies.emplace(entity);
+	enemy.attack_radius = 5;
+	enemy.health = 1000;
+	enemy.start_pos = position;
+	enemy.state = (int)ENEMY_STATE::IDLE;
+	enemy.can_move = movable;
+	enemy.name = name;
+	enemy.attack_damage = 1;
+
+	auto& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 1.0f; // cannot walk past guardian
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+	motion.scale = vec2({ DESERT_GUARDIAN_WIDTH, DESERT_CACTUS_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::GUARDIAN_DESERT,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::TERRAIN,
+		});
+
+	return entity;
+}
+
+Entity createGuardianMushroom(RenderSystem* renderer, vec2 position, int movable, std::string name) {
+
+	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " ent" << std::endl;
+
+	Enemy& enemy = registry.enemies.emplace(entity);
+	enemy.attack_radius = 5;
+	enemy.health = 1000;
+	enemy.start_pos = position;
+	enemy.state = (int)ENEMY_STATE::IDLE;
+	enemy.can_move = movable;
+	enemy.name = name;
+	enemy.attack_damage = 1;
+
+	auto& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 1.0f; // cannot walk past guardian
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+	motion.scale = vec2({ MUSHROOM_GUARDIAN_WIDTH, MUSHROOM_GUARDIAN_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::GUARDIAN_SHROOMLAND,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::TERRAIN,
+		});
+
+	return entity;
+}
+
+Entity createGuardianCrystal(RenderSystem* renderer, vec2 position, int movable, std::string name) {
+
+	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " ent" << std::endl;
+
+	Enemy& enemy = registry.enemies.emplace(entity);
+	enemy.attack_radius = 5;
+	enemy.health = 1000;
+	enemy.start_pos = position;
+	enemy.state = (int)ENEMY_STATE::IDLE;
+	enemy.can_move = movable;
+	enemy.name = name;
+	enemy.attack_damage = 1;
+
+	auto& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 1.0f; // cannot walk past guardian
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+	motion.scale = vec2({ CRYSTAL_GUARDIAN_WIDTH, CRYSTAL_GUARDIAN_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::GUARDIAN_CRYSTAL,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::TERRAIN,
+		});
+
+	return entity;
+}
+
 bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, Entity& player_entity) {
 
 	auto entity = Entity();
