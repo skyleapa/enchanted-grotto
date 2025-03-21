@@ -1089,7 +1089,7 @@ bool WorldSystem::consumePotion() {
 	if (!registry.inventories.has(player_entity)) return false;
 
 	Inventory& inv = registry.inventories.get(player_entity);
-	if (inv.selection > inv.items.size() || inv.items.size() == 0) {
+	if (inv.selection + 1 > inv.items.size() || inv.items.size() == 0) {
 		std::cout << "player has no item in slot" << inv.selection << std::endl;
 		return false;
 	}
@@ -1109,6 +1109,21 @@ bool WorldSystem::consumePotion() {
 		std::cout << "selected potion is not consumable" << std::endl;
 		return false;
 	}
+	
+	// replace any potion of the same type currently active with the new one
+	Player& player = registry.players.get(player_entity);
+	for (int i = 0; i < player.active_effects.size(); i++) {
+		Entity entity = player.active_effects[i];
+		if (!registry.potions.has(entity)) continue;
+
+		Potion& potion = registry.potions.get(entity);
+		if (potion.effect == registry.potions.get(selected_item).effect) {
+			removePotionEffect(potion, player_entity);
+			player.active_effects.erase(player.active_effects.begin() + i);
+			registry.remove_all_components_of(entity);
+			break;
+		}
+	}
 
 	Entity item_copy = ItemSystem::copyItem(selected_item);
 
@@ -1121,8 +1136,8 @@ bool WorldSystem::consumePotion() {
 	}
 
 	// add copy of item to player's active effects
-	registry.players.get(player_entity).active_effects.push_back(item_copy);
-	assert(registry.potions.has(item_copy));
+	player.active_effects.push_back(item_copy);
+	assert(registry.potions.has(item_copy) && "consumed item should be a potion");
 	addPotionEffect(registry.potions.get(item_copy), player_entity);
 
 	std::cout << "player has consumed a potion of " << EFFECT_NAMES.at(registry.potions.get(item_copy).effect) << std::endl;
