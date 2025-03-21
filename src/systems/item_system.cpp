@@ -313,7 +313,12 @@ nlohmann::json ItemSystem::serializePlayerState(Entity player_entity) {
 		}
 	}
 	data["active_effects"] = active_effects;
-	
+
+	if (registry.motions.has(player_entity)) {
+		data["load_position_x"] = registry.motions.get(player_entity).position.x;
+		data["load_position_y"] = registry.motions.get(player_entity).position.y;
+	}
+
 	return data;
 }
 
@@ -502,4 +507,6 @@ void ItemSystem::deserializePlayerState(const nlohmann::json& data) {
 	for (const auto& effect : data["active_effects"]) {
 		player.active_effects.push_back(deserializeItem(effect));
 	}
+
+	registry.players.get(player_entity).load_position = vec2(data["load_position_x"], data["load_position_y"]);
 }

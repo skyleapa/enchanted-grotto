@@ -16,6 +16,7 @@ struct Player
 	float speed_multiplier = 1.f;
 	float effect_multiplier = 1.f;
 	float defense = 1.f;
+	vec2 load_position = vec2(0, 0);
 };
 
 // All data relevant to the shape and motion of entities
@@ -57,6 +58,7 @@ struct ScreenState
 	bool tutorial_step_complete = true;
 	float autosave_timer = AUTOSAVE_TIMER;
 	std::vector<std::string> killed_enemies = {};
+	bool first_game_load = true;
 };
 
 // A struct to refer to debugging graphics in the ECS
