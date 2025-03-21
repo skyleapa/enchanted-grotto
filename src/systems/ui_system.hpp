@@ -84,6 +84,10 @@ public:
     void createHealthBar();
     void updateHealthBar();
 
+    // Effects bar method
+    void createEffectsBar();
+    void updateEffectsBar();
+
 private:
     GLFWwindow* m_window;
     RenderSystem* m_renderer;
@@ -181,8 +185,13 @@ private:
     const std::string BOTTLE_LEFT_PX = "904px";
     const std::string BOTTLE_TOP_PX = "395px";
 
-    // Healthbar variables
-    Rml::ElementDocument* m_healthbar_document = nullptr;
     const std::string PESTLE_LEFT_PX = "800px";
     const std::string PESTLE_TOP_PX = "300px";
+
+    // Healthbar variables
+    Rml::ElementDocument* m_healthbar_document = nullptr;
+
+    // Effects bar variables
+    Rml::ElementDocument* m_effectsbar_document = nullptr;
+    int m_effectsbar_size = 4;
 };

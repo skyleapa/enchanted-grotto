@@ -1149,11 +1149,13 @@ bool WorldSystem::consumePotion() {
 		ItemSystem::destroyItem(selected_item);
 	}
 
-	// add copy of item to player's active effects
-	player.active_effects.push_back(item_copy);
+	// add copy of item to player's active effects - health is instant so don't add to active_effects
 	assert(registry.potions.has(item_copy) && "consumed item should be a potion");
+	assert(registry.items.has(item_copy) && "consumed item should be an item");
+	if (registry.potions.get(item_copy).effect != PotionEffect::HEALTH) {
+		player.active_effects.push_back(item_copy);
+	}
 	addPotionEffect(registry.potions.get(item_copy), player_entity);
-
 	std::cout << "player has consumed a potion of " << EFFECT_NAMES.at(registry.potions.get(item_copy).effect) << std::endl;
 	return true;
 }
