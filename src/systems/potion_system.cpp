@@ -70,9 +70,14 @@ void PotionSystem::addIngredient(Entity cauldron, Entity ingredient) {
 		}
 
 		// Float comparison moment. Return if grindlevels are far enough apart
-		Ingredient& curIng = registry.ingredients.get(ingredient);
-		Ingredient& lastIng = registry.ingredients.get(lastIngredient);
-		if (fabs(lastIng.grindLevel - curIng.grindLevel) >= FLT_EPSILON) {
+		// Only check grind levels if both items are ingredients
+		if (registry.ingredients.has(ingredient) && registry.ingredients.has(lastIngredient)) {
+			Ingredient& curIng = registry.ingredients.get(ingredient);
+			Ingredient& lastIng = registry.ingredients.get(lastIngredient);
+			if (fabs(lastIng.grindLevel - curIng.grindLevel) >= FLT_EPSILON) {
+				break;
+			}
+		} else {
 			break;
 		}
 
@@ -87,13 +92,13 @@ void PotionSystem::addIngredient(Entity cauldron, Entity ingredient) {
 			for (Entity& entity : ci.items) {
 				if (!registry.items.has(entity)) continue;
 				Item& item = registry.items.get(entity);
-				if (item.type == ItemType::MAGICAL_FRUIT) {
-					if (item.amount >= 3) {
+				if (item.type == ItemType::GALEFRUIT) {
+					if (item.amount >= 2) {
 						added_fruits = true;
 					}
 				}
 				if (item.type == ItemType::COFFEE_BEANS) {
-					if (item.amount >= 1) { // TODO CHANGE
+					if (item.amount >= 2) {
 						added_beans = true;
 					}
 				}
@@ -290,15 +295,24 @@ std::pair<int, float> levDist(Entity cauldron, Recipe& recipe,
 		// Check equality of item type. If item type is not equal
 		// do not apply any other penalties
 		if (recipeIng.type != item.type) {
-			penalty += INGREDIENT_TYPE_PENALTY;
-			break;
+			// Special case for potions: if the recipe expects a potion, any potion type can match
+			if (recipeIng.type == ItemType::POTION && item.type == ItemType::POTION) {
+				// could put a change here to identify potion effect
+			} else {
+				penalty += INGREDIENT_TYPE_PENALTY;
+				break;
+			}
 		}
 
 		// Check grind level and amount equality
 		penalty += abs(item.amount - recipeIng.amount) * INGREDIENT_AMOUNT_PENALTY;
-		Ingredient& ing = registry.ingredients.get(itemEntity);
-		if (ing.grindLevel != -1) {
-			penalty += abs(ing.grindLevel - recipeIng.grindAmount) * INGREDIENT_GRIND_PENALTY;
+		
+		// Only check grind level for actual ingredients
+		if (registry.ingredients.has(itemEntity)) {
+			Ingredient& ing = registry.ingredients.get(itemEntity);
+			if (ing.grindLevel != -1) {
+				penalty += abs(ing.grindLevel - recipeIng.grindAmount) * INGREDIENT_GRIND_PENALTY;
+			}
 		}
 		break;
 	}

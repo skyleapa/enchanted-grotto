@@ -345,7 +345,8 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			}
 
 			Entity item = pinv.items[selected];
-			if (!registry.ingredients.has(item)) {
+			// need to allow both ingredients and potions to be added to the cauldron
+			if (!registry.ingredients.has(item) && !(registry.items.get(item).type == ItemType::POTION)) {
 				return;
 			}
 
