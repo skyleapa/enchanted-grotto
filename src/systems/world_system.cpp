@@ -1020,7 +1020,7 @@ bool WorldSystem::throwAmmo(vec2 target) {
 				ItemSystem::destroyItem(item_entity);
 			}
 		}
-		player.cooldown = 500.f;
+		player.cooldown = PLAYER_THROW_COOLDOWN;
 		return true;
 	}
 

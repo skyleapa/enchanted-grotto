@@ -58,6 +58,7 @@ const float PLAYER_SPEED = (float)200;
 const float PLAYER_MAX_HEALTH = (float)100;
 const float PLAYER_DYING = (float)20;
 const float PLAYER_DAMAGE_COOLDOWN = (float)1000.f;
+const float PLAYER_THROW_COOLDOWN = (float)1000.f;
 
 const float TIME_UPDATE_FACTOR = 0.001f;
 const float THROW_UPDATE_FACTOR = 0.3f;
