@@ -10,7 +10,7 @@ struct Player
 	std::string name;
 	float cooldown = 0.f; // defaults to 0, but when ammo is tossed, will have a 1000 ms cooldown
 	float health = PLAYER_MAX_HEALTH;
-	float damage_cooldown = PLAYER_DAMAGE_COOLDOWN; // cooldown before player can take damage again to prevent insta death
+	float damage_cooldown = 0.f; // cooldown before player can take damage again to prevent insta death
 	std::vector<Entity> active_effects = {}; // list of active consumed potions
 	bool consumed_potion = false;
 	float speed_multiplier = 1.f;

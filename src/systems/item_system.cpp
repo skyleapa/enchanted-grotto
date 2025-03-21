@@ -4,38 +4,38 @@
 #include <fstream>
 
 Entity ItemSystem::createItem(ItemType type, int amount, bool isCollectable, bool is_ammo, bool canRespawn) {
-    Entity entity = Entity();
-    // std::cout << "Entity " << entity.id() << " of type " << (int) type << std::endl;
-    
-    Item& item = registry.items.emplace(entity);
-    item.type = type;
-    item.amount = amount;
-    item.isCollectable = isCollectable;
-    item.name = ITEM_INFO.at(type).name;
-    item.is_ammo = is_ammo;
-    item.canRespawn = canRespawn;
+	Entity entity = Entity();
+	// std::cout << "Entity " << entity.id() << " of type " << (int) type << std::endl;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = type;
+	item.amount = amount;
+	item.isCollectable = isCollectable;
+	item.name = ITEM_INFO.at(type).name;
+	item.is_ammo = is_ammo;
+	item.canRespawn = canRespawn;
 
 	if (is_ammo) {
 		registry.ammo.emplace(entity);
 	}
-	
+
 	return entity;
 }
 
 Entity ItemSystem::createIngredient(ItemType type, int amount) {
 	Entity entity = createItem(type, amount, false, false);
-	
+
 	// Add ingredient-specific component
 	Ingredient& ingredient = registry.ingredients.emplace(entity);
 	ingredient.grindLevel = 0.0f;  // Starts ungrounded
-	
+
 	return entity;
 }
 
 Entity ItemSystem::createPotion(PotionEffect effect, int duration, const vec3& color, float quality, float effectValue, int amount) {
 	bool is_throwable = std::find(throwable_potions.begin(), throwable_potions.end(), effect) != throwable_potions.end();
 	Entity entity = createItem(ItemType::POTION, amount, false, is_throwable, false);
-	
+
 	// Add potion-specific component
 	Potion& potion = registry.potions.emplace(entity);
 	potion.effect = effect;
@@ -43,17 +43,17 @@ Entity ItemSystem::createPotion(PotionEffect effect, int duration, const vec3& c
 	potion.color = color;
 	potion.quality = quality;
 	potion.effectValue = effectValue;
-	
+
 	// Get potion name
 	registry.items.get(entity).name = EFFECT_NAMES.at(effect) + " Potion";
 	return entity;
 }
 
 Entity ItemSystem::createCollectableIngredient(vec2 position, ItemType type, int amount, bool canRespawn) {
-    Entity item = createItem(type, amount, true, false, canRespawn);
-    registry.items.get(item).originalPosition = position;
-    Ingredient& ing = registry.ingredients.emplace(item);
-    ing.grindLevel = ITEM_INFO.at(type).grindable ? 0.f : -1.f;
+	Entity item = createItem(type, amount, true, false, canRespawn);
+	registry.items.get(item).originalPosition = position;
+	Ingredient& ing = registry.ingredients.emplace(item);
+	ing.grindLevel = ITEM_INFO.at(type).grindable ? 0.f : -1.f;
 
 	return item;
 }
@@ -77,10 +77,10 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
 	if (!registry.inventories.has(inventory) || !registry.items.has(item)) {
 		return false;
 	}
-	
+
 	Inventory& inv = registry.inventories.get(inventory);
 	Item& item_comp = registry.items.get(item);
-	
+
 	// Try to stack if possible
 	for (Entity existing : inv.items) {
 		if (!registry.items.has(existing)) {
@@ -95,10 +95,10 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
 		if (registry.ingredients.has(existing) && registry.ingredients.has(item)) {
 			Ingredient& existingIng = registry.ingredients.get(existing);
 			Ingredient& newIng = registry.ingredients.get(item);
-			
+
 			// std::cout << "Checking grindlevel: existing=" << existingIng.grindLevel 
 			// 		  << ", new=" << newIng.grindLevel << std::endl;
-			
+
 			if (fabs(existingIng.grindLevel - newIng.grindLevel) > FLT_EPSILON) {
 				// If grind levels are different, do not stack
 				std::cout << "Grind levels do not match, don't stack." << std::endl;
@@ -126,22 +126,23 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
 		}
 		return true;
 	}
-	
+
 	// If we couldn't stack, check capacity
 	if (inv.items.size() >= inv.capacity) {
 		inv.isFull = true;
 		return false;
 	}
-	
+
 	// If item is collectable, create a copy for the inventory
 	if (item_comp.isCollectable) {
 		Entity copy = copyItem(item);
 		inv.items.push_back(copy);
-	} else {
+	}
+	else {
 		// std::cout << "Pushed new item: " << item_comp.name << std::endl;
 		inv.items.push_back(item);
 	}
-	
+
 	std::cout << "Added new item: " << item_comp.name << " to inventory." << std::endl;
 
 	return true;
@@ -151,16 +152,16 @@ bool ItemSystem::removeItemFromInventory(Entity inventory, Entity item) {
 	if (!registry.inventories.has(inventory)) {
 		return false;
 	}
-	
+
 	Inventory& inv = registry.inventories.get(inventory);
 	auto it = std::find(inv.items.begin(), inv.items.end(), item);
-	
+
 	if (it != inv.items.end()) {
 		inv.items.erase(it);
 		inv.isFull = false;
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -208,17 +209,17 @@ Entity ItemSystem::copyItem(Entity toCopy) {
 // Serialization
 nlohmann::json ItemSystem::serializeItem(Entity item) {
 	nlohmann::json data;
-	
+
 	if (!registry.items.has(item)) {
 		return data;
 	}
-	
+
 	const Item& item_comp = registry.items.get(item);
 	data["saved_id"] = item.id();  // Store the Entity ID for reference during deserialization
 	data["type_id"] = item_comp.type;
 	data["amount"] = item_comp.amount;
 	data["is_ammo"] = item_comp.is_ammo;
-	
+
 	// Serialize ingredient data if present
 	if (registry.ingredients.has(item)) {
 		const Ingredient& ing = registry.ingredients.get(item);
@@ -227,7 +228,7 @@ nlohmann::json ItemSystem::serializeItem(Entity item) {
 			{"grindLevel", ing.grindLevel}
 		};
 	}
-	
+
 	// Serialize potion data if present
 	if (registry.potions.has(item)) {
 		const Potion& pot = registry.potions.get(item);
@@ -240,30 +241,32 @@ nlohmann::json ItemSystem::serializeItem(Entity item) {
 			{"effectValue", pot.effectValue}
 		};
 	}
-	
+
 	return data;
 }
 
 nlohmann::json ItemSystem::serializeInventory(Entity inventory) {
 	nlohmann::json data;
-	
+
 	if (!registry.inventories.has(inventory)) {
 		return data;
 	}
-	
+
 	const Inventory& inv = registry.inventories.get(inventory);
 	data["saved_id"] = inventory.id();  // Store the Entity ID for reference
 	data["capacity"] = inv.capacity;
-	
+
 	// Store the inventory owner type based on components
 	if (registry.cauldrons.has(inventory)) {
 		data["owner_type"] = "cauldron";
-	} else if (registry.chests.has(inventory)) {
+	}
+	else if (registry.chests.has(inventory)) {
 		data["owner_type"] = "chest";
-	} else {
+	}
+	else {
 		data["owner_type"] = "player";  // Default to player inventory
 	}
-	
+
 	nlohmann::json items_data = nlohmann::json::array();
 	for (Entity item : inv.items) {
 		if (registry.items.has(item)) {
@@ -271,7 +274,7 @@ nlohmann::json ItemSystem::serializeInventory(Entity inventory) {
 		}
 	}
 	data["items"] = items_data;
-	
+
 	return data;
 }
 
@@ -288,6 +291,32 @@ nlohmann::json ItemSystem::serializeScreenState() {
 	return data;
 }
 
+// serializes all player attributes except for inventory
+nlohmann::json ItemSystem::serializePlayerState(Entity player_entity) {
+
+	Player& player = registry.players.get(player_entity);
+	nlohmann::json data;
+
+	data["name"] = player.name;
+	data["cooldown"] = player.cooldown;
+	data["health"] = player.health;
+	data["damage_cooldown"] = player.damage_cooldown;
+	data["consumed_potion"] = player.consumed_potion;
+	data["speed_multiplier"] = player.speed_multiplier;
+	data["effect_multiplier"] = player.effect_multiplier;
+	data["defense"] = player.defense;
+
+	nlohmann::json active_effects = nlohmann::json::array();
+	for (Entity effect : player.active_effects) {
+		if (registry.items.has(effect) && registry.potions.has(effect)) {
+			active_effects.push_back(serializeItem(effect));
+		}
+	}
+	data["active_effects"] = active_effects;
+	
+	return data;
+}
+
 Entity ItemSystem::deserializeItem(const nlohmann::json& data) {
 	Entity entity;
 
@@ -299,7 +328,8 @@ Entity ItemSystem::deserializeItem(const nlohmann::json& data) {
 			auto& ing_data = data["ingredient"];
 			ing.grindLevel = ing_data["grindLevel"];
 		}
-	} else if (type == "potion") {
+	}
+	else if (type == "potion") {
 		auto& pot_data = data["potion"];
 		entity = createPotion(
 			pot_data["effect"],
@@ -309,7 +339,8 @@ Entity ItemSystem::deserializeItem(const nlohmann::json& data) {
 			pot_data["effectValue"],
 			data["amount"]
 		);
-	} else {
+	}
+	else {
 		entity = createItem(data["type_id"], data["amount"], false, data["is_ammo"]);
 	}
 
@@ -321,10 +352,10 @@ void ItemSystem::deserializeInventory(Entity inventory, const nlohmann::json& da
 		// std::cout << "Entity " << inventory.id() << " deserialize inventory" << std::endl;
 		registry.inventories.emplace(inventory);
 	}
-	
+
 	Inventory& inv = registry.inventories.get(inventory);
 	inv.capacity = data["capacity"];
-	
+
 	// Create appropriate components based on owner type
 	std::string owner_type = data["owner_type"];
 	// Don't need this anymore because we call createCauldron
@@ -333,13 +364,13 @@ void ItemSystem::deserializeInventory(Entity inventory, const nlohmann::json& da
 	if (owner_type == "chest" && !registry.chests.has(inventory)) {
 		registry.chests.emplace(inventory);
 	}
-	
+
 	// Clear existing items
 	for (Entity item : inv.items) {
 		destroyItem(item);
 	}
 	inv.items.clear();
-	
+
 	// Load new items
 	for (const auto& item_data : data["items"]) {
 		Entity item = deserializeItem(item_data);
@@ -352,13 +383,13 @@ void ItemSystem::deserializeInventory(Entity inventory, const nlohmann::json& da
 bool ItemSystem::saveGameState() {
 	nlohmann::json data;
 	nlohmann::json inventories = nlohmann::json::array();
-	
+
 	// First, find and save the player inventory if it exists
 	Entity player_inventory;
 	bool found_player = false;
 	for (Entity inventory : registry.inventories.entities) {
 		// Only save player inventory if it belongs to a player entity
-		if (registry.players.has(inventory) || 
+		if (registry.players.has(inventory) ||
 			(!registry.cauldrons.has(inventory) && !registry.chests.has(inventory))) {
 			if (!found_player) {
 				inventories.push_back(serializeInventory(inventory));
@@ -371,17 +402,16 @@ bool ItemSystem::saveGameState() {
 	}
 	data["inventories"] = inventories;
 	data["screen_state"] = serializeScreenState();
-	if (registry.players.size() > 0) {
-		data["player_health"] = registry.players.components[0].health;
-	}
-	
+	if (registry.players.entities.size() > 0) data["player_state"] = serializePlayerState(registry.players.entities[0]);
+
 	try {
 		std::string save_path = game_state_path(GAME_STATE_FILE);
 		std::ofstream file(save_path);
 		// https://json.nlohmann.me/api/basic_json/dump/
 		file << data.dump(4);
 		return true;
-	} catch (const std::exception& e) {
+	}
+	catch (const std::exception& e) {
 		std::cerr << "Failed to save game state: " << e.what() << std::endl;
 		return false;
 	}
@@ -394,51 +424,54 @@ bool ItemSystem::loadGameState() {
 		if (!file.is_open()) {
 			return false;
 		}
-		
+
 		nlohmann::json data;
 		file >> data;
-		
+
 		Entity player;
 		if (!registry.players.entities.empty()) {
 			player = registry.players.entities[0];
 		}
-		
+
 		// Load inventories
 		for (const auto& inv_data : data["inventories"]) {
 			std::string owner_type = inv_data["owner_type"];
-			
+
 			if (owner_type == "player") {
 				if (player) {
 					deserializeInventory(player, inv_data);
 				}
-			} else if (owner_type == "cauldron") {
+			}
+			else if (owner_type == "cauldron") {
 				// Leave out cauldron serialization for now
 				// if (registry.cauldrons.entities.size() > 1) continue;
 				// Entity cauldron_inv = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.35, GRID_CELL_HEIGHT_PX * 5.85 }), vec2({ 175, 280 }), 8, "Cauldron", false);
 				// std::cout << "Entity " << cauldron_inv.id() << " cauldron" << std::endl;
 				// deserializeInventory(cauldron_inv, inv_data);
-			} else {
+			}
+			else {
 				// For non-player inventories, create new entities
 				Entity inv = Entity();
 				// std::cout << "Entity " << inv.id() << " item copy" << std::endl;
 				deserializeInventory(inv, inv_data);
 			}
 		}
-		
+
 		if (!data["screen_state"].empty()) {
 			deserializeScreenState(data["screen_state"]);
 		}
 
-		if (!data["player_health"].empty()) {
-			registry.players.get(player).health = data["player_health"];
+		if (!data["player_state"].empty()) {
+			deserializePlayerState(data["player_state"]);
 		}
-		
+
 		return true;
-	} catch (const std::exception& e) {
+	}
+	catch (const std::exception& e) {
 		std::cerr << "Failed to load game state: " << e.what() << std::endl;
 		return false;
 	}
-} 
+}
 
 void ItemSystem::deserializeScreenState(const nlohmann::json& data) {
 	ScreenState& screen = registry.screenStates.components[0];
@@ -451,4 +484,22 @@ void ItemSystem::deserializeScreenState(const nlohmann::json& data) {
 		registry.screenStates.components[0].killed_enemies.push_back(enemy);
 	}
 }
-	
+
+void ItemSystem::deserializePlayerState(const nlohmann::json& data) {
+	if (registry.players.entities.size() == 0) return;
+	Entity player_entity = registry.players.entities[0];
+	Player& player = registry.players.get(player_entity);
+
+	player.name = data["name"];
+	player.cooldown = data["cooldown"];
+	player.health = data["health"];
+	player.damage_cooldown = data["damage_cooldown"];
+	player.consumed_potion = data["consumed_potion"];
+	player.speed_multiplier = data["speed_multiplier"];
+	player.effect_multiplier = data["effect_multiplier"];
+	player.defense = data["defense"];
+
+	for (const auto& effect : data["active_effects"]) {
+		player.active_effects.push_back(deserializeItem(effect));
+	}
+}

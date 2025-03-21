@@ -972,7 +972,10 @@ void WorldSystem::updatePlayerState(Entity& player, Motion& player_motion, float
 	}
 
 	// update player's damage cooldown
-	if (player_comp.damage_cooldown >= 0) player_comp.damage_cooldown -= elapsed_ms_since_last_update;
+	if (player_comp.damage_cooldown > 0) player_comp.damage_cooldown -= elapsed_ms_since_last_update;
+	else {
+		player_comp.damage_cooldown = 0.f;
+	}
 
 	// update player's active effects
 	updateConsumedPotions(elapsed_ms_since_last_update);
