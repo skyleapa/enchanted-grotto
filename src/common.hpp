@@ -211,12 +211,17 @@ enum class ItemType
 	PETRIFIED_BONE = MUMMY_BANDAGES + 1,
 	HEALING_LILY = PETRIFIED_BONE + 1,
 	CACTUS_PULP = HEALING_LILY + 1,
-	CACTUS_EXTRACT = CACTUS_PULP + 1,
-	GLOWSHROOM = CACTUS_EXTRACT + 1,
-	DOOMSPORE = GLOWSHROOM + 1,
-	CRYSTAL_SHARD = DOOMSPORE + 1,
+	GLOWSHROOM = CACTUS_PULP + 1,
+	DOOMCAP = GLOWSHROOM + 1,
+	CRYSTAL_SHARD = DOOMCAP + 1,
 	QUARTZMELON = CRYSTAL_SHARD + 1,
-	CRYSTABLOOM = QUARTZMELON + 1
+	CRYSTABLOOM = QUARTZMELON + 1,
+	STORM_SAP = CRYSTABLOOM + 1,
+	CACTUS_EXTRACT = STORM_SAP + 1,
+	SWIFT_POWDER = CACTUS_EXTRACT + 1,
+	BONE_DUST = SWIFT_POWDER + 1,
+	CRYSTAL_MEPH = BONE_DUST + 1,
+	GLOWSPORE = CRYSTAL_MEPH + 1
 };
 
 // Potion Types and names
@@ -437,14 +442,14 @@ const std::vector<Recipe> RECIPES = {
 		{
 			{ ItemType::POTION, 1, 0.0f },        // TODO:1x damage potion
 			{ ItemType::BLIGHTLEAF, 2, 0.0f },    // ingredients
-			{ ItemType::DOOMSPORE, 2, 0.0f }      // ingredients
+			{ ItemType::DOOMCAP, 2, 0.0f }      // ingredients
 		},
 		{
 			{ ActionType::MODIFY_HEAT, 50 },  // medium heat
 			{ ActionType::ADD_INGREDIENT, 0 }, // add damage potion
 			{ ActionType::ADD_INGREDIENT, 1 }, // add blightleaf
 			{ ActionType::WAIT, 1 },          // wait 5 seconds
-			{ ActionType::ADD_INGREDIENT, 2 }, // add doomspores
+			{ ActionType::ADD_INGREDIENT, 2 }, // add doomcap
 			{ ActionType::STIR, 3 },          // stir 3 times
 			{ ActionType::WAIT, 5 }           // wait 25 seconds
 		}

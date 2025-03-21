@@ -327,12 +327,11 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 			registry.remove_all_components_of(ammo_entity);
 			SoundSystem::playEnemyOuchSound((int)SOUND_CHANNEL::GENERAL, 0); // play enemy ouch sound
 			if (enemy.health <= 0) {
-				// using can_move for now since ent cannot move, but mummy can
-				if (enemy.can_move == 0) {
-					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::SAP, 1, false);
+				if (enemy.name == "Ent") {
+					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::STORM_BARK, 1, false);
 				}
-				else if (enemy.can_move == 1) {
-					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MAGICAL_DUST, 1, false);
+				else if (enemy.name == "Mummy") {
+					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MUMMY_BANDAGES, 1, false);
 				}
 				if (screen.tutorial_state == (int)TUTORIAL::ATTACK_ENEMY) {
 					screen.tutorial_step_complete = true;
