@@ -98,6 +98,13 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 			"data/fonts/OpenSans-Regular.ttf"
 		};
 
+		// Add Caveat font for the recipe book
+		std::vector<std::string> caveat_font_paths = {
+			"./data/fonts/Caveat-VariableFont_wght.ttf",
+			"../data/fonts/Caveat-VariableFont_wght.ttf",
+			"data/fonts/Caveat-VariableFont_wght.ttf"
+		};
+
 		bool font_loaded = false;
 		for (const auto& path : font_paths) {
 			std::cout << "UISystem::init - Attempting to load font from: " << path << std::endl;
@@ -107,6 +114,15 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 				break;
 			}
 			std::cerr << "UISystem::init - Failed to load font from: " << path << std::endl;
+		}
+
+		for (const auto& path : caveat_font_paths) {
+			std::cout << "UISystem::init - Attempting to load Caveat font from: " << path << std::endl;
+			if (Rml::LoadFontFace(path)) {
+				std::cout << "UISystem::init - Successfully loaded Caveat font from: " << path << std::endl;
+				break;
+			}
+			std::cerr << "UISystem::init - Failed to load Caveat font from: " << path << std::endl;
 		}
 
 		if (!font_loaded) {
@@ -461,6 +477,22 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 		// Check for an inventory click
 		if (slotId != -1) {
 			selectInventorySlot(slotId);
+		}
+		
+		// Check for recipe book clicks
+		if (isRecipeBookOpen()) {
+		    if (id == "close-button") {
+		        closeRecipeBook();
+		        return;
+		    } else if (id == "left-arrow") {
+		        navigateRecipeBook(false);
+		        SoundSystem::playPageFlipSound((int)SOUND_CHANNEL::MENU, 0);
+		        return;
+		    } else if (id == "right-arrow") {
+		        navigateRecipeBook(true);
+		        SoundSystem::playPageFlipSound((int)SOUND_CHANNEL::MENU, 0);
+		        return;
+		    }
 		}
 
 		// Check for ladle/bottle pickup
@@ -1439,4 +1471,405 @@ void UISystem::updateHealthBar() {
 	} catch (const std::exception& e) {
 		std::cerr << "Exception in UISystem::updateHealthBar: " << e.what() << std::endl;
 	}
+}
+
+bool UISystem::openRecipeBook(Entity recipe_book)
+{
+    // Already open
+    if (m_recipe_book_document != nullptr) {
+        if (openedRecipeBook == recipe_book) {
+            return true;
+        } else {
+            closeRecipeBook(); 
+        }
+    }
+    
+    setOpenedRecipeBook(recipe_book);
+    
+    try {
+        std::string recipe_book_rml = R"(
+            <rml>
+            <head>
+                <style>
+                    body {
+                        width: 100%;
+                        height: 100%;
+                    }
+                    .recipe-book {
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        width: 1000px;
+                        height: 650px;
+                        decorator: image("recipe_book.png" flip-vertical fill);
+                    }
+                    .close-button {
+                        position: absolute;
+                        top: 20px;
+                        left: 20px;
+                        width: 40px;
+                        height: 40px;
+                        text-align: center;
+                        background-color: #d9a66f;
+                        border-width: 3px;
+                        border-color: #5c3e23;
+                        border-radius: 20px;
+                        padding-top: 5px;
+                        box-sizing: border-box;
+                        cursor: pointer;
+                        font-size: 20px;
+                        font-weight: bold;
+                        color: #5c3e23;
+                        transition: background-color 0.2s;
+						font-family: Caveat;
+                    }
+                    .close-button:hover {
+                        background-color: #c1834e;
+                    }
+                    .page-navigation {
+                        position: absolute;
+                        bottom: 30px;
+                        width: 100%;
+                        text-align: center;
+                    }
+                    .page-button {
+                        display: inline-block;
+                        background-color: #d9a66f;
+                        border-width: 3px;
+                        border-color: #5c3e23;
+                        border-radius: 20px;
+                        padding: 8px 20px;
+                        margin: 0 15px;
+                        cursor: pointer;
+                        font-size: 18px;
+                        font-weight: bold;
+                        color: #5c3e23;
+                        font-family: Caveat;
+                    }
+                    .left-page {
+                        position: absolute;
+                        top: 90px;
+                        left: 120px;
+                        width: 300px;
+                        height: 500px;
+                        overflow-y: auto;
+                        font-size: 16px;
+                        color: black;
+                        font-family: Caveat;
+                        padding-right: 10px;
+                    }
+                    .right-page {
+                        position: absolute;
+                        top: 90px;
+                        right: 120px;
+                        width: 300px;
+                        height: 500px;
+                        overflow-y: auto;
+                        font-size: 18px;
+                        color: black;
+                        font-family: Caveat;
+                        padding-right: 10px;
+                    }
+                    .potion-title {
+                        text-align: center;
+                        font-weight: bold;
+                        font-size: 40px;
+                        color: rgb(185, 30, 30);
+                        margin-bottom: 15px;
+                        font-family: Caveat;
+                    }
+                    .potion-description {
+                        margin-bottom: 15px;
+                        font-size: 18px;
+                        font-weight: bold;
+                        font-family: Caveat;
+                    }
+                    .ingredients-title {
+                        font-weight: bold;
+                        margin-top: 20px;
+                        margin-bottom: 5px;
+                        font-size: 20px;
+                        font-weight: bold;
+                        font-family: Caveat;
+                    }
+                    .ingredients-list {
+                        font-size: 18px;
+                        font-family: Caveat;
+                    }
+                    .recipe-steps-title {
+                        font-weight: bold;
+                        margin-bottom: 10px;
+                        font-size: 24px;
+                        font-family: Caveat;
+                    }
+                    .recipe-steps {
+                        font-size: 26px;
+                        font-family: Caveat;
+                    }
+                    .potion-quality {
+                        font-weight: bold;
+                        text-align: center;
+                        font-size: 20px;
+                        font-family: Caveat;
+						left: 50%;
+						margin-left: 17%;
+                    }
+                    .potion-color-container {
+                        margin-top: 15px;
+                        margin-left: 35%;
+                    }
+                    .potion-color {
+                        width: 90px;
+                        height: 90px;
+						margin-top: 15px;
+                        border-radius: 50px;
+                        border-width: 2px;
+                        border-color: #333;
+						display: inline-block;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="recipe-book">
+                    <div class="close-button" id="close-button" onclick="closeBook">X</div>
+                    <div class="left-page" id="left-page"></div>
+                    <div class="right-page" id="right-page"></div>
+                    <div class="page-navigation">
+                        <div class="page-button" id="left-arrow" onclick="prevPage">Previous Recipe</div>
+                        <div class="page-button" id="right-arrow" onclick="nextPage">Next Recipe</div>
+                    </div>
+                </div>
+            </body>
+            </rml>
+        )";
+        
+        m_recipe_book_document = m_context->LoadDocumentFromMemory(recipe_book_rml.c_str());
+        if (!m_recipe_book_document) {
+            std::cerr << "UISystem::openRecipeBook - Failed to create recipe book document" << std::endl;
+            return false;
+        }
+        
+        updateRecipeBookUI();
+        
+        m_recipe_book_document->Show();
+        
+        SoundSystem::playPageFlipSound((int)SOUND_CHANNEL::MENU, 0);
+        
+        return true;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Exception in UISystem::openRecipeBook: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+void UISystem::updateRecipeBookUI()
+{
+    if (!m_initialized || !m_context || !m_recipe_book_document)
+        return;
+    
+    // Update left page (potion info and ingredients)
+    if (Rml::Element* leftPage = m_recipe_book_document->GetElementById("left-page")) {
+        leftPage->SetInnerRML(getRecipeHtml(current_recipe_index));
+    }
+    
+    // Update right page (recipe steps)
+    if (Rml::Element* rightPage = m_recipe_book_document->GetElementById("right-page")) {
+        rightPage->SetInnerRML(getRecipeStepsText(RECIPES[current_recipe_index]));
+    }
+}
+
+void UISystem::closeRecipeBook()
+{
+    if (m_recipe_book_document) {
+        m_recipe_book_document->Close();
+        m_recipe_book_document = nullptr;
+        
+        SoundSystem::playPageFlipSound((int)SOUND_CHANNEL::MENU, 0);
+    }
+    
+    openedRecipeBook = {};
+}
+
+bool UISystem::isRecipeBookOpen()
+{
+    return m_recipe_book_document != nullptr;
+}
+
+Entity UISystem::getOpenedRecipeBook()
+{
+    return openedRecipeBook;
+}
+
+void UISystem::setOpenedRecipeBook(Entity new_recipe_book)
+{
+    openedRecipeBook = new_recipe_book;
+}
+
+void UISystem::navigateRecipeBook(bool next_page)
+{
+    if (next_page) {
+        current_recipe_index = (current_recipe_index + 1) % RECIPES.size();
+    } else {
+        current_recipe_index = (current_recipe_index - 1 + RECIPES.size()) % RECIPES.size();
+    }
+    
+    updateRecipeBookUI();
+}
+
+std::string UISystem::getRecipeHtml(int recipe_index)
+{
+	// TODO: Can add undiscovered recipe logic here for m4
+    if (recipe_index < 0 || recipe_index >= RECIPES.size())
+    {
+        return "<p>Invalid recipe index</p>";
+    }
+    
+    const Recipe& recipe = RECIPES[recipe_index];
+    std::string effect_name = EFFECT_NAMES.at(recipe.effect);
+
+    std::string html;
+    html += "<div class='potion-title'>" + effect_name + "</div><br />";
+
+    std::string description;
+    switch (recipe.effect)
+    {
+        case PotionEffect::HEALTH:
+            description = "A basic potion that will replenish your health.";
+            break;
+        case PotionEffect::SPEED:
+            description = "Increases your movement speed for a limited time.";
+            break;
+        case PotionEffect::DAMAGE:
+            description = "A damaging potion that can be thrown at enemies.";
+            break;
+        case PotionEffect::MOLOTOV:
+            description = "Creates a burning area when thrown.";
+            break;
+        case PotionEffect::REGEN:
+            description = "Gradually restores health over time.";
+            break;
+        case PotionEffect::TENACITY:
+            description = "Increases your inventory capacity.";
+            break;
+        case PotionEffect::POISON:
+            description = "Creates a poisonous area when thrown.";
+            break;
+        case PotionEffect::RESISTANCE:
+            description = "Reduces damage taken for a limited time.";
+            break;
+        case PotionEffect::SATURATION:
+            description = "Increases the potency of other potions.";
+            break;
+        case PotionEffect::ALKALESCENCE:
+            description = "Reacts with acidic substances.";
+            break;
+        case PotionEffect::CLARITY:
+            description = "Reveals hidden objects or ingredients.";
+            break;
+        case PotionEffect::REJUVENATION:
+            description = "The ultimate healing potion.";
+            break;
+        default:
+            description = "A mysterious potion with unknown effects.";
+            break;
+    }
+    
+    html += "<div class='potion-description'>" + description + "</div><br /><br />";
+
+    html += "<div class='ingredients-title'>Ingredients:</div><br />";
+    html += "<div class='ingredients-list'>" + getRecipeIngredientsText(recipe) + "</div><br /><br />";
+
+    html += "<div class='potion-quality'>PERFECT QUALITY COLOUR</div><br />";
+    
+    vec3 potion_color = recipe.finalPotionColor;
+    std::string color_style = "background-color: rgb(" + 
+        std::to_string(int(potion_color.x)) + "," + 
+        std::to_string(int(potion_color.y)) + "," + 
+        std::to_string(int(potion_color.z)) + ");";
+    
+    html += "<div class='potion-color-container'><div class='potion-color' style='" + color_style + "'></div></div>";
+
+    return html;
+}
+
+std::string UISystem::getRecipeStepsText(const Recipe& recipe)
+{
+    std::string html = "<div class='recipe-steps-title'>RECIPE:</div><br />";
+    html += "<div class='recipe-steps'>";
+    
+    // Steps with numbering
+    for (size_t i = 0; i < recipe.steps.size(); i++) {
+        const auto& step = recipe.steps[i];
+		
+        html += "<div>" + std::to_string(i + 1) + ". ";
+        
+        switch (step.type)
+        {
+            case ActionType::MODIFY_HEAT:
+            {
+                if (step.value <= 33)
+                    html += "Turn heat to low";
+                else if (step.value <= 66)
+                    html += "Turn heat to medium";
+                else
+                    html += "Turn heat to high";
+                break;
+            }
+            case ActionType::WAIT:
+            {
+                html += "Wait " + std::to_string(step.value * 5) + " seconds";
+                break;
+            }
+            case ActionType::ADD_INGREDIENT:
+            {
+                if (step.value < recipe.ingredients.size())
+                {
+                    const auto& ingredient = recipe.ingredients[step.value];
+                    std::string name = getItemName(ingredient.type);
+                    
+                    if (ingredient.type == ItemType::POTION)
+                        html += "Insert " + std::to_string(ingredient.amount) + " " + name;
+                    else
+                        html += "Add " + std::to_string(ingredient.amount) + " " + name;
+                }
+                break;
+            }
+            case ActionType::STIR:
+            {
+                html += "Stir " + std::to_string(step.value) + " times";
+                break;
+            }
+        }
+
+        html += "</div><br />";
+    }
+
+    html += "<div>" + std::to_string(recipe.steps.size() + 1) + ". Bottle</div>";
+    html += "</div>";
+    
+    return html;
+}
+
+std::string UISystem::getRecipeIngredientsText(const Recipe& recipe)
+{
+    std::string text;
+
+    for (const auto& ingredient : recipe.ingredients) {
+        std::string name = getItemName(ingredient.type);
+        text += std::to_string(ingredient.amount) + "x " + name;
+        text += "<br />";
+    }
+
+    return text;
+}
+
+std::string UISystem::getItemName(ItemType type)
+{
+    if (ITEM_INFO.find(type) != ITEM_INFO.end()) {
+        return ITEM_INFO.at(type).name;
+    }
+    
+    return "Unknown Item";
 }

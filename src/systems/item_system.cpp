@@ -1,4 +1,5 @@
 #include "item_system.hpp"
+#include "ui_system.hpp"
 #include "world_init.hpp"
 #include <iostream>
 #include <fstream>
@@ -375,6 +376,11 @@ bool ItemSystem::saveGameState() {
 		data["player_health"] = registry.players.components[0].health;
 	}
 	
+	// Save the current recipe book index
+	if (UISystem::s_instance != nullptr) {
+	    data["recipe_book_index"] = UISystem::s_instance->current_recipe_index;
+	}
+	
 	try {
 		std::string save_path = game_state_path(GAME_STATE_FILE);
 		std::ofstream file(save_path);
@@ -431,6 +437,10 @@ bool ItemSystem::loadGameState() {
 
 		if (!data["player_health"].empty()) {
 			registry.players.get(player).health = data["player_health"];
+		}
+		
+		if (data.contains("recipe_book_index") && UISystem::s_instance != nullptr) {
+		    UISystem::s_instance->current_recipe_index = data["recipe_book_index"];
 		}
 		
 		return true;

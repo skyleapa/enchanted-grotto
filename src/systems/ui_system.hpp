@@ -63,6 +63,17 @@ public:
     void setOpenedCauldron(Entity new_cauldron);
     void cauldronDragUpdate(bool isDown);
  
+    // Recipe book methods
+    bool openRecipeBook(Entity recipe_book);
+    void updateRecipeBookUI();
+    void closeRecipeBook();
+    bool isRecipeBookOpen();
+    Entity getOpenedRecipeBook();
+    void setOpenedRecipeBook(Entity new_recipe_book);
+    void navigateRecipeBook(bool next_page);
+    
+    // Recipe book index for saving/loading
+    int current_recipe_index = 0;
 
     bool openMortarPestle(Entity mortar);
     bool isMortarPestleOpen();
@@ -129,6 +140,10 @@ private:
     Rml::Element* heldLadle = nullptr;
     Rml::Element* heldBottle = nullptr;
 
+    // Recipe book variables
+    Rml::ElementDocument* m_recipe_book_document = nullptr;
+    Entity openedRecipeBook;
+
     // Mortar & Pestle variables
     Rml::ElementDocument* m_mortar_document = nullptr;
     Entity openedMortar;
@@ -184,4 +199,10 @@ private:
     Rml::ElementDocument* m_healthbar_document = nullptr;
     const std::string PESTLE_LEFT_PX = "800px";
     const std::string PESTLE_TOP_PX = "300px";
+    
+    // Helper functions for recipe book
+    std::string getRecipeHtml(int recipe_index);
+    std::string getRecipeStepsText(const Recipe& recipe);
+    std::string getRecipeIngredientsText(const Recipe& recipe);
+    std::string getItemName(ItemType type);
 };
