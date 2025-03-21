@@ -54,7 +54,7 @@ public:
 
 	void handle_item_respawn(float elapsed_ms);
 
-	void updatePlayerWalkAndAnimation(Entity& player, Motion& player_motion, float elapsed_ms_since_last_update);
+	void updatePlayerState(Entity& player, Motion& player_motion, float elapsed_ms_since_last_update);
 
 	// Set reference to UI system
 	void setUISystem(UISystem* ui_system) { m_ui_system = ui_system; }
@@ -64,6 +64,12 @@ public:
 	void updateThrownAmmo(float elapsed_ms_since_last_update);
 
 	void updateFPS(float elapsed_ms);
+
+	// Potion methods
+	void updateConsumedPotions(float elapsed_ms_since_last_update);
+	bool consumePotion();
+	void addPotionEffect(Potion& potion, Entity player);
+	void removePotionEffect(Potion& potion, Entity player);
 private:
 
 	float mouse_pos_x = 0.0f;

@@ -362,7 +362,7 @@ void PotionSystem::updatePotion(Entity cauldron) {
 		// Assign based on formulas
 		potion.quality = max(steps - (dist.first + dist.second) * POTION_DIFFICULTY, 0.f) / steps;
 		potion.effectValue = min_potency + (recipe.highestQualityEffect - min_potency) * potion.quality;
-		potion.duration = min_duration + (recipe.highestQualityDuration - min_duration) * potion.quality;
+		potion.duration = min_duration + (recipe.highestQualityDuration - min_duration) * potion.quality * 1000.f; // in milliseconds
 		potion.color = interpolateColor(DEFAULT_COLOR, recipe.finalPotionColor, potion.quality);
 	}
 	else if (ci.items.size() > 0) {

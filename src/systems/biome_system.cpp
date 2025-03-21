@@ -72,7 +72,7 @@ void BiomeSystem::step(float elapsed_ms_since_last_update) {
 void BiomeSystem::switchBiome(int biome) {
 	std::vector<Entity> to_remove;
 	for (auto entity : registry.motions.entities) {
-		if (registry.players.has(entity) || registry.inventories.has(entity)) continue;
+		if (registry.players.has(entity) || registry.inventories.has(entity) || registry.potions.has(entity)) continue; // don't lose potion effects
 
 		// don't delete any render requests marked as invisible
 		if (registry.renderRequests.has(entity)) {

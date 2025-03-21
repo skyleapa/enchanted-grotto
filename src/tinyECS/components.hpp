@@ -11,6 +11,9 @@ struct Player
 	float cooldown = 0.f; // defaults to 0, but when ammo is tossed, will have a 1000 ms cooldown
 	float health = PLAYER_MAX_HEALTH;
 	float damage_cooldown = PLAYER_DAMAGE_COOLDOWN; // cooldown before player can take damage again to prevent insta death
+	std::vector<Entity> active_effects = {}; // list of active consumed potions
+	bool consumed_potion = false;
+	float speed_boost = 0.f;
 };
 
 // All data relevant to the shape and motion of entities
@@ -135,7 +138,7 @@ struct Inventory
 	std::vector<Entity> items;
 	int capacity;
 	bool isFull;
-	int selection = 0; // index that corresponds to the selected item indexed in items
+	int selection = 0; // index that corresponds to the selected item indexed in items, zero-indexed
 };
 
 struct Cauldron

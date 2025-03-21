@@ -96,9 +96,10 @@ private:
     // State tracking
     bool m_initialized;
 
-    // Mouse tracking
+    // Mouse and key tracking
     double mouse_pos_x;
     double mouse_pos_y;
+    bool shift_key_pressed = false;
 
     // Convert GLFW key to RmlUi key
     Rml::Input::KeyIdentifier convertKey(int key);

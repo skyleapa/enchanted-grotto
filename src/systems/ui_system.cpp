@@ -409,6 +409,16 @@ void UISystem::handleKeyEvent(int key, int scancode, int action, int mods)
 		int slot = key - GLFW_KEY_1; // Convert key to 0-based slot index
 		selectInventorySlot(slot);
 	}
+
+	// Check for shift key press
+	if ((key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT)) {
+		if (action == GLFW_PRESS) {
+			shift_key_pressed = true;
+		}
+		else if (action == GLFW_RELEASE) {
+			shift_key_pressed = false;
+		}
+	}
 }
 
 void UISystem::handleTextInput(unsigned int codepoint)
@@ -576,12 +586,12 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 				Inventory& mortarInventory = registry.inventories.get(getOpenedMortarPestle());
 				if (!mortarInventory.items.empty()) {
 					Entity ingredient = mortarInventory.items[0];
-		
+
 					// Check it's fully grinded and pickable
 					if (registry.items.has(ingredient) && registry.items.get(ingredient).isCollectable
-					&& heldPestle == nullptr) {
+						&& heldPestle == nullptr) {
 						Entity player = registry.players.entities[0];
-		
+
 						// Move to inventory
 						ItemSystem::addItemToInventory(player, ingredient);
 						std::cout << "Picked up ingredient from mortar" << std::endl;
@@ -595,6 +605,19 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 				break;
 			}
 		} while (false);
+	}
+	// Check for consuming potion in inventory
+	if ((action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_RIGHT) || (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT && shift_key_pressed)) {
+		Rml::Element* hovered = m_context->GetHoverElement();
+		if (!hovered) return;
+
+		std::string id = hovered->GetId();
+		int slotId = getSlotFromId(id);
+
+		if (slotId != -1 && registry.players.entities.size() > 0) {
+			selectInventorySlot(slotId);
+			registry.players.components[0].consumed_potion = true;
+		}
 	}
 
 	// Pass the event to RmlUi
@@ -1245,15 +1268,15 @@ void UISystem::updateFollowMouse() {
 }
 
 bool UISystem::openMortarPestle(Entity mortar) {
-    if (!m_initialized || !m_context) return false;
-    if (m_mortar_document) {
-        m_mortar_document->Show();
-        return true;
-    }
+	if (!m_initialized || !m_context) return false;
+	if (m_mortar_document) {
+		m_mortar_document->Show();
+		return true;
+	}
 
-    try {
-        std::cout << "UISystem::openMortarPestle - Creating mortar & pestle UI" << std::endl;
-        std::string mortar_rml = R"(
+	try {
+		std::cout << "UISystem::openMortarPestle - Creating mortar & pestle UI" << std::endl;
+		std::string mortar_rml = R"(
         <rml>
         <head>
             <style>
@@ -1306,25 +1329,25 @@ bool UISystem::openMortarPestle(Entity mortar) {
         </rml>
         )";
 
-        m_mortar_document = m_context->LoadDocumentFromMemory(mortar_rml.c_str());
-        if (!m_mortar_document) {
-            std::cerr << "UISystem::openMortarPestle - Failed to open UI" << std::endl;
-            return false;
-        }
+		m_mortar_document = m_context->LoadDocumentFromMemory(mortar_rml.c_str());
+		if (!m_mortar_document) {
+			std::cerr << "UISystem::openMortarPestle - Failed to open UI" << std::endl;
+			return false;
+		}
 
-        DragListener::RegisterDragDropElement(m_mortar_document->GetElementById("mortar"));
+		DragListener::RegisterDragDropElement(m_mortar_document->GetElementById("mortar"));
 		DragListener::RegisterDragDropElement(m_mortar_document->GetElementById("mortar_border"));
-        DragListener::RegisterDraggableElement(m_mortar_document->GetElementById("pestle"));
+		DragListener::RegisterDraggableElement(m_mortar_document->GetElementById("pestle"));
 
-        m_mortar_document->Show();
-        openedMortar = mortar;
-        std::cout << "UISystem::openMortarPestle - Mortar & Pestle UI created successfully" << std::endl;
-        return true;
-    }
-    catch (const std::exception& e) {
-        std::cerr << "Exception in UISystem::openMortarPestle: " << e.what() << std::endl;
-        return false;
-    }
+		m_mortar_document->Show();
+		openedMortar = mortar;
+		std::cout << "UISystem::openMortarPestle - Mortar & Pestle UI created successfully" << std::endl;
+		return true;
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::openMortarPestle: " << e.what() << std::endl;
+		return false;
+	}
 }
 
 bool UISystem::isMortarPestleOpen() {
@@ -1428,13 +1451,16 @@ void UISystem::updateHealthBar() {
 
 		if (hp_percentage >= 0.5) {
 			healthbar_element->SetAttribute("class", "vertical healthy");
-		} else if (hp_percentage >= 0.2) {
+		}
+		else if (hp_percentage >= 0.2) {
 			healthbar_element->SetAttribute("class", "vertical injured");
-		} else {
+		}
+		else {
 			healthbar_element->SetAttribute("class", "vertical dying");
 		}
-		
-	} catch (const std::exception& e) {
+
+	}
+	catch (const std::exception& e) {
 		std::cerr << "Exception in UISystem::updateHealthBar: " << e.what() << std::endl;
 	}
 }
