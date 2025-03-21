@@ -13,7 +13,9 @@ struct Player
 	float damage_cooldown = PLAYER_DAMAGE_COOLDOWN; // cooldown before player can take damage again to prevent insta death
 	std::vector<Entity> active_effects = {}; // list of active consumed potions
 	bool consumed_potion = false;
-	float speed_boost = 0.f;
+	float speed_multiplier = 1.f;
+	float effect_multiplier = 1.f;
+	float defense = 1.f;
 };
 
 // All data relevant to the shape and motion of entities
@@ -589,4 +591,9 @@ const std::unordered_map<ItemType, ItemInfo> ITEM_INFO = {
 // damage flash only to be applied to player and enemies
 struct DamageFlash {
 	float flash_value = 1.f; // defaults to 0 for no flash, and 1 for red tint
+};
+
+struct Regeneration {
+	float heal_amount = 0.f;
+	float timer = REGEN_TIMER;
 };

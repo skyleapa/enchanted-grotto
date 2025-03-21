@@ -603,6 +603,7 @@ const float STIR_PENALTY = 0.3f;
 const float WAIT_PENALTY = 0.2f;
 const float HEAT_PENALTY = 0.01f; // Heat is measured 1-100
 
+const float REGEN_TIMER = 1000.f;
 enum class TUTORIAL {
 	WELCOME_SCREEN = 0,
 	MOVEMENT = WELCOME_SCREEN + 1,
@@ -637,10 +638,9 @@ const std::vector<PotionEffect> consumable_potions = {
 	PotionEffect::SPEED,
 	PotionEffect::HEALTH,
 	PotionEffect::REGEN,
-	PotionEffect::TENACITY,
+	// PotionEffect::TENACITY, // to be implemented in M4
 	PotionEffect::RESISTANCE,
 	PotionEffect::SATURATION,
-	PotionEffect::REJUVENATION
 };
 
 #ifndef M_PI

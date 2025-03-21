@@ -323,7 +323,7 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 
 			Ammo& ammo = registry.ammo.get(ammo_entity);
 			Enemy& enemy = registry.enemies.get(enemy_entity);
-			enemy.health -= ammo.damage;
+			enemy.health -= ammo.damage * registry.players.get(player_entity).effect_multiplier;
 			registry.remove_all_components_of(ammo_entity);
 			SoundSystem::playEnemyOuchSound((int)SOUND_CHANNEL::GENERAL, 0); // play enemy ouch sound
 			if (enemy.health <= 0) {
@@ -359,7 +359,7 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 
 			// player flashes red and takes damage equal to enemy's attack
 			if (!registry.damageFlashes.has(player_entity)) registry.damageFlashes.emplace(player_entity);
-			player.health -= registry.enemies.get(enemy_entity).attack_damage;
+			player.health -= (registry.enemies.get(enemy_entity).attack_damage * player.defense);
 			player.damage_cooldown = PLAYER_DAMAGE_COOLDOWN;
 
 			// if player dies, reload from most recent save and respawn in grotto
@@ -956,7 +956,7 @@ void WorldSystem::updatePlayerState(Entity& player, Motion& player_motion, float
 	}
 
 	// add any active speed boost
-	if (player_comp.speed_boost != 0) player_motion.velocity *= player_comp.speed_boost;
+	player_motion.velocity *= player_comp.speed_multiplier;
 
 	// move the character
 	player_motion.previous_position = player_motion.position;
@@ -976,6 +976,17 @@ void WorldSystem::updatePlayerState(Entity& player, Motion& player_motion, float
 
 	// update player's active effects
 	updateConsumedPotions(elapsed_ms_since_last_update);
+
+	// update regen timer
+	if (registry.regen.has(player)) {
+		Regeneration& regen = registry.regen.get(player);
+		regen.timer -= elapsed_ms_since_last_update;
+		if (regen.timer <= 0) {
+			player_comp.health = std::min(player_comp.health + regen.heal_amount, PLAYER_MAX_HEALTH);
+			regen.timer = REGEN_TIMER;
+		}
+	}
+
 }
 
 bool WorldSystem::throwAmmo(vec2 target) {
@@ -1109,7 +1120,7 @@ bool WorldSystem::consumePotion() {
 		std::cout << "selected potion is not consumable" << std::endl;
 		return false;
 	}
-	
+
 	// replace any potion of the same type currently active with the new one
 	Player& player = registry.players.get(player_entity);
 	for (int i = 0; i < player.active_effects.size(); i++) {
@@ -1145,17 +1156,56 @@ bool WorldSystem::consumePotion() {
 }
 
 void WorldSystem::addPotionEffect(Potion& potion, Entity player) {
+	Player& player_comp = registry.players.get(player);
 
-	if (potion.effect == PotionEffect::SPEED) {
-		registry.players.get(player).speed_boost = potion.effectValue;
+	switch (potion.effect) {
+	case PotionEffect::SPEED: {
+		player_comp.speed_multiplier = player_comp.effect_multiplier * potion.effectValue; // needs to be set separately because we reset velocity every time in updatePlayerState
+		break;
 	}
-	// add more potions
+	case PotionEffect::HEALTH: {
+		player_comp.health = std::min(player_comp.health + player_comp.effect_multiplier * potion.effectValue, PLAYER_MAX_HEALTH);
+		break;
+	}
+	case PotionEffect::REGEN: {
+		Regeneration& regen = registry.regen.emplace(player);
+		regen.heal_amount = potion.effectValue * player_comp.effect_multiplier;
+		regen.timer = 1000.f; // regen every second
+		break;
+	}
+	case PotionEffect::RESISTANCE: {
+		player_comp.defense = 1 - (player_comp.effect_multiplier * potion.effectValue); // percent of damage reduced
+		break;
+	}
+	case PotionEffect::SATURATION: {
+		player_comp.effect_multiplier = potion.effectValue;
+		break;
+	}
+	default: {
+		break;
+	}
+	}
 }
 
 void WorldSystem::removePotionEffect(Potion& potion, Entity player) {
-	if (potion.effect == PotionEffect::SPEED) {
-		if (registry.motions.has(player)) {
-			registry.players.get(player).speed_boost = 0;
+	Player& player_comp = registry.players.get(player);
+
+	switch (potion.effect) {
+	case PotionEffect::SPEED:
+		player_comp.speed_multiplier = 1.f;
+		break;
+	case PotionEffect::REGEN:
+		if (registry.regen.has(player)) {
+			registry.regen.remove(player);
 		}
+		break;
+	case PotionEffect::RESISTANCE:
+		player_comp.defense = 1.f;
+		break;
+	case PotionEffect::SATURATION:
+		player_comp.effect_multiplier = 1.f;
+		break;
+	default:
+		break;
 	}
 }
