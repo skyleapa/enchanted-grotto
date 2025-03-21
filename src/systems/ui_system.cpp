@@ -478,21 +478,23 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 		if (slotId != -1) {
 			selectInventorySlot(slotId);
 		}
-		
+
 		// Check for recipe book clicks
 		if (isRecipeBookOpen()) {
-		    if (id == "close-button") {
-		        closeRecipeBook();
-		        return;
-		    } else if (id == "left-arrow") {
-		        navigateRecipeBook(false);
-		        SoundSystem::playPageFlipSound((int)SOUND_CHANNEL::MENU, 0);
-		        return;
-		    } else if (id == "right-arrow") {
-		        navigateRecipeBook(true);
-		        SoundSystem::playPageFlipSound((int)SOUND_CHANNEL::MENU, 0);
-		        return;
-		    }
+			if (id == "close-button") {
+				closeRecipeBook();
+				return;
+			}
+			else if (id == "left-arrow") {
+				navigateRecipeBook(false);
+				SoundSystem::playPageFlipSound((int)SOUND_CHANNEL::MENU, 0);
+				return;
+			}
+			else if (id == "right-arrow") {
+				navigateRecipeBook(true);
+				SoundSystem::playPageFlipSound((int)SOUND_CHANNEL::MENU, 0);
+				return;
+			}
 		}
 
 		// Check for ladle/bottle pickup
@@ -608,12 +610,12 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 				Inventory& mortarInventory = registry.inventories.get(getOpenedMortarPestle());
 				if (!mortarInventory.items.empty()) {
 					Entity ingredient = mortarInventory.items[0];
-		
+
 					// Check it's fully grinded and pickable
 					if (registry.items.has(ingredient) && registry.items.get(ingredient).isCollectable
-					&& heldPestle == nullptr) {
+						&& heldPestle == nullptr) {
 						Entity player = registry.players.entities[0];
-		
+
 						// Move to inventory
 						ItemSystem::addItemToInventory(player, ingredient);
 						std::cout << "Picked up ingredient from mortar" << std::endl;
@@ -1279,15 +1281,15 @@ void UISystem::updateFollowMouse() {
 }
 
 bool UISystem::openMortarPestle(Entity mortar) {
-    if (!m_initialized || !m_context) return false;
-    if (m_mortar_document) {
-        m_mortar_document->Show();
-        return true;
-    }
+	if (!m_initialized || !m_context) return false;
+	if (m_mortar_document) {
+		m_mortar_document->Show();
+		return true;
+	}
 
-    try {
-        std::cout << "UISystem::openMortarPestle - Creating mortar & pestle UI" << std::endl;
-        std::string mortar_rml = R"(
+	try {
+		std::cout << "UISystem::openMortarPestle - Creating mortar & pestle UI" << std::endl;
+		std::string mortar_rml = R"(
         <rml>
         <head>
             <style>
@@ -1340,25 +1342,25 @@ bool UISystem::openMortarPestle(Entity mortar) {
         </rml>
         )";
 
-        m_mortar_document = m_context->LoadDocumentFromMemory(mortar_rml.c_str());
-        if (!m_mortar_document) {
-            std::cerr << "UISystem::openMortarPestle - Failed to open UI" << std::endl;
-            return false;
-        }
+		m_mortar_document = m_context->LoadDocumentFromMemory(mortar_rml.c_str());
+		if (!m_mortar_document) {
+			std::cerr << "UISystem::openMortarPestle - Failed to open UI" << std::endl;
+			return false;
+		}
 
-        DragListener::RegisterDragDropElement(m_mortar_document->GetElementById("mortar"));
+		DragListener::RegisterDragDropElement(m_mortar_document->GetElementById("mortar"));
 		DragListener::RegisterDragDropElement(m_mortar_document->GetElementById("mortar_border"));
-        DragListener::RegisterDraggableElement(m_mortar_document->GetElementById("pestle"));
+		DragListener::RegisterDraggableElement(m_mortar_document->GetElementById("pestle"));
 
-        m_mortar_document->Show();
-        openedMortar = mortar;
-        std::cout << "UISystem::openMortarPestle - Mortar & Pestle UI created successfully" << std::endl;
-        return true;
-    }
-    catch (const std::exception& e) {
-        std::cerr << "Exception in UISystem::openMortarPestle: " << e.what() << std::endl;
-        return false;
-    }
+		m_mortar_document->Show();
+		openedMortar = mortar;
+		std::cout << "UISystem::openMortarPestle - Mortar & Pestle UI created successfully" << std::endl;
+		return true;
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::openMortarPestle: " << e.what() << std::endl;
+		return false;
+	}
 }
 
 bool UISystem::isMortarPestleOpen() {
@@ -1462,32 +1464,36 @@ void UISystem::updateHealthBar() {
 
 		if (hp_percentage >= 0.5) {
 			healthbar_element->SetAttribute("class", "vertical healthy");
-		} else if (hp_percentage >= 0.2) {
+		}
+		else if (hp_percentage >= 0.2) {
 			healthbar_element->SetAttribute("class", "vertical injured");
-		} else {
+		}
+		else {
 			healthbar_element->SetAttribute("class", "vertical dying");
 		}
-		
-	} catch (const std::exception& e) {
+
+	}
+	catch (const std::exception& e) {
 		std::cerr << "Exception in UISystem::updateHealthBar: " << e.what() << std::endl;
 	}
 }
 
 bool UISystem::openRecipeBook(Entity recipe_book)
 {
-    // Already open
-    if (m_recipe_book_document != nullptr) {
-        if (openedRecipeBook == recipe_book) {
-            return true;
-        } else {
-            closeRecipeBook(); 
-        }
-    }
-    
-    setOpenedRecipeBook(recipe_book);
-    
-    try {
-        std::string recipe_book_rml = R"(
+	// Already open
+	if (m_recipe_book_document != nullptr) {
+		if (openedRecipeBook == recipe_book) {
+			return true;
+		}
+		else {
+			closeRecipeBook();
+		}
+	}
+
+	setOpenedRecipeBook(recipe_book);
+
+	try {
+		std::string recipe_book_rml = R"(
             <rml>
             <head>
                 <style>
@@ -1642,233 +1648,234 @@ bool UISystem::openRecipeBook(Entity recipe_book)
             </body>
             </rml>
         )";
-        
-        m_recipe_book_document = m_context->LoadDocumentFromMemory(recipe_book_rml.c_str());
-        if (!m_recipe_book_document) {
-            std::cerr << "UISystem::openRecipeBook - Failed to create recipe book document" << std::endl;
-            return false;
-        }
-        
-        updateRecipeBookUI();
-        
-        m_recipe_book_document->Show();
-        
-        SoundSystem::playPageFlipSound((int)SOUND_CHANNEL::MENU, 0);
-        
-        return true;
-    }
-    catch (const std::exception& e) {
-        std::cerr << "Exception in UISystem::openRecipeBook: " << e.what() << std::endl;
-        return false;
-    }
+
+		m_recipe_book_document = m_context->LoadDocumentFromMemory(recipe_book_rml.c_str());
+		if (!m_recipe_book_document) {
+			std::cerr << "UISystem::openRecipeBook - Failed to create recipe book document" << std::endl;
+			return false;
+		}
+
+		updateRecipeBookUI();
+
+		m_recipe_book_document->Show();
+
+		SoundSystem::playPageFlipSound((int)SOUND_CHANNEL::MENU, 0);
+
+		return true;
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::openRecipeBook: " << e.what() << std::endl;
+		return false;
+	}
 }
 
 void UISystem::updateRecipeBookUI()
 {
-    if (!m_initialized || !m_context || !m_recipe_book_document)
-        return;
-    
-    // Update left page (potion info and ingredients)
-    if (Rml::Element* leftPage = m_recipe_book_document->GetElementById("left-page")) {
-        leftPage->SetInnerRML(getRecipeHtml(current_recipe_index));
-    }
-    
-    // Update right page (recipe steps)
-    if (Rml::Element* rightPage = m_recipe_book_document->GetElementById("right-page")) {
-        rightPage->SetInnerRML(getRecipeStepsText(RECIPES[current_recipe_index]));
-    }
+	if (!m_initialized || !m_context || !m_recipe_book_document)
+		return;
+
+	// Update left page (potion info and ingredients)
+	if (Rml::Element* leftPage = m_recipe_book_document->GetElementById("left-page")) {
+		leftPage->SetInnerRML(getRecipeHtml(current_recipe_index));
+	}
+
+	// Update right page (recipe steps)
+	if (Rml::Element* rightPage = m_recipe_book_document->GetElementById("right-page")) {
+		rightPage->SetInnerRML(getRecipeStepsText(RECIPES[current_recipe_index]));
+	}
 }
 
 void UISystem::closeRecipeBook()
 {
-    if (m_recipe_book_document) {
-        m_recipe_book_document->Close();
-        m_recipe_book_document = nullptr;
-        
-        SoundSystem::playPageFlipSound((int)SOUND_CHANNEL::MENU, 0);
-    }
-    
-    openedRecipeBook = {};
+	if (m_recipe_book_document) {
+		m_recipe_book_document->Close();
+		m_recipe_book_document = nullptr;
+
+		SoundSystem::playPageFlipSound((int)SOUND_CHANNEL::MENU, 0);
+	}
+
+	openedRecipeBook = {};
 }
 
 bool UISystem::isRecipeBookOpen()
 {
-    return m_recipe_book_document != nullptr;
+	return m_recipe_book_document != nullptr;
 }
 
 Entity UISystem::getOpenedRecipeBook()
 {
-    return openedRecipeBook;
+	return openedRecipeBook;
 }
 
 void UISystem::setOpenedRecipeBook(Entity new_recipe_book)
 {
-    openedRecipeBook = new_recipe_book;
+	openedRecipeBook = new_recipe_book;
 }
 
 void UISystem::navigateRecipeBook(bool next_page)
 {
-    if (next_page) {
-        current_recipe_index = (current_recipe_index + 1) % RECIPES.size();
-    } else {
-        current_recipe_index = (current_recipe_index - 1 + RECIPES.size()) % RECIPES.size();
-    }
-    
-    updateRecipeBookUI();
+	if (next_page) {
+		current_recipe_index = (current_recipe_index + 1) % RECIPES.size();
+	}
+	else {
+		current_recipe_index = (current_recipe_index - 1 + RECIPES.size()) % RECIPES.size();
+	}
+
+	updateRecipeBookUI();
 }
 
 std::string UISystem::getRecipeHtml(int recipe_index)
 {
 	// TODO: Can add undiscovered recipe logic here for m4
-    if (recipe_index < 0 || recipe_index >= RECIPES.size())
-    {
-        return "<p>Invalid recipe index</p>";
-    }
-    
-    const Recipe& recipe = RECIPES[recipe_index];
-    std::string effect_name = EFFECT_NAMES.at(recipe.effect);
+	if (recipe_index < 0 || recipe_index >= RECIPES.size())
+	{
+		return "<p>Invalid recipe index</p>";
+	}
 
-    std::string html;
-    html += "<div class='potion-title'>" + effect_name + "</div><br />";
+	const Recipe& recipe = RECIPES[recipe_index];
+	std::string effect_name = EFFECT_NAMES.at(recipe.effect);
 
-    std::string description;
-    switch (recipe.effect)
-    {
-        case PotionEffect::HEALTH:
-            description = "A basic potion that will replenish your health.";
-            break;
-        case PotionEffect::SPEED:
-            description = "Increases your movement speed for a limited time.";
-            break;
-        case PotionEffect::DAMAGE:
-            description = "A damaging potion that can be thrown at enemies.";
-            break;
-        case PotionEffect::MOLOTOV:
-            description = "Creates a burning area when thrown.";
-            break;
-        case PotionEffect::REGEN:
-            description = "Gradually restores health over time.";
-            break;
-        case PotionEffect::TENACITY:
-            description = "Increases your inventory capacity.";
-            break;
-        case PotionEffect::POISON:
-            description = "Creates a poisonous area when thrown.";
-            break;
-        case PotionEffect::RESISTANCE:
-            description = "Reduces damage taken for a limited time.";
-            break;
-        case PotionEffect::SATURATION:
-            description = "Increases the potency of other potions.";
-            break;
-        case PotionEffect::ALKALESCENCE:
-            description = "Reacts with acidic substances.";
-            break;
-        case PotionEffect::CLARITY:
-            description = "Reveals hidden objects or ingredients.";
-            break;
-        case PotionEffect::REJUVENATION:
-            description = "The ultimate healing potion.";
-            break;
-        default:
-            description = "A mysterious potion with unknown effects.";
-            break;
-    }
-    
-    html += "<div class='potion-description'>" + description + "</div><br /><br />";
+	std::string html;
+	html += "<div class='potion-title'>" + effect_name + "</div><br />";
 
-    html += "<div class='ingredients-title'>Ingredients:</div><br />";
-    html += "<div class='ingredients-list'>" + getRecipeIngredientsText(recipe) + "</div><br /><br />";
+	std::string description;
+	switch (recipe.effect)
+	{
+	case PotionEffect::HEALTH:
+		description = "A basic potion that will replenish your health.";
+		break;
+	case PotionEffect::SPEED:
+		description = "Increases your movement speed for a limited time.";
+		break;
+	case PotionEffect::DAMAGE:
+		description = "A damaging potion that can be thrown at enemies.";
+		break;
+	case PotionEffect::MOLOTOV:
+		description = "Creates a burning area when thrown.";
+		break;
+	case PotionEffect::REGEN:
+		description = "Gradually restores health over time.";
+		break;
+	case PotionEffect::TENACITY:
+		description = "Increases your inventory capacity.";
+		break;
+	case PotionEffect::POISON:
+		description = "Creates a poisonous area when thrown.";
+		break;
+	case PotionEffect::RESISTANCE:
+		description = "Reduces damage taken for a limited time.";
+		break;
+	case PotionEffect::SATURATION:
+		description = "Increases the potency of other potions.";
+		break;
+	case PotionEffect::ALKALESCENCE:
+		description = "Reacts with acidic substances.";
+		break;
+	case PotionEffect::CLARITY:
+		description = "Reveals hidden objects or ingredients.";
+		break;
+	case PotionEffect::REJUVENATION:
+		description = "The ultimate healing potion.";
+		break;
+	default:
+		description = "A mysterious potion with unknown effects.";
+		break;
+	}
 
-    html += "<div class='potion-quality'>PERFECT QUALITY COLOUR</div><br />";
-    
-    vec3 potion_color = recipe.finalPotionColor;
-    std::string color_style = "background-color: rgb(" + 
-        std::to_string(int(potion_color.x)) + "," + 
-        std::to_string(int(potion_color.y)) + "," + 
-        std::to_string(int(potion_color.z)) + ");";
-    
-    html += "<div class='potion-color-container'><div class='potion-color' style='" + color_style + "'></div></div>";
+	html += "<div class='potion-description'>" + description + "</div><br /><br />";
 
-    return html;
+	html += "<div class='ingredients-title'>Ingredients:</div><br />";
+	html += "<div class='ingredients-list'>" + getRecipeIngredientsText(recipe) + "</div><br /><br />";
+
+	html += "<div class='potion-quality'>PERFECT QUALITY COLOUR</div><br />";
+
+	vec3 potion_color = recipe.finalPotionColor;
+	std::string color_style = "background-color: rgb(" +
+		std::to_string(int(potion_color.x)) + "," +
+		std::to_string(int(potion_color.y)) + "," +
+		std::to_string(int(potion_color.z)) + ");";
+
+	html += "<div class='potion-color-container'><div class='potion-color' style='" + color_style + "'></div></div>";
+
+	return html;
 }
 
 std::string UISystem::getRecipeStepsText(const Recipe& recipe)
 {
-    std::string html = "<div class='recipe-steps-title'>RECIPE:</div><br />";
-    html += "<div class='recipe-steps'>";
-    
-    // Steps with numbering
-    for (size_t i = 0; i < recipe.steps.size(); i++) {
-        const auto& step = recipe.steps[i];
-		
-        html += "<div>" + std::to_string(i + 1) + ". ";
-        
-        switch (step.type)
-        {
-            case ActionType::MODIFY_HEAT:
-            {
-                if (step.value <= 33)
-                    html += "Turn heat to low";
-                else if (step.value <= 66)
-                    html += "Turn heat to medium";
-                else
-                    html += "Turn heat to high";
-                break;
-            }
-            case ActionType::WAIT:
-            {
-                html += "Wait " + std::to_string(step.value * 5) + " seconds";
-                break;
-            }
-            case ActionType::ADD_INGREDIENT:
-            {
-                if (step.value < recipe.ingredients.size())
-                {
-                    const auto& ingredient = recipe.ingredients[step.value];
-                    std::string name = getItemName(ingredient.type);
-                    
-                    if (ingredient.type == ItemType::POTION)
-                        html += "Insert " + std::to_string(ingredient.amount) + " " + name;
-                    else
-                        html += "Add " + std::to_string(ingredient.amount) + " " + name;
-                }
-                break;
-            }
-            case ActionType::STIR:
-            {
-                html += "Stir " + std::to_string(step.value) + " times";
-                break;
-            }
-        }
+	std::string html = "<div class='recipe-steps-title'>RECIPE:</div><br />";
+	html += "<div class='recipe-steps'>";
 
-        html += "</div><br />";
-    }
+	// Steps with numbering
+	for (size_t i = 0; i < recipe.steps.size(); i++) {
+		const auto& step = recipe.steps[i];
 
-    html += "<div>" + std::to_string(recipe.steps.size() + 1) + ". Bottle</div>";
-    html += "</div>";
-    
-    return html;
+		html += "<div>" + std::to_string(i + 1) + ". ";
+
+		switch (step.type)
+		{
+		case ActionType::MODIFY_HEAT:
+		{
+			if (step.value <= 33)
+				html += "Turn heat to low";
+			else if (step.value <= 66)
+				html += "Turn heat to medium";
+			else
+				html += "Turn heat to high";
+			break;
+		}
+		case ActionType::WAIT:
+		{
+			html += "Wait " + std::to_string(step.value * 5) + " seconds";
+			break;
+		}
+		case ActionType::ADD_INGREDIENT:
+		{
+			if (step.value < recipe.ingredients.size())
+			{
+				const auto& ingredient = recipe.ingredients[step.value];
+				std::string name = getItemName(ingredient.type);
+
+				if (ingredient.type == ItemType::POTION)
+					html += "Insert " + std::to_string(ingredient.amount) + " " + name;
+				else
+					html += "Add " + std::to_string(ingredient.amount) + " " + name;
+			}
+			break;
+		}
+		case ActionType::STIR:
+		{
+			html += "Stir " + std::to_string(step.value) + " times";
+			break;
+		}
+		}
+
+		html += "</div><br />";
+	}
+
+	html += "<div>" + std::to_string(recipe.steps.size() + 1) + ". Bottle</div>";
+	html += "</div>";
+
+	return html;
 }
 
 std::string UISystem::getRecipeIngredientsText(const Recipe& recipe)
 {
-    std::string text;
+	std::string text;
 
-    for (const auto& ingredient : recipe.ingredients) {
-        std::string name = getItemName(ingredient.type);
-        text += std::to_string(ingredient.amount) + "x " + name;
-        text += "<br />";
-    }
+	for (const auto& ingredient : recipe.ingredients) {
+		std::string name = getItemName(ingredient.type);
+		text += std::to_string(ingredient.amount) + "x " + name;
+		text += "<br />";
+	}
 
-    return text;
+	return text;
 }
 
 std::string UISystem::getItemName(ItemType type)
 {
-    if (ITEM_INFO.find(type) != ITEM_INFO.end()) {
-        return ITEM_INFO.at(type).name;
-    }
-    
-    return "Unknown Item";
+	if (ITEM_INFO.find(type) != ITEM_INFO.end()) {
+		return ITEM_INFO.at(type).name;
+	}
+
+	return "Unknown Item";
 }
