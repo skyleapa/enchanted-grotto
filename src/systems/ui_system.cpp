@@ -1520,9 +1520,8 @@ bool UISystem::openRecipeBook(Entity recipe_book)
                         cursor: pointer;
                         font-size: 20px;
                         font-weight: bold;
-                        color: #5c3e23;
-                        transition: background-color 0.2s;
 						font-family: Open Sans;
+                        color: #5c3e23;
                     }
                     .close-button:hover {
                         background-color: #c1834e;
@@ -1611,9 +1610,9 @@ bool UISystem::openRecipeBook(Entity recipe_book)
                         font-weight: bold;
                         text-align: center;
                         font-size: 20px;
-                        font-family: Caveat;
 						left: 50%;
 						margin-left: 17%;
+                        font-family: Caveat;
                     }
                     .potion-color-container {
                         margin-top: 15px;
@@ -1622,11 +1621,11 @@ bool UISystem::openRecipeBook(Entity recipe_book)
                     .potion-color {
                         width: 90px;
                         height: 90px;
-						margin-top: 15px;
                         border-radius: 50px;
                         border-width: 2px;
                         border-color: #333;
 						display: inline-block;
+						margin-top: 15px;
                     }
                 </style>
             </head>
