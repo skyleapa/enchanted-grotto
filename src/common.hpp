@@ -632,7 +632,8 @@ const std::vector<PotionEffect> throwable_potions = {
 	PotionEffect::DAMAGE,
 	PotionEffect::MOLOTOV,
 	PotionEffect::POISON,
-	PotionEffect::CLARITY
+	PotionEffect::CLARITY,
+	PotionEffect::FAILED
 };
 
 const std::vector<PotionEffect> consumable_potions = {
