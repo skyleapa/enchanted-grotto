@@ -318,10 +318,18 @@ void BiomeSystem::createForest()
 	createBush(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5));
 	createBush(renderer, vec2(1100, 292));
 
-	ScreenState screen = registry.screenStates.components[0];
-	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Ent 1") == screen.killed_enemies.end())
-	{
-		createEnt(renderer, vec2(GRID_CELL_WIDTH_PX * 2.15, GRID_CELL_HEIGHT_PX * 5), 0, "Ent 1");
+	// admin flag used so we can test the game and disable guardian spawns
+	if (!ADMIN_FLAG) {
+		ScreenState screen = registry.screenStates.components[0];
+		if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Desert Guardian") == screen.killed_enemies.end())
+		{
+			createGuardianDesert(renderer, vec2(GRID_CELL_WIDTH_PX * 2, GRID_CELL_HEIGHT_PX * 3), 0, "Desert Guardian");
+		}
+
+		if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Mushroom Guardian") == screen.killed_enemies.end())
+		{
+			createGuardianMushroom(renderer, vec2(GRID_CELL_WIDTH_PX * 2.1, WINDOW_HEIGHT_PX - 80), 0, "Mushroom Guardian");
+		}
 	}
 
 	createForestToGrotto(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 1), "Grotto Entrance");
@@ -348,6 +356,21 @@ void BiomeSystem::createForestEx()
 
 	createBush(renderer, vec2(920, 392));
 
+	createCollectableIngredient(renderer, vec2(288, 101), ItemType::EVERFERN, 1, true);
+	createCollectableIngredient(renderer, vec2(708, 601), ItemType::EVERFERN, 1, true);
+	createCollectableIngredient(renderer, vec2(1153, 109), ItemType::BLIGHTLEAF, 1, true);
+	createCollectableIngredient(renderer, vec2(72, 619), ItemType::BLIGHTLEAF, 1, true);
+	createEnt(renderer, vec2(606, 390), 1, "Ent");
+	createEnt(renderer, vec2(1011, 158), 1, "Ent");
+
+	if (!ADMIN_FLAG) {
+		ScreenState screen = registry.screenStates.components[0];
+		if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Crystal Guardian") == screen.killed_enemies.end())
+		{
+			createGuardianCrystal(renderer, vec2(900, 620), 0, "Crystal Guardian");
+		}
+	}
+
 	createForestExToForest(renderer, vec2(50, 470), "Forest Ex to Forest");
 	createForestExToCrystal(renderer, vec2(930, 665), "Forest Ex to Crystal");
 }
@@ -366,6 +389,8 @@ void BiomeSystem::createDesert()
 	createDesertRiver(renderer, vec2(1190, WINDOW_HEIGHT_PX / 2));
 	createDesertPage(renderer, vec2(GRID_CELL_WIDTH_PX * 13.5, GRID_CELL_HEIGHT_PX * 3.2));
 	createDesertSkull(renderer, vec2(GRID_CELL_WIDTH_PX * 13.7, GRID_CELL_HEIGHT_PX * 10.9));
+	createCollectableIngredient(renderer, vec2(1096, 373), ItemType::HEALING_LILY, 1, true);
+	createCollectableIngredient(renderer, vec2(400, 194), ItemType::HEALING_LILY, 1, true);
 
 	ScreenState screen = registry.screenStates.components[0];
 	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Mummy 1") == screen.killed_enemies.end())
@@ -394,8 +419,18 @@ void BiomeSystem::createMushroom()
 	createMushroomBlue(renderer, vec2(750, 515));
 	createMushroomTallBlue(renderer, vec2(1055, 435));
 
+	createCollectableIngredient(renderer, vec2(260, 584), ItemType::GLOWSHROOM, 1, true);
+	createCollectableIngredient(renderer, vec2(904, 454), ItemType::GLOWSHROOM, 1, true);
+	createCollectableIngredient(renderer, vec2(1090, 114), ItemType::DOOMCAP, 1, true);
+
+	ScreenState screen = registry.screenStates.components[0];
+	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Crystal Guardian") == screen.killed_enemies.end())
+	{
+		createGuardianCrystal(renderer, vec2(1150, 200), 0, "Crystal Guardian");
+	}
+
 	createMushroomToForest(renderer, vec2(60, 50), "Mushroom To Forest");
-	createMushroomToCrystal(renderer, vec2(1220, 200), "Mushroom to Crystal");
+	createMushroomToCrystal(renderer, vec2(1220, 160), "Mushroom to Crystal");
 }
 
 void BiomeSystem::createCrystal()
@@ -413,6 +448,11 @@ void BiomeSystem::createCrystal()
 	createCrystalMinecart(renderer, vec2(986, 530));
 	createCrystalRock(renderer, vec2(639, 262));
 	createCrystalPage(renderer, vec2(966, 510));
+
+	createCollectableIngredient(renderer, vec2(491, 90), ItemType::CRYSTABLOOM, 1, true);
+	createCollectableIngredient(renderer, vec2(458, 355), ItemType::CRYSTAL_SHARD, 1, true);
+	createCollectableIngredient(renderer, vec2(302, 617), ItemType::CRYSTAL_SHARD, 1, true);
+	createCollectableIngredient(renderer, vec2(1141, 624), ItemType::QUARTZMELON, 1, true);
 
 	createCrystalToMushroom(renderer, vec2(50, 200), "Crystal To Mushroom");
 	createCrystalToForestEx(renderer, vec2(930, 30), "Crystal to Forest Ex");

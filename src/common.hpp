@@ -43,6 +43,9 @@ const int WATER_QUALITY_LEVEL = 1;
 //
 // game constants
 //
+
+const bool ADMIN_FLAG = false;
+
 const int WINDOW_WIDTH_PX = 1250;
 const int WINDOW_HEIGHT_PX = 700;
 const float WINDOW_RATIO = (float)WINDOW_WIDTH_PX / WINDOW_HEIGHT_PX;
@@ -155,6 +158,15 @@ const float ENT_HEIGHT = (float)130;
 const float MUMMY_WIDTH = (float)45;
 const float MUMMY_HEIGHT = (float)85;
 
+const float DESERT_GUARDIAN_WIDTH = (float)160;
+const float DESERT_GUARDIAN_HEIGHT = (float)150;
+
+const float MUSHROOM_GUARDIAN_WIDTH = (float)160;
+const float MUSHROOM_GUARDIAN_HEIGHT = (float)150;
+
+const float CRYSTAL_GUARDIAN_WIDTH = (float)140;
+const float CRYSTAL_GUARDIAN_HEIGHT = (float)160;
+
 const float DETECTION_RADIUS = (float)200;  // Enemy starts moving & attacking
 const float FOLLOWING_RADIUS = (float)300;  // Enemy stops attacking if outside this
 
@@ -167,7 +179,6 @@ const float BAR_WIDTH = (float)450.0f;
 const float BAR_HEIGHT = (float)60.0f;
 const float BAR_X = (float)((WINDOW_WIDTH_PX - BAR_WIDTH) / 2.0f);
 const float BAR_Y = (float)(WINDOW_HEIGHT_PX - BAR_HEIGHT - 20.f); // 20 from bottom
-
 
 // Item and potion constants. The enums are declared here instead of in components.hpp
 // because this file is included in components, not the other way around - otherwise,
@@ -211,12 +222,17 @@ enum class ItemType
 	PETRIFIED_BONE = MUMMY_BANDAGES + 1,
 	HEALING_LILY = PETRIFIED_BONE + 1,
 	CACTUS_PULP = HEALING_LILY + 1,
-	CACTUS_EXTRACT = CACTUS_PULP + 1,
-	GLOWSHROOM = CACTUS_EXTRACT + 1,
-	DOOMSPORE = GLOWSHROOM + 1,
-	CRYSTAL_SHARD = DOOMSPORE + 1,
+	GLOWSHROOM = CACTUS_PULP + 1,
+	DOOMCAP = GLOWSHROOM + 1,
+	CRYSTAL_SHARD = DOOMCAP + 1,
 	QUARTZMELON = CRYSTAL_SHARD + 1,
-	CRYSTABLOOM = QUARTZMELON + 1
+	CRYSTABLOOM = QUARTZMELON + 1,
+	STORM_SAP = CRYSTABLOOM + 1,
+	CACTUS_EXTRACT = STORM_SAP + 1,
+	SWIFT_POWDER = CACTUS_EXTRACT + 1,
+	BONE_DUST = SWIFT_POWDER + 1,
+	CRYSTAL_MEPH = BONE_DUST + 1,
+	GLOWSPORE = CRYSTAL_MEPH + 1
 };
 
 // Potion Types and names
@@ -437,14 +453,14 @@ const std::vector<Recipe> RECIPES = {
 		{
 			{ ItemType::POTION, 1, 0.0f },        // TODO:1x damage potion
 			{ ItemType::BLIGHTLEAF, 2, 0.0f },    // ingredients
-			{ ItemType::DOOMSPORE, 2, 0.0f }      // ingredients
+			{ ItemType::DOOMCAP, 2, 0.0f }      // ingredients
 		},
 		{
 			{ ActionType::MODIFY_HEAT, 50 },  // medium heat
 			{ ActionType::ADD_INGREDIENT, 0 }, // add damage potion
 			{ ActionType::ADD_INGREDIENT, 1 }, // add blightleaf
 			{ ActionType::WAIT, 1 },          // wait 5 seconds
-			{ ActionType::ADD_INGREDIENT, 2 }, // add doomspores
+			{ ActionType::ADD_INGREDIENT, 2 }, // add doomcap
 			{ ActionType::STIR, 3 },          // stir 3 times
 			{ ActionType::WAIT, 5 }           // wait 25 seconds
 		}

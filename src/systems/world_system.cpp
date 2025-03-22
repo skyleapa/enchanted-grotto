@@ -327,12 +327,11 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 			registry.remove_all_components_of(ammo_entity);
 			SoundSystem::playEnemyOuchSound((int)SOUND_CHANNEL::GENERAL, 0); // play enemy ouch sound
 			if (enemy.health <= 0) {
-				// using can_move for now since ent cannot move, but mummy can
-				if (enemy.can_move == 0) {
-					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::SAP, 1, false);
+				if (enemy.name == "Ent") {
+					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::STORM_BARK, 1, false);
 				}
-				else if (enemy.can_move == 1) {
-					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MAGICAL_DUST, 1, false);
+				else if (enemy.name == "Mummy") {
+					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MUMMY_BANDAGES, 1, false);
 				}
 				if (screen.tutorial_state == (int)TUTORIAL::ATTACK_ENEMY) {
 					screen.tutorial_step_complete = true;
@@ -684,8 +683,8 @@ void WorldSystem::handle_player_interaction()
 			continue;
 		}
 
-		// If this is a cauldron and it's invisible, ignore it so if items overlap, we don't get stuck opening cauldron
-		if (registry.cauldrons.has(item)) {
+		// If this is a cauldron/mortar & pestle and it's invisible, ignore it so if items overlap, we don't get stuck opening it
+		if (registry.cauldrons.has(item) || registry.mortarAndPestles.has(item)) {
 			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) {
 				continue;
 			}
@@ -787,6 +786,7 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 
 	// Set a random respawn time (10-15 seconds)
 	item_info.respawnTime = (rand() % 5001 + 10000);
+	item_info.lastBiome = static_cast<BIOME>(registry.screenStates.components[0].biome);
 
 	return true;
 }
@@ -794,12 +794,21 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 
 void WorldSystem::handle_item_respawn(float elapsed_ms)
 {
+	if (registry.players.entities.size() == 0) return;
+	Entity entity = registry.players.entities[0];
+
+	if (!registry.inventories.has(entity)) return;
+	Inventory& inventory = registry.inventories.get(entity);
+
 	for (Entity item : registry.items.entities)
 	{
 		Item& item_info = registry.items.get(item);
 
+		// skip if in inventory
+		if (std::find(inventory.items.begin(), inventory.items.end(), item) != inventory.items.end()) continue;
+
 		if (!item_info.canRespawn)
-			return;
+			continue;
 
 		if (item_info.respawnTime <= 0)
 			continue;
@@ -809,8 +818,28 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 		if (item_info.respawnTime > 0)
 			return;
 
-		if (registry.screenStates.components[0].biome != (GLuint)BIOME::FOREST) return;
-		// only respawn if in forest biome
+		// Check if current biome matches any allowed respawn biome for this item type
+		auto it = itemRespawnBiomes.find(item_info.type);
+		if (it == itemRespawnBiomes.end())
+			continue; 
+
+		const std::vector<BIOME>& allowedBiomes = it->second;
+		BIOME originalBiome = item_info.lastBiome;
+		GLuint currentBiome = registry.screenStates.components[0].biome;
+
+		bool canRespawnHere = false;
+		for (BIOME allowedBiome : allowedBiomes) {
+			if (allowedBiome == originalBiome && static_cast<GLuint>(allowedBiome) == currentBiome) {
+				canRespawnHere = true;
+				break;
+			}
+		}
+
+		if (!canRespawnHere) {
+			// std::cout << "Biome mismatch, will not respawn. Original biome: " << static_cast<int>(originalBiome)
+			// 		<< ", Current biome: " << currentBiome << std::endl;
+			continue;
+		}
 
 		// Respawn item at its original position
 		Motion& motion = registry.motions.emplace(item);
