@@ -369,10 +369,10 @@ void BiomeSystem::createForestEx()
 		{
 			createGuardianCrystal(renderer, vec2(900, 620), 0, "Crystal Guardian");
 		}
-
-		createForestExToForest(renderer, vec2(50, 470), "Forest Ex to Forest");
-		createForestExToCrystal(renderer, vec2(930, 665), "Forest Ex to Crystal");
 	}
+
+	createForestExToForest(renderer, vec2(50, 470), "Forest Ex to Forest");
+	createForestExToCrystal(renderer, vec2(930, 665), "Forest Ex to Crystal");
 }
 
 void BiomeSystem::createDesert()
