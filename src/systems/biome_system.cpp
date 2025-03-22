@@ -318,15 +318,18 @@ void BiomeSystem::createForest()
 	createBush(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5));
 	createBush(renderer, vec2(1100, 292));
 
-	ScreenState screen = registry.screenStates.components[0];
-	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Desert Guardian") == screen.killed_enemies.end())
-	{
-		createGuardianDesert(renderer, vec2(GRID_CELL_WIDTH_PX * 2, GRID_CELL_HEIGHT_PX * 3), 0, "Desert Guardian");
-	}
+	// admin flag used so we can test the game and disable guardian spawns
+	if (!ADMIN_FLAG) {
+		ScreenState screen = registry.screenStates.components[0];
+		if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Desert Guardian") == screen.killed_enemies.end())
+		{
+			createGuardianDesert(renderer, vec2(GRID_CELL_WIDTH_PX * 2, GRID_CELL_HEIGHT_PX * 3), 0, "Desert Guardian");
+		}
 
-	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Mushroom Guardian") == screen.killed_enemies.end())
-	{
-		createGuardianMushroom(renderer, vec2(GRID_CELL_WIDTH_PX * 2.1, WINDOW_HEIGHT_PX - 80), 0, "Mushroom Guardian");
+		if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Mushroom Guardian") == screen.killed_enemies.end())
+		{
+			createGuardianMushroom(renderer, vec2(GRID_CELL_WIDTH_PX * 2.1, WINDOW_HEIGHT_PX - 80), 0, "Mushroom Guardian");
+		}
 	}
 
 	createForestToGrotto(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 1), "Grotto Entrance");
@@ -360,14 +363,16 @@ void BiomeSystem::createForestEx()
 	createEnt(renderer, vec2(606, 390), 1, "Ent");
 	createEnt(renderer, vec2(1011, 158), 1, "Ent");
 
-	ScreenState screen = registry.screenStates.components[0];
-	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Crystal Guardian") == screen.killed_enemies.end())
-	{
-		createGuardianCrystal(renderer, vec2(900, 620), 0, "Crystal Guardian");
-	}
+	if (!ADMIN_FLAG) {
+		ScreenState screen = registry.screenStates.components[0];
+		if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Crystal Guardian") == screen.killed_enemies.end())
+		{
+			createGuardianCrystal(renderer, vec2(900, 620), 0, "Crystal Guardian");
+		}
 
-	createForestExToForest(renderer, vec2(50, 470), "Forest Ex to Forest");
-	createForestExToCrystal(renderer, vec2(930, 665), "Forest Ex to Crystal");
+		createForestExToForest(renderer, vec2(50, 470), "Forest Ex to Forest");
+		createForestExToCrystal(renderer, vec2(930, 665), "Forest Ex to Crystal");
+	}
 }
 
 void BiomeSystem::createDesert()

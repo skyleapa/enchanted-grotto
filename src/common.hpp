@@ -43,6 +43,9 @@ const int WATER_QUALITY_LEVEL = 1;
 //
 // game constants
 //
+
+const bool ADMIN_FLAG = true;
+
 const int WINDOW_WIDTH_PX = 1250;
 const int WINDOW_HEIGHT_PX = 700;
 const float WINDOW_RATIO = (float)WINDOW_WIDTH_PX / WINDOW_HEIGHT_PX;
@@ -176,7 +179,6 @@ const float BAR_WIDTH = (float)450.0f;
 const float BAR_HEIGHT = (float)60.0f;
 const float BAR_X = (float)((WINDOW_WIDTH_PX - BAR_WIDTH) / 2.0f);
 const float BAR_Y = (float)(WINDOW_HEIGHT_PX - BAR_HEIGHT - 20.f); // 20 from bottom
-
 
 // Item and potion constants. The enums are declared here instead of in components.hpp
 // because this file is included in components, not the other way around - otherwise,
