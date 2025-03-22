@@ -30,16 +30,14 @@ public:
     void step(float elapsed_ms);
     void draw();
 
-    // Input event handlers (called from GLFW callbacks)
+    // Input event handlers (called mostly from worldsystem)
     void handleKeyEvent(int key, int scancode, int action, int mods);
     void handleMouseMoveEvent(double x, double y);
     void handleMouseButtonEvent(int button, int action, int mods);
+    void handleScrollWheelEvent(double xoffset, double yoffset);
     void handleTextInput(unsigned int codepoint);
 
     // Static callbacks for GLFW
-    static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-    static void cursorPosCallback(GLFWwindow* window, double x, double y);
-    static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
     static void charCallback(GLFWwindow* window, unsigned int codepoint);
 
     // FPS counter

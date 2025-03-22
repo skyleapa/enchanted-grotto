@@ -498,47 +498,50 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 					updateFollowMouse();
 					break;
 				}
-
-				// Check if clicking on cauldron water to bottle potion
-				Rml::Element* possibleCauldron = m_context->GetElementAtPoint(mousePos, hovered);
-				if (possibleCauldron && (possibleCauldron->GetId() == "cauldron-water" || possibleCauldron->GetId() == "cauldron")) {
-					// Create potion and add to player inventory
-					Entity cauldron = getOpenedCauldron();
-					Potion potion = PotionSystem::bottlePotion(cauldron);
-
-					// Create potion item and add to player inventory
-					Entity player = registry.players.entities[0];
-					Entity potionItem = ItemSystem::createPotion(
-						potion.effect,
-						potion.duration,
-						potion.color,
-						potion.quality,
-						potion.effectValue,
-						1
-					);
-
-					// TODOOO
-					// if (potion.effect != PotionEffect::WATER) {
-					//     registry.items.get(potionItem).is_ammo = true;
-					//     auto& ammo = registry.ammo.emplace(potionItem);
-					//     ammo.damage = 1000;
-					// }
-
-					if (ItemSystem::addItemToInventory(player, potionItem)) {
-						// stop the boiling sound then bottle the potion
-						DragListener::is_boiling = false;
-						SoundSystem::playBottleHighQualityPotionSound((int)SOUND_CHANNEL::MENU, 0);
-						SoundSystem::haltBoilSound();
-					}
-
-					// Reset cauldron water
-					m_renderer->initializeWaterBuffers(true);
-				}
-
+				
 				// Reset bottle position
 				hovered->SetProperty("top", BOTTLE_TOP_PX);
 				hovered->SetProperty("left", BOTTLE_LEFT_PX);
 				heldBottle = nullptr;
+				
+				// Check if clicking on cauldron water to bottle potion
+				Rml::Element* possibleCauldron = m_context->GetElementAtPoint(mousePos, hovered);
+				if (!possibleCauldron || (possibleCauldron->GetId() != "cauldron-water" && possibleCauldron->GetId() != "cauldron")) {
+					break;
+				}
+				
+				// Create potion and add to player inventory
+				Entity cauldron = getOpenedCauldron();
+				Potion potion = PotionSystem::bottlePotion(cauldron);
+
+				// Create potion item and add to player inventory
+				Entity player = registry.players.entities[0];
+				Entity potionItem = ItemSystem::createPotion(
+					potion.effect,
+					potion.duration,
+					potion.color,
+					potion.quality,
+					potion.effectValue,
+					1
+				);
+
+				// If couldn't be added to inventory then don't do anything (obviously)
+				if (!ItemSystem::addItemToInventory(player, potionItem)) {
+					break;
+				}
+
+				// Reset cauldron
+				PotionSystem::resetCauldron(cauldron);
+				m_renderer->initializeWaterBuffers(true); // Will not be necessary once empty cauldron is supported
+
+				// stop the boiling sound and play potion bottling sound
+				DragListener::is_boiling = false;
+				SoundSystem::haltBoilSound();
+				if (potion.quality > 0.75) {
+					SoundSystem::playBottleHighQualityPotionSound((int)SOUND_CHANNEL::MENU, 0);
+				} else {
+					SoundSystem::playBottleSound((int)SOUND_CHANNEL::MENU, 0);
+				}
 			}
 		} while (false);
 
@@ -606,32 +609,18 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 	}
 }
 
-// Static callbacks
-void UISystem::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+// Changing inventory slots on scroll wheel
+void UISystem::handleScrollWheelEvent(double xoffset, double yoffset)
 {
-	if (s_instance) {
-		s_instance->handleKeyEvent(key, scancode, action, mods);
-	}
+	int dist = (int) yoffset * -1;
+	selectInventorySlot(m_selected_slot + dist);
+	m_context->ProcessMouseWheel(Rml::Vector2f(xoffset, yoffset), getKeyModifiers());
 }
 
 void UISystem::charCallback(GLFWwindow* window, unsigned int codepoint)
 {
 	if (s_instance) {
 		s_instance->handleTextInput(codepoint);
-	}
-}
-
-void UISystem::cursorPosCallback(GLFWwindow* window, double x, double y)
-{
-	if (s_instance) {
-		s_instance->handleMouseMoveEvent(x, y);
-	}
-}
-
-void UISystem::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
-{
-	if (s_instance) {
-		s_instance->handleMouseButtonEvent(button, action, mods);
 	}
 }
 
@@ -793,11 +782,29 @@ void UISystem::updateInventoryBar()
                         margin: 4px; 
                         transform: scaleY(-1); 
                     )";
+
+				// Add color and star if potion
 				if (item.type == ItemType::POTION) {
-					vec3 color = registry.potions.get(item_entity).color;
-					slot_content += "image-color: " + getImageColorProperty(color, 255) + ";";
+					Potion& potion = registry.potions.get(item_entity);
+					slot_content += "image-color: " + getImageColorProperty(potion.color, 255) + ";'/>";
+					
+					PotionQuality pq = PotionSystem::getNormalizedQuality(potion);
+					if (!isUselessEffect(potion.effect) && pq.threshold > 0) {
+						std::string star_tex = pq.star_texture_path;
+						slot_content += R"(
+							<div style='
+								pointer-events: none; 
+								position: absolute; 
+								bottom: 3px;
+								left: 3px;
+								width: 15px;
+								height: 15px;
+								decorator: image(")" + star_tex + R"(" flip-vertical fill);'>
+							</div>)";
+					}
+				} else {
+					slot_content += "' />";
 				}
-				slot_content += "' />";
 
 				// Add item count if more than 1
 				if (item.amount > 1) {
@@ -826,7 +833,10 @@ void UISystem::updateInventoryBar()
 
 void UISystem::selectInventorySlot(int slot)
 {
-	if (slot < 0 || slot >= m_hotbar_size) return;
+	while (slot < 0) {
+		slot += m_hotbar_size;
+	}
+	slot = slot % m_hotbar_size;
 
 	if (registry.players.entities.size() == 0) return;
 	Entity entity = registry.players.entities[0];

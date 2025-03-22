@@ -87,29 +87,36 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
 			continue;
 		}
 
+		// Do not stack if item types are different
 		Item& existing_item = registry.items.get(existing);
 		if (existing_item.type != item_comp.type) {
 			continue;
 		}
 
+		// Do not stack if ingredient grindlevels are different
 		if (registry.ingredients.has(existing) && registry.ingredients.has(item)) {
 			Ingredient& existingIng = registry.ingredients.get(existing);
 			Ingredient& newIng = registry.ingredients.get(item);
-			
-			// std::cout << "Checking grindlevel: existing=" << existingIng.grindLevel 
-			// 		  << ", new=" << newIng.grindLevel << std::endl;
-			
 			if (fabs(existingIng.grindLevel - newIng.grindLevel) > FLT_EPSILON) {
-				// If grind levels are different, do not stack
-				std::cout << "Grind levels do not match, don't stack." << std::endl;
 				continue;
 			}
 		}
 
+		// FAILED potions stack based on COLOR
+		// Otherwise, potions stack based on QUALITY
+		// Potion quality should be normalized at this point
 		if (existing_item.type == ItemType::POTION) {
-			PotionEffect first = registry.potions.get(existing).effect;
-			PotionEffect second = registry.potions.get(item).effect;
-			if (first != second) {
+			Potion& first = registry.potions.get(existing);
+			Potion& second = registry.potions.get(item);
+			if (first.effect != second.effect) {
+				continue;
+			}
+
+			if (first.effect == PotionEffect::FAILED && first.color != second.color) {
+				continue;
+			}
+
+			if (fabs(first.quality - second.quality) > FLT_EPSILON) {
 				continue;
 			}
 		}
@@ -128,8 +135,7 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
 	}
 	
 	// If we couldn't stack, check capacity
-	if (inv.items.size() >= inv.capacity) {
-		inv.isFull = true;
+	if (inv.isFull) {
 		return false;
 	}
 	
@@ -140,6 +146,11 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
 	} else {
 		// std::cout << "Pushed new item: " << item_comp.name << std::endl;
 		inv.items.push_back(item);
+	}
+
+	// Update capacity
+	if (inv.items.size() >= inv.capacity) {
+		inv.isFull = true;
 	}
 	
 	std::cout << "Added new item: " << item_comp.name << " to inventory." << std::endl;

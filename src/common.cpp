@@ -58,3 +58,8 @@ bool gl_has_errors()
 
 	return true;
 }
+
+bool isUselessEffect(PotionEffect effect)
+{
+	return effect == PotionEffect::WATER || effect == PotionEffect::FAILED;
+}

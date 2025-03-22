@@ -101,12 +101,15 @@ GLFWwindow* WorldSystem::create_window()
 		{ ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_move({ _0, _1 }); };
 	auto mouse_button_pressed_redirect = [](GLFWwindow* wnd, int _button, int _action, int _mods)
 		{ ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_button_pressed(_button, _action, _mods); };
+	auto scroll_wheel_redirect = [](GLFWwindow* wnd, double _xoffset, double _yoffset)
+		{ ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_wheel(_xoffset, _yoffset); };
 	auto window_resize_redirect = [](GLFWwindow* wnd, int _width, int _height)
 		{ ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_window_resize(_width, _height); };
 
 	glfwSetKeyCallback(window, key_redirect);
 	glfwSetCursorPosCallback(window, cursor_pos_redirect);
 	glfwSetMouseButtonCallback(window, mouse_button_pressed_redirect);
+	glfwSetScrollCallback(window, scroll_wheel_redirect);
 	glfwSetWindowSizeCallback(window, window_resize_redirect);
 
 	return window;
@@ -608,6 +611,14 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 		if (mouse_pos_x >= BAR_X && mouse_pos_x <= BAR_X + BAR_WIDTH && mouse_pos_y >= BAR_Y && mouse_pos_y <= BAR_Y + BAR_HEIGHT) return;
 		// don't throw ammo if in potion making menu or clicking on inventory
 		if (throwAmmo(vec2(mouse_pos_x, mouse_pos_y))) SoundSystem::playThrowSound((int)SOUND_CHANNEL::GENERAL, 0);
+	}
+}
+
+void WorldSystem::on_mouse_wheel(double xoffset, double yoffset)
+{
+	// Pass the event to the UI system if it's initialized 
+	if (m_ui_system != nullptr) {
+		m_ui_system->handleScrollWheelEvent(xoffset, yoffset);
 	}
 }
 

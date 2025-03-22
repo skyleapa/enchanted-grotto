@@ -344,9 +344,15 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 				return;
 			}
 
-			Entity item = pinv.items[selected];
 			// need to allow both ingredients and potions to be added to the cauldron
-			if (!registry.ingredients.has(item) && !(registry.items.get(item).type == ItemType::POTION)) {
+			Entity item = pinv.items[selected];
+			if (!registry.ingredients.has(item) && !registry.potions.has(item)) {
+				return;
+			}
+
+			// FOR NOW don't let water be dumped inside the cauldron
+			// Change this when fillable cauldron gets added
+			if (registry.potions.has(item) && registry.potions.get(item).effect == PotionEffect::WATER) {
 				return;
 			}
 
