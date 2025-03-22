@@ -44,7 +44,7 @@ const int WATER_QUALITY_LEVEL = 1;
 // game constants
 //
 
-const bool ADMIN_FLAG = true;
+const bool ADMIN_FLAG = false;
 
 const int WINDOW_WIDTH_PX = 1250;
 const int WINDOW_HEIGHT_PX = 700;
