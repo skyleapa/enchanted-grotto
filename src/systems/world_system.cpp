@@ -683,8 +683,8 @@ void WorldSystem::handle_player_interaction()
 			continue;
 		}
 
-		// If this is a cauldron and it's invisible, ignore it so if items overlap, we don't get stuck opening cauldron
-		if (registry.cauldrons.has(item)) {
+		// If this is a cauldron/mortar & pestle and it's invisible, ignore it so if items overlap, we don't get stuck opening it
+		if (registry.cauldrons.has(item) || registry.mortarAndPestles.has(item)) {
 			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) {
 				continue;
 			}
