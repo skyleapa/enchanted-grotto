@@ -558,13 +558,9 @@ float getMaxQuality(Inventory& cauldronInventory) {
 		if (isUselessEffect(potion.effect)) {
 			continue;
 		}
-
-		if (pots == 0) {
-			res = potion.quality;
-		} else {
-			res = (res * pots + potion.quality) / (pots + 1);
-		}
-
+		
+		// Running average calculation
+		res = (res * pots + potion.quality) / (pots + 1);
 		pots++;
 	}
 
