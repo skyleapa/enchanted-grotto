@@ -255,23 +255,6 @@ enum class PotionEffect
 	REJUVENATION = CLARITY + 1
 };
 
-const std::unordered_map<PotionEffect, std::string> EFFECT_NAMES = {
-	{PotionEffect::FAILED, "Failed"},
-	{PotionEffect::WATER, "Water"},
-	{PotionEffect::SPEED, "Speed"},
-	{PotionEffect::HEALTH, "Health"},
-	{PotionEffect::DAMAGE, "Damage"},
-	{PotionEffect::MOLOTOV, "Molotov"},
-	{PotionEffect::REGEN, "Regen"},
-	{PotionEffect::TENACITY, "Tenacity"},
-	{PotionEffect::POISON, "Poison"},
-	{PotionEffect::RESISTANCE, "Resistance"},
-	{PotionEffect::SATURATION, "Saturation"},
-	{PotionEffect::ALKALESCENCE, "Alkalescence"},
-	{PotionEffect::CLARITY, "Clarity"},
-	{PotionEffect::REJUVENATION, "Rejuvenation"}
-};
-
 // Action types
 // WAIT: Records a wait time of some constant minutes defined in common.hpp (default 5).
 //       The value represents how many units of that constant wait time have been recorded.
@@ -321,6 +304,8 @@ struct Recipe
 	vec3 finalPotionColor;
 	std::vector<RecipeIngredient> ingredients;
 	std::vector<Action> steps;
+	std::string name;                  // Name of the potion
+	std::string description;           // Description in recipe book
 };
 
 // Potions are accepted as recipe ingredients, but their amount value is used as the PotionEffect.
@@ -343,7 +328,9 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::ADD_INGREDIENT, 1 }, // add galefruit
 			{ ActionType::STIR, 3 },          // stir 3 times
 			{ ActionType::WAIT, 6 }           // wait 30 seconds
-		}
+		},
+		"Potion of Speed",
+		"[Consumable] Increases your movement speed for a limited time."
 	},
 	{
 		PotionEffect::HEALTH,
@@ -359,7 +346,9 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::ADD_INGREDIENT, 0 }, // add everfern
 			{ ActionType::STIR, 3 },          // stir 3 times
 			{ ActionType::WAIT, 4 }           // wait 20 seconds
-		}
+		},
+		"Potion of Healing",
+		"[Consumable] A basic potion that instantly replenishes your health."
 	},
 	{
 		PotionEffect::DAMAGE,
@@ -377,7 +366,9 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::ADD_INGREDIENT, 1 }, // add storm bark
 			{ ActionType::STIR, 2 },          // stir 2 times
 			{ ActionType::WAIT, 3 }           // wait 15 seconds
-		}
+		},
+		"Potion of Harming",
+		"[Throwable] A damaging potion that can be thrown at enemies."
 	},
 	{
 		PotionEffect::MOLOTOV,
@@ -397,7 +388,9 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::ADD_INGREDIENT, 2 }, // add petrified bones
 			{ ActionType::STIR, 2 },          // stir 2 times
 			{ ActionType::WAIT, 4 }           // wait 20 seconds
-		}
+		},
+		"Molotov Cocktail",
+		"[Throwable] Creates a burning area when thrown."
 	},
 	{
 		PotionEffect::REGEN,
@@ -418,7 +411,9 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 3 },          // wait 15 seconds
 			{ ActionType::STIR, 2 },          // stir 2 times
 			{ ActionType::WAIT, 3 }           // wait 15 seconds
-		}
+		},
+		"Potion of Regeneration",
+		"[Consumable] Gradually restores health over time."
 	},
 	{
 		PotionEffect::TENACITY,
@@ -438,7 +433,9 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::ADD_INGREDIENT, 2 }, // add petrified bones
 			{ ActionType::STIR, 4 },          // stir 4 times
 			{ ActionType::WAIT, 4 }           // wait 20 seconds
-		}
+		},
+		"Potion of Tenacity",
+		"[Consumable] Increases your inventory capacity."
 	},
 	{
 		PotionEffect::POISON,
@@ -458,7 +455,9 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::ADD_INGREDIENT, 2 }, // add doomspores
 			{ ActionType::STIR, 3 },          // stir 3 times
 			{ ActionType::WAIT, 5 }           // wait 25 seconds
-		}
+		},
+		"Potion of Poison",
+		"[Throwable] Creates a poisonous area."
 	},
 	{
 		PotionEffect::RESISTANCE,
@@ -476,7 +475,9 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::ADD_INGREDIENT, 1 }, // add cactus extract
 			{ ActionType::STIR, 5 },          // stir 5 times
 			{ ActionType::WAIT, 6 }           // wait 30 seconds
-		}
+		},
+		"Potion of Resistance",
+		"[Consumable] Reduces damage taken for a limited time."
 	},
 	{
 		PotionEffect::SATURATION,
@@ -498,7 +499,9 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::ADD_INGREDIENT, 0 }, // add galefruit
 			{ ActionType::STIR, 3 },          // stir 3 times
 			{ ActionType::WAIT, 5 }           // wait 25 seconds
-		}
+		},
+		"Potion of Saturation",
+		"[Consumable] Temporarily increases the potency of other potions."
 	},
 	{
 		PotionEffect::ALKALESCENCE,
@@ -520,7 +523,9 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::ADD_INGREDIENT, 2 }, // add storm bark
 			{ ActionType::STIR, 2 },          // stir 2 times
 			{ ActionType::WAIT, 4 }           // wait 20 seconds
-		}
+		},
+		"Potion of Alkalescence",
+		"[Throwable] Reacts with acidic substances."
 	},
 	{
 		PotionEffect::CLARITY,
@@ -542,7 +547,9 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::ADD_INGREDIENT, 2 }, // add galefruit
 			{ ActionType::STIR, 2 },          // stir 2 times
 			{ ActionType::WAIT, 3 }           // wait 15 seconds
-		}
+		},
+		"Potion of Clarity",
+		"[Throwable] Reveals hidden objects or ingredients."
 	},
 	{
 		PotionEffect::REJUVENATION,
@@ -569,7 +576,9 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::ADD_INGREDIENT, 5 }, // add glowshroom
 			{ ActionType::STIR, 4 },          // stir 4 times
 			{ ActionType::WAIT, 6 }           // wait 30 seconds
-		}
+		},
+		"Potion of Rejuvenation",
+		"[???] The ultimate healing potion."
 	}
 };
 

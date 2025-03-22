@@ -29,7 +29,6 @@ Entity ItemSystem::createIngredient(ItemType type, int amount) {
 	// Add ingredient-specific component
 	Ingredient& ingredient = registry.ingredients.emplace(entity);
 	ingredient.grindLevel = 0.0f;  // Starts ungrounded
-	
 	return entity;
 }
 
@@ -46,9 +45,43 @@ Entity ItemSystem::createPotion(PotionEffect effect, int duration, const vec3& c
 	potion.effectValue = effectValue;
 	
 	// Get potion name
-	registry.items.get(entity).name = EFFECT_NAMES.at(effect) + " Potion";
 	return entity;
 }
+
+std::string ItemSystem::getItemName(Entity item) {
+	Item& it = registry.items.get(item);
+	std::string name = ITEM_INFO.at(it.type).name;
+
+	// Add grind stat for ingredient
+	if (registry.ingredients.has(item)) {
+		int lvl = (int) (registry.ingredients.get(item).grindLevel * 100);
+		if (lvl > 0) {
+			name += " (" + std::to_string(lvl) + "% Grinded)";
+		}
+	}
+
+	// Add potion name for potions
+	if (registry.potions.has(item)) {
+		Potion& potion = registry.potions.get(item);
+		if (potion.effect == PotionEffect::WATER) {
+			return "Flask of Holy Water";
+		} else if (potion.effect == PotionEffect::FAILED) {
+			return "Failed Potion";
+		}
+		
+		for (Recipe r : RECIPES) {
+			if (potion.effect == r.effect) {
+				name = r.name;
+				break;
+			}
+		}
+
+		name = PotionSystem::getNormalizedQuality(potion).name + " " + name;
+	}
+
+	return name;
+}
+
 
 Entity ItemSystem::createCollectableIngredient(vec2 position, ItemType type, int amount, bool canRespawn) {
     Entity item = createItem(type, amount, true, false, canRespawn);

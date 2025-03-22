@@ -688,18 +688,34 @@ void UISystem::createInventoryBar()
         <head>
             <style>
                 body {
-                    position: absolute;
                     bottom: 10px;
                     left: 50%;
                     margin-left: -220px;
+                    width: 440px;
+                    height: 72px;
+                    font-family: Open Sans;
+                }
+
+				#item-name {
+					position: absolute;
+					top: 0px;
+					width: 440px;
+					text-align: center;
+					font-size: 16px;
+					font-effect: outline( 1px black );
+				}
+
+				#inventory-bar {
+                    position: absolute;
+                    bottom: 0px;
+					left: 0px;
                     width: 440px;
                     height: 44px;
                     background-color: rgba(173, 146, 132, 238);
                     border-width: 2px;
                     border-color: rgb(78, 54, 32);
                     display: block;
-                    font-family: Open Sans;
-                }
+				}
                 
                 .inventory-slot {
                     position: absolute;
@@ -721,7 +737,9 @@ void UISystem::createInventoryBar()
                 }
             </style>
         </head>
-        <body id="inventory-bar">
+		<body>
+			<div id="item-name"></div>
+        	<div id="inventory-bar">
         )";
 
 		// Add inventory slots
@@ -731,13 +749,12 @@ void UISystem::createInventoryBar()
 				slot_class += " selected";
 			}
 
-			// Number near each slot
 			int left = i * 44;
 			inventory_rml += "<div id='slot-" + std::to_string(i) + "' class='" + slot_class +
 				"' style='left: " + std::to_string(left) + "px;'></div>";
 		}
 
-		inventory_rml += "</body></rml>";
+		inventory_rml += "</div></body></rml>";
 		m_inventory_document = m_context->LoadDocumentFromMemory(inventory_rml.c_str());
 		if (m_inventory_document) {
 			m_inventory_document->Show();
@@ -770,6 +787,14 @@ void UISystem::updateInventoryBar()
 		if (!registry.inventories.has(player)) return;
 
 		Inventory& inventory = registry.inventories.get(player);
+
+		// Update the item name
+		Rml::Element* item_name = m_inventory_document->GetElementById("item-name");
+		if (m_selected_slot < inventory.items.size()) {
+			item_name->SetInnerRML(ItemSystem::getItemName(inventory.items[m_selected_slot]));
+		} else {
+			item_name->SetInnerRML("");
+		}
 
 		// Update each slot in the inventory bar
 		for (int i = 0; i < m_hotbar_size; i++) {
@@ -1743,56 +1768,10 @@ std::string UISystem::getRecipeHtml(int recipe_index)
 	}
 
 	const Recipe& recipe = RECIPES[recipe_index];
-	std::string effect_name = EFFECT_NAMES.at(recipe.effect);
-
 	std::string html;
-	html += "<div class='potion-title'>" + effect_name + "</div><br />";
+	html += "<div class='potion-title'>" + recipe.name + "</div><br />";
 
-	std::string description;
-	switch (recipe.effect)
-	{
-	case PotionEffect::HEALTH:
-		description = "A basic potion that will replenish your health.";
-		break;
-	case PotionEffect::SPEED:
-		description = "Increases your movement speed for a limited time.";
-		break;
-	case PotionEffect::DAMAGE:
-		description = "A damaging potion that can be thrown at enemies.";
-		break;
-	case PotionEffect::MOLOTOV:
-		description = "Creates a burning area when thrown.";
-		break;
-	case PotionEffect::REGEN:
-		description = "Gradually restores health over time.";
-		break;
-	case PotionEffect::TENACITY:
-		description = "Increases your inventory capacity.";
-		break;
-	case PotionEffect::POISON:
-		description = "Creates a poisonous area when thrown.";
-		break;
-	case PotionEffect::RESISTANCE:
-		description = "Reduces damage taken for a limited time.";
-		break;
-	case PotionEffect::SATURATION:
-		description = "Increases the potency of other potions.";
-		break;
-	case PotionEffect::ALKALESCENCE:
-		description = "Reacts with acidic substances.";
-		break;
-	case PotionEffect::CLARITY:
-		description = "Reveals hidden objects or ingredients.";
-		break;
-	case PotionEffect::REJUVENATION:
-		description = "The ultimate healing potion.";
-		break;
-	default:
-		description = "A mysterious potion with unknown effects.";
-		break;
-	}
-
-	html += "<div class='potion-description'>" + description + "</div><br /><br />";
+	html += "<div class='potion-description'>" + recipe.description + "</div><br /><br />";
 
 	html += "<div class='ingredients-title'>Ingredients:</div><br />";
 	html += "<div class='ingredients-list'>" + getRecipeIngredientsText(recipe) + "</div><br /><br />";
@@ -1843,10 +1822,10 @@ std::string UISystem::getRecipeStepsText(const Recipe& recipe)
 			if (step.value < recipe.ingredients.size())
 			{
 				const auto& ingredient = recipe.ingredients[step.value];
-				std::string name = getItemName(ingredient.type);
+				std::string name = getIngredientName(ingredient);
 
 				if (ingredient.type == ItemType::POTION)
-					html += "Insert " + std::to_string(ingredient.amount) + " " + name;
+					html += "Pour in 1 " + name;
 				else
 					html += "Add " + std::to_string(ingredient.amount) + " " + name;
 			}
@@ -1873,7 +1852,7 @@ std::string UISystem::getRecipeIngredientsText(const Recipe& recipe)
 	std::string text;
 
 	for (const auto& ingredient : recipe.ingredients) {
-		std::string name = getItemName(ingredient.type);
+		std::string name = getIngredientName(ingredient);
 		text += std::to_string(ingredient.amount) + "x " + name;
 		text += "<br />";
 	}
@@ -1881,11 +1860,28 @@ std::string UISystem::getRecipeIngredientsText(const Recipe& recipe)
 	return text;
 }
 
-std::string UISystem::getItemName(ItemType type)
+std::string UISystem::getIngredientName(RecipeIngredient ing)
 {
-	if (ITEM_INFO.find(type) != ITEM_INFO.end()) {
-		return ITEM_INFO.at(type).name;
+	// Add potion name for potions
+	if (ing.type == ItemType::POTION) {
+		PotionEffect effect = static_cast<PotionEffect>(ing.amount);
+		for (Recipe r : RECIPES) {
+			if (effect == r.effect) {
+				return r.name;
+			}
+		}
 	}
 
-	return "Unknown Item";
+	std::string name = ITEM_INFO.at(ing.type).name;
+	if (ing.amount > 1 && name.substr(name.length() - 1) != "s") {
+		name += "s";
+	}
+
+	// Add grind stat for ingredient
+	if (ing.grindAmount > 0.f) {
+		int lvl = (int) (ing.grindAmount * 100);
+		name += " (" + std::to_string(lvl) + "% Grinded)";
+	}
+
+	return name;
 }

@@ -202,5 +202,5 @@ private:
     std::string getRecipeHtml(int recipe_index);
     std::string getRecipeStepsText(const Recipe& recipe);
     std::string getRecipeIngredientsText(const Recipe& recipe);
-    std::string getItemName(ItemType type);
+    std::string getIngredientName(RecipeIngredient ing);
 };
