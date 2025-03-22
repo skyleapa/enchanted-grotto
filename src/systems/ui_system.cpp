@@ -1563,7 +1563,6 @@ void UISystem::updateEffectsBar() {
 
 			if (i >= m_effectsbar_size - player.active_effects.size()) {
 				Entity effect = player.active_effects[m_effectsbar_size - i - 1];
-				registry.list_all_components_of(effect);
 				if (!registry.items.has(effect)) {
 					std::cout << "missing item component" << std::endl;
 					continue;
