@@ -3,6 +3,7 @@
 #include "physics_system.hpp"
 #include "item_system.hpp"
 #include "world_init.hpp"
+#include "sound_system.hpp"
 #include <iostream>
 
 #include <vector>
@@ -13,8 +14,6 @@ void BiomeSystem::init(RenderSystem* renderer_arg) {
 	screen.darken_screen_factor = 1;
 	screen.fade_status = 1; // start from black screen
 	screen.is_switching_biome = true;
-
-	switchBiome(screen.biome);
 }
 
 // step function to handle biome changes
@@ -51,7 +50,7 @@ void BiomeSystem::step(float elapsed_ms_since_last_update) {
 				screen.from_biome = screen.biome;
 				screen.biome = screen.switching_to_biome;
 				screen.darken_screen_factor = 1;
-				switchBiome((int)screen.biome);
+				switchBiome((int)screen.biome, screen.first_game_load);
 			}
 			screen.darken_screen_factor -= elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
 			if (screen.darken_screen_factor <= 0)
@@ -68,10 +67,10 @@ void BiomeSystem::step(float elapsed_ms_since_last_update) {
 	return;
 }
 
-void BiomeSystem::switchBiome(int biome) {
+void BiomeSystem::switchBiome(int biome, bool is_first_load) {
 	std::vector<Entity> to_remove;
 	for (auto entity : registry.motions.entities) {
-		if (registry.players.has(entity) || registry.inventories.has(entity)) continue;
+		if (registry.players.has(entity) || registry.inventories.has(entity) || registry.potions.has(entity)) continue; // don't lose potion effects
 
 		// don't delete any render requests marked as invisible
 		if (registry.renderRequests.has(entity)) {
@@ -85,6 +84,9 @@ void BiomeSystem::switchBiome(int biome) {
 		registry.remove_all_components_of(entity);
 	}
 
+	// halt any boiling sounds first
+	SoundSystem::haltBoilSound();
+
 	if (biome == (GLuint)BIOME::FOREST) {
 		createForest();
 	}
@@ -93,6 +95,10 @@ void BiomeSystem::switchBiome(int biome) {
 	}
 	else if (biome == (GLuint)BIOME::GROTTO) {
 		createGrotto();
+		// continue boiling if it was boiling before leaving grotto, assumes we only have 1 cauldron enttity
+		if (registry.cauldrons.entities.size() > 0) {
+			if (registry.cauldrons.components[0].is_boiling) SoundSystem::playBoilSound((int)SOUND_CHANNEL::BOILING, -1);
+		}
 	}
 	else if (biome == (GLuint)BIOME::DESERT) {
 		createDesert();
@@ -104,10 +110,10 @@ void BiomeSystem::switchBiome(int biome) {
 		createCrystal();
 	}
 
-	renderPlayerInNewBiome();
+	renderPlayerInNewBiome(is_first_load);
 }
 
-void BiomeSystem::renderPlayerInNewBiome() {
+void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
 	if (registry.players.entities.size() == 0) return;
 
 	Entity player_entity = registry.players.entities[0];
@@ -148,7 +154,6 @@ void BiomeSystem::renderPlayerInNewBiome() {
 			}
 			// recreate textbox
 			if (registry.motions.has(mortar)) {
-				Motion& motion = registry.motions.get(mortar);
 				createTextbox(renderer, { GRID_CELL_WIDTH_PX * 6.5, GRID_CELL_HEIGHT_PX * 3 }, mortar, "[F] Use Mortar & Pestle");
 			}
 
@@ -205,6 +210,14 @@ void BiomeSystem::renderPlayerInNewBiome() {
 	}
 	else if (screen.from_biome == (int)BIOME::FOREST_EX && screen.biome == (int)BIOME::CRYSTAL) {
 		player_motion.position = vec2(960, 90);
+	}
+
+	// if re-opening the game, set player position to where they were 
+	if (is_first_load && registry.players.get(player_entity).load_position != vec2(0, 0)) {
+		screen.first_game_load = false;
+		player_motion.position = registry.players.get(player_entity).load_position;
+		std::cout << registry.players.get(player_entity).load_position.x << ", " << registry.players.get(player_entity).load_position.y << std::endl;
+		std::cout << "reloaded player's position" << std::endl;
 	}
 }
 

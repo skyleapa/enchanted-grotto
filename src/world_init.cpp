@@ -1853,7 +1853,6 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 		registry.colors.insert(entity, registry.potions.get(item_entity).color / 255.f);
 	}
 
-	Player& player = registry.players.get(player_entity);
 	Motion& player_motion = registry.motions.get(player_entity);
 	vec2 player_pos = player_motion.position;
 

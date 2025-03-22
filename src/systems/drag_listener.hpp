@@ -12,7 +12,6 @@ public:
 	static void RegisterDraggableElement(Rml::Element* element);
 	static void RegisterDragDropElement(Rml::Element* element);
 	static void LinkUISystem(UISystem* ui_system) { m_ui_system = ui_system; }
-	static bool is_boiling; // is the boiling sound playing
 
 protected:
 	virtual void ProcessEvent(Rml::Event& event);

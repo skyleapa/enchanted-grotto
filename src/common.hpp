@@ -60,7 +60,8 @@ const float PlAYER_BB_GROTTO_SIZE_FACTOR = 1.8;
 const float PLAYER_SPEED = (float)200;
 const float PLAYER_MAX_HEALTH = (float)100;
 const float PLAYER_DYING = (float)20;
-const float PLAYER_DAMAGE_COOLDOWN = (float)500;
+const float PLAYER_DAMAGE_COOLDOWN = (float)1000.f;
+const float PLAYER_THROW_COOLDOWN = (float)1000.f;
 
 const float TIME_UPDATE_FACTOR = 0.001f;
 const float THROW_UPDATE_FACTOR = 0.3f;
@@ -619,6 +620,7 @@ const float STIR_PENALTY = 0.3f;
 const float WAIT_PENALTY = 0.2f;
 const float HEAT_PENALTY = 0.01f; // Heat is measured 1-100
 
+const float REGEN_TIMER = 1000.f;
 enum class TUTORIAL {
 	WELCOME_SCREEN = 0,
 	MOVEMENT = WELCOME_SCREEN + 1,
@@ -646,17 +648,17 @@ const std::vector<PotionEffect> throwable_potions = {
 	PotionEffect::DAMAGE,
 	PotionEffect::MOLOTOV,
 	PotionEffect::POISON,
-	PotionEffect::CLARITY
+	PotionEffect::CLARITY,
+	PotionEffect::FAILED
 };
 
 const std::vector<PotionEffect> consumable_potions = {
 	PotionEffect::SPEED,
 	PotionEffect::HEALTH,
 	PotionEffect::REGEN,
-	PotionEffect::TENACITY,
+	// PotionEffect::TENACITY, // to be implemented in M4
 	PotionEffect::RESISTANCE,
 	PotionEffect::SATURATION,
-	PotionEffect::REJUVENATION
 };
 
 #ifndef M_PI

@@ -9,7 +9,6 @@
 
 static DragListener drag_listener;
 UISystem* DragListener::m_ui_system;
-bool DragListener::is_boiling = false;
 
 void DragListener::RegisterDraggableElement(Rml::Element* element) {
 	element->AddEventListener("dragstart", &drag_listener);
@@ -255,7 +254,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			if (!is_heat_changing) {
 				is_heat_changing = true;
 				SoundSystem::haltGeneralSound();
-				if (is_boiling) SoundSystem::continueBoilSound((int) SOUND_CHANNEL::BOILING, -1); // continue boiling if it was already boiling
+				if (registry.cauldrons.get(m_ui_system->getOpenedCauldron()).is_boiling) SoundSystem::continueBoilSound((int) SOUND_CHANNEL::BOILING, -1); // continue boiling if it was already boiling
 				SoundSystem::playInteractMenuSound((int) SOUND_CHANNEL::MENU, -1); // play infinitely until dragging is finished
 			}
 			return;
@@ -298,12 +297,12 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			if (heatLevel == 0) {
 				SoundSystem::haltBoilSound(); // no boiling if setting temperature back to off
 				SoundSystem::haltGeneralSound();
-				is_boiling = false;
+				registry.cauldrons.get(m_ui_system->getOpenedCauldron()).is_boiling = false;
 			} else {
 				// stsart boiling or continue boiling
-				if (is_boiling) SoundSystem::continueBoilSound((int) SOUND_CHANNEL::BOILING, -1);
+				if (registry.cauldrons.get(m_ui_system->getOpenedCauldron()).is_boiling) SoundSystem::continueBoilSound((int) SOUND_CHANNEL::BOILING, -1);
 				else {
-					is_boiling = true;
+					registry.cauldrons.get(m_ui_system->getOpenedCauldron()).is_boiling = true;
 					SoundSystem::playBoilSound((int) SOUND_CHANNEL::BOILING, -1);
 				}
 			}

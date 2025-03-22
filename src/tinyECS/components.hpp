@@ -10,7 +10,13 @@ struct Player
 	std::string name;
 	float cooldown = 0.f; // defaults to 0, but when ammo is tossed, will have a 1000 ms cooldown
 	float health = PLAYER_MAX_HEALTH;
-	float damage_cooldown = PLAYER_DAMAGE_COOLDOWN; // cooldown before player can take damage again to prevent insta death
+	float damage_cooldown = 0.f; // cooldown before player can take damage again to prevent insta death
+	std::vector<Entity> active_effects = {}; // list of active consumed potions
+	bool consumed_potion = false;
+	float speed_multiplier = 1.f;
+	float effect_multiplier = 1.f;
+	float defense = 1.f;
+	vec2 load_position = vec2(0, 0);
 };
 
 // All data relevant to the shape and motion of entities
@@ -52,6 +58,7 @@ struct ScreenState
 	bool tutorial_step_complete = true;
 	float autosave_timer = AUTOSAVE_TIMER;
 	std::vector<std::string> killed_enemies = {};
+	bool first_game_load = true;
 };
 
 // A struct to refer to debugging graphics in the ECS
@@ -147,7 +154,7 @@ struct Inventory
 	std::vector<Entity> items;
 	int capacity;
 	bool isFull;
-	int selection = 0; // index that corresponds to the selected item indexed in items
+	int selection = 0; // index that corresponds to the selected item indexed in items, zero-indexed
 };
 
 struct Cauldron
@@ -161,6 +168,7 @@ struct Cauldron
 	int stirFlash = 0;                // Time remaining for stir flash
 	std::vector<Action> actions;      // Records player actions
 	Entity water;                     // We technically only need 1 of these globally but this was easier so whatever
+	bool is_boiling = false;
 	// If stir quality ever gets added, a penalty can be recorded here
 };
 
@@ -657,4 +665,9 @@ const std::unordered_map<ItemType, std::vector<BIOME>> itemRespawnBiomes = {
 // damage flash only to be applied to player and enemies
 struct DamageFlash {
 	float flash_value = 1.f; // defaults to 0 for no flash, and 1 for red tint
+};
+
+struct Regeneration {
+	float heal_amount = 0.f;
+	float timer = REGEN_TIMER;
 };

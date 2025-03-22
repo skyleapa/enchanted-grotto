@@ -13,9 +13,9 @@ public:
 
     void init(RenderSystem* renderer_arg); // initialize screen state
     void step(float elapsed_ms);
-    void switchBiome(int biome); // handle switching biome
+    void switchBiome(int biome, bool is_first_load); // handle switching biome
     bool handleEntranceInteraction(Entity entrance_entity);
-    void renderPlayerInNewBiome();
+    void renderPlayerInNewBiome(bool is_first_load);
 
     void createGrotto();
     void createForest();
