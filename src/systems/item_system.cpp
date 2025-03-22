@@ -3,6 +3,9 @@
 #include <iostream>
 #include <fstream>
 
+// initialize m_ui_system
+UISystem* ItemSystem::m_ui_system = nullptr;
+
 Entity ItemSystem::createItem(ItemType type, int amount, bool isCollectable, bool is_ammo, bool canRespawn) {
 	Entity entity = Entity();
 	// std::cout << "Entity " << entity.id() << " of type " << (int) type << std::endl;
@@ -124,6 +127,12 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
 		if (!item_comp.isCollectable) {
 			destroyItem(item);
 		}
+
+		// update bar if inventory belongs to player
+		if (registry.players.has(inventory) && m_ui_system != nullptr) {
+			m_ui_system->updateInventoryBar();
+		}
+
 		return true;
 	}
 
@@ -145,6 +154,11 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
 
 	std::cout << "Added new item: " << item_comp.name << " to inventory." << std::endl;
 
+	// update bar if inventory belongs to player
+	if (registry.players.has(inventory) && m_ui_system != nullptr) {
+		m_ui_system->updateInventoryBar();
+	}
+
 	return true;
 }
 
@@ -162,6 +176,10 @@ bool ItemSystem::removeItemFromInventory(Entity inventory, Entity item) {
 		return true;
 	}
 
+	// update bar if inventory belongs to player
+	if (registry.players.has(inventory) && m_ui_system != nullptr) {
+		m_ui_system->updateInventoryBar();
+	}
 	return false;
 }
 

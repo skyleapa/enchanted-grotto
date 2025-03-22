@@ -48,4 +48,11 @@ public:
 	static void deserializeInventory(Entity inventory, const nlohmann::json& data);
 	static void deserializeScreenState(const nlohmann::json& data);
 	static void deserializePlayerState(const nlohmann::json& data);
+
+	// Set reference to UI system
+	static void setUISystem(UISystem* ui_system) { m_ui_system = ui_system; }
+
+private:
+	// Pointer to the UI system for passing input events
+	static UISystem* m_ui_system;
 }; 

@@ -134,6 +134,12 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 		createEffectsBar();
 
 		m_initialized = true;
+
+		// update the bars for the first time to reload state
+		updateInventoryBar();
+		updateHealthBar();
+		updateEffectsBar();
+
 		std::cout << "UISystem::init - Successfully initialized" << std::endl;
 		return true;
 	}
@@ -226,15 +232,6 @@ void UISystem::step(float elapsed_ms)
 		if (!m_effectsbar_document) {
 			createEffectsBar();
 		}
-
-		// Update inventory bar
-		updateInventoryBar();
-
-		// Update health bar
-		updateHealthBar();
-
-		// Update active effects bar
-		updateEffectsBar();
 
 		// Display tutorial
 		updateTutorial();

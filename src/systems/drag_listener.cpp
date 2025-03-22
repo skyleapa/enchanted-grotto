@@ -358,6 +358,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			registry.items.get(copy).amount = 1;
 			SoundSystem::playDropInCauldronSound((int) SOUND_CHANNEL::MENU, 0);
 			PotionSystem::addIngredient(m_ui_system->getOpenedCauldron(), copy);
+			if (m_ui_system) m_ui_system->updateInventoryBar();
 			return;
 		}
 

@@ -217,10 +217,12 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		}
 	}
 
+	handle_item_respawn(elapsed_ms_since_last_update);
+
+	if (m_ui_system->isCauldronOpen() || m_ui_system->isMortarPestleOpen()) return true; // skip the following updates if menu is open
 	updatePlayerState(player, player_motion, elapsed_ms_since_last_update);
 	updateThrownAmmo(elapsed_ms_since_last_update);
 	update_textbox_visibility();
-	handle_item_respawn(elapsed_ms_since_last_update);
 
 	return true;
 }
@@ -375,6 +377,7 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 				screen.fade_status = 0;
 				player.health = PLAYER_MAX_HEALTH; // reset to max health
 			}
+			if (m_ui_system) m_ui_system->updateHealthBar();
 			continue;
 		}
 		else if ((registry.ammo.has(collision_entity) || registry.ammo.has(collision.other)) && (registry.terrains.has(collision_entity) || registry.terrains.has(collision.other))) {
@@ -715,7 +718,6 @@ void WorldSystem::handle_player_interaction()
 		}
 		else if (registry.mortarAndPestles.has(item)) {
 			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
-			std::cout << "found mortar " << item.id() << std::endl;
 			if (m_ui_system != nullptr)
 			{
 				handle_textbox = m_ui_system->openMortarPestle(item);
@@ -821,7 +823,7 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 		// Check if current biome matches any allowed respawn biome for this item type
 		auto it = itemRespawnBiomes.find(item_info.type);
 		if (it == itemRespawnBiomes.end())
-			continue; 
+			continue;
 
 		const std::vector<BIOME>& allowedBiomes = it->second;
 		BIOME originalBiome = item_info.lastBiome;
@@ -1050,6 +1052,9 @@ bool WorldSystem::throwAmmo(vec2 target) {
 			}
 		}
 		player.cooldown = PLAYER_THROW_COOLDOWN;
+		if (registry.players.has(player_entity) && m_ui_system != nullptr) {
+			m_ui_system->updateInventoryBar();
+		}
 		return true;
 	}
 
@@ -1123,6 +1128,11 @@ void WorldSystem::updateConsumedPotions(float elapsed_ms_since_last_update) {
 		player.active_effects.erase(std::remove(player.active_effects.begin(), player.active_effects.end(), entity), player.active_effects.end());
 		registry.remove_all_components_of(entity);
 	}
+
+	// if a potion expired, then update the effect bar, needs to update after active_effects has been modified
+	if (to_remove.size() > 0) {
+		if (m_ui_system) m_ui_system->updateEffectsBar();
+	}
 }
 
 bool WorldSystem::consumePotion() {
@@ -1181,10 +1191,16 @@ bool WorldSystem::consumePotion() {
 	// add copy of item to player's active effects - health is instant so don't add to active_effects
 	assert(registry.potions.has(item_copy) && "consumed item should be a potion");
 	assert(registry.items.has(item_copy) && "consumed item should be an item");
+
+	addPotionEffect(registry.potions.get(item_copy), player_entity);
+
 	if (registry.potions.get(item_copy).effect != PotionEffect::HEALTH) {
 		player.active_effects.push_back(item_copy);
 	}
-	addPotionEffect(registry.potions.get(item_copy), player_entity);
+	else {
+		if (m_ui_system) m_ui_system->updateHealthBar();
+	}
+	if (m_ui_system) m_ui_system->updateInventoryBar();
 	std::cout << "player has consumed a potion of " << EFFECT_NAMES.at(registry.potions.get(item_copy).effect) << std::endl;
 	return true;
 }
@@ -1219,6 +1235,8 @@ void WorldSystem::addPotionEffect(Potion& potion, Entity player) {
 		break;
 	}
 	}
+
+	if (m_ui_system) m_ui_system->updateEffectsBar();
 }
 
 void WorldSystem::removePotionEffect(Potion& potion, Entity player) {
