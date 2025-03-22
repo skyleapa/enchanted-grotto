@@ -794,12 +794,21 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 
 void WorldSystem::handle_item_respawn(float elapsed_ms)
 {
+	if (registry.players.entities.size() == 0) return;
+	Entity entity = registry.players.entities[0];
+
+	if (!registry.inventories.has(entity)) return;
+	Inventory& inventory = registry.inventories.get(entity);
+
 	for (Entity item : registry.items.entities)
 	{
 		Item& item_info = registry.items.get(item);
 
+		// skip if in inventory
+		if (std::find(inventory.items.begin(), inventory.items.end(), item) != inventory.items.end()) continue;
+
 		if (!item_info.canRespawn)
-			return;
+			continue;
 
 		if (item_info.respawnTime <= 0)
 			continue;
