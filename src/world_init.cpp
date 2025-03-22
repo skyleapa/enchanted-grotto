@@ -643,7 +643,7 @@ Entity createRecipeBook(RenderSystem* renderer, vec2 position, vec2 scale, std::
 	motion.position = position;
 	motion.scale = scale;
 
-	// Entity textbox = createTextbox(renderer, position, entity, "[F] Recipe Book"); // not needed for Milestone 1
+	Entity textbox = createTextbox(renderer, position, entity, "[F] Recipe Book");
 
 	registry.renderRequests.insert(
 		entity,
