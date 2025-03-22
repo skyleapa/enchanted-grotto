@@ -532,18 +532,18 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 					updateFollowMouse();
 					break;
 				}
-				
+
 				// Reset bottle position
 				hovered->SetProperty("top", BOTTLE_TOP_PX);
 				hovered->SetProperty("left", BOTTLE_LEFT_PX);
 				heldBottle = nullptr;
-				
+
 				// Check if clicking on cauldron water to bottle potion
 				Rml::Element* possibleCauldron = m_context->GetElementAtPoint(mousePos, hovered);
 				if (!possibleCauldron || (possibleCauldron->GetId() != "cauldron-water" && possibleCauldron->GetId() != "cauldron")) {
 					break;
 				}
-				
+
 				// Create potion and add to player inventory
 				Entity cauldron = getOpenedCauldron();
 				Potion potion = PotionSystem::bottlePotion(cauldron);
@@ -573,7 +573,8 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 				SoundSystem::haltBoilSound();
 				if (potion.quality > 0.75) {
 					SoundSystem::playBottleHighQualityPotionSound((int)SOUND_CHANNEL::MENU, 0);
-				} else {
+				}
+				else {
 					SoundSystem::playBottleSound((int)SOUND_CHANNEL::MENU, 0);
 				}
 			}
@@ -646,7 +647,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 // Changing inventory slots on scroll wheel
 void UISystem::handleScrollWheelEvent(double xoffset, double yoffset)
 {
-	int dist = (int) yoffset * -1;
+	int dist = (int)yoffset * -1;
 	selectInventorySlot(m_selected_slot + dist);
 	m_context->ProcessMouseWheel(Rml::Vector2f(xoffset, yoffset), getKeyModifiers());
 }
@@ -694,6 +695,7 @@ void UISystem::createInventoryBar()
                     width: 440px;
                     height: 72px;
                     font-family: Open Sans;
+                    z-index: 10;
                 }
 
 				#item-name {
@@ -792,7 +794,8 @@ void UISystem::updateInventoryBar()
 		Rml::Element* item_name = m_inventory_document->GetElementById("item-name");
 		if (m_selected_slot < inventory.items.size()) {
 			item_name->SetInnerRML(ItemSystem::getItemName(inventory.items[m_selected_slot]));
-		} else {
+		}
+		else {
 			item_name->SetInnerRML("");
 		}
 
@@ -846,7 +849,7 @@ void UISystem::updateInventoryBar()
 				if (item.type == ItemType::POTION) {
 					Potion& potion = registry.potions.get(item_entity);
 					slot_content += "image-color: " + getImageColorProperty(potion.color, 255) + ";'/>";
-					
+
 					PotionQuality pq = PotionSystem::getNormalizedQuality(potion);
 					if (!isUselessEffect(potion.effect) && pq.threshold > 0) {
 						std::string star_tex = pq.star_texture_path;
@@ -861,7 +864,8 @@ void UISystem::updateInventoryBar()
 								decorator: image(")" + star_tex + R"(" flip-vertical fill);'>
 							</div>)";
 					}
-				} else {
+				}
+				else {
 					slot_content += "' />";
 				}
 
@@ -1879,7 +1883,7 @@ std::string UISystem::getIngredientName(RecipeIngredient ing)
 
 	// Add grind stat for ingredient
 	if (ing.grindAmount > 0.f) {
-		int lvl = (int) (ing.grindAmount * 100);
+		int lvl = (int)(ing.grindAmount * 100);
 		name += " (" + std::to_string(lvl) + "% Grinded)";
 	}
 
