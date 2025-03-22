@@ -110,6 +110,17 @@ struct Potion
 	vec3 color;
 };
 
+enum class BIOME
+{
+	GROTTO = 0,
+	FOREST = GROTTO + 1,
+	FOREST_EX = FOREST + 1,
+	DESERT = FOREST_EX + 1,
+	MUSHROOM = DESERT + 1,
+	CRYSTAL = MUSHROOM + 1,
+	BLANK = CRYSTAL + 1,
+};
+
 // an item that can be in an inventory
 struct Item
 {
@@ -121,6 +132,7 @@ struct Item
 	vec2 originalPosition;
 	bool is_ammo = false;
 	bool canRespawn = true;
+	BIOME lastBiome;
 };
 
 // an item that can be added to potions
@@ -434,17 +446,6 @@ struct RenderRequest
 	bool is_visible = true;
 };
 
-enum class BIOME
-{
-	GROTTO = 0,
-	FOREST = GROTTO + 1,
-	FOREST_EX = FOREST + 1,
-	DESERT = FOREST_EX + 1,
-	MUSHROOM = DESERT + 1,
-	CRYSTAL = MUSHROOM + 1,
-	BLANK = CRYSTAL + 1,
-};
-
 enum class DIRECTION
 {
 	UP = 0,
@@ -629,6 +630,28 @@ const std::unordered_map<ItemType, ItemInfo> ITEM_INFO = {
 			TEXTURE_ASSET_ID::CRYSTAL_MEPH,
 			"interactables/crystal_meph.png",
 			false} },
+};
+
+const std::unordered_map<ItemType, std::vector<BIOME>> itemRespawnBiomes = {
+	// Forest
+	{ ItemType::COFFEE_BEANS,   { BIOME::FOREST, BIOME::FOREST_EX } },
+	{ ItemType::GALEFRUIT,      { BIOME::FOREST, BIOME::FOREST_EX } },
+	{ ItemType::EVERFERN,       { BIOME::FOREST, BIOME::FOREST_EX } },
+	{ ItemType::BLIGHTLEAF,     { BIOME::FOREST, BIOME::FOREST_EX } },
+
+	// Desert
+	{ ItemType::PETRIFIED_BONE, { BIOME::DESERT } },
+	{ ItemType::HEALING_LILY,   { BIOME::DESERT } },
+	{ ItemType::CACTUS_PULP,    { BIOME::DESERT } },
+
+	// Mushroom
+	{ ItemType::GLOWSHROOM,    { BIOME::MUSHROOM } },
+	{ ItemType::DOOMCAP,        { BIOME::MUSHROOM } },
+
+	// Crystal Mountains
+	{ ItemType::CRYSTABLOOM,    { BIOME::CRYSTAL } },
+	{ ItemType::CRYSTAL_SHARD,  { BIOME::CRYSTAL } },
+	{ ItemType::QUARTZMELON,    { BIOME::CRYSTAL } }
 };
 
 // damage flash only to be applied to player and enemies

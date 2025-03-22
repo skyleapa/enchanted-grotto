@@ -786,6 +786,7 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 
 	// Set a random respawn time (10-15 seconds)
 	item_info.respawnTime = (rand() % 5001 + 10000);
+	item_info.lastBiome = static_cast<BIOME>(registry.screenStates.components[0].biome);
 
 	return true;
 }
@@ -808,8 +809,28 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 		if (item_info.respawnTime > 0)
 			return;
 
-		if (registry.screenStates.components[0].biome != (GLuint)BIOME::FOREST) return;
-		// only respawn if in forest biome
+		// Check if current biome matches any allowed respawn biome for this item type
+		auto it = itemRespawnBiomes.find(item_info.type);
+		if (it == itemRespawnBiomes.end())
+			continue; 
+
+		const std::vector<BIOME>& allowedBiomes = it->second;
+		BIOME originalBiome = item_info.lastBiome;
+		GLuint currentBiome = registry.screenStates.components[0].biome;
+
+		bool canRespawnHere = false;
+		for (BIOME allowedBiome : allowedBiomes) {
+			if (allowedBiome == originalBiome && static_cast<GLuint>(allowedBiome) == currentBiome) {
+				canRespawnHere = true;
+				break;
+			}
+		}
+
+		if (!canRespawnHere) {
+			// std::cout << "Biome mismatch, will not respawn. Original biome: " << static_cast<int>(originalBiome)
+			// 		<< ", Current biome: " << currentBiome << std::endl;
+			continue;
+		}
 
 		// Respawn item at its original position
 		Motion& motion = registry.motions.emplace(item);
