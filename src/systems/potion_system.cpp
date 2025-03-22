@@ -559,12 +559,13 @@ float getMaxQuality(Inventory& cauldronInventory) {
 			continue;
 		}
 
-		pots++;
 		if (pots == 0) {
 			res = potion.quality;
 		} else {
-			res = (res + potion.quality) / pots;
+			res = (res * pots + potion.quality) / (pots + 1);
 		}
+
+		pots++;
 	}
 
 	return res;
