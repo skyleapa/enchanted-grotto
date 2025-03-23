@@ -931,29 +931,19 @@ void WorldSystem::update_textbox_visibility()
 		float distance = glm::distance(player_motion.position, item_motion.position);
 
 		// Find the textbox linked to this item
-		Entity textboxEntity;
-		bool foundTextbox = false;
-
-		for (Entity textbox : registry.textboxes.entities)
+		for (Entity textboxEntity : registry.textboxes.entities)
 		{
-			if (registry.textboxes.get(textbox).targetItem == item)
+			if (registry.textboxes.get(textboxEntity).targetItem == item)
 			{
-				textboxEntity = textbox;
-				foundTextbox = true;
+				Textbox& textbox = registry.textboxes.get(textboxEntity);
+				bool shouldBeVisible = (distance < TEXTBOX_VISIBILITY_RADIUS);
+
+				// should not have "open cauldron" textbox while using cauldron
+				if (shouldBeVisible && !m_ui_system->isCauldronOpen())
+				{
+					m_ui_system->textboxes[textboxEntity.id()] = textbox;
+				}
 				break;
-			}
-		}
-
-		// Update isVisible based on distance
-		if (foundTextbox)
-		{
-			Textbox& textbox = registry.textboxes.get(textboxEntity);
-			bool shouldBeVisible = (distance < TEXTBOX_VISIBILITY_RADIUS);
-
-			// should not have "open cauldron" textbox while using cauldron
-			if (shouldBeVisible && !m_ui_system->isCauldronOpen())
-			{
-				m_ui_system->textboxes[textboxEntity.id()] = textbox;
 			}
 		}
 	}

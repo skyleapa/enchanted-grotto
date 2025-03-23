@@ -1072,8 +1072,6 @@ void UISystem::updateTextboxes()
 	{
 		removeRmlUITextbox(id);
 	}
-
-	textboxes.clear();
 }
 
 void UISystem::createRmlUITextbox(int id, std::string text, vec2 pos)
