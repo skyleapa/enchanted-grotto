@@ -48,13 +48,13 @@ public:
     void createInventoryBar();
     void updateInventoryBar();
     void selectInventorySlot(int slot);
-    int getSelectedSlot() const { return m_selected_slot; }
+    int getSelectedSlot();
     int getSlotFromId(std::string id);
 
     // Cauldron methods
-    bool openCauldron(Entity cauldron);
+    bool openCauldron(Entity cauldron, bool play_sound);
     void updateCauldronUI();
-    void closeCauldron();
+    void closeCauldron(bool play_sound);
     bool isCauldronOpen();
     bool isCauldronOpen(Entity cauldron);
     Entity getOpenedCauldron();
@@ -73,9 +73,9 @@ public:
     // Recipe book index for saving/loading
     int current_recipe_index = 0;
 
-    bool openMortarPestle(Entity mortar);
+    bool openMortarPestle(Entity mortar, bool play_sound);
     bool isMortarPestleOpen();
-    void closeMortarPestle();
+    void closeMortarPestle(bool play_sound);
     Entity getOpenedMortarPestle();
     void setOpenedMortarPestle(Entity new_mortar_pestle);
 
@@ -136,7 +136,6 @@ private:
 
     // Inventory bar variables
     Rml::ElementDocument* m_inventory_document = nullptr;
-    int m_selected_slot = 0;
     int m_hotbar_size = 10;
 
     // Cauldron variables

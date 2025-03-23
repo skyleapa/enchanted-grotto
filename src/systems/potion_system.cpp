@@ -344,12 +344,6 @@ void PotionSystem::storeIngredientInMortar(Entity mortar, Entity ingredient) {
 
 	Inventory& mortarInventory = registry.inventories.get(mortar);
 
-	// Check if the mortar already has an ingredient
-	if (!mortarInventory.items.empty()) {
-		std::cerr << "Mortar already contains an ingredient" << std::endl;
-		return;
-	}
-
 	const ItemInfo& itemInfo = ITEM_INFO.find(registry.items.get(ingredient).type)->second;
 
 	// Set ingredient to be visible inside the mortar

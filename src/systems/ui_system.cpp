@@ -150,6 +150,12 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 		createEffectsBar();
 
 		m_initialized = true;
+
+		// update the bars for the first time to reload state
+		updateInventoryBar();
+		updateHealthBar();
+		updateEffectsBar();
+
 		std::cout << "UISystem::init - Successfully initialized" << std::endl;
 		return true;
 	}
@@ -243,23 +249,11 @@ void UISystem::step(float elapsed_ms)
 			createEffectsBar();
 		}
 
-		// Update inventory bar
-		updateInventoryBar();
-
-		// Update health bar
-		updateHealthBar();
-
-		// Update active effects bar
-		updateEffectsBar();
-
 		// Display tutorial
 		updateTutorial();
 
 		// update all the textboxes
 		updateTextboxes();
-
-		// Update cauldron color
-		updateCauldronUI();
 
 		// Update RmlUi
 		m_context->Update();
@@ -651,6 +645,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 
 						// Move to inventory
 						ItemSystem::addItemToInventory(player, ingredient);
+						SoundSystem::playBottleHighQualityPotionSound((int) SOUND_CHANNEL::MENU, 0);
 						std::cout << "Picked up ingredient from mortar" << std::endl;
 
 						// Clear the mortar inventory
@@ -690,7 +685,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 void UISystem::handleScrollWheelEvent(double xoffset, double yoffset)
 {
 	int dist = (int)yoffset * -1;
-	selectInventorySlot(m_selected_slot + dist);
+	selectInventorySlot(getSelectedSlot() + dist);
 	m_context->ProcessMouseWheel(Rml::Vector2f(xoffset, yoffset), getKeyModifiers());
 }
 
@@ -789,7 +784,7 @@ void UISystem::createInventoryBar()
 		// Add inventory slots
 		for (int i = 0; i < m_hotbar_size; i++) {
 			std::string slot_class = "inventory-slot";
-			if (i == m_selected_slot) {
+			if (i == getSelectedSlot()) {
 				slot_class += " selected";
 			}
 
@@ -834,8 +829,8 @@ void UISystem::updateInventoryBar()
 
 		// Update the item name
 		Rml::Element* item_name = m_inventory_document->GetElementById("item-name");
-		if (m_selected_slot < inventory.items.size()) {
-			item_name->SetInnerRML(ItemSystem::getItemName(inventory.items[m_selected_slot]));
+		if (getSelectedSlot() < inventory.items.size()) {
+			item_name->SetInnerRML(ItemSystem::getItemName(inventory.items[getSelectedSlot()]));
 		}
 		else {
 			item_name->SetInnerRML("");
@@ -851,7 +846,7 @@ void UISystem::updateInventoryBar()
 			// Update the slot class (selected or not)
 			std::string slot_class = "inventory-slot";
 			int loc = i * 44;
-			if (i == m_selected_slot) {
+			if (i == inventory.selection) {
 				slot_class += " selected";
 				int selectedLoc = loc - 2;
 				slot_element->SetProperty("left", std::to_string(selectedLoc) + "px");
@@ -949,13 +944,20 @@ void UISystem::selectInventorySlot(int slot)
 	Inventory& inventory = registry.inventories.get(entity);
 
 	inventory.selection = slot;
-	m_selected_slot = slot;
 
 	// Update the inventory bar to reflect the selection
 	if (m_inventory_document) {
 		updateInventoryBar();
 	}
 }
+
+int UISystem::getSelectedSlot() {
+	if (registry.players.entities.size() == 0 ) return -1;
+	Entity entity = registry.players.entities[0];
+	if (!registry.inventories.has(entity)) return -1;
+	return registry.inventories.get(entity).selection;
+};
+
 
 int UISystem::getSlotFromId(std::string id)
 {
@@ -1165,12 +1167,12 @@ void UISystem::removeRmlUITextbox(int id)
 	}
 }
 
-bool UISystem::openCauldron(Entity cauldron)
+bool UISystem::openCauldron(Entity cauldron, bool play_sound = true)
 {
 	if (!m_initialized || !m_context) return false;
 	if (m_cauldron_document) {
 		m_cauldron_document->Show();
-		SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+		if (play_sound) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
 		return true;
 	}
 
@@ -1288,7 +1290,7 @@ bool UISystem::openCauldron(Entity cauldron)
 		DragListener::RegisterDragDropElement(m_cauldron_document->GetElementById("cauldron-water"));
 		DragListener::RegisterDragDropElement(m_cauldron_document->GetElementById("cauldron"));
 		m_cauldron_document->Show();
-		SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+		if (play_sound) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
 		openedCauldron = cauldron;
 		registry.cauldrons.get(cauldron).filled = true;
 		std::cout << "UISystem::openCauldron - Cauldron created successfully" << std::endl;
@@ -1330,11 +1332,11 @@ bool UISystem::isCauldronOpen(Entity cauldron) {
 	return isCauldronOpen() && cauldron == openedCauldron;
 }
 
-void UISystem::closeCauldron()
+void UISystem::closeCauldron(bool play_sound)
 {
 	if (isCauldronOpen()) {
 		m_cauldron_document->Hide();
-		SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+		if (play_sound) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
 		// handle exit menu tutorial
 		if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::EXIT_MENU) {
 			ScreenState& screen = registry.screenStates.components[0];
@@ -1383,9 +1385,10 @@ void UISystem::updateFollowMouse() {
 	}
 }
 
-bool UISystem::openMortarPestle(Entity mortar) {
+bool UISystem::openMortarPestle(Entity mortar, bool play_sound = true) {
 	if (!m_initialized || !m_context) return false;
 	if (m_mortar_document) {
+		if (play_sound) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
 		m_mortar_document->Show();
 		return true;
 	}
@@ -1479,6 +1482,7 @@ bool UISystem::openMortarPestle(Entity mortar) {
 		DragListener::RegisterDraggableElement(m_mortar_document->GetElementById("pestle"));
 
 		m_mortar_document->Show();
+		if (play_sound) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
 		openedMortar = mortar;
 		std::cout << "UISystem::openMortarPestle - Mortar & Pestle UI created successfully" << std::endl;
 		return true;
@@ -1493,9 +1497,10 @@ bool UISystem::isMortarPestleOpen() {
 	return m_mortar_document && m_mortar_document->IsVisible();
 }
 
-void UISystem::closeMortarPestle()
+void UISystem::closeMortarPestle(bool play_sound = true)
 {
 	if (isMortarPestleOpen()) {
+		if (play_sound) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
 		m_mortar_document->Hide();
 	}
 }

@@ -150,7 +150,6 @@ void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
 			if (registry.renderRequests.has(mortar)) {
 				RenderRequest& rr = registry.renderRequests.get(mortar);
 				rr.is_visible = true;
-				std::cout << "re-rendering mortar" << std::endl;
 			}
 			// recreate textbox
 			if (registry.motions.has(mortar)) {
@@ -216,8 +215,6 @@ void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
 	if (is_first_load && registry.players.get(player_entity).load_position != vec2(0, 0)) {
 		screen.first_game_load = false;
 		player_motion.position = registry.players.get(player_entity).load_position;
-		std::cout << registry.players.get(player_entity).load_position.x << ", " << registry.players.get(player_entity).load_position.y << std::endl;
-		std::cout << "reloaded player's position" << std::endl;
 	}
 }
 
@@ -246,14 +243,25 @@ void BiomeSystem::createGrotto()
 		for (Entity cauldron : registry.cauldrons.entities) {
 			if (new_cauldron != cauldron) registry.remove_all_components_of(cauldron);
 		}
+		// initialize cauldron menu
+		if (m_ui_system) {
+			m_ui_system->setOpenedCauldron(new_cauldron);
+			m_ui_system->openCauldron(new_cauldron, false);
+			m_ui_system->closeCauldron(false);
+		}
 	}
 	// assert(registry.cauldrons.entities.size() == 1); // We should always only have one cauldron for testing purposes
 
 	if (registry.mortarAndPestles.entities.size() == 0) {
-		std::cout << "creating mortar in grotto" << std::endl;
 		Entity new_mortar = createMortarPestle(renderer, vec2({ GRID_CELL_WIDTH_PX * 7.5, GRID_CELL_HEIGHT_PX * 5.22 }), vec2({ 213, 141 }), "Mortar and Pestle");
 		for (Entity mortar : registry.mortarAndPestles.entities) {
 			if (new_mortar != mortar) registry.remove_all_components_of(mortar);
+		}
+		// initialize mortar and pestle menu
+		if (m_ui_system) {
+			m_ui_system->setOpenedMortarPestle(new_mortar);
+			m_ui_system->openMortarPestle(new_mortar, false);
+			m_ui_system->closeMortarPestle(false);
 		}
 	}
 

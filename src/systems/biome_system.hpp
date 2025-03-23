@@ -24,6 +24,8 @@ public:
     void createMushroom();
     void createCrystal();
 
+    void setUISystem(UISystem* ui_system) { m_ui_system = ui_system; }
+
     BiomeSystem()
     {
     }
@@ -86,6 +88,8 @@ private:
         {vec2({GRID_CELL_WIDTH_PX * 24.2, GRID_CELL_HEIGHT_PX * 9.1}), vec2({90, 429}), 180, (GLuint)TEXTURE_ASSET_ID::GROTTO_RIGHT_BOOKSHELF, 1},
         {vec2({GRID_CELL_WIDTH_PX * 4.8, GRID_CELL_HEIGHT_PX * 11.9}), vec2({510, 215}), 180, (GLuint)TEXTURE_ASSET_ID::GROTTO_POOL, 2}
     };
+
+    UISystem* m_ui_system = nullptr;
 
 };
 
