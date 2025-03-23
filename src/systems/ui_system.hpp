@@ -97,6 +97,8 @@ public:
     void createEffectsBar();
     void updateEffectsBar();
 
+    bool isClickOnUIElement();
+
 private:
     GLFWwindow* m_window;
     RenderSystem* m_renderer;
