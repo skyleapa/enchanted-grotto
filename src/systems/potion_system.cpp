@@ -262,77 +262,76 @@ void PotionSystem::grindIngredient(Entity mortar) {
 	
 	// Increase grind level up to a maximum
 	if (ing.grindLevel < 1.0f) {
-		ing.grindLevel += 1;
-		//std::cout << "Ingredient grindlevel increased to " << ing.grindLevel << std::endl;
-	}
+		ing.grindLevel += 1.0f;
 
-	// Check if fully ground and update texture
-	if (ing.grindLevel >= 1.0f) {
-		std::cout << "Ingredient is fully ground" << std::endl;
-
-		// Determine new item type
-		switch (itemComp.type) {
-			case ItemType::COFFEE_BEANS:
-				itemComp.type = ItemType::SWIFT_POWDER;
-				if (registry.renderRequests.has(ingredient)) {
-					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::SWIFT_POWDER;
-				}
-				break;
-
-			case ItemType::PETRIFIED_BONE:
-				itemComp.type = ItemType::BONE_DUST;
-				if (registry.renderRequests.has(ingredient)) {
-					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::BONE_DUST;
-				}
-				break;
-
-			case ItemType::CACTUS_PULP:
-				itemComp.type = ItemType::CACTUS_EXTRACT;
-				if (registry.renderRequests.has(ingredient)) {
-					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::CACTUS_EXTRACT;
-				}
-				break;
-
-			case ItemType::GLOWSHROOM:
-				itemComp.type = ItemType::GLOWSPORE;
-				if (registry.renderRequests.has(ingredient)) {
-					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::GLOWSPORE;
-				}
-				break;
-
-			case ItemType::CRYSTAL_SHARD:
-				itemComp.type = ItemType::CRYSTAL_MEPH;
-				if (registry.renderRequests.has(ingredient)) {
-					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::CRYSTAL_MEPH;
-				}
-				break;
-
-			case ItemType::STORM_BARK:
-				itemComp.type = ItemType::STORM_SAP;
-				if (registry.renderRequests.has(ingredient)) {
-					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::STORM_SAP;
-				}
-				break;
-
-			default:
-				itemComp.type = ItemType::MAGICAL_DUST;
-				if (registry.renderRequests.has(ingredient)) {
-					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::MAGICAL_DUST;
-				}
-				break;
+		// Clamp to 1.0
+		if (ing.grindLevel > 1.0f) {
+			ing.grindLevel = 1.0f;
 		}
 
-		// Get size from updated item type
-		auto infoIt = ITEM_INFO.find(itemComp.type);
-		if (infoIt != ITEM_INFO.end() && registry.motions.has(ingredient)) {
-			vec2 baseSize = infoIt->second.size;
-			vec2 enlargedSize = baseSize * 1.5f;
-			registry.motions.get(ingredient).scale = enlargedSize;
+		// Check if we just fully ground it
+		if (ing.grindLevel >= 1.0f) {
+			std::cout << "Ingredient is fully ground" << std::endl;
+
+			switch (itemComp.type) {
+				case ItemType::COFFEE_BEANS:
+					itemComp.type = ItemType::SWIFT_POWDER;
+					if (registry.renderRequests.has(ingredient)) {
+						registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::SWIFT_POWDER;
+					}
+					break;
+
+				case ItemType::PETRIFIED_BONE:
+					itemComp.type = ItemType::BONE_DUST;
+					if (registry.renderRequests.has(ingredient)) {
+						registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::BONE_DUST;
+					}
+					break;
+
+				case ItemType::CACTUS_PULP:
+					itemComp.type = ItemType::CACTUS_EXTRACT;
+					if (registry.renderRequests.has(ingredient)) {
+						registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::CACTUS_EXTRACT;
+					}
+					break;
+
+				case ItemType::GLOWSHROOM:
+					itemComp.type = ItemType::GLOWSPORE;
+					if (registry.renderRequests.has(ingredient)) {
+						registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::GLOWSPORE;
+					}
+					break;
+
+				case ItemType::CRYSTAL_SHARD:
+					itemComp.type = ItemType::CRYSTAL_MEPH;
+					if (registry.renderRequests.has(ingredient)) {
+						registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::CRYSTAL_MEPH;
+					}
+					break;
+
+				case ItemType::STORM_BARK:
+					itemComp.type = ItemType::STORM_SAP;
+					if (registry.renderRequests.has(ingredient)) {
+						registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::STORM_SAP;
+					}
+					break;
+
+				default:
+					std::cerr << "No grind result for item type: " << static_cast<int>(itemComp.type) << std::endl;
+					break;
+			}
+
+			// Update size
+			auto infoIt = ITEM_INFO.find(itemComp.type);
+			if (infoIt != ITEM_INFO.end() && registry.motions.has(ingredient)) {
+				vec2 baseSize = infoIt->second.size;
+				vec2 enlargedSize = baseSize * 1.5f;
+				registry.motions.get(ingredient).scale = enlargedSize;
+			}
+
+			itemComp.isCollectable = true;
+			std::cout << "Grinded ingredient can now be picked up" << std::endl;
 		}
-
-		itemComp.isCollectable = true;
-
-		std::cout << "Grinded ingredient can now be picked up" << std::endl;
 	}
 }
 
