@@ -1,6 +1,7 @@
 #include "potion_system.hpp"
 #include "item_system.hpp"
 #include "tinyECS/registry.hpp"
+#include "sound_system.hpp"
 #include <unordered_set>
 #include <iostream>
 #include <cfloat>
@@ -121,10 +122,26 @@ void PotionSystem::addIngredient(Entity cauldron, Entity ingredient) {
 
 void PotionSystem::changeHeat(Entity cauldron, int value) {
 	Cauldron& cc = registry.cauldrons.get(cauldron);
-	if (cc.actions.size() == 0 && value == 0) {
-		return;
+	
+	// Update sounds
+	SoundSystem::playTurnDialSound((int) SOUND_CHANNEL::MENU, 0);
+	if (value == 0) {
+		cc.is_boiling = false;
+		SoundSystem::haltBoilSound(); // no boiling if setting temperature back to off
+		SoundSystem::haltGeneralSound();
+		if (cc.actions.size() == 0) {
+			return;
+		}
+	} else {
+		if (cc.is_boiling) {
+			SoundSystem::continueBoilSound((int) SOUND_CHANNEL::BOILING, -1);
+		} else {
+			cc.is_boiling = true;
+			SoundSystem::playBoilSound((int) SOUND_CHANNEL::BOILING, -1);
+		}
 	}
 
+	// Record the actiono
 	cc.heatLevel = value;
 	recordAction(cauldron, ActionType::MODIFY_HEAT, value);
 }
@@ -207,6 +224,7 @@ void PotionSystem::resetCauldron(Entity cauldron) {
 	cc.timeElapsed = 0;
 	cc.timeSinceLastAction = 0;
 	cc.actions.clear();
+	cc.is_boiling = false;
 
 	// Clear cauldron items
 	Inventory& cinv = registry.inventories.get(cauldron);

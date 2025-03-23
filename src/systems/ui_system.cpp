@@ -589,7 +589,6 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 				m_renderer->initializeWaterBuffers(true); // Will not be necessary once empty cauldron is supported
 
 				// stop the boiling sound and play potion bottling sound
-				DragListener::is_boiling = false;
 				SoundSystem::haltBoilSound();
 				if (potion.quality > 0.75) {
 					SoundSystem::playBottleHighQualityPotionSound((int)SOUND_CHANNEL::MENU, 0);

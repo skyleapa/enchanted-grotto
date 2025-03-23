@@ -1138,7 +1138,7 @@ void WorldSystem::updateConsumedPotions(float elapsed_ms_since_last_update) {
 		Potion& potion = registry.potions.get(effect);
 		potion.duration -= elapsed_ms_since_last_update;
 		if (potion.duration <= 0) {
-			std::cout << "potion of " << EFFECT_NAMES.at(potion.effect) << " has expired" << std::endl;
+			std::cout << "potion of effect id " << (int) potion.effect << " has expired" << std::endl;
 			removePotionEffect(registry.potions.get(effect), player_entity);
 			to_remove.push_back(effect);
 		}
@@ -1210,7 +1210,7 @@ bool WorldSystem::consumePotion() {
 		player.active_effects.push_back(item_copy);
 	}
 	addPotionEffect(registry.potions.get(item_copy), player_entity);
-	std::cout << "player has consumed a potion of " << EFFECT_NAMES.at(registry.potions.get(item_copy).effect) << std::endl;
+	std::cout << "player has consumed a potion of effect id " << (int) registry.potions.get(item_copy).effect << std::endl;
 	return true;
 }
 
