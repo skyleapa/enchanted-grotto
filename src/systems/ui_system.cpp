@@ -239,9 +239,6 @@ void UISystem::step(float elapsed_ms)
 		// update all the textboxes
 		updateTextboxes();
 
-		// Update cauldron color
-		updateCauldronUI();
-
 		// Update RmlUi
 		m_context->Update();
 	}

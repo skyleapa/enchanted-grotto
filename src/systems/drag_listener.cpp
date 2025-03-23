@@ -207,6 +207,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 	if (event == "dragstart") {
 		if (cur->GetId() == "heat") {
 			lastCoords = mouseCoords;
+			if (m_ui_system) m_ui_system->updateCauldronUI();
 			return;
 		}
 
@@ -257,6 +258,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 				if (registry.cauldrons.get(m_ui_system->getOpenedCauldron()).is_boiling) SoundSystem::continueBoilSound((int) SOUND_CHANNEL::BOILING, -1); // continue boiling if it was already boiling
 				SoundSystem::playInteractMenuSound((int) SOUND_CHANNEL::MENU, -1); // play infinitely until dragging is finished
 			}
+			if (m_ui_system) m_ui_system->updateCauldronUI();
 			return;
 		}
 
@@ -307,6 +309,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 				}
 			}
 			SoundSystem::playTurnDialSound((int) SOUND_CHANNEL::MENU, 0);
+			if (m_ui_system) m_ui_system->updateCauldronUI();
 			return;
 		}
 
