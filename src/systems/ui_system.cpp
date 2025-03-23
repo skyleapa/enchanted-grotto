@@ -808,7 +808,6 @@ void UISystem::updateInventoryBar()
 	if (!m_initialized || !m_context || !m_inventory_document) return;
 
 	try {
-		std::cout << "updating inventory bar" << std::endl;
 		if (registry.players.entities.empty()) return;
 
 		Entity player = registry.players.entities[0]; // Assuming there's only one player
@@ -816,7 +815,6 @@ void UISystem::updateInventoryBar()
 		if (!registry.inventories.has(player)) return;
 
 		Inventory& inventory = registry.inventories.get(player);
-		std::cout << inventory.selection <<std::endl;
 
 		// Update the item name
 		Rml::Element* item_name = m_inventory_document->GetElementById("item-name");
@@ -935,11 +933,9 @@ void UISystem::selectInventorySlot(int slot)
 	Inventory& inventory = registry.inventories.get(entity);
 
 	inventory.selection = slot;
-	std::cout << inventory.selection << std::endl;
 
 	// Update the inventory bar to reflect the selection
 	if (m_inventory_document) {
-		std::cout << "updating in select inventory slot" << std::endl;
 		updateInventoryBar();
 	}
 }
@@ -1160,12 +1156,12 @@ void UISystem::removeRmlUITextbox(int id)
 	}
 }
 
-bool UISystem::openCauldron(Entity cauldron, bool is_init = false)
+bool UISystem::openCauldron(Entity cauldron, bool play_sound = true)
 {
 	if (!m_initialized || !m_context) return false;
 	if (m_cauldron_document) {
 		m_cauldron_document->Show();
-		if (!is_init) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+		if (play_sound) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
 		return true;
 	}
 
@@ -1259,7 +1255,7 @@ bool UISystem::openCauldron(Entity cauldron, bool is_init = false)
 		DragListener::RegisterDragDropElement(m_cauldron_document->GetElementById("cauldron-water"));
 		DragListener::RegisterDragDropElement(m_cauldron_document->GetElementById("cauldron"));
 		m_cauldron_document->Show();
-		if (!is_init) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+		if (play_sound) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
 		openedCauldron = cauldron;
 		registry.cauldrons.get(cauldron).filled = true;
 		std::cout << "UISystem::openCauldron - Cauldron created successfully" << std::endl;
@@ -1301,11 +1297,11 @@ bool UISystem::isCauldronOpen(Entity cauldron) {
 	return isCauldronOpen() && cauldron == openedCauldron;
 }
 
-void UISystem::closeCauldron(bool is_init)
+void UISystem::closeCauldron(bool play_sound)
 {
 	if (isCauldronOpen()) {
 		m_cauldron_document->Hide();
-		if (!is_init) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+		if (play_sound) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
 		// handle exit menu tutorial
 		if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::EXIT_MENU) {
 			ScreenState& screen = registry.screenStates.components[0];
@@ -1354,9 +1350,10 @@ void UISystem::updateFollowMouse() {
 	}
 }
 
-bool UISystem::openMortarPestle(Entity mortar) {
+bool UISystem::openMortarPestle(Entity mortar, bool play_sound = true) {
 	if (!m_initialized || !m_context) return false;
 	if (m_mortar_document) {
+		if (play_sound) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
 		m_mortar_document->Show();
 		return true;
 	}
@@ -1427,6 +1424,7 @@ bool UISystem::openMortarPestle(Entity mortar) {
 		DragListener::RegisterDraggableElement(m_mortar_document->GetElementById("pestle"));
 
 		m_mortar_document->Show();
+		if (play_sound) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
 		openedMortar = mortar;
 		std::cout << "UISystem::openMortarPestle - Mortar & Pestle UI created successfully" << std::endl;
 		return true;
@@ -1441,9 +1439,10 @@ bool UISystem::isMortarPestleOpen() {
 	return m_mortar_document && m_mortar_document->IsVisible();
 }
 
-void UISystem::closeMortarPestle()
+void UISystem::closeMortarPestle(bool play_sound = true)
 {
 	if (isMortarPestleOpen()) {
+		if (play_sound) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
 		m_mortar_document->Hide();
 	}
 }

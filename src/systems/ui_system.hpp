@@ -52,9 +52,9 @@ public:
     int getSlotFromId(std::string id);
 
     // Cauldron methods
-    bool openCauldron(Entity cauldron, bool is_init); // call with is_init=true to initialize the cauldron without showing the document
+    bool openCauldron(Entity cauldron, bool play_sound);
     void updateCauldronUI();
-    void closeCauldron(bool is_init); // call with is_init=true to close the cauldron without playing a sound
+    void closeCauldron(bool play_sound);
     bool isCauldronOpen();
     bool isCauldronOpen(Entity cauldron);
     Entity getOpenedCauldron();
@@ -73,9 +73,9 @@ public:
     // Recipe book index for saving/loading
     int current_recipe_index = 0;
 
-    bool openMortarPestle(Entity mortar);
+    bool openMortarPestle(Entity mortar, bool play_sound);
     bool isMortarPestleOpen();
-    void closeMortarPestle();
+    void closeMortarPestle(bool play_sound);
     Entity getOpenedMortarPestle();
     void setOpenedMortarPestle(Entity new_mortar_pestle);
 

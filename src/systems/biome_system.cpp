@@ -246,8 +246,8 @@ void BiomeSystem::createGrotto()
 		// initialize cauldron menu
 		if (m_ui_system) {
 			m_ui_system->setOpenedCauldron(new_cauldron);
-			m_ui_system->openCauldron(new_cauldron, true);
-			m_ui_system->closeCauldron(true);
+			m_ui_system->openCauldron(new_cauldron, false);
+			m_ui_system->closeCauldron(false);
 		}
 	}
 	// assert(registry.cauldrons.entities.size() == 1); // We should always only have one cauldron for testing purposes
@@ -260,8 +260,8 @@ void BiomeSystem::createGrotto()
 		// initialize mortar and pestle menu
 		if (m_ui_system) {
 			m_ui_system->setOpenedMortarPestle(new_mortar);
-			m_ui_system->openMortarPestle(new_mortar);
-			m_ui_system->closeMortarPestle();
+			m_ui_system->openMortarPestle(new_mortar, false);
+			m_ui_system->closeMortarPestle(false);
 		}
 	}
 

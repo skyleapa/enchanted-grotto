@@ -258,7 +258,7 @@ void WorldSystem::restart_game(bool hard_reset)
 	// }
 
 	// close cauldron if it's open
-	if (m_ui_system && m_ui_system->isCauldronOpen()) m_ui_system->closeCauldron(false);
+	if (m_ui_system && m_ui_system->isCauldronOpen()) m_ui_system->closeCauldron(true);
 
 	// Debugging for memory/component leaks
 	registry.list_all_components();
@@ -669,17 +669,17 @@ void WorldSystem::handle_player_interaction()
 
 	// If a cauldron is open just close it
 	if (m_ui_system && m_ui_system->isCauldronOpen()) {
-		m_ui_system->closeCauldron(false);
+		m_ui_system->closeCauldron(true);
 		return;
 	}
 
 	// If a mortar is open, close it
 	if (m_ui_system && m_ui_system->isMortarPestleOpen()) {
-		m_ui_system->closeMortarPestle();
+		m_ui_system->closeMortarPestle(true);
 		return;
 	}
 
-  // If a recipe book is open, close it
+	// If a recipe book is open, close it
 	if (m_ui_system && m_ui_system->isRecipeBookOpen()) {
 		m_ui_system->closeRecipeBook();
 		return;
@@ -733,7 +733,7 @@ void WorldSystem::handle_player_interaction()
 			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
 			if (m_ui_system != nullptr)
 			{
-				handle_textbox = m_ui_system->openCauldron(item, false);
+				handle_textbox = m_ui_system->openCauldron(item, true);
 				if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::INTERACT_CAULDRON) {
 					ScreenState& screen = registry.screenStates.components[0];
 					screen.tutorial_step_complete = true;
@@ -743,9 +743,9 @@ void WorldSystem::handle_player_interaction()
 		}
 		else if (registry.mortarAndPestles.has(item)) {
 			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
-				if (m_ui_system != nullptr) {
-            handle_textbox = m_ui_system->openMortarPestle(item);
-				}
+			if (m_ui_system != nullptr) {
+				handle_textbox = m_ui_system->openMortarPestle(item, true);
+			}
 		}
 		else if (item_info.type == ItemType::RECIPE_BOOK) {
 			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
@@ -1148,7 +1148,7 @@ void WorldSystem::updateConsumedPotions(float elapsed_ms_since_last_update) {
 		Potion& potion = registry.potions.get(effect);
 		potion.duration -= elapsed_ms_since_last_update;
 		if (potion.duration <= 0) {
-			std::cout << "potion of effect id " << (int) potion.effect << " has expired" << std::endl;
+			std::cout << "potion of effect id " << (int)potion.effect << " has expired" << std::endl;
 			removePotionEffect(registry.potions.get(effect), player_entity);
 			to_remove.push_back(effect);
 		}
@@ -1235,7 +1235,8 @@ bool WorldSystem::consumePotion() {
 		m_ui_system->updateEffectsBar();
 	}
 
-	std::cout << "player has consumed a potion of " << (int) registry.potions.get(item_copy).effect << std::endl;
+	SoundSystem::playGulpSound((int)SOUND_CHANNEL::GENERAL, 0);
+	std::cout << "player has consumed a potion of " << (int)registry.potions.get(item_copy).effect << std::endl;
 	return true;
 }
 

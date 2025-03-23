@@ -245,7 +245,6 @@ void ItemSystem::swapItems(Entity inventory, int slot1, int slot2) {
 		return;
 	}
 	std::iter_swap(items.begin() + slot1, items.begin() + slot2);
-	std::cout << slot1 << slot2 << std::endl;
 	registry.inventories.get(inventory).selection = slot1;
 }
 
