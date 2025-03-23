@@ -54,9 +54,9 @@ public:
     int getSlotFromId(std::string id);
 
     // Cauldron methods
-    bool openCauldron(Entity cauldron);
+    bool openCauldron(Entity cauldron, bool is_init);
     void updateCauldronUI();
-    void closeCauldron();
+    void closeCauldron(bool is_init);
     bool isCauldronOpen();
     bool isCauldronOpen(Entity cauldron);
     Entity getOpenedCauldron();

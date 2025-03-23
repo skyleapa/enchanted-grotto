@@ -246,8 +246,8 @@ void BiomeSystem::createGrotto()
 		// initialize cauldron menu
 		if (m_ui_system) {
 			m_ui_system->setOpenedCauldron(new_cauldron);
-			m_ui_system->openCauldron(new_cauldron);
-			m_ui_system->closeCauldron();
+			m_ui_system->openCauldron(new_cauldron, true);
+			m_ui_system->closeCauldron(true);
 		}
 	}
 	// assert(registry.cauldrons.entities.size() == 1); // We should always only have one cauldron for testing purposes

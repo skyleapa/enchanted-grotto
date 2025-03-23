@@ -255,7 +255,7 @@ void WorldSystem::restart_game(bool hard_reset)
 	// }
 
 	// close cauldron if it's open
-	if (m_ui_system && m_ui_system->isCauldronOpen()) m_ui_system->closeCauldron();
+	if (m_ui_system && m_ui_system->isCauldronOpen()) m_ui_system->closeCauldron(false);
 
 	// Debugging for memory/component leaks
 	registry.list_all_components();
@@ -653,7 +653,7 @@ void WorldSystem::handle_player_interaction()
 
 	// If a cauldron is open just close it
 	if (m_ui_system && m_ui_system->isCauldronOpen()) {
-		m_ui_system->closeCauldron();
+		m_ui_system->closeCauldron(false);
 		return;
 	}
 
@@ -708,7 +708,7 @@ void WorldSystem::handle_player_interaction()
 			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
 			if (m_ui_system != nullptr)
 			{
-				handle_textbox = m_ui_system->openCauldron(item);
+				handle_textbox = m_ui_system->openCauldron(item, false);
 				if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::INTERACT_CAULDRON) {
 					ScreenState& screen = registry.screenStates.components[0];
 					screen.tutorial_step_complete = true;

@@ -1077,12 +1077,12 @@ void UISystem::removeRmlUITextbox(int id)
 	}
 }
 
-bool UISystem::openCauldron(Entity cauldron)
+bool UISystem::openCauldron(Entity cauldron, bool is_init = false)
 {
 	if (!m_initialized || !m_context) return false;
 	if (m_cauldron_document) {
 		m_cauldron_document->Show();
-		SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+		if (!is_init) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
 		return true;
 	}
 
@@ -1176,7 +1176,7 @@ bool UISystem::openCauldron(Entity cauldron)
 		DragListener::RegisterDragDropElement(m_cauldron_document->GetElementById("cauldron-water"));
 		DragListener::RegisterDragDropElement(m_cauldron_document->GetElementById("cauldron"));
 		m_cauldron_document->Show();
-		SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+		if (!is_init) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
 		openedCauldron = cauldron;
 		registry.cauldrons.get(cauldron).filled = true;
 		std::cout << "UISystem::openCauldron - Cauldron created successfully" << std::endl;
@@ -1218,11 +1218,11 @@ bool UISystem::isCauldronOpen(Entity cauldron) {
 	return isCauldronOpen() && cauldron == openedCauldron;
 }
 
-void UISystem::closeCauldron()
+void UISystem::closeCauldron(bool is_init)
 {
 	if (isCauldronOpen()) {
 		m_cauldron_document->Hide();
-		SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+		if (!is_init) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
 		// handle exit menu tutorial
 		if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::EXIT_MENU) {
 			ScreenState& screen = registry.screenStates.components[0];
