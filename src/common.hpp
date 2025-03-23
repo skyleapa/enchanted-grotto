@@ -168,6 +168,9 @@ const float MUSHROOM_GUARDIAN_HEIGHT = (float)150;
 const float CRYSTAL_GUARDIAN_WIDTH = (float)140;
 const float CRYSTAL_GUARDIAN_HEIGHT = (float)160;
 
+const float PEDESTAL_WIDTH = (float)82;
+const float PEDESTAL_HEIGHT = (float)117;
+
 const float DETECTION_RADIUS = (float)200;  // Enemy starts moving & attacking
 const float FOLLOWING_RADIUS = (float)300;  // Enemy stops attacking if outside this
 
@@ -186,7 +189,7 @@ const int THROW_DISTANCE = 300; // Player throw dist in pixels
 
 // Item Types and names
 // IMPORTANT: Add new types to the end of the list to not break serialization!
-// IMPORTANT: Add information for each ItemType to ITEM_INFO in common.cpp
+// IMPORTANT: Add information for each ItemType to ITEM_INFO in components.hpp
 enum class ItemType
 {
 	POTION = 0,
@@ -227,7 +230,11 @@ enum class ItemType
 	SWIFT_POWDER = CACTUS_EXTRACT + 1,
 	BONE_DUST = SWIFT_POWDER + 1,
 	CRYSTAL_MEPH = BONE_DUST + 1,
-	GLOWSPORE = CRYSTAL_MEPH + 1
+	GLOWSPORE = CRYSTAL_MEPH + 1,
+	DESERT_GUARDIAN = GLOWSPORE + 1,
+	MUSHROOM_GUARDIAN = DESERT_GUARDIAN + 1,
+	CRYSTAL_GUARDIAN = MUSHROOM_GUARDIAN + 1,
+	MASTER_POTION_PEDESTAL = CRYSTAL_GUARDIAN + 1
 };
 
 // Potion Types and names
@@ -513,7 +520,7 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 5 }           // wait 25 seconds
 		},
 		"Potion of Saturation",
-		"[Consumable] Temporarily increases the potency of other potions."
+		"[Consumable] Temporarily increases the potency of other potions. Restores hydration to enemies that are very dry."
 	},
 	{
 		PotionEffect::ALKALESCENCE,
@@ -537,7 +544,7 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 4 }           // wait 20 seconds
 		},
 		"Potion of Alkalescence",
-		"[Throwable] Reacts with acidic substances."
+		"[Throwable] Reacts with acidic substances. Neutralizes enemies that are highly acidic, as well as acidic mushrooms."
 	},
 	{
 		PotionEffect::CLARITY,
@@ -561,7 +568,7 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 3 }           // wait 15 seconds
 		},
 		"Potion of Clarity",
-		"[Throwable] Reveals hidden objects or ingredients."
+		"[Throwable] Reveals hidden objects or ingredients. May be potent against enemies that are averse to the light."
 	},
 	{
 		PotionEffect::REJUVENATION,

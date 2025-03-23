@@ -1735,6 +1735,15 @@ Entity createGuardianDesert(RenderSystem* renderer, vec2 position, int movable, 
 	enemy.name = name;
 	enemy.attack_damage = 1;
 
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::DESERT_GUARDIAN;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	Guardian& guardian = registry.guardians.emplace(entity);
+	guardian.unlock_potion = PotionEffect::SATURATION;
+
 	auto& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 1.0f; // cannot walk past guardian
 
@@ -1746,7 +1755,9 @@ Entity createGuardianDesert(RenderSystem* renderer, vec2 position, int movable, 
 	motion.angle = 180.f;
 	motion.velocity = { 0, 0 };
 	motion.position = position;
-	motion.scale = vec2({ DESERT_GUARDIAN_WIDTH, DESERT_CACTUS_HEIGHT });
+	motion.scale = vec2({ DESERT_GUARDIAN_WIDTH, DESERT_GUARDIAN_WIDTH });
+
+	createTextbox(renderer, position, entity, "[F] Use Potion of Saturation");
 
 	registry.renderRequests.insert(
 		entity,
@@ -1774,6 +1785,15 @@ Entity createGuardianMushroom(RenderSystem* renderer, vec2 position, int movable
 	enemy.name = name;
 	enemy.attack_damage = 1;
 
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::MUSHROOM_GUARDIAN;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	Guardian& guardian = registry.guardians.emplace(entity);
+	guardian.unlock_potion = PotionEffect::ALKALESCENCE;
+
 	auto& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 1.0f; // cannot walk past guardian
 
@@ -1786,6 +1806,9 @@ Entity createGuardianMushroom(RenderSystem* renderer, vec2 position, int movable
 	motion.velocity = { 0, 0 };
 	motion.position = position;
 	motion.scale = vec2({ MUSHROOM_GUARDIAN_WIDTH, MUSHROOM_GUARDIAN_HEIGHT });
+
+	// make it higher because it doesnt appear
+	createTextbox(renderer, vec2(position.x, position.y - 50), entity, "[F] Use Potion of Alkalescense");
 
 	registry.renderRequests.insert(
 		entity,
@@ -1813,6 +1836,15 @@ Entity createGuardianCrystal(RenderSystem* renderer, vec2 position, int movable,
 	enemy.name = name;
 	enemy.attack_damage = 1;
 
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::CRYSTAL_GUARDIAN;
+	item.name = name;
+	item.isCollectable = false;
+	item.amount = 1;
+
+	Guardian& guardian = registry.guardians.emplace(entity);
+	guardian.unlock_potion = PotionEffect::CLARITY;
+
 	auto& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 1.0f; // cannot walk past guardian
 
@@ -1826,6 +1858,8 @@ Entity createGuardianCrystal(RenderSystem* renderer, vec2 position, int movable,
 	motion.position = position;
 	motion.scale = vec2({ CRYSTAL_GUARDIAN_WIDTH, CRYSTAL_GUARDIAN_HEIGHT });
 
+	createTextbox(renderer, position, entity, "[F] Use Potion of Clarity");
+
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -1834,6 +1868,47 @@ Entity createGuardianCrystal(RenderSystem* renderer, vec2 position, int movable,
 			GEOMETRY_BUFFER_ID::SPRITE,
 			RENDER_LAYER::TERRAIN,
 		});
+
+	return entity;
+}
+
+
+Entity createMasterPotionPedestal(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.height_ratio = 0.1f;
+	terrain.width_ratio = 0.2f;
+
+	Item& item = registry.items.emplace(entity);
+	item.type = ItemType::MASTER_POTION_PEDESTAL;
+	item.name = "Master Potion Pedestal";
+	item.isCollectable = false;
+	item.amount = 1;
+
+	Guardian& guardian = registry.guardians.emplace(entity);
+	guardian.unlock_potion = PotionEffect::REJUVENATION;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ PEDESTAL_WIDTH, PEDESTAL_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::MASTER_POTION_PEDESTAL,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN });
+
+	createTextbox(renderer, position, entity, "[F] Use Potion of Rejuvenation");
 
 	return entity;
 }

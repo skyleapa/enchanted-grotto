@@ -54,6 +54,8 @@ public:
 
 	void handle_item_respawn(float elapsed_ms);
 
+	bool handleGuardianUnlocking(Entity guardianEntity);
+
 	void updatePlayerState(Entity& player, Motion& player_motion, float elapsed_ms_since_last_update);
 
 	// Set reference to UI system

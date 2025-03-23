@@ -24,6 +24,10 @@ public:
     void createMushroom();
     void createCrystal();
 
+    bool desert_unlocked = false;
+    bool mushroom_unlocked = false;
+    bool crystal_unlocked = false;
+
     void setUISystem(UISystem* ui_system) { m_ui_system = ui_system; }
 
     BiomeSystem()
