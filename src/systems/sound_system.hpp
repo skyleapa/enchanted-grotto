@@ -22,6 +22,7 @@ public:
     static void playCollectItemSound(int channel, int loops);
     static void playDialChangeSound(int channel, int loops);
     static void playEnemyOuchSound(int channel, int loops);
+    static void playDropInBowlSound(int channel, int loops);
     static void playDropInCauldronSound(int channel, int loops);
     static void playGrindSound(int channel, int loops);
     static void playGulpSound(int channel, int loops);
@@ -48,6 +49,7 @@ private:
     static Mix_Chunk* bottle_sound;
     static Mix_Chunk* collect_item_sound;
     static Mix_Chunk* dial_change_sound;
+    static Mix_Chunk* drop_in_bowl_sound;
     static Mix_Chunk* drop_in_cauldron_sound;
     static Mix_Chunk* enemy_ouch_sound;
     static Mix_Chunk* grind_sound;

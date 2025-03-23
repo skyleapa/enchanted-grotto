@@ -6,6 +6,7 @@ Mix_Chunk* SoundSystem::bottle_high_quality_potion_sound = nullptr;
 Mix_Chunk* SoundSystem::bottle_sound = nullptr;
 Mix_Chunk* SoundSystem::collect_item_sound = nullptr;
 Mix_Chunk* SoundSystem::dial_change_sound = nullptr;
+Mix_Chunk* SoundSystem::drop_in_bowl_sound = nullptr;
 Mix_Chunk* SoundSystem::drop_in_cauldron_sound = nullptr;
 Mix_Chunk* SoundSystem::enemy_ouch_sound = nullptr;
 Mix_Chunk* SoundSystem::grind_sound = nullptr;
@@ -39,6 +40,7 @@ bool SoundSystem::startAndLoadSounds()
     bottle_sound = Mix_LoadWAV(audio_path("bottle.wav").c_str());
     collect_item_sound = Mix_LoadWAV(audio_path("collect_item.wav").c_str());
     dial_change_sound = Mix_LoadWAV(audio_path("dial_change.wav").c_str());
+    drop_in_bowl_sound = Mix_LoadWAV(audio_path("drop_in_bowl.wav").c_str());
     drop_in_cauldron_sound = Mix_LoadWAV(audio_path("drop_in_cauldron.wav").c_str());
     enemy_ouch_sound = Mix_LoadWAV(audio_path("enemy_ouch.wav").c_str());
     grind_sound = Mix_LoadWAV(audio_path("grind.wav").c_str());
@@ -50,7 +52,7 @@ bool SoundSystem::startAndLoadSounds()
     turn_dial_sound = Mix_LoadWAV(audio_path("turn_dial.wav").c_str());
 
     // return false if any sound failed to load
-    return !(!boil_sound || !bottle_high_quality_potion_sound || !bottle_sound || !collect_item_sound || !dial_change_sound || !drop_in_cauldron_sound
+    return !(!boil_sound || !bottle_high_quality_potion_sound || !bottle_sound || !collect_item_sound || !dial_change_sound || !drop_in_bowl_sound || !drop_in_cauldron_sound
         || !enemy_ouch_sound || !grind_sound || !gulp_sound || !interact_menu_sound || !page_flip_sound || !stir_sound || !throw_sound || !turn_dial_sound);
 }
 
@@ -61,6 +63,7 @@ SoundSystem::~SoundSystem()
     if (bottle_sound) Mix_FreeChunk(bottle_sound);
     if (collect_item_sound) Mix_FreeChunk(collect_item_sound);
     if (dial_change_sound) Mix_FreeChunk(dial_change_sound);
+    if (drop_in_bowl_sound) Mix_FreeChunk(drop_in_bowl_sound);
     if (drop_in_cauldron_sound) Mix_FreeChunk(drop_in_cauldron_sound);
     if (enemy_ouch_sound) Mix_FreeChunk(enemy_ouch_sound);
     if (grind_sound) Mix_FreeChunk(grind_sound);
@@ -91,6 +94,10 @@ void SoundSystem::playCollectItemSound(int channel, int loops) {
 
 void SoundSystem::playDialChangeSound(int channel, int loops) {
     Mix_PlayChannel(channel, dial_change_sound, loops);
+}
+
+void SoundSystem::playDropInBowlSound(int channel, int loops) {
+    Mix_PlayChannel(channel, drop_in_bowl_sound, loops);
 }
 
 void SoundSystem::playDropInCauldronSound(int channel, int loops) {

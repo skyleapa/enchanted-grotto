@@ -377,16 +377,26 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 				return;
 			}
 
+			Inventory& mortarInventory = registry.inventories.get(m_ui_system->getOpenedMortarPestle());
+
+			// Check if the mortar already has an ingredient
+			if (!mortarInventory.items.empty()) {
+				std::cerr << "Mortar already contains an ingredient" << std::endl;
+				return;
+			}
+
 			Entity copy = ItemSystem::copyItem(item);
 			invItem.amount -= 1;
 			if (invItem.amount <= 0) {
 				ItemSystem::removeItemFromInventory(player, item);
 			}
 			registry.items.get(copy).amount = 1;
+			m_ui_system->updateInventoryBar();
 			std::cout << "Added ingredient: " << invItem.name << " to mortar" << std::endl;
 
 			createTempRenderRequestForItem(copy);
 
+			SoundSystem::playDropInBowlSound((int)SOUND_CHANNEL::MENU, 0);
 			PotionSystem::storeIngredientInMortar(m_ui_system->getOpenedMortarPestle(), copy);
 			return;
 		}

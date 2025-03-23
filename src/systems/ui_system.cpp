@@ -635,6 +635,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 
 						// Move to inventory
 						ItemSystem::addItemToInventory(player, ingredient);
+						SoundSystem::playBottleHighQualityPotionSound((int) SOUND_CHANNEL::MENU, 0);
 						std::cout << "Picked up ingredient from mortar" << std::endl;
 
 						// Clear the mortar inventory
