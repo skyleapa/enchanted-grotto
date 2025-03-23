@@ -714,6 +714,10 @@ void WorldSystem::handle_player_interaction()
 		{
 			handle_textbox = biome_sys->handleEntranceInteraction(item);
 		}
+		else if (registry.guardians.has(item))
+		{
+			handle_textbox = handleGuardianUnlocking(item);
+		}
 		else if (item_info.isCollectable)
 		{
 			handle_textbox = handle_item_pickup(player, item);
@@ -791,7 +795,7 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 		return false;
 	SoundSystem::playCollectItemSound((int)SOUND_CHANNEL::GENERAL, 0);
 
-	// handle fruit collection
+	// handle item collection for the tutorial
 	if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::COLLECT_ITEMS) {
 		Inventory& inventory = registry.inventories.get(player);
 		bool collected_bark = false;
@@ -948,6 +952,53 @@ void WorldSystem::update_textbox_visibility()
 		}
 	}
 }
+
+bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
+	Entity player = registry.players.entities[0];
+	Inventory& player_inventory = registry.inventories.get(player);
+	Guardian& guardian = registry.guardians.get(guardianEntity);
+
+	// Check if the correct potion is in the player's inventory
+	for (auto it = player_inventory.items.begin(); it != player_inventory.items.end(); ++it)
+	{
+		Entity itemEntity = *it;
+
+		if (registry.potions.has(itemEntity)) {
+			Potion& potion = registry.potions.get(itemEntity);
+
+			if (potion.effect == guardian.unlock_potion)
+			{
+				// Remove potion from inventory
+				player_inventory.items.erase(it);
+
+				// Unlock corresponding biome
+				if (registry.items.get(guardianEntity).type == ItemType::DESERT_GUARDIAN)
+				{
+					biome_sys->desert_unlocked = true;
+				}
+				else if (registry.items.get(guardianEntity).type == ItemType::MUSHROOM_GUARDIAN)
+				{
+					biome_sys->mushroom_unlocked = true;
+				}
+				else if (registry.items.get(guardianEntity).type == ItemType::CRYSTAL_GUARDIAN)
+				{
+					biome_sys->crystal_unlocked = true;
+				}
+
+				// Remove the guardian from the game world
+				registry.remove_all_components_of(guardianEntity);
+				registry.remove_all_components_of(itemEntity);
+
+				std::cout << "You got da potion" << std::endl;
+
+				return true;
+			}
+		}
+	}
+	std::cout << "You don't have the potion!!" << std::endl;
+	return false;
+}
+
 
 void WorldSystem::updatePlayerState(Entity& player, Motion& player_motion, float elapsed_ms_since_last_update) {
 
