@@ -200,6 +200,16 @@ bool genericCollides(const Motion& motion, const Motion& other_motion)
 
 void PhysicsSystem::step(float elapsed_ms)
 {
+	// move guardians towards exit
+	for (auto entity : registry.guardians.entities) {
+		if (registry.motions.has(entity)) {
+			Motion& guardian_motion = registry.motions.get(entity);
+			if (guardian_motion.velocity == vec2(0, 0)) continue;
+			guardian_motion.position += guardian_motion.velocity * elapsed_ms * TIME_UPDATE_FACTOR;
+		}
+	}
+
+
 	// first update the flash value of any enemies who took damage
 	for (Entity entity : registry.damageFlashes.entities) {
 		DamageFlash& flash = registry.damageFlashes.get(entity);
