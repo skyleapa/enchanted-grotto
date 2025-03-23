@@ -336,10 +336,6 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 				else if (enemy.name == "Mummy") {
 					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MUMMY_BANDAGES, 1, false);
 				}
-				if (screen.tutorial_state == (int)TUTORIAL::ATTACK_ENEMY) {
-					screen.tutorial_step_complete = true;
-					screen.tutorial_state += 1;
-				}
 
 				// add enemy name to killed_enemies for persistence
 				if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), enemy.name) == screen.killed_enemies.end()) {
@@ -508,7 +504,7 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 	// toggle tutorial
 	if (action == GLFW_PRESS && key == GLFW_KEY_T) {
 		screen.tutorial_step_complete = true;
-		screen.tutorial_state = (screen.tutorial_state == (int)TUTORIAL::COMPLETE) ? (int)TUTORIAL::MOVEMENT : (int)TUTORIAL::COMPLETE;
+		screen.tutorial_state = (screen.tutorial_state == (int)TUTORIAL::COMPLETE) ? (int)TUTORIAL::TOGGLE_TUTORIAL : (int)TUTORIAL::COMPLETE;
 	}
 
 	// skip tutorial step
@@ -522,12 +518,6 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 	if (key == GLFW_KEY_W || key == GLFW_KEY_S || key == GLFW_KEY_D || key == GLFW_KEY_A)
 		// even if press happened in different biome should still continue after switching
 	{
-		// handle tutorial movement
-		if (screen.tutorial_state == (int)TUTORIAL::MOVEMENT) {
-			screen.tutorial_step_complete = true;
-			screen.tutorial_state += 1;
-		}
-
 		if (action == GLFW_PRESS)
 		{
 			pressed_keys.insert(key);
@@ -609,7 +599,15 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 		if (m_ui_system != nullptr && (m_ui_system->isCauldronOpen() || m_ui_system->isMortarPestleOpen() || m_ui_system->isRecipeBookOpen())) return;
 		if (mouse_pos_x >= BAR_X && mouse_pos_x <= BAR_X + BAR_WIDTH && mouse_pos_y >= BAR_Y && mouse_pos_y <= BAR_Y + BAR_HEIGHT) return;
 		// don't throw ammo if in potion making menu or clicking on inventory
-		if (throwAmmo(vec2(mouse_pos_x, mouse_pos_y))) SoundSystem::playThrowSound((int)SOUND_CHANNEL::GENERAL, 0);
+		if (throwAmmo(vec2(mouse_pos_x, mouse_pos_y))) {
+			SoundSystem::playThrowSound((int)SOUND_CHANNEL::GENERAL, 0);
+
+			if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::THROW_POTION) {
+				ScreenState& screen = registry.screenStates.components[0];
+				screen.tutorial_step_complete = true;
+				screen.tutorial_state += 1;
+			}
+		}
 	}
 }
 
@@ -738,12 +736,22 @@ void WorldSystem::handle_player_interaction()
 			std::cout << "found mortar " << item.id() << std::endl;
 			if (m_ui_system != nullptr) {
 				handle_textbox = m_ui_system->openMortarPestle(item);
+				if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::MORTAR_PESTLE) {
+					ScreenState& screen = registry.screenStates.components[0];
+					screen.tutorial_step_complete = true;
+					screen.tutorial_state += 1;
+				}
 			}
 		}
 		else if (item_info.type == ItemType::RECIPE_BOOK) {
 			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
 			if (m_ui_system != nullptr) {
 				handle_textbox = m_ui_system->openRecipeBook(item);
+				if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::RECIPE_BOOK) {
+					ScreenState& screen = registry.screenStates.components[0];
+					screen.tutorial_step_complete = true;
+					screen.tutorial_state += 1;
+				}
 			}
 		}
 
@@ -786,23 +794,23 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 	// handle fruit collection
 	if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::COLLECT_ITEMS) {
 		Inventory& inventory = registry.inventories.get(player);
-		bool collected_fruits = false;
-		bool collected_beans = false;
+		bool collected_bark = false;
+		bool collected_leaves = false;
 		for (Entity& entity : inventory.items) {
 			if (!registry.items.has(entity)) continue;
 			Item& item = registry.items.get(entity);
-			if (item.type == ItemType::GALEFRUIT) {
-				if (item.amount >= 6) {
-					collected_fruits = true;
+			if (item.type == ItemType::STORM_BARK) {
+				if (item.amount >= 2) {
+					collected_bark = true;
 				}
 			}
-			if (item.type == ItemType::COFFEE_BEANS) {
-				if (item.amount >= 5) {
-					collected_beans = true;
+			if (item.type == ItemType::BLIGHTLEAF) {
+				if (item.amount >= 1) {
+					collected_leaves = true;
 				}
 			}
 		}
-		if (collected_fruits && collected_beans) {
+		if (collected_bark && collected_leaves) {
 			ScreenState& screen = registry.screenStates.components[0];
 			screen.tutorial_step_complete = true;
 			screen.tutorial_state += 1;

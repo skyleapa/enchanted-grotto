@@ -566,7 +566,7 @@ Entity createMortarPestle(RenderSystem* renderer, vec2 position, vec2 scale, std
 	motion.velocity = { 0, 0 };
 	motion.position = position;
 	motion.scale = scale;
-	
+
 	// Create mortar pestle
 	registry.mortarAndPestles.emplace(entity);
 	createTextbox(renderer, { GRID_CELL_WIDTH_PX * 6.5, GRID_CELL_HEIGHT_PX * 3 }, entity, "[F] Use Mortar & Pestle");
@@ -711,8 +711,8 @@ Entity createDesertCactus(RenderSystem* renderer, vec2 position)
 
 	motion.scale = vec2({ DESERT_CACTUS_WIDTH, DESERT_CACTUS_HEIGHT });
 
-	createCollectableIngredient(renderer, {position.x, position.y}, ItemType::CACTUS_PULP, 1, true);
-	createCollectableIngredient(renderer, {position.x + 40.0f, position.y - 30.0f}, ItemType::CACTUS_PULP, 1, true);
+	createCollectableIngredient(renderer, { position.x, position.y }, ItemType::CACTUS_PULP, 1, true);
+	createCollectableIngredient(renderer, { position.x + 40.0f, position.y - 30.0f }, ItemType::CACTUS_PULP, 1, true);
 
 	registry.renderRequests.insert(
 		entity,
@@ -831,7 +831,7 @@ Entity createDesertSkull(RenderSystem* renderer, vec2 position) {
 
 	motion.scale = vec2({ DESERT_SKULL_WIDTH, DESERT_SKULL_HEIGHT });
 
-	createCollectableIngredient(renderer, { position.x - 100.0f, position.y + 10.0f}, ItemType::PETRIFIED_BONE, 2, true);
+	createCollectableIngredient(renderer, { position.x - 100.0f, position.y + 10.0f }, ItemType::PETRIFIED_BONE, 2, true);
 
 	registry.renderRequests.insert(
 		entity,
@@ -1659,7 +1659,7 @@ Entity createEnt(RenderSystem* renderer, vec2 position, int movable, std::string
 	enemy.state = (int)ENEMY_STATE::IDLE;
 	enemy.can_move = movable;
 	enemy.name = name;
-	enemy.attack_damage = 1;
+	enemy.attack_damage = 20;
 
 	// auto& terrain = registry.terrains.emplace(entity);
 	// terrain.collision_setting = 1.0f; // cannot walk past guardian

@@ -380,11 +380,10 @@ const std::vector<Recipe> RECIPES = {
 		{
 			{ ActionType::MODIFY_HEAT, 100 }, // high heat
 			{ ActionType::ADD_INGREDIENT, 0 }, // add blightleaf
-			{ ActionType::WAIT, 2 },          // wait 10 seconds
 			{ ActionType::ADD_INGREDIENT, 1 }, // add storm bark
 			{ ActionType::ADD_INGREDIENT, 2 }, // add storm sap
 			{ ActionType::STIR, 2 },          // stir 2 times
-			{ ActionType::WAIT, 3 }           // wait 15 seconds
+			{ ActionType::WAIT, 1 }           // wait 10 seconds
 		},
 		"Potion of Harming",
 		"[Throwable] A damaging potion that can be thrown at enemies."
@@ -664,19 +663,25 @@ const float WAIT_PENALTY = 0.2f;
 const float HEAT_PENALTY = 0.01f; // Heat is measured 1-100
 
 const float REGEN_TIMER = 1000.f;
+
 enum class TUTORIAL {
 	WELCOME_SCREEN = 0,
-	MOVEMENT = WELCOME_SCREEN + 1,
-	COLLECT_ITEMS = MOVEMENT + 1,
-	ATTACK_ENEMY = COLLECT_ITEMS + 1,
-	ENTER_GROTTO = ATTACK_ENEMY + 1,
-	INTERACT_CAULDRON = ENTER_GROTTO + 1,
+	TOGGLE_TUTORIAL = WELCOME_SCREEN + 1,
+	RECIPE_BOOK = TOGGLE_TUTORIAL + 1,
+	FLIP_PAGE = RECIPE_BOOK + 1,
+	EXIT_GROTTO = FLIP_PAGE + 1,
+	COLLECT_ITEMS = EXIT_GROTTO + 1,
+	ENTER_GROTTO = COLLECT_ITEMS + 1,
+	MORTAR_PESTLE = ENTER_GROTTO + 1,
+	GRIND_BARK = MORTAR_PESTLE + 1,
+	INTERACT_CAULDRON = GRIND_BARK + 1,
 	SET_HEAT = INTERACT_CAULDRON + 1,
-	ADD_INGREDIENT = SET_HEAT + 1,
-	STIR = ADD_INGREDIENT + 1,
-	BOTTLE = STIR + 1,
-	EXIT_MENU = BOTTLE + 1,
-	COMPLETE = EXIT_MENU + 1
+	ADD_INGREDIENTS = SET_HEAT + 1,
+	STIR = ADD_INGREDIENTS + 1,
+	WAIT = STIR + 1,
+	BOTTLE = WAIT + 1,
+	THROW_POTION = BOTTLE + 1,
+	COMPLETE = THROW_POTION + 1
 };
 
 enum class SOUND_CHANNEL {

@@ -1006,6 +1006,7 @@ void UISystem::updateTutorial()
 						pointer-events: none;
 						width: 100%;
 						height: 100%;
+						z-index: 15;
 					}
 					div.text { 
 						position: absolute;
@@ -1017,7 +1018,8 @@ void UISystem::updateTutorial()
 						background-color: #ffffff;
 						font-family: Open Sans;
 						padding: 5px;
-						width: 250px;
+						width: auto;
+						max-width: 250px;
 						white-space: normal;
 						color: #000000;
 					}
@@ -1301,12 +1303,6 @@ void UISystem::closeCauldron()
 	if (isCauldronOpen()) {
 		m_cauldron_document->Hide();
 		SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
-		// handle exit menu tutorial
-		if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::EXIT_MENU) {
-			ScreenState& screen = registry.screenStates.components[0];
-			screen.tutorial_step_complete = true;
-			screen.tutorial_state += 1;
-		}
 	}
 }
 
@@ -1743,6 +1739,13 @@ void UISystem::updateRecipeBookUI()
 {
 	if (!m_initialized || !m_context || !m_recipe_book_document)
 		return;
+
+	// potion of harming recipe index is 2, although I thought it would be PotionEffect::DAMAGE which is 4... its ok for now
+	if (current_recipe_index == 2 && registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::FLIP_PAGE) {
+		ScreenState& screen = registry.screenStates.components[0];
+		screen.tutorial_step_complete = true;
+		screen.tutorial_state += 1;
+	}
 
 	// Update left page (potion info and ingredients)
 	if (Rml::Element* leftPage = m_recipe_book_document->GetElementById("left-page")) {

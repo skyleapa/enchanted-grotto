@@ -37,7 +37,7 @@ float DragListener::getHeatDegree(Rml::Vector2f coords, float curDegree) {
 }
 
 int DragListener::getHeatLevel(float degree) {
-	return (int) ((degree + MAX_KNOB_DEGREE) / 1.2f);
+	return (int)((degree + MAX_KNOB_DEGREE) / 1.2f);
 }
 
 float DragListener::getCurrentDegree(Rml::Element* heatknob) {
@@ -103,13 +103,8 @@ void DragListener::checkCompletedStir() {
 
 		if (a && b && c && d) {
 			PotionSystem::stirCauldron(m_ui_system->getOpenedCauldron());
-			if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::STIR) {
-				ScreenState& screen = registry.screenStates.components[0];
-				screen.tutorial_step_complete = true;
-				screen.tutorial_state += 1;
-			}
 			std::cout << "Recorded a successful ladle stir" << std::endl;
-			SoundSystem::playStirSound((int) SOUND_CHANNEL::MENU, 0);
+			SoundSystem::playStirSound((int)SOUND_CHANNEL::MENU, 0);
 			break;
 		}
 	}
@@ -158,6 +153,12 @@ void DragListener::checkGrindingMotion() {
 		// Grinding action detected
 		std::cout << "Grinding done!" << std::endl;
 		PotionSystem::grindIngredient(m_ui_system->getOpenedMortarPestle());
+
+		if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::GRIND_BARK) {
+			ScreenState& screen = registry.screenStates.components[0];
+			screen.tutorial_step_complete = true;
+			screen.tutorial_state += 1;
+		}
 
 		// Clear motion data after successful grind
 		pestleMotion.clear();
@@ -230,7 +231,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 				event.StopImmediatePropagation();
 				return;
 			}
-	
+
 			pestleY = mouseCoords.y;
 			pestleX = mouseCoords.x;
 			pestleMotion.clear();
@@ -244,7 +245,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			float newDegree = getHeatDegree(mouseCoords, curDegree);
 			setHeatDegree(newDegree);
 			if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::SET_HEAT) {
-				if (newDegree == 60) { // indicating max rotation
+				if (newDegree >= 50) { // indicating max rotation, allow for some error in high for tutorial
 					ScreenState& screen = registry.screenStates.components[0];
 					screen.tutorial_step_complete = true;
 					screen.tutorial_state += 1;
@@ -254,8 +255,8 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			if (!is_heat_changing) {
 				is_heat_changing = true;
 				SoundSystem::haltGeneralSound();
-				if (registry.cauldrons.get(m_ui_system->getOpenedCauldron()).is_boiling) SoundSystem::continueBoilSound((int) SOUND_CHANNEL::BOILING, -1); // continue boiling if it was already boiling
-				SoundSystem::playInteractMenuSound((int) SOUND_CHANNEL::MENU, -1); // play infinitely until dragging is finished
+				if (registry.cauldrons.get(m_ui_system->getOpenedCauldron()).is_boiling) SoundSystem::continueBoilSound((int)SOUND_CHANNEL::BOILING, -1); // continue boiling if it was already boiling
+				SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, -1); // play infinitely until dragging is finished
 			}
 			return;
 		}
@@ -268,7 +269,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 				endStir(cur);
 				return;
 			}
-			
+
 			stirCoords.push_back(coords);
 			checkCompletedStir();
 			return;
@@ -278,9 +279,9 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			float deltaY = mouseCoords.y - pestleY;
 			pestleX = mouseCoords.x;
 			pestleY = mouseCoords.y;
-	
+
 			pestleMotion.push_back(deltaY);
-	
+
 			// Check if enough vertical movement happened
 			checkGrindingMotion();
 			return;
@@ -348,7 +349,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 				ItemSystem::removeItemFromInventory(player, item);
 			}
 			registry.items.get(copy).amount = 1;
-			SoundSystem::playDropInCauldronSound((int) SOUND_CHANNEL::MENU, 0);
+			SoundSystem::playDropInCauldronSound((int)SOUND_CHANNEL::MENU, 0);
 			PotionSystem::addIngredient(m_ui_system->getOpenedCauldron(), copy);
 			return;
 		}
@@ -364,7 +365,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			if (!registry.ingredients.has(item)) {
 				return;
 			}
-			
+
 			Item& invItem = registry.items.get(item);
 
 			Ingredient& curItem = registry.ingredients.get(item);

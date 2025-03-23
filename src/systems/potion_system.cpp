@@ -29,6 +29,17 @@ void PotionSystem::updateCauldrons(float elapsed_ms) {
 		if (cc.timeSinceLastAction >= DEFAULT_WAIT) {
 			std::cout << "WAIT action recorded!" << std::endl;
 			recordAction(cauldron, ActionType::WAIT, cc.timeSinceLastAction / DEFAULT_WAIT);
+
+			// checks if we have waited 1 wait action (5 seconds) to advance tutorial
+			Action& lastAction = cc.actions[cc.actions.size() - 1];
+			if (lastAction.type == ActionType::WAIT && lastAction.value == 1) {
+				if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::WAIT) {
+					ScreenState& screen = registry.screenStates.components[0];
+					screen.tutorial_step_complete = true;
+					screen.tutorial_state += 1;
+				}
+			}
+
 			cc.timeSinceLastAction = 0;
 		}
 
@@ -79,38 +90,12 @@ void PotionSystem::addIngredient(Entity cauldron, Entity ingredient) {
 			if (fabs(lastIng.grindLevel - curIng.grindLevel) >= FLT_EPSILON) {
 				break;
 			}
-		} else {
+		}
+		else {
 			break;
 		}
 
 		lastItem.amount += curItem.amount;
-
-		// handle tutorial adding 5 coffee beans and 3 magical fruits
-		if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::ADD_INGREDIENT) {
-
-			// this is buggy so just add 8 items
-			bool added_fruits = false;
-			bool added_beans = false;
-			for (Entity& entity : ci.items) {
-				if (!registry.items.has(entity)) continue;
-				Item& item = registry.items.get(entity);
-				if (item.type == ItemType::GALEFRUIT) {
-					if (item.amount >= 2) {
-						added_fruits = true;
-					}
-				}
-				if (item.type == ItemType::COFFEE_BEANS) {
-					if (item.amount >= 2) {
-						added_beans = true;
-					}
-				}
-			}
-			if (added_beans && added_fruits) {
-				ScreenState& screen = registry.screenStates.components[0];
-				screen.tutorial_step_complete = true;
-				screen.tutorial_state += 1;
-			}
-		}
 		updatePotion(cauldron);
 		return;
 	} while (false);
@@ -118,13 +103,44 @@ void PotionSystem::addIngredient(Entity cauldron, Entity ingredient) {
 	ci.items.push_back(ingredient);
 	recordAction(cauldron, ActionType::ADD_INGREDIENT, ci.items.size() - 1);
 
+	// handle tutorial adding damage potion ingredients
+	if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::ADD_INGREDIENTS) {
+		// this is buggy...
+		bool added_blightleaf = false;
+		bool added_stormbark = false;
+		bool added_stormsap = false;
+		for (Entity& entity : ci.items) {
+			if (!registry.items.has(entity)) continue;
+			Item& item = registry.items.get(entity);
+			if (item.type == ItemType::BLIGHTLEAF) {
+				if (item.amount >= 1) {
+					added_blightleaf = true;
+				}
+			}
+			if (item.type == ItemType::STORM_BARK) {
+				if (item.amount >= 1) {
+					added_stormbark = true;
+				}
+			}
+			if (item.type == ItemType::STORM_SAP) {
+				if (item.amount >= 1) {
+					added_stormsap = true;
+				}
+			}
+		}
+		if (added_stormbark && added_blightleaf && added_stormsap) {
+			ScreenState& screen = registry.screenStates.components[0];
+			screen.tutorial_step_complete = true;
+			screen.tutorial_state += 1;
+		}
+	}
 }
 
 void PotionSystem::changeHeat(Entity cauldron, int value) {
 	Cauldron& cc = registry.cauldrons.get(cauldron);
-	
+
 	// Update sounds
-	SoundSystem::playTurnDialSound((int) SOUND_CHANNEL::MENU, 0);
+	SoundSystem::playTurnDialSound((int)SOUND_CHANNEL::MENU, 0);
 	if (value == 0) {
 		cc.is_boiling = false;
 		SoundSystem::haltBoilSound(); // no boiling if setting temperature back to off
@@ -132,12 +148,14 @@ void PotionSystem::changeHeat(Entity cauldron, int value) {
 		if (cc.actions.size() == 0) {
 			return;
 		}
-	} else {
+	}
+	else {
 		if (cc.is_boiling) {
-			SoundSystem::continueBoilSound((int) SOUND_CHANNEL::BOILING, -1);
-		} else {
+			SoundSystem::continueBoilSound((int)SOUND_CHANNEL::BOILING, -1);
+		}
+		else {
 			cc.is_boiling = true;
-			SoundSystem::playBoilSound((int) SOUND_CHANNEL::BOILING, -1);
+			SoundSystem::playBoilSound((int)SOUND_CHANNEL::BOILING, -1);
 		}
 	}
 
@@ -158,6 +176,17 @@ void PotionSystem::stirCauldron(Entity cauldron, int amount)
 		return;
 	}
 	recordAction(cauldron, ActionType::STIR, amount);
+
+	// if we have 3 stirs for the damage potion, next tutorial step
+	Cauldron& cc = registry.cauldrons.get(cauldron);
+	Action& lastAction = cc.actions[cc.actions.size() - 1];
+	if (ActionType::STIR == lastAction.type && lastAction.value >= 3) {
+		if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::STIR) {
+			ScreenState& screen = registry.screenStates.components[0];
+			screen.tutorial_step_complete = true;
+			screen.tutorial_state += 1;
+		}
+	}
 }
 
 Potion PotionSystem::bottlePotion(Entity cauldron) {
@@ -167,7 +196,7 @@ Potion PotionSystem::bottlePotion(Entity cauldron) {
 		screen.tutorial_step_complete = true;
 		screen.tutorial_state += 1;
 	}
-	
+
 	// Return potion immediately if effect is useless
 	Potion potion = getPotion(cauldron);
 	if (isUselessEffect(potion.effect)) {
@@ -192,7 +221,8 @@ Potion PotionSystem::bottlePotion(Entity cauldron) {
 		potion.duration = recipe.baseDuration + potion.quality * (recipe.highestQualityDuration - recipe.baseDuration);
 		potion.duration *= 1000; // So that it is in ms now
 		potion.effectValue = recipe.baseEffect + potion.quality * (recipe.highestQualityEffect - recipe.baseEffect);
-	} else {
+	}
+	else {
 		potion.effect = PotionEffect::FAILED;
 		potion.quality = 0.0f;
 	}
@@ -259,7 +289,7 @@ void PotionSystem::grindIngredient(Entity mortar) {
 
 	Ingredient& ing = registry.ingredients.get(ingredient);
 	Item& itemComp = registry.items.get(ingredient);
-	
+
 	// Increase grind level up to a maximum
 	if (ing.grindLevel < 1.0f) {
 		ing.grindLevel += 1;
@@ -272,54 +302,54 @@ void PotionSystem::grindIngredient(Entity mortar) {
 
 		// Determine new item type
 		switch (itemComp.type) {
-			case ItemType::COFFEE_BEANS:
-				itemComp.type = ItemType::SWIFT_POWDER;
-				if (registry.renderRequests.has(ingredient)) {
-					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::SWIFT_POWDER;
-				}
-				break;
+		case ItemType::COFFEE_BEANS:
+			itemComp.type = ItemType::SWIFT_POWDER;
+			if (registry.renderRequests.has(ingredient)) {
+				registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::SWIFT_POWDER;
+			}
+			break;
 
-			case ItemType::PETRIFIED_BONE:
-				itemComp.type = ItemType::BONE_DUST;
-				if (registry.renderRequests.has(ingredient)) {
-					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::BONE_DUST;
-				}
-				break;
+		case ItemType::PETRIFIED_BONE:
+			itemComp.type = ItemType::BONE_DUST;
+			if (registry.renderRequests.has(ingredient)) {
+				registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::BONE_DUST;
+			}
+			break;
 
-			case ItemType::CACTUS_PULP:
-				itemComp.type = ItemType::CACTUS_EXTRACT;
-				if (registry.renderRequests.has(ingredient)) {
-					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::CACTUS_EXTRACT;
-				}
-				break;
+		case ItemType::CACTUS_PULP:
+			itemComp.type = ItemType::CACTUS_EXTRACT;
+			if (registry.renderRequests.has(ingredient)) {
+				registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::CACTUS_EXTRACT;
+			}
+			break;
 
-			case ItemType::GLOWSHROOM:
-				itemComp.type = ItemType::GLOWSPORE;
-				if (registry.renderRequests.has(ingredient)) {
-					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::GLOWSPORE;
-				}
-				break;
+		case ItemType::GLOWSHROOM:
+			itemComp.type = ItemType::GLOWSPORE;
+			if (registry.renderRequests.has(ingredient)) {
+				registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::GLOWSPORE;
+			}
+			break;
 
-			case ItemType::CRYSTAL_SHARD:
-				itemComp.type = ItemType::CRYSTAL_MEPH;
-				if (registry.renderRequests.has(ingredient)) {
-					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::CRYSTAL_MEPH;
-				}
-				break;
+		case ItemType::CRYSTAL_SHARD:
+			itemComp.type = ItemType::CRYSTAL_MEPH;
+			if (registry.renderRequests.has(ingredient)) {
+				registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::CRYSTAL_MEPH;
+			}
+			break;
 
-			case ItemType::STORM_BARK:
-				itemComp.type = ItemType::STORM_SAP;
-				if (registry.renderRequests.has(ingredient)) {
-					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::STORM_SAP;
-				}
-				break;
+		case ItemType::STORM_BARK:
+			itemComp.type = ItemType::STORM_SAP;
+			if (registry.renderRequests.has(ingredient)) {
+				registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::STORM_SAP;
+			}
+			break;
 
-			default:
-				itemComp.type = ItemType::MAGICAL_DUST;
-				if (registry.renderRequests.has(ingredient)) {
-					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::MAGICAL_DUST;
-				}
-				break;
+		default:
+			itemComp.type = ItemType::MAGICAL_DUST;
+			if (registry.renderRequests.has(ingredient)) {
+				registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::MAGICAL_DUST;
+			}
+			break;
 		}
 
 		// Get size from updated item type
@@ -533,15 +563,15 @@ std::pair<int, float> levDist(Entity cauldron, Recipe& recipe,
 
 		// Check equality of item type. If item type is not equal do not apply any other penalties.
 		// If both items are potions, but the types don't match, also apply the type penalty
-		if (recipeIng.type != item.type || 
-			(recipeIng.type == ItemType::POTION && recipeIng.amount != (int) registry.potions.get(itemEntity).effect)) {
+		if (recipeIng.type != item.type ||
+			(recipeIng.type == ItemType::POTION && recipeIng.amount != (int)registry.potions.get(itemEntity).effect)) {
 			penalty += INGREDIENT_TYPE_PENALTY;
 			break;
 		}
 
 		// Check grind level and amount equality
 		penalty += abs(item.amount - recipeIng.amount) * INGREDIENT_AMOUNT_PENALTY;
-		
+
 		// Only check grind level for actual ingredients
 		if (registry.ingredients.has(itemEntity)) {
 			Ingredient& ing = registry.ingredients.get(itemEntity);
@@ -615,12 +645,12 @@ float getMaxQuality(Inventory& cauldronInventory) {
 		if (!registry.potions.has(e)) {
 			continue;
 		}
-		
+
 		Potion& potion = registry.potions.get(e);
 		if (isUselessEffect(potion.effect)) {
 			continue;
 		}
-		
+
 		// Running average calculation
 		res = (res * pots + potion.quality) / (pots + 1);
 		pots++;
@@ -658,10 +688,12 @@ void PotionSystem::updatePotion(Entity cauldron) {
 		// These are now calculated in bottlePotion()!!
 		// potion.effectValue = min_potency + (recipe.highestQualityEffect - min_potency) * potion.quality;
 		// potion.duration = min_duration + (recipe.highestQualityDuration - min_duration) * potion.quality;
-	} else if (ci.items.size() == 1 && registry.potions.has(ci.items[0])) {
+	}
+	else if (ci.items.size() == 1 && registry.potions.has(ci.items[0])) {
 		// If the only ingredient is a potion, return that potion
 		potion = registry.potions.get(ci.items[0]);
-	} else if (ci.items.size() > 0) {
+	}
+	else if (ci.items.size() > 0) {
 		// Otherwise, if there are ingredients, then its failed
 		potion.effect = PotionEffect::FAILED;
 	}

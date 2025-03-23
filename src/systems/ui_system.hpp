@@ -60,7 +60,7 @@ public:
     Entity getOpenedCauldron();
     void setOpenedCauldron(Entity new_cauldron);
     void cauldronDragUpdate(bool isDown);
- 
+
     // Recipe book methods
     bool openRecipeBook(Entity recipe_book);
     void updateRecipeBookUI();
@@ -69,7 +69,7 @@ public:
     Entity getOpenedRecipeBook();
     void setOpenedRecipeBook(Entity new_recipe_book);
     void navigateRecipeBook(bool next_page);
-    
+
     // Recipe book index for saving/loading
     int current_recipe_index = 0;
 
@@ -160,37 +160,52 @@ private:
 
     const std::unordered_map<int, std::tuple<std::string, std::string, std::string>> tutorial_steps = {
         { (int)TUTORIAL::WELCOME_SCREEN, {
+            }},
+        { (int)TUTORIAL::TOGGLE_TUTORIAL, {
+            "820px", "466px", "Let’s make your first potion! Toggle the tutorial with T at any time or N to skip to the tutorial step. Try pressing N now!"
         }},
-        { (int)TUTORIAL::MOVEMENT, {
-            "65%", "70%", "Welcome to Enchanted Grotto! Move around with the WASD keys. Press T to toggle the tutorial at any time or N to skip the tutorial step."
+        { (int)TUTORIAL::RECIPE_BOOK, {
+            "211px", "110px", "Head to the lectern using the WASD keys and press F to open the recipe book."
+        }},
+        { (int)TUTORIAL::FLIP_PAGE, {
+            "790px", "455px", "Flip to the recipe page for “Potion of Harming”."
+        }},
+        { (int)TUTORIAL::EXIT_GROTTO, {
+            "790px", "455px", "Looks like we’re missing a couple of ingredients! Exit the recipe book menu by pressing F and leave the grotto from the exit in the bottom right."
         }},
         { (int)TUTORIAL::COLLECT_ITEMS, {
-            "60%", "75%", "Exit the grotto by pressing F in front of the door. Collect 6 Magical Fruits and 5 Coffee Beans by pressing F next to the items."
-        }},
-        { (int)TUTORIAL::ATTACK_ENEMY, {
-            "25%", "35%", "Select the fruits by clicking on the corresponding inventory slot. Defeat the enemy by left-clicking to throw fruits from your inventory. If you touch the enemy you will die!"
+            "25%", "35%", "Welcome to the forest! Collect 2 storm bark and 1 blightleaf for your potion, you may have to explore the area to find ingredients."
         }},
         { (int)TUTORIAL::ENTER_GROTTO, {
-            "55%", "10%", "Nice work! Now enter the grotto by pressing F at the entrance."
+            "611px", "200px", "Great, now head back into the grotto."
+        }},
+        { (int)TUTORIAL::MORTAR_PESTLE, {
+            "422px", "125px", "Go to the mortar and pestle and press F to open the menu"
+        }},
+        { (int)TUTORIAL::GRIND_BARK, {
+            "284px", "190px", "Insert a storm bark by dragging it into the mortar and pestle from your inventory. Then pickup the pestle and start pounding that bark!"
         }},
         { (int)TUTORIAL::INTERACT_CAULDRON, {
-            "70%", "45%", "Open the potion-making menu by pressing F in front of the cauldron."
+            "284px", "190px", "Now you have Storm Sap! Click it in the mortar and pestle to pick it up. Exit the menu with F and go to your cauldron. Press F to open the cauldron menu."
         }},
         { (int)TUTORIAL::SET_HEAT, {
-            "85%", "90%", "Click and drag to turn the dial to max heat."
+            "210px", "290px", "Get started by dragging the heat dial to high. If you forget the recipe, you can always exit and take a peek, the cauldron state is saved."
         }},
-        { (int)TUTORIAL::ADD_INGREDIENT, {
-            "85%", "90%", "Click and drag to add items to the cauldron. Add 5 Coffee Beans and 3 Magical Fruits. NOTE: this is buggy right now and the number isn't exact. Press N to move to the next step."
+        { (int)TUTORIAL::ADD_INGREDIENTS, {
+            "210px", "290px", "Now add in 1 storm sap, 1 blightleaf and 1 storm bark by dragging it from your inventory into the cauldron."
         }},
         { (int)TUTORIAL::STIR, {
-            "85%", "90%", "Click on the ladle and bring it to the cauldron. Click and drag to make a circle in the cauldron to stir."
+            "210px", "290px", "Pick up the ladle by clicking and dragging it in the cauldron. Stir 3 times, a successful stir will flash and play a whoosh sound."
+        }},
+        { (int)TUTORIAL::WAIT, {
+            "210px", "290px", "Wait for 5 seconds for the potion to develop. We will have a timer in the cauldron menu for the future."
         }},
         { (int)TUTORIAL::BOTTLE, {
-            "85%", "90%", "Click on the bottle and bring it to the cauldron and click on the cauldron to bottle the newly brewed potion."
+            "210px", "290px", "Now bottle your potion by dragging the bottle to the cauldron and left clicking. The closer the color to the recipe book, the better the quality and potion effect."
         }},
-        { (int)TUTORIAL::EXIT_MENU, {
-            "85%", "90%", "Congrats! You just made your first potion! Press F to exit menu and best of luck on your adventure!"
-        }},
+        { (int)TUTORIAL::THROW_POTION, {
+            "210px", "290px", "Exit the cauldron menu by clicking F. You can throw your potion at enemies with left click. Consume potions by right clicking on the potion in your inventory. Good luck saving the grotto!"
+        }}
     };
 
     const std::string LADLE_LEFT_PX = "866px";
@@ -200,7 +215,7 @@ private:
 
     const std::string PESTLE_LEFT_PX = "800px";
     const std::string PESTLE_TOP_PX = "300px";
-    
+
     // Helper functions for recipe book
     std::string getRecipeHtml(int recipe_index);
     std::string getRecipeStepsText(const Recipe& recipe);

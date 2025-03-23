@@ -162,6 +162,11 @@ void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
 	else if (screen.from_biome == (int)BIOME::GROTTO && screen.biome == (int)BIOME::FOREST) { // through grotto exit into forest
 		player_motion.position = vec2(GROTTO_ENTRANCE_X, GROTTO_ENTRANCE_Y + 50);
 
+		if (screen.tutorial_state == (int)TUTORIAL::EXIT_GROTTO) {
+			screen.tutorial_step_complete = true;
+			screen.tutorial_state += 1;
+		}
+
 		// ensure to make cauldron invisble since it should still exist but only rendered when in grotto
 		for (Entity cauldron : registry.cauldrons.entities) {
 			if (registry.renderRequests.has(cauldron)) {
