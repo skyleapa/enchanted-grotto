@@ -3,6 +3,7 @@
 #include "physics_system.hpp"
 #include "item_system.hpp"
 #include "world_init.hpp"
+#include "sound_system.hpp"
 #include <iostream>
 
 #include <vector>
@@ -13,8 +14,6 @@ void BiomeSystem::init(RenderSystem* renderer_arg) {
 	screen.darken_screen_factor = 1;
 	screen.fade_status = 1; // start from black screen
 	screen.is_switching_biome = true;
-
-	switchBiome(screen.biome);
 }
 
 // step function to handle biome changes
@@ -51,7 +50,7 @@ void BiomeSystem::step(float elapsed_ms_since_last_update) {
 				screen.from_biome = screen.biome;
 				screen.biome = screen.switching_to_biome;
 				screen.darken_screen_factor = 1;
-				switchBiome((int)screen.biome);
+				switchBiome((int)screen.biome, screen.first_game_load);
 			}
 			screen.darken_screen_factor -= elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
 			if (screen.darken_screen_factor <= 0)
@@ -68,10 +67,10 @@ void BiomeSystem::step(float elapsed_ms_since_last_update) {
 	return;
 }
 
-void BiomeSystem::switchBiome(int biome) {
+void BiomeSystem::switchBiome(int biome, bool is_first_load) {
 	std::vector<Entity> to_remove;
 	for (auto entity : registry.motions.entities) {
-		if (registry.players.has(entity) || registry.inventories.has(entity)) continue;
+		if (registry.players.has(entity) || registry.inventories.has(entity) || registry.potions.has(entity)) continue; // don't lose potion effects
 
 		// don't delete any render requests marked as invisible
 		if (registry.renderRequests.has(entity)) {
@@ -85,6 +84,9 @@ void BiomeSystem::switchBiome(int biome) {
 		registry.remove_all_components_of(entity);
 	}
 
+	// halt any boiling sounds first
+	SoundSystem::haltBoilSound();
+
 	if (biome == (GLuint)BIOME::FOREST) {
 		createForest();
 	}
@@ -93,6 +95,10 @@ void BiomeSystem::switchBiome(int biome) {
 	}
 	else if (biome == (GLuint)BIOME::GROTTO) {
 		createGrotto();
+		// continue boiling if it was boiling before leaving grotto, assumes we only have 1 cauldron enttity
+		if (registry.cauldrons.entities.size() > 0) {
+			if (registry.cauldrons.components[0].is_boiling) SoundSystem::playBoilSound((int)SOUND_CHANNEL::BOILING, -1);
+		}
 	}
 	else if (biome == (GLuint)BIOME::DESERT) {
 		createDesert();
@@ -104,10 +110,10 @@ void BiomeSystem::switchBiome(int biome) {
 		createCrystal();
 	}
 
-	renderPlayerInNewBiome();
+	renderPlayerInNewBiome(is_first_load);
 }
 
-void BiomeSystem::renderPlayerInNewBiome() {
+void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
 	if (registry.players.entities.size() == 0) return;
 
 	Entity player_entity = registry.players.entities[0];
@@ -148,7 +154,6 @@ void BiomeSystem::renderPlayerInNewBiome() {
 			}
 			// recreate textbox
 			if (registry.motions.has(mortar)) {
-				Motion& motion = registry.motions.get(mortar);
 				createTextbox(renderer, { GRID_CELL_WIDTH_PX * 6.5, GRID_CELL_HEIGHT_PX * 3 }, mortar, "[F] Use Mortar & Pestle");
 			}
 
@@ -205,6 +210,14 @@ void BiomeSystem::renderPlayerInNewBiome() {
 	}
 	else if (screen.from_biome == (int)BIOME::FOREST_EX && screen.biome == (int)BIOME::CRYSTAL) {
 		player_motion.position = vec2(960, 90);
+	}
+
+	// if re-opening the game, set player position to where they were 
+	if (is_first_load && registry.players.get(player_entity).load_position != vec2(0, 0)) {
+		screen.first_game_load = false;
+		player_motion.position = registry.players.get(player_entity).load_position;
+		std::cout << registry.players.get(player_entity).load_position.x << ", " << registry.players.get(player_entity).load_position.y << std::endl;
+		std::cout << "reloaded player's position" << std::endl;
 	}
 }
 
@@ -318,10 +331,18 @@ void BiomeSystem::createForest()
 	createBush(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5));
 	createBush(renderer, vec2(1100, 292));
 
-	ScreenState screen = registry.screenStates.components[0];
-	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Ent 1") == screen.killed_enemies.end())
-	{
-		createEnt(renderer, vec2(GRID_CELL_WIDTH_PX * 2.15, GRID_CELL_HEIGHT_PX * 5), 0, "Ent 1");
+	// admin flag used so we can test the game and disable guardian spawns
+	if (!ADMIN_FLAG) {
+		ScreenState screen = registry.screenStates.components[0];
+		if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Desert Guardian") == screen.killed_enemies.end())
+		{
+			createGuardianDesert(renderer, vec2(GRID_CELL_WIDTH_PX * 2, GRID_CELL_HEIGHT_PX * 3), 0, "Desert Guardian");
+		}
+
+		if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Mushroom Guardian") == screen.killed_enemies.end())
+		{
+			createGuardianMushroom(renderer, vec2(GRID_CELL_WIDTH_PX * 2.1, WINDOW_HEIGHT_PX - 80), 0, "Mushroom Guardian");
+		}
 	}
 
 	createForestToGrotto(renderer, vec2(GRID_CELL_WIDTH_PX * 20, GRID_CELL_HEIGHT_PX * 1), "Grotto Entrance");
@@ -348,6 +369,21 @@ void BiomeSystem::createForestEx()
 
 	createBush(renderer, vec2(920, 392));
 
+	createCollectableIngredient(renderer, vec2(288, 101), ItemType::EVERFERN, 1, true);
+	createCollectableIngredient(renderer, vec2(708, 601), ItemType::EVERFERN, 1, true);
+	createCollectableIngredient(renderer, vec2(1153, 109), ItemType::BLIGHTLEAF, 1, true);
+	createCollectableIngredient(renderer, vec2(72, 619), ItemType::BLIGHTLEAF, 1, true);
+	createEnt(renderer, vec2(606, 390), 1, "Ent");
+	createEnt(renderer, vec2(1011, 158), 1, "Ent");
+
+	if (!ADMIN_FLAG) {
+		ScreenState screen = registry.screenStates.components[0];
+		if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Crystal Guardian") == screen.killed_enemies.end())
+		{
+			createGuardianCrystal(renderer, vec2(900, 620), 0, "Crystal Guardian");
+		}
+	}
+
 	createForestExToForest(renderer, vec2(50, 470), "Forest Ex to Forest");
 	createForestExToCrystal(renderer, vec2(930, 665), "Forest Ex to Crystal");
 }
@@ -366,6 +402,8 @@ void BiomeSystem::createDesert()
 	createDesertRiver(renderer, vec2(1190, WINDOW_HEIGHT_PX / 2));
 	createDesertPage(renderer, vec2(GRID_CELL_WIDTH_PX * 13.5, GRID_CELL_HEIGHT_PX * 3.2));
 	createDesertSkull(renderer, vec2(GRID_CELL_WIDTH_PX * 13.7, GRID_CELL_HEIGHT_PX * 10.9));
+	createCollectableIngredient(renderer, vec2(1096, 373), ItemType::HEALING_LILY, 1, true);
+	createCollectableIngredient(renderer, vec2(400, 194), ItemType::HEALING_LILY, 1, true);
 
 	ScreenState screen = registry.screenStates.components[0];
 	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Mummy 1") == screen.killed_enemies.end())
@@ -394,8 +432,18 @@ void BiomeSystem::createMushroom()
 	createMushroomBlue(renderer, vec2(750, 515));
 	createMushroomTallBlue(renderer, vec2(1055, 435));
 
+	createCollectableIngredient(renderer, vec2(260, 584), ItemType::GLOWSHROOM, 1, true);
+	createCollectableIngredient(renderer, vec2(904, 454), ItemType::GLOWSHROOM, 1, true);
+	createCollectableIngredient(renderer, vec2(1090, 114), ItemType::DOOMCAP, 1, true);
+
+	ScreenState screen = registry.screenStates.components[0];
+	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Crystal Guardian") == screen.killed_enemies.end())
+	{
+		createGuardianCrystal(renderer, vec2(1150, 200), 0, "Crystal Guardian");
+	}
+
 	createMushroomToForest(renderer, vec2(60, 50), "Mushroom To Forest");
-	createMushroomToCrystal(renderer, vec2(1220, 200), "Mushroom to Crystal");
+	createMushroomToCrystal(renderer, vec2(1220, 160), "Mushroom to Crystal");
 }
 
 void BiomeSystem::createCrystal()
@@ -413,6 +461,11 @@ void BiomeSystem::createCrystal()
 	createCrystalMinecart(renderer, vec2(986, 530));
 	createCrystalRock(renderer, vec2(639, 262));
 	createCrystalPage(renderer, vec2(966, 510));
+
+	createCollectableIngredient(renderer, vec2(491, 90), ItemType::CRYSTABLOOM, 1, true);
+	createCollectableIngredient(renderer, vec2(458, 355), ItemType::CRYSTAL_SHARD, 1, true);
+	createCollectableIngredient(renderer, vec2(302, 617), ItemType::CRYSTAL_SHARD, 1, true);
+	createCollectableIngredient(renderer, vec2(1141, 624), ItemType::QUARTZMELON, 1, true);
 
 	createCrystalToMushroom(renderer, vec2(50, 200), "Crystal To Mushroom");
 	createCrystalToForestEx(renderer, vec2(930, 30), "Crystal to Forest Ex");

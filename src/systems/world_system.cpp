@@ -220,7 +220,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		}
 	}
 
-	updatePlayerWalkAndAnimation(player, player_motion, elapsed_ms_since_last_update);
+	updatePlayerState(player, player_motion, elapsed_ms_since_last_update);
 	updateThrownAmmo(elapsed_ms_since_last_update);
 	update_textbox_visibility();
 	handle_item_respawn(elapsed_ms_since_last_update);
@@ -326,16 +326,15 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 
 			Ammo& ammo = registry.ammo.get(ammo_entity);
 			Enemy& enemy = registry.enemies.get(enemy_entity);
-			enemy.health -= ammo.damage;
+			enemy.health -= ammo.damage * registry.players.get(player_entity).effect_multiplier;
 			registry.remove_all_components_of(ammo_entity);
 			SoundSystem::playEnemyOuchSound((int)SOUND_CHANNEL::GENERAL, 0); // play enemy ouch sound
 			if (enemy.health <= 0) {
-				// using can_move for now since ent cannot move, but mummy can
-				if (enemy.can_move == 0) {
-					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::SAP, 1, false);
+				if (enemy.name == "Ent") {
+					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::STORM_BARK, 1, false);
 				}
-				else if (enemy.can_move == 1) {
-					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MAGICAL_DUST, 1, false);
+				else if (enemy.name == "Mummy") {
+					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MUMMY_BANDAGES, 1, false);
 				}
 				if (screen.tutorial_state == (int)TUTORIAL::ATTACK_ENEMY) {
 					screen.tutorial_step_complete = true;
@@ -362,7 +361,7 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 
 			// player flashes red and takes damage equal to enemy's attack
 			if (!registry.damageFlashes.has(player_entity)) registry.damageFlashes.emplace(player_entity);
-			player.health -= registry.enemies.get(enemy_entity).attack_damage;
+			player.health -= (registry.enemies.get(enemy_entity).attack_damage * player.defense);
 			player.damage_cooldown = PLAYER_DAMAGE_COOLDOWN;
 
 			// if player dies, reload from most recent save and respawn in grotto
@@ -667,16 +666,16 @@ void WorldSystem::handle_player_interaction()
 	}
 
 	// If a mortar is open, close it
-    if (m_ui_system && m_ui_system->isMortarPestleOpen()) {
-        m_ui_system->closeMortarPestle();
-        return;
-    }
-    
-    // If a recipe book is open, close it
-    if (m_ui_system && m_ui_system->isRecipeBookOpen()) {
-        m_ui_system->closeRecipeBook();
-        return;
-    }
+	if (m_ui_system && m_ui_system->isMortarPestleOpen()) {
+		m_ui_system->closeMortarPestle();
+		return;
+	}
+
+  // If a recipe book is open, close it
+	if (m_ui_system && m_ui_system->isRecipeBookOpen()) {
+		m_ui_system->closeRecipeBook();
+		return;
+	}
 
 	Motion& player_motion = registry.motions.get(player);
 	for (Entity item : registry.items.entities)
@@ -689,7 +688,7 @@ void WorldSystem::handle_player_interaction()
 		Item& item_info = registry.items.get(item);
 
 		// Check if item is collectable or is an interactable entrance
-		if (!item_info.isCollectable && !registry.entrances.has(item) && !registry.cauldrons.has(item) 
+		if (!item_info.isCollectable && !registry.entrances.has(item) && !registry.cauldrons.has(item)
 			&& !registry.mortarAndPestles.has(item)) {
 			// Check for recipe book specifically
 			if (item_info.type != ItemType::RECIPE_BOOK) {
@@ -704,8 +703,8 @@ void WorldSystem::handle_player_interaction()
 			continue;
 		}
 
-		// If this is a cauldron and it's invisible, ignore it so if items overlap, we don't get stuck opening cauldron
-		if (registry.cauldrons.has(item)) {
+		// If this is a cauldron/mortar & pestle and it's invisible, ignore it so if items overlap, we don't get stuck opening it
+		if (registry.cauldrons.has(item) || registry.mortarAndPestles.has(item)) {
 			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) {
 				continue;
 			}
@@ -734,21 +733,19 @@ void WorldSystem::handle_player_interaction()
 				}
 			}
 		}
-        else if (registry.mortarAndPestles.has(item)) {
-            if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
-            std::cout << "found mortar " << item.id() << std::endl;
-            if (m_ui_system != nullptr)
-            {
-                handle_textbox = m_ui_system->openMortarPestle(item);
-            }
-        }
-        else if (item_info.type == ItemType::RECIPE_BOOK) {
-            if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
-            if (m_ui_system != nullptr)
-            {
-                handle_textbox = m_ui_system->openRecipeBook(item);
-            }
-        }
+		else if (registry.mortarAndPestles.has(item)) {
+			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
+				std::cout << "found mortar " << item.id() << std::endl;
+				if (m_ui_system != nullptr) {
+            handle_textbox = m_ui_system->openMortarPestle(item);
+				}
+		}
+		else if (item_info.type == ItemType::RECIPE_BOOK) {
+			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
+			if (m_ui_system != nullptr) {
+				handle_textbox = m_ui_system->openRecipeBook(item);
+			}
+		}
 
 		if (handle_textbox)
 		{
@@ -814,6 +811,7 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 
 	// Set a random respawn time (10-15 seconds)
 	item_info.respawnTime = (rand() % 5001 + 10000);
+	item_info.lastBiome = static_cast<BIOME>(registry.screenStates.components[0].biome);
 
 	return true;
 }
@@ -821,12 +819,21 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 
 void WorldSystem::handle_item_respawn(float elapsed_ms)
 {
+	if (registry.players.entities.size() == 0) return;
+	Entity entity = registry.players.entities[0];
+
+	if (!registry.inventories.has(entity)) return;
+	Inventory& inventory = registry.inventories.get(entity);
+
 	for (Entity item : registry.items.entities)
 	{
 		Item& item_info = registry.items.get(item);
 
+		// skip if in inventory
+		if (std::find(inventory.items.begin(), inventory.items.end(), item) != inventory.items.end()) continue;
+
 		if (!item_info.canRespawn)
-			return;
+			continue;
 
 		if (item_info.respawnTime <= 0)
 			continue;
@@ -836,8 +843,28 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 		if (item_info.respawnTime > 0)
 			return;
 
-		if (registry.screenStates.components[0].biome != (GLuint)BIOME::FOREST) return;
-		// only respawn if in forest biome
+		// Check if current biome matches any allowed respawn biome for this item type
+		auto it = itemRespawnBiomes.find(item_info.type);
+		if (it == itemRespawnBiomes.end())
+			continue; 
+
+		const std::vector<BIOME>& allowedBiomes = it->second;
+		BIOME originalBiome = item_info.lastBiome;
+		GLuint currentBiome = registry.screenStates.components[0].biome;
+
+		bool canRespawnHere = false;
+		for (BIOME allowedBiome : allowedBiomes) {
+			if (allowedBiome == originalBiome && static_cast<GLuint>(allowedBiome) == currentBiome) {
+				canRespawnHere = true;
+				break;
+			}
+		}
+
+		if (!canRespawnHere) {
+			// std::cout << "Biome mismatch, will not respawn. Original biome: " << static_cast<int>(originalBiome)
+			// 		<< ", Current biome: " << currentBiome << std::endl;
+			continue;
+		}
 
 		// Respawn item at its original position
 		Motion& motion = registry.motions.emplace(item);
@@ -924,7 +951,7 @@ void WorldSystem::update_textbox_visibility()
 	}
 }
 
-void WorldSystem::updatePlayerWalkAndAnimation(Entity& player, Motion& player_motion, float elapsed_ms_since_last_update) {
+void WorldSystem::updatePlayerState(Entity& player, Motion& player_motion, float elapsed_ms_since_last_update) {
 
 	Animation& player_animation = registry.animations.get(player);
 
@@ -934,6 +961,8 @@ void WorldSystem::updatePlayerWalkAndAnimation(Entity& player, Motion& player_mo
 	// no movement while menu is open, switching biome, or on welcome screen
 	ScreenState& screen = registry.screenStates.components[0];
 	if ((m_ui_system != nullptr && (m_ui_system->isCauldronOpen() || m_ui_system->isMortarPestleOpen() || m_ui_system->isRecipeBookOpen())) || screen.is_switching_biome || screen.tutorial_state == (int)TUTORIAL::WELCOME_SCREEN) return;
+
+	Player& player_comp = registry.players.get(player);
 
 	if (pressed_keys.count(GLFW_KEY_W)) {
 		player_motion.velocity[1] -= PLAYER_SPEED;
@@ -980,13 +1009,15 @@ void WorldSystem::updatePlayerWalkAndAnimation(Entity& player, Motion& player_mo
 		render_request.used_texture = player_animation.frames[player_animation.current_frame];
 	}
 
+	// add any active speed boost
+	player_motion.velocity *= player_comp.speed_multiplier;
+
 	// move the character
 	player_motion.previous_position = player_motion.position;
 	float delta = elapsed_ms_since_last_update * TIME_UPDATE_FACTOR;
 	player_motion.position += delta * player_motion.velocity;
 
 	// update player's throwing cooldown
-	Player& player_comp = registry.players.get(player);
 	if (player_comp.cooldown > 0) {
 		player_comp.cooldown -= elapsed_ms_since_last_update;
 		if (player_comp.cooldown <= 0) {
@@ -995,7 +1026,24 @@ void WorldSystem::updatePlayerWalkAndAnimation(Entity& player, Motion& player_mo
 	}
 
 	// update player's damage cooldown
-	if (player_comp.damage_cooldown >= 0) player_comp.damage_cooldown -= elapsed_ms_since_last_update;
+	if (player_comp.damage_cooldown > 0) player_comp.damage_cooldown -= elapsed_ms_since_last_update;
+	else {
+		player_comp.damage_cooldown = 0.f;
+	}
+
+	// update player's active effects
+	updateConsumedPotions(elapsed_ms_since_last_update);
+
+	// update regen timer
+	if (registry.regen.has(player)) {
+		Regeneration& regen = registry.regen.get(player);
+		regen.timer -= elapsed_ms_since_last_update;
+		if (regen.timer <= 0) {
+			player_comp.health = std::min(player_comp.health + regen.heal_amount, PLAYER_MAX_HEALTH);
+			regen.timer = REGEN_TIMER;
+		}
+	}
+
 }
 
 bool WorldSystem::throwAmmo(vec2 target) {
@@ -1022,11 +1070,11 @@ bool WorldSystem::throwAmmo(vec2 target) {
 			Item& item = registry.items.get(item_entity);
 			item.amount -= 1;
 			if (item.amount == 0) {
-				ItemSystem::destroyItem(item_entity);
 				ItemSystem::removeItemFromInventory(player_entity, item_entity);
+				ItemSystem::destroyItem(item_entity);
 			}
 		}
-		player.cooldown = 500.f;
+		player.cooldown = PLAYER_THROW_COOLDOWN;
 		return true;
 	}
 
@@ -1046,7 +1094,7 @@ void WorldSystem::updateThrownAmmo(float elapsed_ms_since_last_update) {
 		if (abs(ammo_motion.position.x - ammo.start_pos.x) > abs(ammo.target.x - ammo.start_pos.x)
 			|| abs(ammo_motion.position.y - ammo.start_pos.y) > abs(ammo.target.y - ammo.start_pos.y))
 			registry.remove_all_components_of(entity);
-		
+
 		// make ammo rotate
 		ammo_motion.angle += 5.f;
 
@@ -1070,4 +1118,153 @@ void WorldSystem::updateFPS(float elapsed_ms)
 
 	// Update timer for display refresh
 	m_fps_update_timer += elapsed_ms;
+}
+
+void WorldSystem::updateConsumedPotions(float elapsed_ms_since_last_update) {
+	if (registry.players.entities.size() == 0) return;
+	Entity player_entity = registry.players.entities[0];
+	Player& player = registry.players.get(player_entity);
+
+	if (player.consumed_potion) {
+		player.consumed_potion = false;
+		consumePotion();
+	}
+
+	std::vector<Entity> to_remove = {};
+
+	for (Entity effect : player.active_effects) {
+		if (!registry.potions.has(effect)) continue; // only potions should be added
+
+		Potion& potion = registry.potions.get(effect);
+		potion.duration -= elapsed_ms_since_last_update;
+		if (potion.duration <= 0) {
+			std::cout << "potion of " << EFFECT_NAMES.at(potion.effect) << " has expired" << std::endl;
+			removePotionEffect(registry.potions.get(effect), player_entity);
+			to_remove.push_back(effect);
+		}
+	}
+
+	for (Entity entity : to_remove) {
+		player.active_effects.erase(std::remove(player.active_effects.begin(), player.active_effects.end(), entity), player.active_effects.end());
+		registry.remove_all_components_of(entity);
+	}
+}
+
+bool WorldSystem::consumePotion() {
+	// get the item in the selected inventory slot
+	if (registry.players.entities.size() == 0) return false;
+	Entity player_entity = registry.players.entities[0];
+	if (!registry.inventories.has(player_entity)) return false;
+
+	Inventory& inv = registry.inventories.get(player_entity);
+	if (inv.selection + 1 > inv.items.size() || inv.items.size() == 0) {
+		std::cout << "player has no item in slot" << inv.selection << std::endl;
+		return false;
+	}
+
+	Entity selected_item = inv.items[inv.selection];
+
+	if (!registry.items.has(selected_item)) {
+		std::cout << "selected item is not an item" << std::endl;
+		return false;
+	}
+	if (!registry.potions.has(selected_item)) {
+		std::cout << "selected item is not a potion" << std::endl;
+		return false;
+	}
+	// Check that the potion is consumable
+	if (std::find(consumable_potions.begin(), consumable_potions.end(), registry.potions.get(selected_item).effect) == consumable_potions.end()) {
+		std::cout << "selected potion is not consumable" << std::endl;
+		return false;
+	}
+
+	// replace any potion of the same type currently active with the new one
+	Player& player = registry.players.get(player_entity);
+	for (int i = 0; i < player.active_effects.size(); i++) {
+		Entity entity = player.active_effects[i];
+		if (!registry.potions.has(entity)) continue;
+
+		Potion& potion = registry.potions.get(entity);
+		if (potion.effect == registry.potions.get(selected_item).effect) {
+			removePotionEffect(potion, player_entity);
+			player.active_effects.erase(player.active_effects.begin() + i);
+			registry.remove_all_components_of(entity);
+			break;
+		}
+	}
+
+	Entity item_copy = ItemSystem::copyItem(selected_item);
+
+	// decrement count in inventory
+	Item& item = registry.items.get(selected_item);
+	item.amount -= 1;
+	if (item.amount <= 0) {
+		ItemSystem::removeItemFromInventory(player_entity, selected_item);
+		ItemSystem::destroyItem(selected_item);
+	}
+
+	// add copy of item to player's active effects - health is instant so don't add to active_effects
+	assert(registry.potions.has(item_copy) && "consumed item should be a potion");
+	assert(registry.items.has(item_copy) && "consumed item should be an item");
+	if (registry.potions.get(item_copy).effect != PotionEffect::HEALTH) {
+		player.active_effects.push_back(item_copy);
+	}
+	addPotionEffect(registry.potions.get(item_copy), player_entity);
+	std::cout << "player has consumed a potion of " << EFFECT_NAMES.at(registry.potions.get(item_copy).effect) << std::endl;
+	return true;
+}
+
+void WorldSystem::addPotionEffect(Potion& potion, Entity player) {
+	Player& player_comp = registry.players.get(player);
+
+	switch (potion.effect) {
+	case PotionEffect::SPEED: {
+		player_comp.speed_multiplier = player_comp.effect_multiplier * potion.effectValue; // needs to be set separately because we reset velocity every time in updatePlayerState
+		break;
+	}
+	case PotionEffect::HEALTH: {
+		player_comp.health = std::min(player_comp.health + player_comp.effect_multiplier * potion.effectValue, PLAYER_MAX_HEALTH);
+		break;
+	}
+	case PotionEffect::REGEN: {
+		Regeneration& regen = registry.regen.emplace(player);
+		regen.heal_amount = potion.effectValue * player_comp.effect_multiplier;
+		regen.timer = 1000.f; // regen every second
+		break;
+	}
+	case PotionEffect::RESISTANCE: {
+		player_comp.defense = 1 - (player_comp.effect_multiplier * potion.effectValue); // percent of damage reduced
+		break;
+	}
+	case PotionEffect::SATURATION: {
+		player_comp.effect_multiplier = potion.effectValue;
+		break;
+	}
+	default: {
+		break;
+	}
+	}
+}
+
+void WorldSystem::removePotionEffect(Potion& potion, Entity player) {
+	Player& player_comp = registry.players.get(player);
+
+	switch (potion.effect) {
+	case PotionEffect::SPEED:
+		player_comp.speed_multiplier = 1.f;
+		break;
+	case PotionEffect::REGEN:
+		if (registry.regen.has(player)) {
+			registry.regen.remove(player);
+		}
+		break;
+	case PotionEffect::RESISTANCE:
+		player_comp.defense = 1.f;
+		break;
+	case PotionEffect::SATURATION:
+		player_comp.effect_multiplier = 1.f;
+		break;
+	default:
+		break;
+	}
 }

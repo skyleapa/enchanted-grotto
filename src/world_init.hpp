@@ -80,4 +80,7 @@ Entity createForestExToCrystal(RenderSystem* renderer, vec2 position, std::strin
 // combat
 Entity createEnt(RenderSystem* renderer, vec2 position, int movable, std::string name);
 Entity createMummy(RenderSystem* renderer, vec2 position, int movable, std::string name);
+Entity createGuardianDesert(RenderSystem* renderer, vec2 position, int movable, std::string name);
+Entity createGuardianMushroom(RenderSystem* renderer, vec2 position, int movable, std::string name);
+Entity createGuardianCrystal(RenderSystem* renderer, vec2 position, int movable, std::string name);
 bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, Entity& player_entity);

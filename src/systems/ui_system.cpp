@@ -146,6 +146,9 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 		// Create player's health bar
 		createHealthBar();
 
+		// Create player's active effects bar
+		createEffectsBar();
+
 		m_initialized = true;
 		std::cout << "UISystem::init - Successfully initialized" << std::endl;
 		return true;
@@ -236,11 +239,18 @@ void UISystem::step(float elapsed_ms)
 			createHealthBar();
 		}
 
+		if (!m_effectsbar_document) {
+			createEffectsBar();
+		}
+
 		// Update inventory bar
 		updateInventoryBar();
 
 		// Update health bar
 		updateHealthBar();
+
+		// Update active effects bar
+		updateEffectsBar();
 
 		// Display tutorial
 		updateTutorial();
@@ -424,6 +434,16 @@ void UISystem::handleKeyEvent(int key, int scancode, int action, int mods)
 	if (action == GLFW_PRESS && key >= GLFW_KEY_1 && key <= GLFW_KEY_9) {
 		int slot = key - GLFW_KEY_1; // Convert key to 0-based slot index
 		selectInventorySlot(slot);
+	}
+
+	// Check for shift key press
+	if ((key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT)) {
+		if (action == GLFW_PRESS) {
+			shift_key_pressed = true;
+		}
+		else if (action == GLFW_RELEASE) {
+			shift_key_pressed = false;
+		}
 	}
 }
 
@@ -633,6 +653,19 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 				break;
 			}
 		} while (false);
+	}
+	// Check for consuming potion in inventory
+	if ((action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_RIGHT) || (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT && shift_key_pressed)) {
+		Rml::Element* hovered = m_context->GetHoverElement();
+		if (!hovered) return;
+
+		std::string id = hovered->GetId();
+		int slotId = getSlotFromId(id);
+
+		if (slotId != -1 && registry.players.entities.size() > 0) {
+			selectInventorySlot(slotId);
+			registry.players.components[0].consumed_potion = true;
+		}
 	}
 
 	// Pass the event to RmlUi
@@ -1129,7 +1162,6 @@ bool UISystem::openCauldron(Entity cauldron)
 	if (m_cauldron_document) {
 		m_cauldron_document->Show();
 		SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
-		if (DragListener::is_boiling) SoundSystem::continueBoilSound((int)SOUND_CHANNEL::BOILING, -1); // continue boiling if it was boiling before leaving menu
 		return true;
 	}
 
@@ -1269,7 +1301,6 @@ void UISystem::closeCauldron()
 {
 	if (isCauldronOpen()) {
 		m_cauldron_document->Hide();
-		SoundSystem::haltBoilSound();
 		SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
 		// handle exit menu tutorial
 		if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::EXIT_MENU) {
@@ -1888,4 +1919,128 @@ std::string UISystem::getIngredientName(RecipeIngredient ing)
 	}
 
 	return name;
+}
+
+void UISystem::createEffectsBar()
+{
+	if (!m_context) return;
+
+	if (registry.players.entities.size() == 0) {
+		std::cout << "UISystem::createEffectsBar - No player to create effects bar for" << std::endl;
+		return;
+	}
+
+	try {
+		std::cout << "UISystem::createEffectsBar - Creating effects bar" << std::endl;
+
+		std::string effectsbar_rml = R"(
+			<rml>
+			<head>
+				<style>
+					body {
+						position: absolute;
+						top: 10px;
+						right: 5%;
+						width: 160px;
+						height: 40px;
+						background-color: rgba(173, 146, 132, 238);
+						border-width: 2px;
+						border-color: rgb(78, 54, 32);
+						display: block;
+						font-family: Open Sans;
+					}
+
+					.effect-slot {
+						position: absolute;
+						width: 40px;
+						height: 40px;
+						display: inline-block;
+						text-align: right;
+						vertical-align: middle;
+						background-color: transparent;
+						z-index: 10;
+						drag: clone;
+					}
+
+				</style>
+			</head>
+			<body>)";
+
+
+		// there are 4 possible effects - speed, regen, resistance, saturation
+		for (int i = 0; i < m_effectsbar_size; i++) {
+			int left = i * 40;
+			effectsbar_rml += "<div id='effect-" + std::to_string(i) + "' class='effect-slot' style='left: " + std::to_string(left) + "px;'></div>";
+		}
+
+		effectsbar_rml += "< / body>< / rml>)";
+
+		m_effectsbar_document = m_context->LoadDocumentFromMemory(effectsbar_rml.c_str());
+		if (m_effectsbar_document) {
+			m_effectsbar_document->Show();
+			std::cout << "UISystem::createEffectsBar - Effects bar created successfully" << std::endl;
+		}
+		else {
+			std::cerr << "UISystem::createEffectsBar - Failed to create effectsbar document" << std::endl;
+		}
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::createEffectsBar: " << e.what() << std::endl;
+	}
+}
+
+void UISystem::updateEffectsBar() {
+	if (!m_initialized || !m_context || !m_effectsbar_document) return;
+
+	try {
+		if (registry.players.entities.empty()) return;
+
+		Player& player = registry.players.components[0]; // Assuming there's only one player
+
+		assert(player.active_effects.size() <= m_effectsbar_size && "player should not have more than 4 active effects");
+
+		// active effects are appended from right to left
+		for (int i = 0; i < m_effectsbar_size; i++) {
+			std::string slot_id = "effect-" + std::to_string(i);
+			Rml::Element* slot_element = m_effectsbar_document->GetElementById(slot_id);
+
+			if (!slot_element) continue;
+			std::string slot_content = "";
+
+			if (i >= m_effectsbar_size - player.active_effects.size()) {
+				Entity effect = player.active_effects[m_effectsbar_size - i - 1];
+				if (!registry.items.has(effect)) {
+					std::cout << "missing item component" << std::endl;
+					continue;
+				}
+				if (!registry.potions.has(effect)) {
+					std::cout << "missing potion component" << std::endl;
+					continue;
+				}
+
+				Item& item = registry.items.get(effect);
+				std::string tex = ITEM_INFO.count(item.type) ? ITEM_INFO.at(item.type).texture_path : "interactables/coffee_bean.png";
+				slot_content += R"(
+                    <img src=")" + tex + R"(" 
+                    style='
+                        pointer-events: none;
+                        width: 32px; 
+                        height: 32px; 
+                        margin: 4px; 
+                        transform: scaleY(-1); 
+                    )";
+				if (item.type == ItemType::POTION) {
+					vec3 color = registry.potions.get(effect).color;
+					slot_content += "image-color: " + getImageColorProperty(color, 255) + ";";
+				}
+				slot_content += "' />";
+			}
+
+			slot_element->SetInnerRML(slot_content);
+		}
+
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::updateEffectsBar: " << e.what() << std::endl;
+	}
 }

@@ -252,21 +252,65 @@ void PotionSystem::grindIngredient(Entity mortar) {
 	if (ing.grindLevel >= 1.0f) {
 		std::cout << "Ingredient is fully ground" << std::endl;
 
-		// Convert original item type into a new grind type dynamically
-		// std::string original_name = ITEM_INFO.at(itemComp.type).name;
-		// std::string new_texture_name = "GRIND_" + original_name;
+		// Determine new item type
+		switch (itemComp.type) {
+			case ItemType::COFFEE_BEANS:
+				itemComp.type = ItemType::SWIFT_POWDER;
+				if (registry.renderRequests.has(ingredient)) {
+					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::SWIFT_POWDER;
+				}
+				break;
 
-		// TODO: draw grind_coffee_bean, 
-		if (registry.renderRequests.has(ingredient)) {
-			registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::MAGICAL_DUST;
+			case ItemType::PETRIFIED_BONE:
+				itemComp.type = ItemType::BONE_DUST;
+				if (registry.renderRequests.has(ingredient)) {
+					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::BONE_DUST;
+				}
+				break;
+
+			case ItemType::CACTUS_PULP:
+				itemComp.type = ItemType::CACTUS_EXTRACT;
+				if (registry.renderRequests.has(ingredient)) {
+					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::CACTUS_EXTRACT;
+				}
+				break;
+
+			case ItemType::GLOWSHROOM:
+				itemComp.type = ItemType::GLOWSPORE;
+				if (registry.renderRequests.has(ingredient)) {
+					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::GLOWSPORE;
+				}
+				break;
+
+			case ItemType::CRYSTAL_SHARD:
+				itemComp.type = ItemType::CRYSTAL_MEPH;
+				if (registry.renderRequests.has(ingredient)) {
+					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::CRYSTAL_MEPH;
+				}
+				break;
+
+			case ItemType::STORM_BARK:
+				itemComp.type = ItemType::STORM_SAP;
+				if (registry.renderRequests.has(ingredient)) {
+					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::STORM_SAP;
+				}
+				break;
+
+			default:
+				itemComp.type = ItemType::MAGICAL_DUST;
+				if (registry.renderRequests.has(ingredient)) {
+					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::MAGICAL_DUST;
+				}
+				break;
 		}
 
-		itemComp.type = ItemType::MAGICAL_DUST; // Change item type
-
-		//std::cout << "New texture set for ingredient: " << (int)registry.renderRequests.get(ingredient).used_texture << std::endl;
-
-		// Start the countdown for moving ingredient to inventory (using respawnTime)
-		//itemComp.respawnTime = 800.0f;
+		// Get size from updated item type
+		auto infoIt = ITEM_INFO.find(itemComp.type);
+		if (infoIt != ITEM_INFO.end() && registry.motions.has(ingredient)) {
+			vec2 baseSize = infoIt->second.size;
+			vec2 enlargedSize = baseSize * 1.5f;
+			registry.motions.get(ingredient).scale = enlargedSize;
+		}
 
 		itemComp.isCollectable = true;
 

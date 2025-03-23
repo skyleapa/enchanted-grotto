@@ -93,6 +93,10 @@ public:
     void createHealthBar();
     void updateHealthBar();
 
+    // Effects bar method
+    void createEffectsBar();
+    void updateEffectsBar();
+
 private:
     GLFWwindow* m_window;
     RenderSystem* m_renderer;
@@ -105,9 +109,10 @@ private:
     // State tracking
     bool m_initialized;
 
-    // Mouse tracking
+    // Mouse and key tracking
     double mouse_pos_x;
     double mouse_pos_y;
+    bool shift_key_pressed = false;
 
     // Convert GLFW key to RmlUi key
     Rml::Input::KeyIdentifier convertKey(int key);
@@ -193,8 +198,6 @@ private:
     const std::string BOTTLE_LEFT_PX = "904px";
     const std::string BOTTLE_TOP_PX = "395px";
 
-    // Healthbar variables
-    Rml::ElementDocument* m_healthbar_document = nullptr;
     const std::string PESTLE_LEFT_PX = "800px";
     const std::string PESTLE_TOP_PX = "300px";
     
@@ -203,4 +206,11 @@ private:
     std::string getRecipeStepsText(const Recipe& recipe);
     std::string getRecipeIngredientsText(const Recipe& recipe);
     std::string getIngredientName(RecipeIngredient ing);
+
+    // Healthbar variables
+    Rml::ElementDocument* m_healthbar_document = nullptr;
+
+    // Effects bar variables
+    Rml::ElementDocument* m_effectsbar_document = nullptr;
+    int m_effectsbar_size = 4;
 };

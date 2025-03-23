@@ -32,7 +32,7 @@ inline std::string shader_path(const std::string& name) { return std::string(PRO
 inline std::string textures_path(const std::string& name) { return data_path() + "/textures/" + std::string(name); };
 inline std::string audio_path(const std::string& name) { return data_path() + "/audio/" + std::string(name); };
 inline std::string mesh_path(const std::string& name) { return data_path() + "/meshes/" + std::string(name); };
-inline std::string game_state_path(const std::string& name) { return data_path() + "/game_states/v1/" + std::string(name); };
+inline std::string game_state_path(const std::string& name) { return data_path() + "/game_states/v2/" + std::string(name); };
 
 const std::string GAME_STATE_FILE = "game_state.json";
 
@@ -43,6 +43,9 @@ const int WATER_QUALITY_LEVEL = 1;
 //
 // game constants
 //
+
+const bool ADMIN_FLAG = false;
+
 const int WINDOW_WIDTH_PX = 1250;
 const int WINDOW_HEIGHT_PX = 700;
 const float WINDOW_RATIO = (float)WINDOW_WIDTH_PX / WINDOW_HEIGHT_PX;
@@ -57,7 +60,8 @@ const float PlAYER_BB_GROTTO_SIZE_FACTOR = 1.8;
 const float PLAYER_SPEED = (float)200;
 const float PLAYER_MAX_HEALTH = (float)100;
 const float PLAYER_DYING = (float)20;
-const float PLAYER_DAMAGE_COOLDOWN = (float)500;
+const float PLAYER_DAMAGE_COOLDOWN = (float)1000.f;
+const float PLAYER_THROW_COOLDOWN = (float)1000.f;
 
 const float TIME_UPDATE_FACTOR = 0.001f;
 const float THROW_UPDATE_FACTOR = 0.3f;
@@ -155,6 +159,15 @@ const float ENT_HEIGHT = (float)130;
 const float MUMMY_WIDTH = (float)45;
 const float MUMMY_HEIGHT = (float)85;
 
+const float DESERT_GUARDIAN_WIDTH = (float)160;
+const float DESERT_GUARDIAN_HEIGHT = (float)150;
+
+const float MUSHROOM_GUARDIAN_WIDTH = (float)160;
+const float MUSHROOM_GUARDIAN_HEIGHT = (float)150;
+
+const float CRYSTAL_GUARDIAN_WIDTH = (float)140;
+const float CRYSTAL_GUARDIAN_HEIGHT = (float)160;
+
 const float DETECTION_RADIUS = (float)200;  // Enemy starts moving & attacking
 const float FOLLOWING_RADIUS = (float)300;  // Enemy stops attacking if outside this
 
@@ -167,7 +180,6 @@ const float BAR_WIDTH = (float)450.0f;
 const float BAR_HEIGHT = (float)60.0f;
 const float BAR_X = (float)((WINDOW_WIDTH_PX - BAR_WIDTH) / 2.0f);
 const float BAR_Y = (float)(WINDOW_HEIGHT_PX - BAR_HEIGHT - 20.f); // 20 from bottom
-
 
 // Item and potion constants. The enums are declared here instead of in components.hpp
 // because this file is included in components, not the other way around - otherwise,
@@ -211,12 +223,17 @@ enum class ItemType
 	PETRIFIED_BONE = MUMMY_BANDAGES + 1,
 	HEALING_LILY = PETRIFIED_BONE + 1,
 	CACTUS_PULP = HEALING_LILY + 1,
-	CACTUS_EXTRACT = CACTUS_PULP + 1,
-	GLOWSHROOM = CACTUS_EXTRACT + 1,
-	DOOMSPORE = GLOWSHROOM + 1,
-	CRYSTAL_SHARD = DOOMSPORE + 1,
+	GLOWSHROOM = CACTUS_PULP + 1,
+	DOOMCAP = GLOWSHROOM + 1,
+	CRYSTAL_SHARD = DOOMCAP + 1,
 	QUARTZMELON = CRYSTAL_SHARD + 1,
-	CRYSTABLOOM = QUARTZMELON + 1
+	CRYSTABLOOM = QUARTZMELON + 1,
+	STORM_SAP = CRYSTABLOOM + 1,
+	CACTUS_EXTRACT = STORM_SAP + 1,
+	SWIFT_POWDER = CACTUS_EXTRACT + 1,
+	BONE_DUST = SWIFT_POWDER + 1,
+	CRYSTAL_MEPH = BONE_DUST + 1,
+	GLOWSPORE = CRYSTAL_MEPH + 1
 };
 
 // Potion Types and names
@@ -445,14 +462,14 @@ const std::vector<Recipe> RECIPES = {
 		{
 			{ ItemType::POTION, (int)PotionEffect::DAMAGE, 0.0f },
 			{ ItemType::BLIGHTLEAF, 2, 0.0f },    // ingredients
-			{ ItemType::DOOMSPORE, 2, 0.0f }      // ingredients
+			{ ItemType::DOOMCAP, 2, 0.0f }      // ingredients
 		},
 		{
 			{ ActionType::ADD_INGREDIENT, 0 }, // add damage potion
 			{ ActionType::MODIFY_HEAT, 50 },  // medium heat
 			{ ActionType::ADD_INGREDIENT, 1 }, // add blightleaf
 			{ ActionType::WAIT, 1 },          // wait 5 seconds
-			{ ActionType::ADD_INGREDIENT, 2 }, // add doomspores
+			{ ActionType::ADD_INGREDIENT, 2 }, // add doomcap
 			{ ActionType::STIR, 3 },          // stir 3 times
 			{ ActionType::WAIT, 5 }           // wait 25 seconds
 		},
@@ -644,6 +661,7 @@ const float STIR_PENALTY = 0.3f;
 const float WAIT_PENALTY = 0.2f;
 const float HEAT_PENALTY = 0.01f; // Heat is measured 1-100
 
+const float REGEN_TIMER = 1000.f;
 enum class TUTORIAL {
 	WELCOME_SCREEN = 0,
 	MOVEMENT = WELCOME_SCREEN + 1,
@@ -671,17 +689,17 @@ const std::vector<PotionEffect> throwable_potions = {
 	PotionEffect::DAMAGE,
 	PotionEffect::MOLOTOV,
 	PotionEffect::POISON,
-	PotionEffect::CLARITY
+	PotionEffect::CLARITY,
+	PotionEffect::FAILED
 };
 
 const std::vector<PotionEffect> consumable_potions = {
 	PotionEffect::SPEED,
 	PotionEffect::HEALTH,
 	PotionEffect::REGEN,
-	PotionEffect::TENACITY,
+	// PotionEffect::TENACITY, // to be implemented in M4
 	PotionEffect::RESISTANCE,
 	PotionEffect::SATURATION,
-	PotionEffect::REJUVENATION
 };
 
 #ifndef M_PI

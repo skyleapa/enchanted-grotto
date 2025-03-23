@@ -10,7 +10,13 @@ struct Player
 	std::string name;
 	float cooldown = 0.f; // defaults to 0, but when ammo is tossed, will have a 1000 ms cooldown
 	float health = PLAYER_MAX_HEALTH;
-	float damage_cooldown = PLAYER_DAMAGE_COOLDOWN; // cooldown before player can take damage again to prevent insta death
+	float damage_cooldown = 0.f; // cooldown before player can take damage again to prevent insta death
+	std::vector<Entity> active_effects = {}; // list of active consumed potions
+	bool consumed_potion = false;
+	float speed_multiplier = 1.f;
+	float effect_multiplier = 1.f;
+	float defense = 1.f;
+	vec2 load_position = vec2(0, 0);
 };
 
 // All data relevant to the shape and motion of entities
@@ -52,6 +58,7 @@ struct ScreenState
 	bool tutorial_step_complete = true;
 	float autosave_timer = AUTOSAVE_TIMER;
 	std::vector<std::string> killed_enemies = {};
+	bool first_game_load = true;
 };
 
 // A struct to refer to debugging graphics in the ECS
@@ -110,6 +117,17 @@ struct Potion
 	vec3 color;
 };
 
+enum class BIOME
+{
+	GROTTO = 0,
+	FOREST = GROTTO + 1,
+	FOREST_EX = FOREST + 1,
+	DESERT = FOREST_EX + 1,
+	MUSHROOM = DESERT + 1,
+	CRYSTAL = MUSHROOM + 1,
+	BLANK = CRYSTAL + 1,
+};
+
 // an item that can be in an inventory
 struct Item
 {
@@ -121,6 +139,7 @@ struct Item
 	vec2 originalPosition;
 	bool is_ammo = false;
 	bool canRespawn = true;
+	BIOME lastBiome;
 };
 
 // an item that can be added to potions
@@ -135,7 +154,7 @@ struct Inventory
 	std::vector<Entity> items;
 	int capacity;
 	bool isFull;
-	int selection = 0; // index that corresponds to the selected item indexed in items
+	int selection = 0; // index that corresponds to the selected item indexed in items, zero-indexed
 };
 
 struct Cauldron
@@ -149,6 +168,7 @@ struct Cauldron
 	int stirFlash = 0;                // Time remaining for stir flash
 	std::vector<Action> actions;      // Records player actions
 	Entity water;                     // We technically only need 1 of these globally but this was easier so whatever
+	bool is_boiling = false;
 	// If stir quality ever gets added, a penalty can be recorded here
 };
 
@@ -347,17 +367,26 @@ enum class TEXTURE_ASSET_ID
 	HEALING_LILY = PETRIFIED_BONE + 1,
 	CACTUS_PULP = HEALING_LILY + 1,
 	GLOWSHROOM = CACTUS_PULP + 1,
-	DOOMSPORE = GLOWSHROOM + 1,
-	CRYSTABLOOM = DOOMSPORE + 1,
+	DOOMCAP = GLOWSHROOM + 1,
+	CRYSTABLOOM = DOOMCAP + 1,
 	CRYSTAL_SHARD = CRYSTABLOOM + 1,
 	QUARTZMELON = CRYSTAL_SHARD + 1,
+	STORM_SAP = QUARTZMELON + 1,
+	CACTUS_EXTRACT = STORM_SAP + 1,
+	SWIFT_POWDER = CACTUS_EXTRACT + 1,
+	BONE_DUST = SWIFT_POWDER + 1,
+	CRYSTAL_MEPH = BONE_DUST + 1,
+	GLOWSPORE = CRYSTAL_MEPH + 1,
 
 	// enemies
-	ENT = QUARTZMELON + 1,
+	ENT = GLOWSPORE + 1,
 	MUMMY = ENT + 1,
+	GUARDIAN_DESERT = MUMMY + 1,
+	GUARDIAN_SHROOMLAND = GUARDIAN_DESERT + 1,
+	GUARDIAN_CRYSTAL = GUARDIAN_SHROOMLAND + 1,
 
 	// extras
-	POTION = MUMMY + 1,
+	POTION = GUARDIAN_CRYSTAL + 1,
 	WELCOME_TO_GROTTO = POTION + 1,
 	CAULDRON_WATER = WELCOME_TO_GROTTO + 1,
 	TEXTURE_COUNT = CAULDRON_WATER + 1,
@@ -425,17 +454,6 @@ struct RenderRequest
 	bool is_visible = true;
 };
 
-enum class BIOME
-{
-	GROTTO = 0,
-	FOREST = GROTTO + 1,
-	FOREST_EX = FOREST + 1,
-	DESERT = FOREST_EX + 1,
-	MUSHROOM = DESERT + 1,
-	CRYSTAL = MUSHROOM + 1,
-	BLANK = CRYSTAL + 1,
-};
-
 enum class DIRECTION
 {
 	UP = 0,
@@ -471,7 +489,7 @@ const std::unordered_map<ItemType, ItemInfo> ITEM_INFO = {
 	{
 		ItemType::GALEFRUIT, {
 			"Galefruit",
-			vec2((float)GRID_CELL_WIDTH_PX * 1.5, (float)GRID_CELL_HEIGHT_PX * 1.8),
+			vec2((float)GRID_CELL_WIDTH_PX * 0.7, (float)GRID_CELL_HEIGHT_PX * 0.9),
 			TEXTURE_ASSET_ID::GALEFRUIT,
 			"interactables/galefruit.png",
 			false}},
@@ -492,84 +510,84 @@ const std::unordered_map<ItemType, ItemInfo> ITEM_INFO = {
 	{
 		ItemType::EVERFERN, {
 			"Everfern",
-			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
+			vec2((float)GRID_CELL_WIDTH_PX * 1.1, (float)GRID_CELL_HEIGHT_PX * 1.4),
 			TEXTURE_ASSET_ID::EVERFERN,
 			"interactables/everfern.png",
 			false}},
 	{
 		ItemType::BLIGHTLEAF, {
 			"Blightleaf",
-			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
+			vec2((float)GRID_CELL_WIDTH_PX, (float)GRID_CELL_HEIGHT_PX * 1.2),
 			TEXTURE_ASSET_ID::BLIGHTLEAF,
 			"interactables/blightleaf.png",
 			false}},
 	{
 		ItemType::STORM_BARK, {
 			"Storm Bark",
-			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
+			vec2((float)GRID_CELL_WIDTH_PX * 1.1, (float)GRID_CELL_HEIGHT_PX * 1.2),
 			TEXTURE_ASSET_ID::STORM_BARK,
 			"interactables/storm_bark.png",
-			false}},
+			true}},
 	{
 		ItemType::MUMMY_BANDAGES, {
 			"Mummy Bandages",
-			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
+			vec2((float)GRID_CELL_WIDTH_PX, (float)GRID_CELL_HEIGHT_PX * 1.2),
 			TEXTURE_ASSET_ID::MUMMY_BANDAGE,
 			"interactables/mummy_bandage.png",
-			true}},
+			false}},
 	{
 		ItemType::PETRIFIED_BONE, {
 			"Petrified Bone",
-			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
+			vec2((float)GRID_CELL_WIDTH_PX, (float)GRID_CELL_HEIGHT_PX * 1.2),
 			TEXTURE_ASSET_ID::PETRIFIED_BONE,
 			"interactables/petrified_bone.png",
 			true}},
 	{
 		ItemType::HEALING_LILY, {
 			"Healing Lily",
-			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
+			vec2((float)GRID_CELL_WIDTH_PX, (float)GRID_CELL_HEIGHT_PX * 1.1),
 			TEXTURE_ASSET_ID::HEALING_LILY,
 			"interactables/healing_lily.png",
 			false}},
 	{
 		ItemType::CACTUS_PULP, {
 			"Cactus Pulp",
-			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
+			vec2((float)GRID_CELL_WIDTH_PX * 0.5, (float)GRID_CELL_HEIGHT_PX * 0.6),
 			TEXTURE_ASSET_ID::CACTUS_PULP,
 			"interactables/cactus_pulp.png",
 			true}},
 	{
 		ItemType::CACTUS_EXTRACT, {
 			"Cactus Extract",
-			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
-			TEXTURE_ASSET_ID::CACTUS_PULP, // Reusing CACTUS_PULP for extract
-			"interactables/cactus_pulp.png",
+			vec2((float)GRID_CELL_WIDTH_PX * 0.6, (float)GRID_CELL_HEIGHT_PX * 0.9),
+			TEXTURE_ASSET_ID::CACTUS_EXTRACT,
+			"interactables/cactus_extract.png",
 			false}},
 	{
 		ItemType::GLOWSHROOM, {
 			"Glowshroom",
-			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
+			vec2((float)GRID_CELL_WIDTH_PX * 1.1, (float)GRID_CELL_HEIGHT_PX * 1.4),
 			TEXTURE_ASSET_ID::GLOWSHROOM,
 			"interactables/glowshroom.png",
-			false}},
+			true}},
 	{
-		ItemType::DOOMSPORE, {
-			"Doomspore",
-			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
-			TEXTURE_ASSET_ID::DOOMSPORE,
+		ItemType::DOOMCAP, {
+			"Doomcap",
+			vec2((float)GRID_CELL_WIDTH_PX, (float)GRID_CELL_HEIGHT_PX * 1.2),
+			TEXTURE_ASSET_ID::DOOMCAP,
 			"interactables/doomspore.png",
 			false}},
 	{
 		ItemType::CRYSTAL_SHARD, {
 			"Crystal Shard",
-			vec2((float)GRID_CELL_WIDTH_PX * 1.2, (float)GRID_CELL_HEIGHT_PX * 1.5),
+			vec2((float)GRID_CELL_WIDTH_PX, (float)GRID_CELL_HEIGHT_PX * 1.3),
 			TEXTURE_ASSET_ID::CRYSTAL_SHARD,
 			"interactables/crystal_shard.png",
-			false}},
+			true}},
 	{
 		ItemType::QUARTZMELON, {
 			"Quartzmelon",
-			vec2((float)GRID_CELL_WIDTH_PX * 1.5, (float)GRID_CELL_HEIGHT_PX * 1.8),
+			vec2((float)GRID_CELL_WIDTH_PX * 1.3, (float)GRID_CELL_HEIGHT_PX),
 			TEXTURE_ASSET_ID::QUARTZMELON,
 			"interactables/quartzmelon.png",
 			false}},
@@ -580,9 +598,76 @@ const std::unordered_map<ItemType, ItemInfo> ITEM_INFO = {
 			TEXTURE_ASSET_ID::CRYSTABLOOM,
 			"interactables/crystabloom.png",
 			false}},
+
+	{
+		ItemType::SWIFT_POWDER, {
+			"Swift Powder",
+			vec2((float)GRID_CELL_WIDTH_PX * 0.9, (float)GRID_CELL_HEIGHT_PX * 0.9),
+			TEXTURE_ASSET_ID::SWIFT_POWDER,
+			"interactables/swift_powder.png",
+			false} },
+
+	{
+		ItemType::STORM_SAP, {
+			"Storm Sap",
+			vec2((float)GRID_CELL_WIDTH_PX * 0.6, (float)GRID_CELL_HEIGHT_PX * 0.9),
+			TEXTURE_ASSET_ID::STORM_SAP,
+			"interactables/storm_sap.png",
+			false} },
+
+	{
+		ItemType::BONE_DUST, {
+			"Bone Dust",
+			vec2((float)GRID_CELL_WIDTH_PX * 0.9, (float)GRID_CELL_HEIGHT_PX * 0.9),
+			TEXTURE_ASSET_ID::BONE_DUST,
+			"interactables/bone_dust.png",
+			false} },
+
+	{
+		ItemType::GLOWSPORE, {
+			"Glowspore",
+			vec2((float)GRID_CELL_WIDTH_PX * 0.9, (float)GRID_CELL_HEIGHT_PX * 0.9),
+			TEXTURE_ASSET_ID::GLOWSPORE,
+			"interactables/glowspore.png",
+			false} },
+
+	{
+		ItemType::CRYSTAL_MEPH, {
+			"Crystal Meph",
+			vec2((float)GRID_CELL_WIDTH_PX * 0.9, (float)GRID_CELL_HEIGHT_PX * 0.9),
+			TEXTURE_ASSET_ID::CRYSTAL_MEPH,
+			"interactables/crystal_meph.png",
+			false} },
+};
+
+const std::unordered_map<ItemType, std::vector<BIOME>> itemRespawnBiomes = {
+	// Forest
+	{ ItemType::COFFEE_BEANS,   { BIOME::FOREST, BIOME::FOREST_EX } },
+	{ ItemType::GALEFRUIT,      { BIOME::FOREST, BIOME::FOREST_EX } },
+	{ ItemType::EVERFERN,       { BIOME::FOREST, BIOME::FOREST_EX } },
+	{ ItemType::BLIGHTLEAF,     { BIOME::FOREST, BIOME::FOREST_EX } },
+
+	// Desert
+	{ ItemType::PETRIFIED_BONE, { BIOME::DESERT } },
+	{ ItemType::HEALING_LILY,   { BIOME::DESERT } },
+	{ ItemType::CACTUS_PULP,    { BIOME::DESERT } },
+
+	// Mushroom
+	{ ItemType::GLOWSHROOM,    { BIOME::MUSHROOM } },
+	{ ItemType::DOOMCAP,        { BIOME::MUSHROOM } },
+
+	// Crystal Mountains
+	{ ItemType::CRYSTABLOOM,    { BIOME::CRYSTAL } },
+	{ ItemType::CRYSTAL_SHARD,  { BIOME::CRYSTAL } },
+	{ ItemType::QUARTZMELON,    { BIOME::CRYSTAL } }
 };
 
 // damage flash only to be applied to player and enemies
 struct DamageFlash {
 	float flash_value = 1.f; // defaults to 0 for no flash, and 1 for red tint
+};
+
+struct Regeneration {
+	float heal_amount = 0.f;
+	float timer = REGEN_TIMER;
 };

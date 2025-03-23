@@ -38,6 +38,7 @@ public:
 	ComponentContainer<Ammo> ammo;
 	ComponentContainer<WelcomeScreen> welcomeScreens;
 	ComponentContainer<DamageFlash> damageFlashes;
+	ComponentContainer<Regeneration> regen;
 
 	// constructor that adds all containers for looping over them
 	ECSRegistry()
@@ -68,6 +69,7 @@ public:
 		registry_list.push_back(&ammo);
 		registry_list.push_back(&welcomeScreens);
 		registry_list.push_back(&damageFlashes);
+		registry_list.push_back(&regen);
 	}
 
 	void clear_all_components() {

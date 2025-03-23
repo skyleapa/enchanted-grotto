@@ -44,7 +44,9 @@ public:
 	static nlohmann::json serializeItem(Entity item);
 	static nlohmann::json serializeInventory(Entity inventory);
 	static nlohmann::json serializeScreenState();
+	static nlohmann::json serializePlayerState(Entity player_entity);
 	static Entity deserializeItem(const nlohmann::json& data);
 	static void deserializeInventory(Entity inventory, const nlohmann::json& data);
 	static void deserializeScreenState(const nlohmann::json& data);
+	static void deserializePlayerState(const nlohmann::json& data);
 }; 
