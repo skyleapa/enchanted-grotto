@@ -518,7 +518,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 			}
 
 			if (id == "close-button") {
-				closeCauldron();
+				closeCauldron(true);
 				return;
 			}
 
@@ -605,7 +605,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 			}
 
 			if (id == "close-button") {
-				closeMortarPestle();
+				closeMortarPestle(true);
 				return;
 			}
 
