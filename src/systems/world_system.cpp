@@ -984,18 +984,34 @@ bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 					ItemSystem::removeItemFromInventory(player, itemEntity);
 				}
 
+				ScreenState& screen = registry.screenStates.components[0];
 				// Unlock corresponding biome
 				if (registry.items.get(guardianEntity).type == ItemType::DESERT_GUARDIAN)
 				{
-					biome_sys->desert_unlocked = true;
+					if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "desert") == screen.unlocked_biomes.end()) {
+						screen.unlocked_biomes.push_back("desert");
+					}
+					createForestToDesert(renderer, vec2(GRID_CELL_WIDTH_PX * 2.1, GRID_CELL_HEIGHT_PX * 1.2), "Desert Entrance");
 				}
 				else if (registry.items.get(guardianEntity).type == ItemType::MUSHROOM_GUARDIAN)
 				{
-					biome_sys->mushroom_unlocked = true;
+					if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "mushroom") == screen.unlocked_biomes.end()) {
+						screen.unlocked_biomes.push_back("mushroom");
+					}
+					createForestToMushroom(renderer, vec2(GRID_CELL_WIDTH_PX * 2.1, WINDOW_HEIGHT_PX - 40), "Mushroom Entrance");
 				}
 				else if (registry.items.get(guardianEntity).type == ItemType::CRYSTAL_GUARDIAN)
 				{
-					biome_sys->crystal_unlocked = true;
+					// unlocks both crystal and mushroom since crystal is technically end game
+					if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "mushroom") == screen.unlocked_biomes.end()) {
+						screen.unlocked_biomes.push_back("mushroom");
+					}
+					if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "crystal") == screen.unlocked_biomes.end()) {
+						screen.unlocked_biomes.push_back("crystal");
+					}
+					createForestExToCrystal(renderer, vec2(930, 665), "Forest Ex to Crystal");
+					createMushroomToCrystal(renderer, vec2(1220, 160), "Mushroom to Crystal");
+
 				}
 
 				// remove textbox
