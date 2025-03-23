@@ -48,13 +48,13 @@ public:
     void createInventoryBar();
     void updateInventoryBar();
     void selectInventorySlot(int slot);
-    int getSelectedSlot() const { return m_selected_slot; }
+    int getSelectedSlot();
     int getSlotFromId(std::string id);
 
     // Cauldron methods
-    bool openCauldron(Entity cauldron, bool is_init);
+    bool openCauldron(Entity cauldron, bool is_init); // call with is_init=true to initialize the cauldron without showing the document
     void updateCauldronUI();
-    void closeCauldron(bool is_init);
+    void closeCauldron(bool is_init); // call with is_init=true to close the cauldron without playing a sound
     bool isCauldronOpen();
     bool isCauldronOpen(Entity cauldron);
     Entity getOpenedCauldron();
@@ -134,7 +134,6 @@ private:
 
     // Inventory bar variables
     Rml::ElementDocument* m_inventory_document = nullptr;
-    int m_selected_slot = 0;
     int m_hotbar_size = 10;
 
     // Cauldron variables

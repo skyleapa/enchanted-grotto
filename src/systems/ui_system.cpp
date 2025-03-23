@@ -674,7 +674,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 void UISystem::handleScrollWheelEvent(double xoffset, double yoffset)
 {
 	int dist = (int)yoffset * -1;
-	selectInventorySlot(m_selected_slot + dist);
+	selectInventorySlot(getSelectedSlot() + dist);
 	m_context->ProcessMouseWheel(Rml::Vector2f(xoffset, yoffset), getKeyModifiers());
 }
 
@@ -773,7 +773,7 @@ void UISystem::createInventoryBar()
 		// Add inventory slots
 		for (int i = 0; i < m_hotbar_size; i++) {
 			std::string slot_class = "inventory-slot";
-			if (i == m_selected_slot) {
+			if (i == getSelectedSlot()) {
 				slot_class += " selected";
 			}
 
@@ -808,6 +808,7 @@ void UISystem::updateInventoryBar()
 	if (!m_initialized || !m_context || !m_inventory_document) return;
 
 	try {
+		std::cout << "updating inventory bar" << std::endl;
 		if (registry.players.entities.empty()) return;
 
 		Entity player = registry.players.entities[0]; // Assuming there's only one player
@@ -815,11 +816,12 @@ void UISystem::updateInventoryBar()
 		if (!registry.inventories.has(player)) return;
 
 		Inventory& inventory = registry.inventories.get(player);
+		std::cout << inventory.selection <<std::endl;
 
 		// Update the item name
 		Rml::Element* item_name = m_inventory_document->GetElementById("item-name");
-		if (m_selected_slot < inventory.items.size()) {
-			item_name->SetInnerRML(ItemSystem::getItemName(inventory.items[m_selected_slot]));
+		if (getSelectedSlot() < inventory.items.size()) {
+			item_name->SetInnerRML(ItemSystem::getItemName(inventory.items[getSelectedSlot()]));
 		}
 		else {
 			item_name->SetInnerRML("");
@@ -835,7 +837,7 @@ void UISystem::updateInventoryBar()
 			// Update the slot class (selected or not)
 			std::string slot_class = "inventory-slot";
 			int loc = i * 44;
-			if (i == m_selected_slot) {
+			if (i == inventory.selection) {
 				slot_class += " selected";
 				int selectedLoc = loc - 2;
 				slot_element->SetProperty("left", std::to_string(selectedLoc) + "px");
@@ -933,13 +935,22 @@ void UISystem::selectInventorySlot(int slot)
 	Inventory& inventory = registry.inventories.get(entity);
 
 	inventory.selection = slot;
-	m_selected_slot = slot;
+	std::cout << inventory.selection << std::endl;
 
 	// Update the inventory bar to reflect the selection
 	if (m_inventory_document) {
+		std::cout << "updating in select inventory slot" << std::endl;
 		updateInventoryBar();
 	}
 }
+
+int UISystem::getSelectedSlot() {
+	if (registry.players.entities.size() == 0 ) return -1;
+	Entity entity = registry.players.entities[0];
+	if (!registry.inventories.has(entity)) return -1;
+	return registry.inventories.get(entity).selection;
+};
+
 
 int UISystem::getSlotFromId(std::string id)
 {

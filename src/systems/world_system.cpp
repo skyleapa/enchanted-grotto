@@ -221,10 +221,10 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	}
 
 	handle_item_respawn(elapsed_ms_since_last_update);
+	updateThrownAmmo(elapsed_ms_since_last_update);
 
 	if (m_ui_system->isCauldronOpen() || m_ui_system->isMortarPestleOpen()) return true; // skip the following updates if menu is open
 	updatePlayerState(player, player_motion, elapsed_ms_since_last_update);
-	updateThrownAmmo(elapsed_ms_since_last_update);
 	update_textbox_visibility();
 
 	return true;
@@ -290,6 +290,11 @@ void WorldSystem::restart_game(bool hard_reset)
 		screen.tutorial_step_complete = true;
 		createWelcomeScreen(renderer, vec2(WINDOW_WIDTH_PX / 2, WINDOW_HEIGHT_PX / 2 - 50));
 		screen.killed_enemies = {};
+		if (m_ui_system) {
+			m_ui_system->updateEffectsBar();
+			m_ui_system->updateHealthBar();
+			m_ui_system->updateInventoryBar();
+		}
 	}
 	else {
 		ItemSystem::loadGameState(); // load the game state
@@ -612,7 +617,7 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 		if (m_ui_system != nullptr && (m_ui_system->isCauldronOpen() || m_ui_system->isMortarPestleOpen() || m_ui_system->isRecipeBookOpen())) return;
 		if (mouse_pos_x >= BAR_X && mouse_pos_x <= BAR_X + BAR_WIDTH && mouse_pos_y >= BAR_Y && mouse_pos_y <= BAR_Y + BAR_HEIGHT) return;
 		// don't throw ammo if in potion making menu or clicking on inventory
-		if (throwAmmo(vec2(mouse_pos_x, mouse_pos_y))) SoundSystem::playThrowSound((int)SOUND_CHANNEL::GENERAL, 0);
+		if (button == GLFW_MOUSE_BUTTON_LEFT && throwAmmo(vec2(mouse_pos_x, mouse_pos_y))) SoundSystem::playThrowSound((int)SOUND_CHANNEL::GENERAL, 0);
 	}
 }
 
@@ -738,7 +743,6 @@ void WorldSystem::handle_player_interaction()
 		}
 		else if (registry.mortarAndPestles.has(item)) {
 			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
-				std::cout << "found mortar " << item.id() << std::endl;
 				if (m_ui_system != nullptr) {
             handle_textbox = m_ui_system->openMortarPestle(item);
 				}
@@ -1055,7 +1059,7 @@ bool WorldSystem::throwAmmo(vec2 target) {
 	Player& player = registry.players.get(player_entity);
 
 	if (player.cooldown > 0.f) {
-		std::cout << "on cooldown" << std::endl;
+		std::cout << "throwing on cooldown" << std::endl;
 		return false;
 	}
 
@@ -1074,7 +1078,7 @@ bool WorldSystem::throwAmmo(vec2 target) {
 			item.amount -= 1;
 			if (item.amount == 0) {
 				ItemSystem::removeItemFromInventory(player_entity, item_entity);
-				ItemSystem::destroyItem(item_entity);
+				if (inventory.selection + 1 > inventory.items.size()) inventory.selection = std::max(inventory.selection - 1, 0);
 			}
 		}
 		player.cooldown = PLAYER_THROW_COOLDOWN;
@@ -1226,8 +1230,12 @@ bool WorldSystem::consumePotion() {
 	else {
 		if (m_ui_system) m_ui_system->updateHealthBar();
 	}
-	if (m_ui_system) m_ui_system->updateInventoryBar();
-	std::cout << "player has consumed a potion of " << EFFECT_NAMES.at(registry.potions.get(item_copy).effect) << std::endl;
+	if (m_ui_system) {
+		m_ui_system->updateInventoryBar();
+		m_ui_system->updateEffectsBar();
+	}
+
+	std::cout << "player has consumed a potion of " << (int) registry.potions.get(item_copy).effect << std::endl;
 	return true;
 }
 

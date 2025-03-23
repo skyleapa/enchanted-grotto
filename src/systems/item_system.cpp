@@ -218,13 +218,13 @@ bool ItemSystem::removeItemFromInventory(Entity inventory, Entity item) {
 	if (it != inv.items.end()) {
 		inv.items.erase(it);
 		inv.isFull = false;
+		// update bar if inventory belongs to player
+		if (registry.players.has(inventory) && m_ui_system != nullptr) {
+			m_ui_system->updateInventoryBar();
+		}
 		return true;
 	}
 
-	// update bar if inventory belongs to player
-	if (registry.players.has(inventory) && m_ui_system != nullptr) {
-		m_ui_system->updateInventoryBar();
-	}
 	return false;
 }
 
@@ -245,6 +245,8 @@ void ItemSystem::swapItems(Entity inventory, int slot1, int slot2) {
 		return;
 	}
 	std::iter_swap(items.begin() + slot1, items.begin() + slot2);
+	std::cout << slot1 << slot2 << std::endl;
+	registry.inventories.get(inventory).selection = slot1;
 }
 
 Entity ItemSystem::copyItem(Entity toCopy) {
