@@ -671,7 +671,7 @@ void WorldSystem::handle_player_interaction()
 		return;
 	}
 
-  // If a recipe book is open, close it
+	// If a recipe book is open, close it
 	if (m_ui_system && m_ui_system->isRecipeBookOpen()) {
 		m_ui_system->closeRecipeBook();
 		return;
@@ -735,10 +735,10 @@ void WorldSystem::handle_player_interaction()
 		}
 		else if (registry.mortarAndPestles.has(item)) {
 			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
-				std::cout << "found mortar " << item.id() << std::endl;
-				if (m_ui_system != nullptr) {
-            handle_textbox = m_ui_system->openMortarPestle(item);
-				}
+			std::cout << "found mortar " << item.id() << std::endl;
+			if (m_ui_system != nullptr) {
+				handle_textbox = m_ui_system->openMortarPestle(item);
+			}
 		}
 		else if (item_info.type == ItemType::RECIPE_BOOK) {
 			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
@@ -846,7 +846,7 @@ void WorldSystem::handle_item_respawn(float elapsed_ms)
 		// Check if current biome matches any allowed respawn biome for this item type
 		auto it = itemRespawnBiomes.find(item_info.type);
 		if (it == itemRespawnBiomes.end())
-			continue; 
+			continue;
 
 		const std::vector<BIOME>& allowedBiomes = it->second;
 		BIOME originalBiome = item_info.lastBiome;
@@ -1138,7 +1138,7 @@ void WorldSystem::updateConsumedPotions(float elapsed_ms_since_last_update) {
 		Potion& potion = registry.potions.get(effect);
 		potion.duration -= elapsed_ms_since_last_update;
 		if (potion.duration <= 0) {
-			std::cout << "potion of effect id " << (int) potion.effect << " has expired" << std::endl;
+			std::cout << "potion of effect id " << (int)potion.effect << " has expired" << std::endl;
 			removePotionEffect(registry.potions.get(effect), player_entity);
 			to_remove.push_back(effect);
 		}
@@ -1210,7 +1210,7 @@ bool WorldSystem::consumePotion() {
 		player.active_effects.push_back(item_copy);
 	}
 	addPotionEffect(registry.potions.get(item_copy), player_entity);
-	std::cout << "player has consumed a potion of effect id " << (int) registry.potions.get(item_copy).effect << std::endl;
+	std::cout << "player has consumed a potion of effect id " << (int)registry.potions.get(item_copy).effect << std::endl;
 	return true;
 }
 

@@ -316,7 +316,7 @@ struct Recipe
 	PotionEffect effect;
 	float baseEffect;
 	float highestQualityEffect;        // corresponds to effectValue
-	int baseDuration; 
+	int baseDuration;
 	int highestQualityDuration;
 	vec3 finalPotionColor;
 	std::vector<RecipeIngredient> ingredients;
@@ -373,14 +373,16 @@ const std::vector<Recipe> RECIPES = {
 		0, 0,      // highestQualityDuration - instant effect, no duration
 		vec3(100, 0, 100), // finalPotionColor - purple color
 		{
-			{ ItemType::BLIGHTLEAF, 2, 0.0f }, // ingredients
-			{ ItemType::STORM_BARK, 1, 0.0f }  // ingredients
+			{ ItemType::BLIGHTLEAF, 1, 0.0f }, // ingredients
+			{ ItemType::STORM_BARK, 1, 0.0f },  // ingredients
+			{ ItemType::STORM_SAP, 1, 0.0f }
 		},
 		{
 			{ ActionType::MODIFY_HEAT, 100 }, // high heat
 			{ ActionType::ADD_INGREDIENT, 0 }, // add blightleaf
 			{ ActionType::WAIT, 2 },          // wait 10 seconds
 			{ ActionType::ADD_INGREDIENT, 1 }, // add storm bark
+			{ ActionType::ADD_INGREDIENT, 2 }, // add storm sap
 			{ ActionType::STIR, 2 },          // stir 2 times
 			{ ActionType::WAIT, 3 }           // wait 15 seconds
 		},
