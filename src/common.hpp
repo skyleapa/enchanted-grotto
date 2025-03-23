@@ -63,6 +63,8 @@ const float PLAYER_DYING = (float)20;
 const float PLAYER_DAMAGE_COOLDOWN = (float)1000.f;
 const float PLAYER_THROW_COOLDOWN = (float)1000.f;
 
+const float GUARDIAN_SPEED = (float)100;
+
 const float TIME_UPDATE_FACTOR = 0.001f;
 const float THROW_UPDATE_FACTOR = 0.3f;
 const float AUTOSAVE_TIMER = 1000.f * 60; // every 60 seconds

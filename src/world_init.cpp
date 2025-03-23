@@ -1726,15 +1726,6 @@ Entity createGuardianDesert(RenderSystem* renderer, vec2 position, int movable, 
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " ent" << std::endl;
 
-	Enemy& enemy = registry.enemies.emplace(entity);
-	enemy.attack_radius = 5;
-	enemy.health = 1000;
-	enemy.start_pos = position;
-	enemy.state = (int)ENEMY_STATE::IDLE;
-	enemy.can_move = movable;
-	enemy.name = name;
-	enemy.attack_damage = 1;
-
 	Item& item = registry.items.emplace(entity);
 	item.type = ItemType::DESERT_GUARDIAN;
 	item.name = name;
@@ -1743,6 +1734,7 @@ Entity createGuardianDesert(RenderSystem* renderer, vec2 position, int movable, 
 
 	Guardian& guardian = registry.guardians.emplace(entity);
 	guardian.unlock_potion = PotionEffect::SATURATION;
+	guardian.exit_direction = { 0, -1 }; // it leaves upwards
 
 	auto& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 1.0f; // cannot walk past guardian
@@ -1776,15 +1768,6 @@ Entity createGuardianMushroom(RenderSystem* renderer, vec2 position, int movable
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " ent" << std::endl;
 
-	Enemy& enemy = registry.enemies.emplace(entity);
-	enemy.attack_radius = 5;
-	enemy.health = 1000;
-	enemy.start_pos = position;
-	enemy.state = (int)ENEMY_STATE::IDLE;
-	enemy.can_move = movable;
-	enemy.name = name;
-	enemy.attack_damage = 1;
-
 	Item& item = registry.items.emplace(entity);
 	item.type = ItemType::MUSHROOM_GUARDIAN;
 	item.name = name;
@@ -1793,6 +1776,7 @@ Entity createGuardianMushroom(RenderSystem* renderer, vec2 position, int movable
 
 	Guardian& guardian = registry.guardians.emplace(entity);
 	guardian.unlock_potion = PotionEffect::ALKALESCENCE;
+	guardian.exit_direction = vec2(0, 1);
 
 	auto& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 1.0f; // cannot walk past guardian
@@ -1807,8 +1791,7 @@ Entity createGuardianMushroom(RenderSystem* renderer, vec2 position, int movable
 	motion.position = position;
 	motion.scale = vec2({ MUSHROOM_GUARDIAN_WIDTH, MUSHROOM_GUARDIAN_HEIGHT });
 
-	// make it higher because it doesnt appear
-	createTextbox(renderer, vec2(position.x, position.y - 50), entity, "[F] Use Potion of Alkalescense");
+	createTextbox(renderer, vec2(position.x, position.y - 100), entity, "[F] Use Potion of Alkalescense");
 
 	registry.renderRequests.insert(
 		entity,
@@ -1827,15 +1810,6 @@ Entity createGuardianCrystal(RenderSystem* renderer, vec2 position, int movable,
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " ent" << std::endl;
 
-	Enemy& enemy = registry.enemies.emplace(entity);
-	enemy.attack_radius = 5;
-	enemy.health = 1000;
-	enemy.start_pos = position;
-	enemy.state = (int)ENEMY_STATE::IDLE;
-	enemy.can_move = movable;
-	enemy.name = name;
-	enemy.attack_damage = 1;
-
 	Item& item = registry.items.emplace(entity);
 	item.type = ItemType::CRYSTAL_GUARDIAN;
 	item.name = name;
@@ -1844,6 +1818,7 @@ Entity createGuardianCrystal(RenderSystem* renderer, vec2 position, int movable,
 
 	Guardian& guardian = registry.guardians.emplace(entity);
 	guardian.unlock_potion = PotionEffect::CLARITY;
+	guardian.exit_direction = (registry.screenStates.components[0].biome == (GLuint)BIOME::FOREST_EX) ? vec2(0, 1) : vec2(1, 0);
 
 	auto& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 1.0f; // cannot walk past guardian

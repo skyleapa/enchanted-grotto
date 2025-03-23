@@ -696,7 +696,7 @@ void WorldSystem::handle_player_interaction()
 
 		// Check if item is collectable or is an interactable entrance
 		if (!item_info.isCollectable && !registry.entrances.has(item) && !registry.cauldrons.has(item)
-			&& !registry.mortarAndPestles.has(item)) {
+			&& !registry.mortarAndPestles.has(item) && !registry.guardians.has(item)) {
 			// Check for recipe book specifically
 			if (item_info.type != ItemType::RECIPE_BOOK) {
 				continue;
@@ -979,7 +979,10 @@ bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 			if (potion.effect == guardian.unlock_potion)
 			{
 				// Remove potion from inventory
-				player_inventory.items.erase(it);
+				registry.items.get(itemEntity).amount -= 1;
+				if (registry.items.get(itemEntity).amount <= 0) {
+					ItemSystem::removeItemFromInventory(player, itemEntity);
+				}
 
 				// Unlock corresponding biome
 				if (registry.items.get(guardianEntity).type == ItemType::DESERT_GUARDIAN)
@@ -995,9 +998,19 @@ bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 					biome_sys->crystal_unlocked = true;
 				}
 
-				// Remove the guardian from the game world
-				registry.remove_all_components_of(guardianEntity);
-				registry.remove_all_components_of(itemEntity);
+				// remove textbox
+				for (auto textbox : registry.textboxes.entities) {
+					if (registry.textboxes.get(textbox).targetItem == guardianEntity) {
+						std::cout << "removing textbox" << std::endl;
+						m_ui_system->removeRmlUITextbox(textbox.id());
+						registry.remove_all_components_of(textbox);
+					}
+				}
+
+				// Set guardian movement to the direction of the exit
+				if (registry.motions.has(guardianEntity) && guardian.exit_direction != vec2(0, 0)) {
+					registry.motions.get(guardianEntity).velocity = guardian.exit_direction * GUARDIAN_SPEED;
+				}
 
 				std::cout << "You got da potion" << std::endl;
 

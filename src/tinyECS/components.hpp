@@ -232,6 +232,7 @@ struct Enemy {
 
 struct Guardian {
 	PotionEffect unlock_potion; // the potion that will "unlock the biome"
+	vec2 exit_direction = { 0,0 };
 };
 
 struct Ammo {
