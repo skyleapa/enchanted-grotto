@@ -1,4 +1,5 @@
 #include "item_system.hpp"
+#include "ui_system.hpp"
 #include "world_init.hpp"
 #include <iostream>
 #include <fstream>
@@ -28,7 +29,6 @@ Entity ItemSystem::createIngredient(ItemType type, int amount) {
 	// Add ingredient-specific component
 	Ingredient& ingredient = registry.ingredients.emplace(entity);
 	ingredient.grindLevel = 0.0f;  // Starts ungrounded
-
 	return entity;
 }
 
@@ -45,9 +45,43 @@ Entity ItemSystem::createPotion(PotionEffect effect, int duration, const vec3& c
 	potion.effectValue = effectValue;
 
 	// Get potion name
-	registry.items.get(entity).name = EFFECT_NAMES.at(effect) + " Potion";
 	return entity;
 }
+
+std::string ItemSystem::getItemName(Entity item) {
+	Item& it = registry.items.get(item);
+	std::string name = ITEM_INFO.at(it.type).name;
+
+	// Add grind stat for ingredient
+	if (registry.ingredients.has(item)) {
+		int lvl = (int) (registry.ingredients.get(item).grindLevel * 100);
+		if (lvl > 0) {
+			name += " (" + std::to_string(lvl) + "% Grinded)";
+		}
+	}
+
+	// Add potion name for potions
+	if (registry.potions.has(item)) {
+		Potion& potion = registry.potions.get(item);
+		if (potion.effect == PotionEffect::WATER) {
+			return "Flask of Holy Water";
+		} else if (potion.effect == PotionEffect::FAILED) {
+			return "Failed Potion";
+		}
+		
+		for (Recipe r : RECIPES) {
+			if (potion.effect == r.effect) {
+				name = r.name;
+				break;
+			}
+		}
+
+		name = PotionSystem::getNormalizedQuality(potion).name + " " + name;
+	}
+
+	return name;
+}
+
 
 Entity ItemSystem::createCollectableIngredient(vec2 position, ItemType type, int amount, bool canRespawn) {
 	Entity item = createItem(type, amount, true, false, canRespawn);
@@ -87,29 +121,36 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
 			continue;
 		}
 
+		// Do not stack if item types are different
 		Item& existing_item = registry.items.get(existing);
 		if (existing_item.type != item_comp.type) {
 			continue;
 		}
 
+		// Do not stack if ingredient grindlevels are different
 		if (registry.ingredients.has(existing) && registry.ingredients.has(item)) {
 			Ingredient& existingIng = registry.ingredients.get(existing);
 			Ingredient& newIng = registry.ingredients.get(item);
-
-			// std::cout << "Checking grindlevel: existing=" << existingIng.grindLevel 
-			// 		  << ", new=" << newIng.grindLevel << std::endl;
-
 			if (fabs(existingIng.grindLevel - newIng.grindLevel) > FLT_EPSILON) {
-				// If grind levels are different, do not stack
-				std::cout << "Grind levels do not match, don't stack." << std::endl;
 				continue;
 			}
 		}
 
+		// FAILED potions stack based on COLOR
+		// Otherwise, potions stack based on QUALITY
+		// Potion quality should be normalized at this point
 		if (existing_item.type == ItemType::POTION) {
-			PotionEffect first = registry.potions.get(existing).effect;
-			PotionEffect second = registry.potions.get(item).effect;
-			if (first != second) {
+			Potion& first = registry.potions.get(existing);
+			Potion& second = registry.potions.get(item);
+			if (first.effect != second.effect) {
+				continue;
+			}
+
+			if (first.effect == PotionEffect::FAILED && first.color != second.color) {
+				continue;
+			}
+
+			if (fabs(first.quality - second.quality) > FLT_EPSILON) {
 				continue;
 			}
 		}
@@ -128,8 +169,7 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
 	}
 
 	// If we couldn't stack, check capacity
-	if (inv.items.size() >= inv.capacity) {
-		inv.isFull = true;
+	if (inv.isFull) {
 		return false;
 	}
 
@@ -143,6 +183,11 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
 		inv.items.push_back(item);
 	}
 
+	// Update capacity
+	if (inv.items.size() >= inv.capacity) {
+		inv.isFull = true;
+	}
+	
 	std::cout << "Added new item: " << item_comp.name << " to inventory." << std::endl;
 
 	return true;
@@ -407,7 +452,16 @@ bool ItemSystem::saveGameState() {
 	}
 	data["inventories"] = inventories;
 	data["screen_state"] = serializeScreenState();
-	if (registry.players.entities.size() > 0) data["player_state"] = serializePlayerState(registry.players.entities[0]);
+	
+	// Save the current recipe book index
+	if (UISystem::s_instance != nullptr) {
+	  data["recipe_book_index"] = UISystem::s_instance->current_recipe_index;
+	}
+
+  // Save player state
+	if (registry.players.size() > 0) {
+		data["player_state"] = serializePlayerState(registry.players.entities[0]);
+	}
 
 	try {
 		std::string save_path = game_state_path(GAME_STATE_FILE);
@@ -468,6 +522,10 @@ bool ItemSystem::loadGameState() {
 
 		if (!data["player_state"].empty()) {
 			deserializePlayerState(data["player_state"]);
+		}
+		
+		if (data.contains("recipe_book_index") && UISystem::s_instance != nullptr) {
+			UISystem::s_instance->current_recipe_index = data["recipe_book_index"];
 		}
 
 		return true;

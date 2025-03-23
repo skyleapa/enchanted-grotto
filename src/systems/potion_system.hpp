@@ -31,10 +31,16 @@ public:
 	static void stirCauldron(Entity cauldron);
 	static void stirCauldron(Entity cauldron, int amount);
 
-	// Gets the resulting potion in its current state and
-	// empties the cauldron, resetting its values. Requires that
+	// Gets the resulting potion in its current state. Requires that
 	// the cauldron is filled (but no other requirements)
 	static Potion bottlePotion(Entity cauldron);
+
+	// Get the normalized quality values of a potion
+	// If the returned PotionQuality::threshold < 0, then no quality was found
+	static PotionQuality getNormalizedQuality(Potion& potion);
+
+	// Empties the cauldron, resetting its values.
+	static void resetCauldron(Entity cauldron);
 
 	static void grindIngredient(Entity mortar);
 
@@ -50,6 +56,10 @@ private:
 	// Returns a default water potion, used if no potion component is
 	// currently associated with the cauldron
 	static Potion getDefaultPotion();
+
+	// Gets the base color this cauldron from have, by mixing all the potions
+	// that were dumped in as ingredients.
+	static vec3 getBaseColor(Inventory& ci);
 
 	// Gets a color value that is a percentage distance between the start and end
 	// ratio is a number between 0 and 1 representing the percentage
@@ -77,7 +87,7 @@ private:
 	// in the recipe in terms of RGB values, with the delta being computed from the 
 	// the difference between the actual potency and its max.
 	//
-	// Formulas:
+	// Formulas (slightly outdated):
 	// quality = max(#steps - (ld + penalty) * POTION_DIFFICULTY, 0) / #steps
 	//   where:
 	//   - quality is float from 0-1 that determines how good the potion is

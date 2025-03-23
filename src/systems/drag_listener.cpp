@@ -293,20 +293,6 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			int heatLevel = getHeatLevel(curDegree);
 			PotionSystem::changeHeat(m_ui_system->getOpenedCauldron(), heatLevel);
 			is_heat_changing = false;
-			// play turn dial sound to signify completion of drag and start boiling
-			if (heatLevel == 0) {
-				SoundSystem::haltBoilSound(); // no boiling if setting temperature back to off
-				SoundSystem::haltGeneralSound();
-				registry.cauldrons.get(m_ui_system->getOpenedCauldron()).is_boiling = false;
-			} else {
-				// stsart boiling or continue boiling
-				if (registry.cauldrons.get(m_ui_system->getOpenedCauldron()).is_boiling) SoundSystem::continueBoilSound((int) SOUND_CHANNEL::BOILING, -1);
-				else {
-					registry.cauldrons.get(m_ui_system->getOpenedCauldron()).is_boiling = true;
-					SoundSystem::playBoilSound((int) SOUND_CHANNEL::BOILING, -1);
-				}
-			}
-			SoundSystem::playTurnDialSound((int) SOUND_CHANNEL::MENU, 0);
 			return;
 		}
 
@@ -343,9 +329,15 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 				return;
 			}
 
-			Entity item = pinv.items[selected];
 			// need to allow both ingredients and potions to be added to the cauldron
-			if (!registry.ingredients.has(item) && !(registry.items.get(item).type == ItemType::POTION)) {
+			Entity item = pinv.items[selected];
+			if (!registry.ingredients.has(item) && !registry.potions.has(item)) {
+				return;
+			}
+
+			// FOR NOW don't let water be dumped inside the cauldron
+			// Change this when fillable cauldron gets added
+			if (registry.potions.has(item) && registry.potions.get(item).effect == PotionEffect::WATER) {
 				return;
 			}
 

@@ -101,12 +101,15 @@ GLFWwindow* WorldSystem::create_window()
 		{ ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_move({ _0, _1 }); };
 	auto mouse_button_pressed_redirect = [](GLFWwindow* wnd, int _button, int _action, int _mods)
 		{ ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_button_pressed(_button, _action, _mods); };
+	auto scroll_wheel_redirect = [](GLFWwindow* wnd, double _xoffset, double _yoffset)
+		{ ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_mouse_wheel(_xoffset, _yoffset); };
 	auto window_resize_redirect = [](GLFWwindow* wnd, int _width, int _height)
 		{ ((WorldSystem*)glfwGetWindowUserPointer(wnd))->on_window_resize(_width, _height); };
 
 	glfwSetKeyCallback(window, key_redirect);
 	glfwSetCursorPosCallback(window, cursor_pos_redirect);
 	glfwSetMouseButtonCallback(window, mouse_button_pressed_redirect);
+	glfwSetScrollCallback(window, scroll_wheel_redirect);
 	glfwSetWindowSizeCallback(window, window_resize_redirect);
 
 	return window;
@@ -603,10 +606,18 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 		// std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
 		// std::cout << "mouse tile position: " << tile_x << ", " << tile_y << std::endl;
 
-		if (m_ui_system != nullptr && (m_ui_system->isCauldronOpen() || m_ui_system->isMortarPestleOpen())) return;
+		if (m_ui_system != nullptr && (m_ui_system->isCauldronOpen() || m_ui_system->isMortarPestleOpen() || m_ui_system->isRecipeBookOpen())) return;
 		if (mouse_pos_x >= BAR_X && mouse_pos_x <= BAR_X + BAR_WIDTH && mouse_pos_y >= BAR_Y && mouse_pos_y <= BAR_Y + BAR_HEIGHT) return;
 		// don't throw ammo if in potion making menu or clicking on inventory
 		if (throwAmmo(vec2(mouse_pos_x, mouse_pos_y))) SoundSystem::playThrowSound((int)SOUND_CHANNEL::GENERAL, 0);
+	}
+}
+
+void WorldSystem::on_mouse_wheel(double xoffset, double yoffset)
+{
+	// Pass the event to the UI system if it's initialized 
+	if (m_ui_system != nullptr) {
+		m_ui_system->handleScrollWheelEvent(xoffset, yoffset);
 	}
 }
 
@@ -660,6 +671,12 @@ void WorldSystem::handle_player_interaction()
 		return;
 	}
 
+  // If a recipe book is open, close it
+	if (m_ui_system && m_ui_system->isRecipeBookOpen()) {
+		m_ui_system->closeRecipeBook();
+		return;
+	}
+
 	Motion& player_motion = registry.motions.get(player);
 	for (Entity item : registry.items.entities)
 	{
@@ -673,7 +690,10 @@ void WorldSystem::handle_player_interaction()
 		// Check if item is collectable or is an interactable entrance
 		if (!item_info.isCollectable && !registry.entrances.has(item) && !registry.cauldrons.has(item)
 			&& !registry.mortarAndPestles.has(item)) {
-			continue;
+			// Check for recipe book specifically
+			if (item_info.type != ItemType::RECIPE_BOOK) {
+				continue;
+			}
 		}
 
 		// If item is not in pickup range, continue
@@ -715,10 +735,15 @@ void WorldSystem::handle_player_interaction()
 		}
 		else if (registry.mortarAndPestles.has(item)) {
 			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
-			std::cout << "found mortar " << item.id() << std::endl;
-			if (m_ui_system != nullptr)
-			{
-				handle_textbox = m_ui_system->openMortarPestle(item);
+				std::cout << "found mortar " << item.id() << std::endl;
+				if (m_ui_system != nullptr) {
+            handle_textbox = m_ui_system->openMortarPestle(item);
+				}
+		}
+		else if (item_info.type == ItemType::RECIPE_BOOK) {
+			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
+			if (m_ui_system != nullptr) {
+				handle_textbox = m_ui_system->openRecipeBook(item);
 			}
 		}
 
@@ -935,7 +960,7 @@ void WorldSystem::updatePlayerState(Entity& player, Motion& player_motion, float
 
 	// no movement while menu is open, switching biome, or on welcome screen
 	ScreenState& screen = registry.screenStates.components[0];
-	if ((m_ui_system != nullptr && m_ui_system->isCauldronOpen() && m_ui_system->isMortarPestleOpen()) || screen.is_switching_biome || screen.tutorial_state == (int)TUTORIAL::WELCOME_SCREEN) return;
+	if ((m_ui_system != nullptr && (m_ui_system->isCauldronOpen() || m_ui_system->isMortarPestleOpen() || m_ui_system->isRecipeBookOpen())) || screen.is_switching_biome || screen.tutorial_state == (int)TUTORIAL::WELCOME_SCREEN) return;
 
 	Player& player_comp = registry.players.get(player);
 
@@ -1113,7 +1138,7 @@ void WorldSystem::updateConsumedPotions(float elapsed_ms_since_last_update) {
 		Potion& potion = registry.potions.get(effect);
 		potion.duration -= elapsed_ms_since_last_update;
 		if (potion.duration <= 0) {
-			std::cout << "potion of " << EFFECT_NAMES.at(potion.effect) << " has expired" << std::endl;
+			std::cout << "potion of effect id " << (int) potion.effect << " has expired" << std::endl;
 			removePotionEffect(registry.potions.get(effect), player_entity);
 			to_remove.push_back(effect);
 		}
@@ -1185,7 +1210,7 @@ bool WorldSystem::consumePotion() {
 		player.active_effects.push_back(item_copy);
 	}
 	addPotionEffect(registry.potions.get(item_copy), player_entity);
-	std::cout << "player has consumed a potion of " << EFFECT_NAMES.at(registry.potions.get(item_copy).effect) << std::endl;
+	std::cout << "player has consumed a potion of effect id " << (int) registry.potions.get(item_copy).effect << std::endl;
 	return true;
 }
 

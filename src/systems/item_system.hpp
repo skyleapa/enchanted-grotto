@@ -38,6 +38,7 @@ public:
 	static Entity createIngredient(ItemType type, int amount = 1);
 	static Entity createPotion(PotionEffect effect, int duration, const vec3& color, float quality, float effectValue, int amount);
 	static Entity createCollectableIngredient(vec2 position, ItemType type, int amount, bool canRespawn);
+	static std::string getItemName(Entity item);
 	
 	// Serialization helpers made public and static
 	static nlohmann::json serializeItem(Entity item);
