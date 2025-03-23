@@ -606,7 +606,7 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 		// std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
 		// std::cout << "mouse tile position: " << tile_x << ", " << tile_y << std::endl;
 
-		if (m_ui_system != nullptr && (m_ui_system->isCauldronOpen() || m_ui_system->isMortarPestleOpen() || m_ui_system->isRecipeBookOpen())) return;
+		if (m_ui_system != nullptr && (m_ui_system->isCauldronOpen() || m_ui_system->isMortarPestleOpen() || m_ui_system->isRecipeBookOpen() || m_ui_system->isClickOnUIElement())) return;
 		if (mouse_pos_x >= BAR_X && mouse_pos_x <= BAR_X + BAR_WIDTH && mouse_pos_y >= BAR_Y && mouse_pos_y <= BAR_Y + BAR_HEIGHT) return;
 		// don't throw ammo if in potion making menu or clicking on inventory
 		if (throwAmmo(vec2(mouse_pos_x, mouse_pos_y))) SoundSystem::playThrowSound((int)SOUND_CHANNEL::GENERAL, 0);

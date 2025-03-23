@@ -523,6 +523,11 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 				break;
 			}
 
+			if (id == "close-button") {
+				closeCauldron();
+				return;
+			}
+
 			if (id == "ladle") {
 				// If we click cauldron don't drop ladle
 				Rml::Element* possibleCauldron = m_context->GetElementAtPoint(mousePos, hovered);
@@ -603,6 +608,11 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 		do {
 			if (!isMortarPestleOpen()) {
 				break;
+			}
+
+			if (id == "close-button") {
+				closeMortarPestle();
+				return;
 			}
 
 			if (id == "pestle") {
@@ -1231,6 +1241,29 @@ bool UISystem::openCauldron(Entity cauldron)
                     transform: rotate(180deg) scale(1.2);
                     cursor: pointer;
                 }
+
+				#close-button {
+					position: absolute;
+                        top: 45px;
+                        left: 45px;
+                        width: 40px;
+                        height: 40px;
+                        text-align: center;
+                        background-color: #d9a66f;
+                        border-width: 3px;
+                        border-color: #5c3e23;
+                        border-radius: 20px;
+                        padding-top: 5px;
+                        box-sizing: border-box;
+                        cursor: pointer;
+                        font-size: 20px;
+                        font-weight: bold;
+                        font-family: Open Sans;
+                        color: #5c3e23;
+				}
+				#close-button:hover {
+					background-color: #c1834e;
+				}
             </style>
         </head>
         <body>
@@ -1239,6 +1272,7 @@ bool UISystem::openCauldron(Entity cauldron)
             <div id="cauldron"></div>
             <div id="ladle"></div>
             <div id="bottle"></div>
+			<div id="close-button">X</div>
         </body>
         </rml>
         )";
@@ -1401,12 +1435,35 @@ bool UISystem::openMortarPestle(Entity mortar) {
 					decorator: image("interactables/mortar_frontpiece.png" flip-vertical fill);
 					z-index: 20;
 				}
+				#close-button {
+					position: absolute;
+                        top: 20px;
+                        left: 20px;
+                        width: 40px;
+                        height: 40px;
+                        text-align: center;
+                        background-color: #d9a66f;
+                        border-width: 3px;
+                        border-color: #5c3e23;
+                        border-radius: 20px;
+                        padding-top: 5px;
+                        box-sizing: border-box;
+                        cursor: pointer;
+                        font-size: 20px;
+                        font-weight: bold;
+                        font-family: Open Sans;
+                        color: #5c3e23;
+				}
+				#close-button:hover {
+					background-color: #c1834e;
+				}
             </style>
         </head>
         <body>
             <div id="mortar"></div>
 			<div id="mortar_border"></div>
             <div id="pestle"></div>
+			<div id="close-button">X</div>
         </body>
         </rml>
         )";
@@ -2042,4 +2099,11 @@ void UISystem::updateEffectsBar() {
 	catch (const std::exception& e) {
 		std::cerr << "Exception in UISystem::updateEffectsBar: " << e.what() << std::endl;
 	}
+}
+
+bool UISystem::isClickOnUIElement()
+{
+	if (!m_context) return false;
+	Rml::Element* hovered = m_context->GetHoverElement();
+	return hovered != nullptr;
 }
