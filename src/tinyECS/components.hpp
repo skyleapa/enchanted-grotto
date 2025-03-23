@@ -58,6 +58,7 @@ struct ScreenState
 	bool tutorial_step_complete = true;
 	float autosave_timer = AUTOSAVE_TIMER;
 	std::vector<std::string> killed_enemies = {};
+	std::vector<std::string> unlocked_biomes = {};
 	bool first_game_load = true;
 };
 

@@ -332,6 +332,7 @@ nlohmann::json ItemSystem::serializeScreenState() {
 	data["biome"] = screen.biome;
 	data["from_biome"] = screen.from_biome;
 	data["killed_enemies"] = screen.killed_enemies;
+	data["unlocked_biomes"] = screen.unlocked_biomes;
 
 	return data;
 }
@@ -545,6 +546,9 @@ void ItemSystem::deserializeScreenState(const nlohmann::json& data) {
 	screen.from_biome = data["from_biome"];
 	for (const auto& enemy : data["killed_enemies"]) {
 		registry.screenStates.components[0].killed_enemies.push_back(enemy);
+	}
+	for (const auto& biome : data["unlocked_biomes"]) {
+		registry.screenStates.components[0].unlocked_biomes.push_back(biome);
 	}
 }
 
