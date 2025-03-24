@@ -645,35 +645,6 @@ const std::unordered_map<ItemType, ItemInfo> ITEM_INFO = {
 			TEXTURE_ASSET_ID::CRYSTAL_MEPH,
 			"interactables/crystal_meph.png",
 			false} },
-			// {
-				// 	ItemType::DESERT_GUARDIAN, {
-				// 		"Crystal Meph",
-				// 		vec2((float)GRID_CELL_WIDTH_PX * 0.9, (float)GRID_CELL_HEIGHT_PX * 0.9),
-				// 		TEXTURE_ASSET_ID::CRYSTAL_MEPH,
-				// 		"interactables/crystal_meph.png",
-				// 		false} },
-				// {
-				// 	ItemType::MUSHROOM_GUARDIAN, {
-				// 		"Mushroom Guardian",
-				// 		vec2((float)GRID_CELL_WIDTH_PX * 0.9, (float)GRID_CELL_HEIGHT_PX * 0.9),
-				// 		TEXTURE_ASSET_ID::CRYSTAL_MEPH,
-				// 		"interactables/crystal_meph.png",
-				// 		false} },
-				// {
-				// 	ItemType::CRYSTAL_GUARDIAN, {
-				// 		"Crystal Guardian",
-				// 		vec2((float)GRID_CELL_WIDTH_PX * 0.9, (float)GRID_CELL_HEIGHT_PX * 0.9),
-				// 		TEXTURE_ASSET_ID::CRYSTAL_MEPH,
-				// 		"interactables/crystal_meph.png",
-				// 		false} },
-				// {
-				// 	ItemType::MASTER_POTION_PEDESTAL, {
-				// 		"Crystal Meph",
-				// 		vec2((float)GRID_CELL_WIDTH_PX * 0.9, (float)GRID_CELL_HEIGHT_PX * 0.9),
-				// 		TEXTURE_ASSET_ID::CRYSTAL_MEPH,
-				// 		"interactables/crystal_meph.png",
-				// 		false} },
-
 };
 
 const std::unordered_map<ItemType, std::vector<BIOME>> itemRespawnBiomes = {

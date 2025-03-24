@@ -1027,6 +1027,13 @@ bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 					registry.motions.get(guardianEntity).velocity = guardian.exit_direction * GUARDIAN_SPEED;
 				}
 
+				if (registry.items.has(guardianEntity)) {
+					Item& item = registry.items.get(guardianEntity);
+					if (item.type == ItemType::MASTER_POTION_PEDESTAL) {
+						createTextbox(renderer, vec2(558, 40), guardianEntity, "Congratulations, you've saved the grotto!");
+					}
+				}
+
 				std::cout << "You got da potion" << std::endl;
 
 				return true;
