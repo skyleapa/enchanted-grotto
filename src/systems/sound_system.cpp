@@ -1,6 +1,7 @@
 #include "sound_system.hpp"
 
 // Define static variables
+Mix_Music* SoundSystem::background_music = nullptr;
 Mix_Chunk* SoundSystem::boil_sound = nullptr;
 Mix_Chunk* SoundSystem::bottle_high_quality_potion_sound = nullptr;
 Mix_Chunk* SoundSystem::bottle_sound = nullptr;
@@ -35,6 +36,7 @@ bool SoundSystem::startAndLoadSounds()
         return false;
     }
 
+    background_music = Mix_LoadMUS(audio_path("background_music.wav").c_str());
     boil_sound = Mix_LoadWAV(audio_path("boil.wav").c_str());
     bottle_high_quality_potion_sound = Mix_LoadWAV(audio_path("bottle_high_quality_potion.wav").c_str());
     bottle_sound = Mix_LoadWAV(audio_path("bottle.wav").c_str());
@@ -51,13 +53,19 @@ bool SoundSystem::startAndLoadSounds()
     throw_sound = Mix_LoadWAV(audio_path("throw.wav").c_str());
     turn_dial_sound = Mix_LoadWAV(audio_path("turn_dial.wav").c_str());
 
+    Mix_VolumeMusic(MUSIC_VOLUME);
+    // start playing background music indefinitely
+    std::cout << "Starting music..." << std::endl;
+    Mix_PlayMusic(background_music, -1);
+
     // return false if any sound failed to load
-    return !(!boil_sound || !bottle_high_quality_potion_sound || !bottle_sound || !collect_item_sound || !dial_change_sound || !drop_in_bowl_sound || !drop_in_cauldron_sound
+    return !(!background_music || !boil_sound || !bottle_high_quality_potion_sound || !bottle_sound || !collect_item_sound || !dial_change_sound || !drop_in_bowl_sound || !drop_in_cauldron_sound
         || !enemy_ouch_sound || !grind_sound || !gulp_sound || !interact_menu_sound || !page_flip_sound || !stir_sound || !throw_sound || !turn_dial_sound);
 }
 
 SoundSystem::~SoundSystem()
 {
+    if (background_music) Mix_FreeMusic(background_music);
     if (boil_sound) Mix_FreeChunk(boil_sound);
     if (bottle_high_quality_potion_sound) Mix_FreeChunk(bottle_high_quality_potion_sound);
     if (bottle_sound) Mix_FreeChunk(bottle_sound);

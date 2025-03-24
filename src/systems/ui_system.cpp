@@ -12,6 +12,8 @@
 #include <unordered_map>
 #include <tuple>
 #include <sstream>
+#include <SDL.h>
+#include <SDL_mixer.h>
 
 // Global flag to indicate when UI rendering is in progress
 // Used to prevent OpenGL error checking during RmlUi rendering
@@ -664,7 +666,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 		} while (false);
 	}
 	// Check for consuming potion in inventory
-	if ((action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_RIGHT) || (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT && shift_key_pressed)) {
+	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_RIGHT) {
 		Rml::Element* hovered = m_context->GetHoverElement();
 		if (!hovered) return;
 
@@ -674,6 +676,28 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 		if (slotId != -1 && registry.players.entities.size() > 0) {
 			selectInventorySlot(slotId);
 			registry.players.components[0].consumed_potion = true;
+		}
+	}
+
+	// remove selected item from inventory
+	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT && shift_key_pressed) {
+		Rml::Element* hovered = m_context->GetHoverElement();
+		if (!hovered) return;
+
+		std::string id = hovered->GetId();
+		int slotId = getSlotFromId(id);
+
+		if (registry.players.entities.size() == 0) return;
+		Entity entity = registry.players.entities[0];
+		if (!registry.inventories.has(entity)) return;
+		Inventory& inventory = registry.inventories.get(entity);
+
+		if (slotId != -1 && slotId + 1 <= inventory.items.size()) {
+			ItemSystem::removeItemFromInventory(entity, inventory.items[slotId]);
+
+			if (m_inventory_document) {
+				updateInventoryBar();
+			}
 		}
 	}
 
@@ -1179,7 +1203,10 @@ bool UISystem::openCauldron(Entity cauldron, bool play_sound = true)
 	if (!m_initialized || !m_context) return false;
 	if (m_cauldron_document) {
 		m_cauldron_document->Show();
-		if (play_sound) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+		if (play_sound) {
+			SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+			Mix_VolumeMusic(MUSIC_VOLUME_LOWER);
+		}
 		return true;
 	}
 
@@ -1308,7 +1335,10 @@ bool UISystem::openCauldron(Entity cauldron, bool play_sound = true)
 		DragListener::RegisterDragDropElement(m_cauldron_document->GetElementById("cauldron-water"));
 		DragListener::RegisterDragDropElement(m_cauldron_document->GetElementById("cauldron"));
 		m_cauldron_document->Show();
-		if (play_sound) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+		if (play_sound) {
+			SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+			Mix_VolumeMusic(MUSIC_VOLUME_LOWER);
+		}
 		openedCauldron = cauldron;
 		registry.cauldrons.get(cauldron).filled = true;
 		std::cout << "UISystem::openCauldron - Cauldron created successfully" << std::endl;
@@ -1361,7 +1391,10 @@ void UISystem::closeCauldron(bool play_sound)
 	if (isCauldronOpen()) {
 		m_cauldron_document->Hide();
 
-		if (play_sound) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+		if (play_sound) {
+			SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+			Mix_VolumeMusic(MUSIC_VOLUME);
+		}
 	}
 }
 
@@ -1407,7 +1440,10 @@ void UISystem::updateFollowMouse() {
 bool UISystem::openMortarPestle(Entity mortar, bool play_sound = true) {
 	if (!m_initialized || !m_context) return false;
 	if (m_mortar_document) {
-		if (play_sound) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+		if (play_sound) {
+			SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+			Mix_VolumeMusic(MUSIC_VOLUME_LOWER);
+		}
 		m_mortar_document->Show();
 		return true;
 	}
@@ -1501,7 +1537,10 @@ bool UISystem::openMortarPestle(Entity mortar, bool play_sound = true) {
 		DragListener::RegisterDraggableElement(m_mortar_document->GetElementById("pestle"));
 
 		m_mortar_document->Show();
-		if (play_sound) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+		if (play_sound) {
+			SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+			Mix_VolumeMusic(MUSIC_VOLUME_LOWER);
+		}
 		openedMortar = mortar;
 		std::cout << "UISystem::openMortarPestle - Mortar & Pestle UI created successfully" << std::endl;
 		return true;
@@ -1519,7 +1558,10 @@ bool UISystem::isMortarPestleOpen() {
 void UISystem::closeMortarPestle(bool play_sound = true)
 {
 	if (isMortarPestleOpen()) {
-		if (play_sound) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+		if (play_sound) {
+			SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+			Mix_VolumeMusic(MUSIC_VOLUME);
+		}
 		m_mortar_document->Hide();
 	}
 }
@@ -1811,6 +1853,7 @@ bool UISystem::openRecipeBook(Entity recipe_book)
 		m_recipe_book_document->Show();
 
 		SoundSystem::playPageFlipSound((int)SOUND_CHANNEL::MENU, 0);
+		Mix_VolumeMusic(MUSIC_VOLUME_LOWER);
 
 		return true;
 	}
@@ -1850,6 +1893,7 @@ void UISystem::closeRecipeBook()
 		m_recipe_book_document = nullptr;
 
 		SoundSystem::playPageFlipSound((int)SOUND_CHANNEL::MENU, 0);
+		Mix_VolumeMusic(MUSIC_VOLUME);
 	}
 
 	openedRecipeBook = {};
@@ -1976,7 +2020,8 @@ std::string UISystem::getRecipeIngredientsText(const Recipe& recipe)
 
 	for (const auto& ingredient : recipe.ingredients) {
 		std::string name = getIngredientName(ingredient);
-		text += std::to_string(ingredient.amount) + "x " + name;
+		int amt = ingredient.type == ItemType::POTION ? 1 : ingredient.amount;
+		text += std::to_string(amt) + "x " + name;
 		text += "<br />";
 	}
 

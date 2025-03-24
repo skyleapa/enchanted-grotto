@@ -167,7 +167,7 @@ private:
             "820px", "466px", "Let’s make your first potion! Toggle the tutorial with T at any time or N to skip to the tutorial step. Try pressing N now!"
         }},
         { (int)TUTORIAL::RECIPE_BOOK, {
-            "211px", "110px", "Head to the lectern using the WASD keys and press F to open the recipe book."
+            "211px", "110px", "Head to the lectern using the WASD keys and press F to open the recipe book. You can also use R to access the recipe book at any time."
         }},
         { (int)TUTORIAL::FLIP_PAGE, {
             "790px", "455px", "Flip to the recipe page for “Potion of Harming”."

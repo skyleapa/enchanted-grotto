@@ -25,9 +25,6 @@ public:
 	// creates main window
 	GLFWwindow* create_window();
 
-	// starts and loads music and sound effects
-	bool start_and_load_sounds();
-
 	// call to close the window
 	void close_window();
 
@@ -102,11 +99,6 @@ private:
 
 	// user pressed keys
 	std::unordered_set<int> pressed_keys;
-
-	// music references
-	Mix_Music* background_music;
-	Mix_Chunk* chicken_dead_sound;
-	Mix_Chunk* chicken_eat_sound;
 
 	// C++ random number generator
 	std::default_random_engine rng;

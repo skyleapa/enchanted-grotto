@@ -22,15 +22,6 @@ WorldSystem::WorldSystem()
 
 WorldSystem::~WorldSystem()
 {
-	// Destroy music components
-	if (background_music != nullptr)
-		Mix_FreeMusic(background_music);
-	if (chicken_dead_sound != nullptr)
-		Mix_FreeChunk(chicken_dead_sound);
-	if (chicken_eat_sound != nullptr)
-		Mix_FreeChunk(chicken_eat_sound);
-	Mix_CloseAudio();
-
 	// Destroy all created components
 	registry.clear_all_components();
 
@@ -115,47 +106,11 @@ GLFWwindow* WorldSystem::create_window()
 	return window;
 }
 
-bool WorldSystem::start_and_load_sounds()
-{
-
-	//////////////////////////////////////
-	// Loading music and sounds with SDL
-	if (SDL_Init(SDL_INIT_AUDIO) < 0)
-	{
-		fprintf(stderr, "Failed to initialize SDL Audio");
-		return false;
-	}
-
-	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) == -1)
-	{
-		fprintf(stderr, "Failed to open audio device");
-		return false;
-	}
-
-	background_music = Mix_LoadMUS(audio_path("music.wav").c_str());
-	chicken_dead_sound = Mix_LoadWAV(audio_path("chicken_dead.wav").c_str());
-	chicken_eat_sound = Mix_LoadWAV(audio_path("chicken_eat.wav").c_str());
-
-	if (background_music == nullptr || chicken_dead_sound == nullptr || chicken_eat_sound == nullptr)
-	{
-		fprintf(stderr, "Failed to load sounds\n %s\n %s\n %s\n make sure the data directory is present",
-			audio_path("music.wav").c_str(),
-			audio_path("chicken_dead.wav").c_str(),
-			audio_path("chicken_eat.wav").c_str());
-		return false;
-	}
-	return true;
-}
-
 bool WorldSystem::init(RenderSystem* renderer_arg, BiomeSystem* biome_sys)
 {
 
 	this->renderer = renderer_arg;
 	this->biome_sys = biome_sys;
-
-	// start playing background music indefinitely
-	// std::cout << "Starting music..." << std::endl;
-	// Mix_PlayMusic(background_music, -1);
 
 	// Set all states to default
 	restart_game(false);
@@ -379,9 +334,20 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 				// we set screen.from_biome and screen.biome to the same from_biome on reload so we need to overide the biome with the latest one
 				screen.biome = last_biome;
 				screen.fade_status = 0;
+				registry.collisions.clear();
 				player.health = PLAYER_MAX_HEALTH; // reset to max health
+				for (auto effect : player.active_effects) {
+					if (registry.potions.has(effect)) {
+						removePotionEffect(registry.potions.get(effect), player_entity);
+					}
+				}
+				player.active_effects.clear(); // reset active effects
 			}
-			if (m_ui_system) m_ui_system->updateHealthBar();
+			if (m_ui_system) {
+				m_ui_system->updateHealthBar();
+				m_ui_system->updateEffectsBar();
+				m_ui_system->updateInventoryBar();
+			}
 			continue;
 		}
 		else if ((registry.ammo.has(collision_entity) || registry.ammo.has(collision.other)) && (registry.terrains.has(collision_entity) || registry.terrains.has(collision.other))) {
@@ -489,9 +455,19 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 		close_window();
 	}
 
-	if (action == GLFW_RELEASE && key == GLFW_KEY_R)
+	if (action == GLFW_RELEASE && key == GLFW_KEY_L)
 	{
 		restart_game(true);
+	}
+
+	if (action == GLFW_RELEASE && key == GLFW_KEY_R)
+	{
+		if (m_ui_system->isRecipeBookOpen()) {
+			m_ui_system->closeRecipeBook();
+		}
+		else {
+			m_ui_system->openRecipeBook(m_ui_system->getOpenedRecipeBook());
+		}
 	}
 
 	if (action == GLFW_RELEASE && key == GLFW_KEY_P)
