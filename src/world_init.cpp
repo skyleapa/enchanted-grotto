@@ -1925,7 +1925,7 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 	ammo.is_fired = true;
 	ammo.start_pos = player_motion.position;
 	if (ammo.damage == 0) {
-		ammo.damage = 25;
+		ammo.damage = 50;
 	}
 	ammo.target = { player_pos.x + THROW_DISTANCE * cosf(angle), player_pos.y + THROW_DISTANCE * sinf(angle) };
 
