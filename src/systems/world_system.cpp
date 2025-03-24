@@ -696,7 +696,7 @@ void WorldSystem::handle_player_interaction()
 
 		// Check if item is collectable or is an interactable entrance
 		if (!item_info.isCollectable && !registry.entrances.has(item) && !registry.cauldrons.has(item)
-			&& !registry.mortarAndPestles.has(item)) {
+			&& !registry.mortarAndPestles.has(item) && !registry.guardians.has(item)) {
 			// Check for recipe book specifically
 			if (item_info.type != ItemType::RECIPE_BOOK) {
 				continue;
@@ -722,6 +722,10 @@ void WorldSystem::handle_player_interaction()
 		if (registry.entrances.has(item))
 		{
 			handle_textbox = biome_sys->handleEntranceInteraction(item);
+		}
+		else if (registry.guardians.has(item))
+		{
+			handle_textbox = handleGuardianUnlocking(item);
 		}
 		else if (item_info.isCollectable)
 		{
@@ -801,7 +805,7 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 		return false;
 	SoundSystem::playCollectItemSound((int)SOUND_CHANNEL::GENERAL, 0);
 
-	// handle fruit collection
+	// handle item collection for the tutorial
 	if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::COLLECT_ITEMS) {
 		Inventory& inventory = registry.inventories.get(player);
 		bool collected_bark = false;
@@ -958,6 +962,88 @@ void WorldSystem::update_textbox_visibility()
 		}
 	}
 }
+
+bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
+	Entity player = registry.players.entities[0];
+	Inventory& player_inventory = registry.inventories.get(player);
+	Guardian& guardian = registry.guardians.get(guardianEntity);
+
+	// Check if the correct potion is in the player's inventory
+	for (auto it = player_inventory.items.begin(); it != player_inventory.items.end(); ++it)
+	{
+		Entity itemEntity = *it;
+
+		if (registry.potions.has(itemEntity)) {
+			Potion& potion = registry.potions.get(itemEntity);
+
+			if (potion.effect == guardian.unlock_potion)
+			{
+				// Remove potion from inventory
+				registry.items.get(itemEntity).amount -= 1;
+				if (registry.items.get(itemEntity).amount <= 0) {
+					ItemSystem::removeItemFromInventory(player, itemEntity);
+				}
+
+				ScreenState& screen = registry.screenStates.components[0];
+				// Unlock corresponding biome
+				if (registry.items.get(guardianEntity).type == ItemType::DESERT_GUARDIAN)
+				{
+					if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "desert") == screen.unlocked_biomes.end()) {
+						screen.unlocked_biomes.push_back("desert");
+					}
+				}
+				else if (registry.items.get(guardianEntity).type == ItemType::MUSHROOM_GUARDIAN)
+				{
+					if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "mushroom") == screen.unlocked_biomes.end()) {
+						screen.unlocked_biomes.push_back("mushroom");
+					}
+					createForestToMushroom(renderer, vec2(GRID_CELL_WIDTH_PX * 2.1, WINDOW_HEIGHT_PX - 40), "Mushroom Entrance");
+				}
+				else if (registry.items.get(guardianEntity).type == ItemType::CRYSTAL_GUARDIAN)
+				{
+					// unlocks both crystal and mushroom since crystal is technically end game
+					if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "mushroom") == screen.unlocked_biomes.end()) {
+						screen.unlocked_biomes.push_back("mushroom");
+					}
+					if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "crystal") == screen.unlocked_biomes.end()) {
+						screen.unlocked_biomes.push_back("crystal");
+					}
+					createForestExToCrystal(renderer, vec2(930, 665), "Forest Ex to Crystal");
+					createMushroomToCrystal(renderer, vec2(1220, 160), "Mushroom to Crystal");
+
+				}
+
+				// remove textbox
+				for (auto textbox : registry.textboxes.entities) {
+					if (registry.textboxes.get(textbox).targetItem == guardianEntity) {
+						std::cout << "removing textbox" << std::endl;
+						m_ui_system->removeRmlUITextbox(textbox.id());
+						registry.remove_all_components_of(textbox);
+					}
+				}
+
+				// Set guardian movement to the direction of the exit
+				if (registry.motions.has(guardianEntity) && guardian.exit_direction != vec2(0, 0)) {
+					registry.motions.get(guardianEntity).velocity = guardian.exit_direction * GUARDIAN_SPEED;
+				}
+
+				if (registry.items.has(guardianEntity)) {
+					Item& item = registry.items.get(guardianEntity);
+					if (item.type == ItemType::MASTER_POTION_PEDESTAL) {
+						createTextbox(renderer, vec2(558, 40), guardianEntity, "Congratulations, you've saved the grotto!");
+					}
+				}
+
+				std::cout << "You got da potion" << std::endl;
+
+				return true;
+			}
+		}
+	}
+	std::cout << "You don't have the potion!!" << std::endl;
+	return false;
+}
+
 
 void WorldSystem::updatePlayerState(Entity& player, Motion& player_motion, float elapsed_ms_since_last_update) {
 

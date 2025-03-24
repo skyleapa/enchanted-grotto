@@ -58,6 +58,7 @@ struct ScreenState
 	bool tutorial_step_complete = true;
 	float autosave_timer = AUTOSAVE_TIMER;
 	std::vector<std::string> killed_enemies = {};
+	std::vector<std::string> unlocked_biomes = {};
 	bool first_game_load = true;
 };
 
@@ -230,6 +231,11 @@ struct Enemy {
 	float attack_damage;
 };
 
+struct Guardian {
+	PotionEffect unlock_potion; // the potion that will "unlock the biome"
+	vec2 exit_direction = { 0,0 };
+};
+
 struct Ammo {
 	vec2 start_pos;
 	vec2 target; // mouse click direction at max of player's throwable radius
@@ -386,7 +392,8 @@ enum class TEXTURE_ASSET_ID
 	GUARDIAN_CRYSTAL = GUARDIAN_SHROOMLAND + 1,
 
 	// extras
-	POTION = GUARDIAN_CRYSTAL + 1,
+	MASTER_POTION_PEDESTAL = GUARDIAN_CRYSTAL + 1,
+	POTION = MASTER_POTION_PEDESTAL + 1,
 	WELCOME_TO_GROTTO = POTION + 1,
 	CAULDRON_WATER = WELCOME_TO_GROTTO + 1,
 	TEXTURE_COUNT = CAULDRON_WATER + 1,
