@@ -1652,7 +1652,6 @@ void UISystem::updateHealthBar() {
 
 		Rml::Element* healthbar_element = m_healthbar_document->GetElementById("health-bar");
 		float hp_percentage = registry.players.components[0].health / PLAYER_MAX_HEALTH;
-		std::cout << hp_percentage << std::endl;
 		healthbar_element->SetAttribute("value", hp_percentage);
 
 		if (hp_percentage >= 0.5) {
