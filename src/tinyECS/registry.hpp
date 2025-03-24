@@ -35,6 +35,7 @@ public:
 	ComponentContainer<Animation> animations;
 	ComponentContainer<Chest> chests;
 	ComponentContainer<Enemy> enemies;
+	ComponentContainer<Guardian> guardians;
 	ComponentContainer<Ammo> ammo;
 	ComponentContainer<WelcomeScreen> welcomeScreens;
 	ComponentContainer<DamageFlash> damageFlashes;
@@ -66,6 +67,7 @@ public:
 		registry_list.push_back(&animations);
 		registry_list.push_back(&chests);
 		registry_list.push_back(&enemies);
+		registry_list.push_back(&guardians);
 		registry_list.push_back(&ammo);
 		registry_list.push_back(&welcomeScreens);
 		registry_list.push_back(&damageFlashes);
