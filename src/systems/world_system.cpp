@@ -220,10 +220,12 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		}
 	}
 
-	updatePlayerState(player, player_motion, elapsed_ms_since_last_update);
-	updateThrownAmmo(elapsed_ms_since_last_update);
-	update_textbox_visibility();
 	handle_item_respawn(elapsed_ms_since_last_update);
+	updateThrownAmmo(elapsed_ms_since_last_update);
+
+	if (m_ui_system->isCauldronOpen() || m_ui_system->isMortarPestleOpen()) return true; // skip the following updates if menu is open
+	updatePlayerState(player, player_motion, elapsed_ms_since_last_update);
+	update_textbox_visibility();
 
 	return true;
 }
@@ -256,7 +258,7 @@ void WorldSystem::restart_game(bool hard_reset)
 	// }
 
 	// close cauldron if it's open
-	if (m_ui_system && m_ui_system->isCauldronOpen()) m_ui_system->closeCauldron();
+	if (m_ui_system && m_ui_system->isCauldronOpen()) m_ui_system->closeCauldron(true);
 
 	// Debugging for memory/component leaks
 	registry.list_all_components();
@@ -288,6 +290,11 @@ void WorldSystem::restart_game(bool hard_reset)
 		screen.tutorial_step_complete = true;
 		createWelcomeScreen(renderer, vec2(WINDOW_WIDTH_PX / 2, WINDOW_HEIGHT_PX / 2 - 50));
 		screen.killed_enemies = {};
+		if (m_ui_system) {
+			m_ui_system->updateEffectsBar();
+			m_ui_system->updateHealthBar();
+			m_ui_system->updateInventoryBar();
+		}
 	}
 	else {
 		ItemSystem::loadGameState(); // load the game state
@@ -374,6 +381,7 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 				screen.fade_status = 0;
 				player.health = PLAYER_MAX_HEALTH; // reset to max health
 			}
+			if (m_ui_system) m_ui_system->updateHealthBar();
 			continue;
 		}
 		else if ((registry.ammo.has(collision_entity) || registry.ammo.has(collision.other)) && (registry.terrains.has(collision_entity) || registry.terrains.has(collision.other))) {
@@ -596,18 +604,19 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 		// std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
 		// std::cout << "mouse tile position: " << tile_x << ", " << tile_y << std::endl;
 
-		if (m_ui_system != nullptr && (m_ui_system->isCauldronOpen() || m_ui_system->isMortarPestleOpen() || m_ui_system->isRecipeBookOpen())) return;
+		if (m_ui_system != nullptr && (m_ui_system->isCauldronOpen() || m_ui_system->isMortarPestleOpen() || m_ui_system->isRecipeBookOpen() || m_ui_system->isClickOnUIElement())) return;
 		if (mouse_pos_x >= BAR_X && mouse_pos_x <= BAR_X + BAR_WIDTH && mouse_pos_y >= BAR_Y && mouse_pos_y <= BAR_Y + BAR_HEIGHT) return;
 		// don't throw ammo if in potion making menu or clicking on inventory
-		if (throwAmmo(vec2(mouse_pos_x, mouse_pos_y))) {
-			SoundSystem::playThrowSound((int)SOUND_CHANNEL::GENERAL, 0);
 
+		if (throwAmmo(vec2(mouse_pos_x, mouse_pos_y))) {
 			if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::THROW_POTION) {
 				ScreenState& screen = registry.screenStates.components[0];
 				screen.tutorial_step_complete = true;
 				screen.tutorial_state += 1;
 			}
 		}
+		if (button == GLFW_MOUSE_BUTTON_LEFT && throwAmmo(vec2(mouse_pos_x, mouse_pos_y))) SoundSystem::playThrowSound((int)SOUND_CHANNEL::GENERAL, 0);
+
 	}
 }
 
@@ -659,13 +668,13 @@ void WorldSystem::handle_player_interaction()
 
 	// If a cauldron is open just close it
 	if (m_ui_system && m_ui_system->isCauldronOpen()) {
-		m_ui_system->closeCauldron();
+		m_ui_system->closeCauldron(true);
 		return;
 	}
 
 	// If a mortar is open, close it
 	if (m_ui_system && m_ui_system->isMortarPestleOpen()) {
-		m_ui_system->closeMortarPestle();
+		m_ui_system->closeMortarPestle(true);
 		return;
 	}
 
@@ -723,7 +732,7 @@ void WorldSystem::handle_player_interaction()
 			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
 			if (m_ui_system != nullptr)
 			{
-				handle_textbox = m_ui_system->openCauldron(item);
+				handle_textbox = m_ui_system->openCauldron(item, true);
 				if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::INTERACT_CAULDRON) {
 					ScreenState& screen = registry.screenStates.components[0];
 					screen.tutorial_step_complete = true;
@@ -733,14 +742,15 @@ void WorldSystem::handle_player_interaction()
 		}
 		else if (registry.mortarAndPestles.has(item)) {
 			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
-			std::cout << "found mortar " << item.id() << std::endl;
+
 			if (m_ui_system != nullptr) {
-				handle_textbox = m_ui_system->openMortarPestle(item);
+				handle_textbox = m_ui_system->openMortarPestle(item, true);
 				if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::MORTAR_PESTLE) {
 					ScreenState& screen = registry.screenStates.components[0];
 					screen.tutorial_step_complete = true;
 					screen.tutorial_state += 1;
 				}
+
 			}
 		}
 		else if (item_info.type == ItemType::RECIPE_BOOK) {
@@ -1050,7 +1060,7 @@ bool WorldSystem::throwAmmo(vec2 target) {
 	Player& player = registry.players.get(player_entity);
 
 	if (player.cooldown > 0.f) {
-		std::cout << "on cooldown" << std::endl;
+		std::cout << "throwing on cooldown" << std::endl;
 		return false;
 	}
 
@@ -1069,10 +1079,13 @@ bool WorldSystem::throwAmmo(vec2 target) {
 			item.amount -= 1;
 			if (item.amount == 0) {
 				ItemSystem::removeItemFromInventory(player_entity, item_entity);
-				ItemSystem::destroyItem(item_entity);
+				if (inventory.selection + 1 > inventory.items.size()) inventory.selection = std::max(inventory.selection - 1, 0);
 			}
 		}
 		player.cooldown = PLAYER_THROW_COOLDOWN;
+		if (registry.players.has(player_entity) && m_ui_system != nullptr) {
+			m_ui_system->updateInventoryBar();
+		}
 		return true;
 	}
 
@@ -1146,6 +1159,11 @@ void WorldSystem::updateConsumedPotions(float elapsed_ms_since_last_update) {
 		player.active_effects.erase(std::remove(player.active_effects.begin(), player.active_effects.end(), entity), player.active_effects.end());
 		registry.remove_all_components_of(entity);
 	}
+
+	// if a potion expired, then update the effect bar, needs to update after active_effects has been modified
+	if (to_remove.size() > 0) {
+		if (m_ui_system) m_ui_system->updateEffectsBar();
+	}
 }
 
 bool WorldSystem::consumePotion() {
@@ -1204,11 +1222,24 @@ bool WorldSystem::consumePotion() {
 	// add copy of item to player's active effects - health is instant so don't add to active_effects
 	assert(registry.potions.has(item_copy) && "consumed item should be a potion");
 	assert(registry.items.has(item_copy) && "consumed item should be an item");
+
+	addPotionEffect(registry.potions.get(item_copy), player_entity);
+
 	if (registry.potions.get(item_copy).effect != PotionEffect::HEALTH) {
 		player.active_effects.push_back(item_copy);
 	}
-	addPotionEffect(registry.potions.get(item_copy), player_entity);
-	std::cout << "player has consumed a potion of effect id " << (int)registry.potions.get(item_copy).effect << std::endl;
+
+	else {
+		if (m_ui_system) m_ui_system->updateHealthBar();
+	}
+	if (m_ui_system) {
+		m_ui_system->updateInventoryBar();
+		m_ui_system->updateEffectsBar();
+	}
+
+	SoundSystem::playGulpSound((int)SOUND_CHANNEL::GENERAL, 0);
+	std::cout << "player has consumed a potion of " << (int)registry.potions.get(item_copy).effect << std::endl;
+
 	return true;
 }
 
@@ -1242,6 +1273,8 @@ void WorldSystem::addPotionEffect(Potion& potion, Entity player) {
 		break;
 	}
 	}
+
+	if (m_ui_system) m_ui_system->updateEffectsBar();
 }
 
 void WorldSystem::removePotionEffect(Potion& potion, Entity player) {

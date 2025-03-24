@@ -148,6 +148,7 @@ void DragListener::checkGrindingMotion() {
 		if (move < -45) up++;
 	}
 	// std::cout << "Grinding action detected!" << " up: " << up << ", down: " << down << std::endl;
+	SoundSystem::playGrindSound((int)SOUND_CHANNEL::GENERAL, 0);
 
 	if (up >= 4 && down >= 4) {
 		// Grinding action detected
@@ -208,6 +209,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 	if (event == "dragstart") {
 		if (cur->GetId() == "heat") {
 			lastCoords = mouseCoords;
+			if (m_ui_system) m_ui_system->updateCauldronUI();
 			return;
 		}
 
@@ -256,8 +258,10 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 				is_heat_changing = true;
 				SoundSystem::haltGeneralSound();
 				if (registry.cauldrons.get(m_ui_system->getOpenedCauldron()).is_boiling) SoundSystem::continueBoilSound((int)SOUND_CHANNEL::BOILING, -1); // continue boiling if it was already boiling
-				SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, -1); // play infinitely until dragging is finished
+
+				SoundSystem::playDialChangeSound((int)SOUND_CHANNEL::MENU, -1); // play infinitely until dragging is finished
 			}
+			if (m_ui_system) m_ui_system->updateCauldronUI();
 			return;
 		}
 
@@ -351,6 +355,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			registry.items.get(copy).amount = 1;
 			SoundSystem::playDropInCauldronSound((int)SOUND_CHANNEL::MENU, 0);
 			PotionSystem::addIngredient(m_ui_system->getOpenedCauldron(), copy);
+			if (m_ui_system) m_ui_system->updateInventoryBar();
 			return;
 		}
 
@@ -374,16 +379,26 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 				return;
 			}
 
+			Inventory& mortarInventory = registry.inventories.get(m_ui_system->getOpenedMortarPestle());
+
+			// Check if the mortar already has an ingredient
+			if (!mortarInventory.items.empty()) {
+				std::cerr << "Mortar already contains an ingredient" << std::endl;
+				return;
+			}
+
 			Entity copy = ItemSystem::copyItem(item);
 			invItem.amount -= 1;
 			if (invItem.amount <= 0) {
 				ItemSystem::removeItemFromInventory(player, item);
 			}
 			registry.items.get(copy).amount = 1;
+			m_ui_system->updateInventoryBar();
 			std::cout << "Added ingredient: " << invItem.name << " to mortar" << std::endl;
 
 			createTempRenderRequestForItem(copy);
 
+			SoundSystem::playDropInBowlSound((int)SOUND_CHANNEL::MENU, 0);
 			PotionSystem::storeIngredientInMortar(m_ui_system->getOpenedMortarPestle(), copy);
 			return;
 		}
