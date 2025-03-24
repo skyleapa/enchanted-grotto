@@ -1924,9 +1924,12 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 
 	ammo.is_fired = true;
 	ammo.start_pos = player_motion.position;
-	if (ammo.damage == 0) {
+	if (registry.potions.has(item_entity)) {
+		ammo.damage = registry.potions.get(item_entity).effectValue;
+	} else {
 		ammo.damage = 50;
 	}
+
 	ammo.target = { player_pos.x + THROW_DISTANCE * cosf(angle), player_pos.y + THROW_DISTANCE * sinf(angle) };
 
 	registry.renderRequests.insert(
