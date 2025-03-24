@@ -97,6 +97,7 @@ public:
     void createEffectsBar();
     void updateEffectsBar();
 
+    // Check if any UI elements are open/being clicked
     bool isClickOnUIElement();
 
 private:

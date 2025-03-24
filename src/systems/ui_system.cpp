@@ -2137,5 +2137,17 @@ bool UISystem::isClickOnUIElement()
 {
 	if (!m_context) return false;
 	Rml::Element* hovered = m_context->GetHoverElement();
-	return hovered != nullptr;
+	if (!hovered) {
+		return false;
+	}
+
+	if (hovered->GetId() != "main") {
+		return true;
+	}
+
+	if (isCauldronOpen() || isMortarPestleOpen() || isRecipeBookOpen()) {
+		return true;
+	}
+
+	return false;
 }
