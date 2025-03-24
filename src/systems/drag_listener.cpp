@@ -123,6 +123,12 @@ void DragListener::endStir(Rml::Element* e) {
 }
 
 void DragListener::checkGrindingMotion() {
+	// Don't grind if there's no item in the mortar
+	Entity mortar = m_ui_system->getOpenedMortarPestle();
+	if (!registry.inventories.has(mortar) || registry.inventories.get(mortar).items.empty()) {
+		return;
+	}
+	
 	if (pestleMotion.size() < 3) {
 		return;  // Not enough movement to detect a grind action
 	}
