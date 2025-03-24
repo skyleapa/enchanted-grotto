@@ -518,7 +518,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 			}
 
 			if (id == "close-button") {
-				closeCauldron();
+				closeCauldron(true);
 				return;
 			}
 
@@ -605,7 +605,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 			}
 
 			if (id == "close-button") {
-				closeMortarPestle();
+				closeMortarPestle(true);
 				return;
 			}
 
@@ -645,7 +645,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 
 						// Move to inventory
 						ItemSystem::addItemToInventory(player, ingredient);
-						SoundSystem::playBottleHighQualityPotionSound((int) SOUND_CHANNEL::MENU, 0);
+						SoundSystem::playBottleHighQualityPotionSound((int)SOUND_CHANNEL::MENU, 0);
 						std::cout << "Picked up ingredient from mortar" << std::endl;
 
 						// Clear the mortar inventory
@@ -952,7 +952,7 @@ void UISystem::selectInventorySlot(int slot)
 }
 
 int UISystem::getSelectedSlot() {
-	if (registry.players.entities.size() == 0 ) return -1;
+	if (registry.players.entities.size() == 0) return -1;
 	Entity entity = registry.players.entities[0];
 	if (!registry.inventories.has(entity)) return -1;
 	return registry.inventories.get(entity).selection;
