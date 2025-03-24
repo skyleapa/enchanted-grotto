@@ -399,8 +399,6 @@ void BiomeSystem::createForestEx()
 		ScreenState screen = registry.screenStates.components[0];
 		if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "crystal") == screen.unlocked_biomes.end())
 		{
-			// we're automatically removing crystal guardian from forest ex when the mushroom crystal guardian is defeated
-			// so no need to make a textbox for this guy
 			createGuardianCrystal(renderer, vec2(900, 620), 0, "Crystal Guardian");
 		}
 		else {
