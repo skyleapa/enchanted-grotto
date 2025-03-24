@@ -57,7 +57,7 @@ std::string ItemSystem::getItemName(Entity item) {
 
 	// Add grind stat for ingredient
 	if (registry.ingredients.has(item)) {
-		int lvl = (int) (registry.ingredients.get(item).grindLevel * 100);
+		int lvl = (int)(registry.ingredients.get(item).grindLevel * 100);
 		if (lvl > 0) {
 			name += " (" + std::to_string(lvl) + "% Grinded)";
 		}
@@ -68,10 +68,11 @@ std::string ItemSystem::getItemName(Entity item) {
 		Potion& potion = registry.potions.get(item);
 		if (potion.effect == PotionEffect::WATER) {
 			return "Flask of Holy Water";
-		} else if (potion.effect == PotionEffect::FAILED) {
+		}
+		else if (potion.effect == PotionEffect::FAILED) {
 			return "Failed Potion";
 		}
-		
+
 		for (Recipe r : RECIPES) {
 			if (potion.effect == r.effect) {
 				name = r.name;
@@ -196,7 +197,7 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
 	if (inv.items.size() >= inv.capacity) {
 		inv.isFull = true;
 	}
-	
+
 	//std::cout << "Added new item: " << item_comp.name << " to inventory." << std::endl;
 
 	// update bar if inventory belongs to player
@@ -249,23 +250,48 @@ void ItemSystem::swapItems(Entity inventory, int slot1, int slot2) {
 }
 
 Entity ItemSystem::copyItem(Entity toCopy) {
-	const Item item = registry.items.get(toCopy);
 	Entity res = Entity();
-	// std::cout << "Entity " << res.id() << " item copy" << std::endl;
-	registry.items.emplace(res, item);
+	auto& oldItem = registry.items.get(toCopy);
+
+	Item& newItem = registry.items.emplace(res);
+	newItem.type = oldItem.type;
+	newItem.name = oldItem.name;
+	newItem.isCollectable = oldItem.isCollectable;
+	newItem.amount = oldItem.amount;
+	newItem.respawnTime = oldItem.respawnTime;
+	newItem.originalPosition = oldItem.originalPosition;
+	newItem.is_ammo = oldItem.is_ammo;
+	newItem.canRespawn = oldItem.canRespawn;
+	newItem.lastBiome = oldItem.lastBiome;
+
+	//registry.items.emplace(res, newItem);
+
 	if (registry.ingredients.has(toCopy)) {
 		//std::cout << "Entity " << oldIng.grindLevel << " item copy" << std::endl;
 		auto& oldIng = registry.ingredients.get(toCopy);
-		registry.ingredients.emplace(res, Ingredient(oldIng));
+		// registry.ingredients.emplace(res, Ingredient(oldIng));
+		Ingredient& newIng = registry.ingredients.emplace(res);
+		newIng.grindLevel = oldIng.grindLevel;
 		// std::cout << "Entity " << oldIng.grindLevel << " item copy" << std::endl;
 	}
 	if (registry.potions.has(toCopy)) {
 		auto& oldPot = registry.potions.get(toCopy);
-		registry.potions.emplace(res, Potion(oldPot));
+		// registry.potions.emplace(res, Potion(oldPot));
+		Potion& newPot = registry.potions.emplace(res);
+		newPot.effect = oldPot.effect;
+		newPot.duration = oldPot.duration;
+		newPot.effectValue = oldPot.effectValue;
+		newPot.quality = oldPot.quality;
+		newPot.color = oldPot.color;
 	}
 	if (registry.ammo.has(toCopy)) {
 		auto& oldAmmo = registry.ammo.get(toCopy);
-		registry.ammo.emplace(res, Ammo(oldAmmo));
+		// registry.ammo.emplace(res, Ammo(oldAmmo));
+		Ammo& newAmmo = registry.ammo.emplace(res);
+		newAmmo.start_pos = oldAmmo.start_pos;
+		newAmmo.target = oldAmmo.target;
+		newAmmo.is_fired = oldAmmo.is_fired;
+		newAmmo.damage = oldAmmo.damage;
 	}
 	return res;
 }
@@ -472,13 +498,13 @@ bool ItemSystem::saveGameState() {
 	}
 	data["inventories"] = inventories;
 	data["screen_state"] = serializeScreenState();
-	
+
 	// Save the current recipe book index
 	if (UISystem::s_instance != nullptr) {
-	  data["recipe_book_index"] = UISystem::s_instance->current_recipe_index;
+		data["recipe_book_index"] = UISystem::s_instance->current_recipe_index;
 	}
 
-  // Save player state
+	// Save player state
 	if (registry.players.size() > 0) {
 		data["player_state"] = serializePlayerState(registry.players.entities[0]);
 	}
@@ -543,7 +569,7 @@ bool ItemSystem::loadGameState() {
 		if (!data["player_state"].empty()) {
 			deserializePlayerState(data["player_state"]);
 		}
-		
+
 		if (data.contains("recipe_book_index") && UISystem::s_instance != nullptr) {
 			UISystem::s_instance->current_recipe_index = data["recipe_book_index"];
 		}

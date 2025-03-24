@@ -2020,7 +2020,8 @@ std::string UISystem::getRecipeIngredientsText(const Recipe& recipe)
 
 	for (const auto& ingredient : recipe.ingredients) {
 		std::string name = getIngredientName(ingredient);
-		text += std::to_string(ingredient.amount) + "x " + name;
+		int amt = ingredient.type == ItemType::POTION ? 1 : ingredient.amount;
+		text += std::to_string(amt) + "x " + name;
 		text += "<br />";
 	}
 

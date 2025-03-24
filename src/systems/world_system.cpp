@@ -336,7 +336,12 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 				screen.fade_status = 0;
 				registry.collisions.clear();
 				player.health = PLAYER_MAX_HEALTH; // reset to max health
-				player.active_effects = {}; // reset active effects
+				for (auto effect : player.active_effects) {
+					if (registry.potions.has(effect)) {
+						removePotionEffect(registry.potions.get(effect), player_entity);
+					}
+				}
+				player.active_effects.clear(); // reset active effects
 			}
 			if (m_ui_system) {
 				m_ui_system->updateHealthBar();
