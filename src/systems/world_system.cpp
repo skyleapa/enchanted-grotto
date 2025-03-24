@@ -338,7 +338,7 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 				player.health = PLAYER_MAX_HEALTH; // reset to max health
 				player.active_effects = {}; // reset active effects
 			}
-			if (m_ui_system){
+			if (m_ui_system) {
 				m_ui_system->updateHealthBar();
 				m_ui_system->updateEffectsBar();
 				m_ui_system->updateInventoryBar();
@@ -457,13 +457,11 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 
 	if (action == GLFW_RELEASE && key == GLFW_KEY_R)
 	{
-		// allow opening recipe book in the grotto when cauldron is open
-		if (registry.screenStates.components[0].biome == (GLuint) BIOME::GROTTO && (m_ui_system->isCauldronOpen() || m_ui_system->isMortarPestleOpen())) {
-			if (m_ui_system->isRecipeBookOpen()) {
-				m_ui_system->closeRecipeBook();
-			} else {
-				m_ui_system->openRecipeBook(m_ui_system->getOpenedRecipeBook());
-			}
+		if (m_ui_system->isRecipeBookOpen()) {
+			m_ui_system->closeRecipeBook();
+		}
+		else {
+			m_ui_system->openRecipeBook(m_ui_system->getOpenedRecipeBook());
 		}
 	}
 
