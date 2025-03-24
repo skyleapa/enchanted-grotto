@@ -991,7 +991,6 @@ bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 					if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "desert") == screen.unlocked_biomes.end()) {
 						screen.unlocked_biomes.push_back("desert");
 					}
-					createForestToDesert(renderer, vec2(GRID_CELL_WIDTH_PX * 2.1, GRID_CELL_HEIGHT_PX * 1.2), "Desert Entrance");
 				}
 				else if (registry.items.get(guardianEntity).type == ItemType::MUSHROOM_GUARDIAN)
 				{
