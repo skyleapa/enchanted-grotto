@@ -255,6 +255,11 @@ void UISystem::step(float elapsed_ms)
 		// update all the textboxes
 		updateTextboxes();
 
+		// Update cauldron (heat/timer)
+		if (isCauldronOpen()) {
+			updateCauldronUI();
+		}
+
 		// Update RmlUi
 		m_context->Update();
 	}
@@ -1248,30 +1253,41 @@ bool UISystem::openCauldron(Entity cauldron, bool play_sound = true)
 
 				#close-button {
 					position: absolute;
-                        top: 45px;
-                        left: 45px;
-                        width: 40px;
-                        height: 40px;
-                        text-align: center;
-                        background-color: #d9a66f;
-                        border-width: 3px;
-                        border-color: #5c3e23;
-                        border-radius: 20px;
-                        padding-top: 5px;
-                        box-sizing: border-box;
-                        cursor: pointer;
-                        font-size: 20px;
-                        font-weight: bold;
-                        font-family: Open Sans;
-                        color: #5c3e23;
+					top: 45px;
+					left: 45px;
+					width: 40px;
+					height: 40px;
+					text-align: center;
+					background-color: #d9a66f;
+					border-width: 3px;
+					border-color: #5c3e23;
+					border-radius: 20px;
+					padding-top: 5px;
+					box-sizing: border-box;
+					cursor: pointer;
+					font-size: 20px;
+					font-weight: bold;
+					font-family: Open Sans;
+					color: #5c3e23;
 				}
 				#close-button:hover {
 					background-color: #c1834e;
+				}
+
+				#timer {
+					position: absolute;
+					top: 62px;
+					left: 94px;
+					width: 150px;
+					height: 150px;
+                    decorator: image("interactables/timer_hand.png" flip-vertical fill);
+                    transform: rotate(0deg);
 				}
             </style>
         </head>
         <body>
             <div id="heat"></div>
+			<div id="timer"></div>
             <div id="cauldron-water"></div>
             <div id="cauldron"></div>
             <div id="ladle"></div>
@@ -1310,14 +1326,20 @@ void UISystem::updateCauldronUI() {
 	}
 
 	// Update heatknob rotation
-	int heat = registry.cauldrons.get(openedCauldron).heatLevel;
-	float degree = heat * (MAX_KNOB_DEGREE * 2 / 100.f) - MAX_KNOB_DEGREE;
+	Cauldron& cauldron = registry.cauldrons.get(openedCauldron);
+	float degree = cauldron.heatLevel * (MAX_KNOB_DEGREE * 2 / 100.f) - MAX_KNOB_DEGREE;
 	Rml::Element* heatknob = m_cauldron_document->GetElementById("heat");
 	std::string heatTrans = heatknob->GetProperty(Rml::PropertyId::Transform)->Get<Rml::String>();
 	std::string before = heatTrans.substr(0, heatTrans.find("rotate"));
 	std::stringstream s;
 	s << before << "rotate(" << std::to_string(degree) << "deg)";
 	heatknob->SetProperty("transform", s.str());
+
+	// Update timer rotation
+	int modElapsed = cauldron.timeElapsed % 60000;
+	float rotation = 360 * modElapsed / 60000.f;
+	Rml::Element* timerHand = m_cauldron_document->GetElementById("timer");
+	timerHand->SetProperty("transform", "rotate(" + std::to_string(rotation) + "deg)");
 }
 
 std::string UISystem::getImageColorProperty(vec3 color, float alpha) {
