@@ -205,10 +205,10 @@ private:
             "210px", "300px", "Now bottle your potion by dragging the bottle to the cauldron and left clicking. The closer the color to the recipe book, the better the quality and potion effect."
         }},
         { (int)TUTORIAL::THROW_POTION, {
-            "210px", "300px", "Exit the cauldron menu by clicking F. You can throw your potion at enemies with left click. Consume potions by right clicking on the potion in your inventory."
+            "210px", "300px", "Exit the cauldron menu by clicking F. You can try throwing your potion at enemies with left click. Consume potions by right clicking on the potion in your inventory."
         }},
         { (int)TUTORIAL::POTION_EFFECT, {
-            "790px", "300px", "You can see your player health with the bar in the bottom right. When you consume a potion, it will be displayed in the top right box. Good luck saving the grotto!"
+            "1020px", "336px", "You can see your player health with the green bar in the bottom right, and when you consume a potion, it will be displayed in the top right box. Good luck saving the grotto!"
         }}
     };
 
