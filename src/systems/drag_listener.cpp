@@ -103,11 +103,6 @@ void DragListener::checkCompletedStir() {
 
 		if (a && b && c && d) {
 			PotionSystem::stirCauldron(m_ui_system->getOpenedCauldron());
-			if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::STIR) {
-				ScreenState& screen = registry.screenStates.components[0];
-				screen.tutorial_step_complete = true;
-				screen.tutorial_state += 1;
-			}
 			std::cout << "Recorded a successful ladle stir" << std::endl;
 			SoundSystem::playStirSound((int)SOUND_CHANNEL::MENU, 0);
 			break;
@@ -128,6 +123,12 @@ void DragListener::endStir(Rml::Element* e) {
 }
 
 void DragListener::checkGrindingMotion() {
+	// Don't grind if there's no item in the mortar
+	Entity mortar = m_ui_system->getOpenedMortarPestle();
+	if (!registry.inventories.has(mortar) || registry.inventories.get(mortar).items.empty()) {
+		return;
+	}
+	
 	if (pestleMotion.size() < 3) {
 		return;  // Not enough movement to detect a grind action
 	}
@@ -159,6 +160,12 @@ void DragListener::checkGrindingMotion() {
 		// Grinding action detected
 		std::cout << "Grinding done!" << std::endl;
 		PotionSystem::grindIngredient(m_ui_system->getOpenedMortarPestle());
+
+		if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::GRIND_BARK) {
+			ScreenState& screen = registry.screenStates.components[0];
+			screen.tutorial_step_complete = true;
+			screen.tutorial_state += 1;
+		}
 
 		// Clear motion data after successful grind
 		pestleMotion.clear();
@@ -245,7 +252,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			float newDegree = getHeatDegree(mouseCoords, curDegree);
 			setHeatDegree(newDegree);
 			if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::SET_HEAT) {
-				if (newDegree == 60) { // indicating max rotation
+				if (newDegree >= 50) { // indicating max rotation, allow for some error in high for tutorial
 					ScreenState& screen = registry.screenStates.components[0];
 					screen.tutorial_step_complete = true;
 					screen.tutorial_state += 1;
@@ -256,6 +263,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 				is_heat_changing = true;
 				SoundSystem::haltGeneralSound();
 				if (registry.cauldrons.get(m_ui_system->getOpenedCauldron()).is_boiling) SoundSystem::continueBoilSound((int)SOUND_CHANNEL::BOILING, -1); // continue boiling if it was already boiling
+
 				SoundSystem::playDialChangeSound((int)SOUND_CHANNEL::MENU, -1); // play infinitely until dragging is finished
 			}
 			return;

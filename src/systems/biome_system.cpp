@@ -161,6 +161,11 @@ void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
 	else if (screen.from_biome == (int)BIOME::GROTTO && screen.biome == (int)BIOME::FOREST) { // through grotto exit into forest
 		player_motion.position = vec2(GROTTO_ENTRANCE_X, GROTTO_ENTRANCE_Y + 50);
 
+		if (screen.tutorial_state == (int)TUTORIAL::EXIT_GROTTO) {
+			screen.tutorial_step_complete = true;
+			screen.tutorial_state += 1;
+		}
+
 		// ensure to make cauldron invisble since it should still exist but only rendered when in grotto
 		for (Entity cauldron : registry.cauldrons.entities) {
 			if (registry.renderRequests.has(cauldron)) {
@@ -337,7 +342,9 @@ void BiomeSystem::createForest()
 	createTree(renderer, vec2(1080, 500));
 
 	createBush(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5));
-	createBush(renderer, vec2(1100, 292));
+
+	createCollectableIngredient(renderer, vec2(1085, 282), ItemType::STORM_BARK, 1, true);
+	createCollectableIngredient(renderer, vec2(560, 160), ItemType::STORM_BARK, 1, true);
 
 	// admin flag used so we can test the game and disable guardian spawns
 	if (!ADMIN_FLAG) {
@@ -444,14 +451,16 @@ void BiomeSystem::createMushroom()
 	createCollectableIngredient(renderer, vec2(904, 454), ItemType::GLOWSHROOM, 1, true);
 	createCollectableIngredient(renderer, vec2(1090, 114), ItemType::DOOMCAP, 1, true);
 
-	ScreenState screen = registry.screenStates.components[0];
-	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Crystal Guardian") == screen.killed_enemies.end())
-	{
-		createGuardianCrystal(renderer, vec2(1150, 200), 0, "Crystal Guardian");
-	}
+	if (!ADMIN_FLAG) {
+		ScreenState screen = registry.screenStates.components[0];
+		if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Crystal Guardian") == screen.killed_enemies.end())
+		{
+			createGuardianCrystal(renderer, vec2(1150, 200), 0, "Crystal Guardian");
+		}
 
-	createMushroomToForest(renderer, vec2(60, 50), "Mushroom To Forest");
-	createMushroomToCrystal(renderer, vec2(1220, 160), "Mushroom to Crystal");
+		createMushroomToForest(renderer, vec2(60, 50), "Mushroom To Forest");
+		createMushroomToCrystal(renderer, vec2(1220, 160), "Mushroom to Crystal");
+	}
 }
 
 void BiomeSystem::createCrystal()

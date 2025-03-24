@@ -197,7 +197,7 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
 		inv.isFull = true;
 	}
 	
-	std::cout << "Added new item: " << item_comp.name << " to inventory." << std::endl;
+	//std::cout << "Added new item: " << item_comp.name << " to inventory." << std::endl;
 
 	// update bar if inventory belongs to player
 	if (registry.players.has(inventory) && m_ui_system != nullptr) {

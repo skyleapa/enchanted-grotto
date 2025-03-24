@@ -650,7 +650,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 
 						// Move to inventory
 						ItemSystem::addItemToInventory(player, ingredient);
-						SoundSystem::playBottleHighQualityPotionSound((int) SOUND_CHANNEL::MENU, 0);
+						SoundSystem::playBottleHighQualityPotionSound((int)SOUND_CHANNEL::MENU, 0);
 						std::cout << "Picked up ingredient from mortar" << std::endl;
 
 						// Clear the mortar inventory
@@ -957,7 +957,7 @@ void UISystem::selectInventorySlot(int slot)
 }
 
 int UISystem::getSelectedSlot() {
-	if (registry.players.entities.size() == 0 ) return -1;
+	if (registry.players.entities.size() == 0) return -1;
 	Entity entity = registry.players.entities[0];
 	if (!registry.inventories.has(entity)) return -1;
 	return registry.inventories.get(entity).selection;
@@ -1023,6 +1023,7 @@ void UISystem::updateTutorial()
 						pointer-events: none;
 						width: 100%;
 						height: 100%;
+						z-index: 15;
 					}
 					div.text { 
 						position: absolute;
@@ -1034,7 +1035,8 @@ void UISystem::updateTutorial()
 						background-color: #ffffff;
 						font-family: Open Sans;
 						padding: 5px;
-						width: 250px;
+						width: auto;
+						max-width: 250px;
 						white-space: normal;
 						color: #000000;
 					}
@@ -1358,13 +1360,8 @@ void UISystem::closeCauldron(bool play_sound)
 {
 	if (isCauldronOpen()) {
 		m_cauldron_document->Hide();
+
 		if (play_sound) SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
-		// handle exit menu tutorial
-		if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::EXIT_MENU) {
-			ScreenState& screen = registry.screenStates.components[0];
-			screen.tutorial_step_complete = true;
-			screen.tutorial_state += 1;
-		}
 	}
 }
 
@@ -1653,6 +1650,7 @@ bool UISystem::openRecipeBook(Entity recipe_book)
                     body {
                         width: 100%;
                         height: 100%;
+						z-index: 12;
                     }
                     .recipe-book {
                         position: absolute;
@@ -1826,6 +1824,13 @@ void UISystem::updateRecipeBookUI()
 {
 	if (!m_initialized || !m_context || !m_recipe_book_document)
 		return;
+
+	// potion of harming recipe index is 2, although I thought it would be PotionEffect::DAMAGE which is 4... its ok for now
+	if (current_recipe_index == 2 && registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::FLIP_PAGE) {
+		ScreenState& screen = registry.screenStates.components[0];
+		screen.tutorial_step_complete = true;
+		screen.tutorial_state += 1;
+	}
 
 	// Update left page (potion info and ingredients)
 	if (Rml::Element* leftPage = m_recipe_book_document->GetElementById("left-page")) {
@@ -2132,5 +2137,17 @@ bool UISystem::isClickOnUIElement()
 {
 	if (!m_context) return false;
 	Rml::Element* hovered = m_context->GetHoverElement();
-	return hovered != nullptr;
+	if (!hovered) {
+		return false;
+	}
+
+	if (hovered->GetId() != "main") {
+		return true;
+	}
+
+	if (isCauldronOpen() || isMortarPestleOpen() || isRecipeBookOpen()) {
+		return true;
+	}
+
+	return false;
 }
