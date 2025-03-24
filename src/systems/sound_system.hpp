@@ -44,6 +44,7 @@ public:
     ~SoundSystem(); // Destroy music components
 
 private:
+    static Mix_Music* background_music;
     static Mix_Chunk* boil_sound;
     static Mix_Chunk* bottle_high_quality_potion_sound;
     static Mix_Chunk* bottle_sound;
