@@ -382,8 +382,8 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::ADD_INGREDIENT, 0 }, // add blightleaf
 			{ ActionType::ADD_INGREDIENT, 1 }, // add storm bark
 			{ ActionType::ADD_INGREDIENT, 2 }, // add storm sap
-			{ ActionType::STIR, 2 },          // stir 2 times
-			{ ActionType::WAIT, 1 }           // wait 10 seconds
+			{ ActionType::STIR, 3 },          // stir 3 times
+			{ ActionType::WAIT, 1 }           // wait 5 seconds
 		},
 		"Potion of Harming",
 		"[Throwable] A damaging potion that can be thrown at enemies."
@@ -681,7 +681,8 @@ enum class TUTORIAL {
 	WAIT = STIR + 1,
 	BOTTLE = WAIT + 1,
 	THROW_POTION = BOTTLE + 1,
-	COMPLETE = THROW_POTION + 1
+	POTION_EFFECT = THROW_POTION + 1,
+	COMPLETE = POTION_EFFECT + 1
 };
 
 enum class SOUND_CHANNEL {

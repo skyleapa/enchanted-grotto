@@ -190,22 +190,25 @@ private:
             "284px", "190px", "Now you have Storm Sap! Click it in the mortar and pestle to pick it up. Exit the menu with F and go to your cauldron. Press F to open the cauldron menu."
         }},
         { (int)TUTORIAL::SET_HEAT, {
-            "210px", "290px", "Get started by dragging the heat dial to high. If you forget the recipe, you can always exit and take a peek, the cauldron state is saved."
+            "210px", "300px", "Get started by dragging the heat dial to high. If you forget the recipe, you can always exit and take a peek, the cauldron state is saved."
         }},
         { (int)TUTORIAL::ADD_INGREDIENTS, {
-            "210px", "290px", "Now add in 1 storm sap, 1 blightleaf and 1 storm bark by dragging it from your inventory into the cauldron."
+            "210px", "300px", "Now add in 1 storm sap, 1 blightleaf and 1 storm bark by dragging it from your inventory into the cauldron."
         }},
         { (int)TUTORIAL::STIR, {
-            "210px", "290px", "Pick up the ladle by clicking and dragging it in the cauldron. Stir 3 times, a successful stir will flash and play a whoosh sound."
+            "210px", "300px", "Pick up the ladle by clicking and dragging it in the cauldron. Stir 3 times, a successful stir will flash and play a whoosh sound."
         }},
         { (int)TUTORIAL::WAIT, {
-            "210px", "290px", "Wait for 5 seconds for the potion to develop. We will have a timer in the cauldron menu for the future."
+            "210px", "300px", "Wait for 5 seconds for the potion to develop. You can use the timer that begins turning once you start brewing."
         }},
         { (int)TUTORIAL::BOTTLE, {
-            "210px", "290px", "Now bottle your potion by dragging the bottle to the cauldron and left clicking. The closer the color to the recipe book, the better the quality and potion effect."
+            "210px", "300px", "Now bottle your potion by dragging the bottle to the cauldron and left clicking. The closer the color to the recipe book, the better the quality and potion effect."
         }},
         { (int)TUTORIAL::THROW_POTION, {
-            "210px", "290px", "Exit the cauldron menu by clicking F. You can throw your potion at enemies with left click. Consume potions by right clicking on the potion in your inventory. Good luck saving the grotto!"
+            "210px", "300px", "Exit the cauldron menu by clicking F. You can throw your potion at enemies with left click. Consume potions by right clicking on the potion in your inventory."
+        }},
+        { (int)TUTORIAL::POTION_EFFECT, {
+            "790px", "300px", "You can see your player health with the bar in the bottom right. When you consume a potion, it will be displayed in the top right box. Good luck saving the grotto!"
         }}
     };
 

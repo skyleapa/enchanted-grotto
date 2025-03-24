@@ -304,51 +304,51 @@ void PotionSystem::grindIngredient(Entity mortar) {
 			std::cout << "Ingredient is fully ground" << std::endl;
 
 			switch (itemComp.type) {
-				case ItemType::COFFEE_BEANS:
-					itemComp.type = ItemType::SWIFT_POWDER;
-					if (registry.renderRequests.has(ingredient)) {
-						registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::SWIFT_POWDER;
-					}
-					break;
+			case ItemType::COFFEE_BEANS:
+				itemComp.type = ItemType::SWIFT_POWDER;
+				if (registry.renderRequests.has(ingredient)) {
+					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::SWIFT_POWDER;
+				}
+				break;
 
-				case ItemType::PETRIFIED_BONE:
-					itemComp.type = ItemType::BONE_DUST;
-					if (registry.renderRequests.has(ingredient)) {
-						registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::BONE_DUST;
-					}
-					break;
+			case ItemType::PETRIFIED_BONE:
+				itemComp.type = ItemType::BONE_DUST;
+				if (registry.renderRequests.has(ingredient)) {
+					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::BONE_DUST;
+				}
+				break;
 
-				case ItemType::CACTUS_PULP:
-					itemComp.type = ItemType::CACTUS_EXTRACT;
-					if (registry.renderRequests.has(ingredient)) {
-						registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::CACTUS_EXTRACT;
-					}
-					break;
+			case ItemType::CACTUS_PULP:
+				itemComp.type = ItemType::CACTUS_EXTRACT;
+				if (registry.renderRequests.has(ingredient)) {
+					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::CACTUS_EXTRACT;
+				}
+				break;
 
-				case ItemType::GLOWSHROOM:
-					itemComp.type = ItemType::GLOWSPORE;
-					if (registry.renderRequests.has(ingredient)) {
-						registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::GLOWSPORE;
-					}
-					break;
+			case ItemType::GLOWSHROOM:
+				itemComp.type = ItemType::GLOWSPORE;
+				if (registry.renderRequests.has(ingredient)) {
+					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::GLOWSPORE;
+				}
+				break;
 
-				case ItemType::CRYSTAL_SHARD:
-					itemComp.type = ItemType::CRYSTAL_MEPH;
-					if (registry.renderRequests.has(ingredient)) {
-						registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::CRYSTAL_MEPH;
-					}
-					break;
+			case ItemType::CRYSTAL_SHARD:
+				itemComp.type = ItemType::CRYSTAL_MEPH;
+				if (registry.renderRequests.has(ingredient)) {
+					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::CRYSTAL_MEPH;
+				}
+				break;
 
-				case ItemType::STORM_BARK:
-					itemComp.type = ItemType::STORM_SAP;
-					if (registry.renderRequests.has(ingredient)) {
-						registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::STORM_SAP;
-					}
-					break;
+			case ItemType::STORM_BARK:
+				itemComp.type = ItemType::STORM_SAP;
+				if (registry.renderRequests.has(ingredient)) {
+					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::STORM_SAP;
+				}
+				break;
 
-				default:
-					std::cerr << "No grind result for item type: " << static_cast<int>(itemComp.type) << std::endl;
-					break;
+			default:
+				std::cerr << "No grind result for item type: " << static_cast<int>(itemComp.type) << std::endl;
+				break;
 			}
 
 			// Update size
