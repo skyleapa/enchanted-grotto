@@ -155,3 +155,74 @@ RmlUi GitHub: https://github.com/mikke89/RmlUi
 Users can now use their mouse to interact with the potion making menu. Mouse gestures include clicking on the ladle to pick it up, then dragging it into the cauldron which will update the ladle sprite. Then users can move their mouse in a circular motion to “stir” the cauldron. Users can also interact with the heat knob with their mouse by left clicking and dragging the knob. Users can also click on the empty potion bottle and drag it over the cauldron to bottle a potion.
 
 
+## Milestone 3
+
+### Required Elements:
+
+Playability (15%):
+
+Sustain progressive, non-repetitive gameplay for at least 5 minutes. Within this five minutes, demonstrate all of the new features (with minimal oral instructions).
+- We have an updated tutorial for the new game flow and features - players are free to explore and discover how to complete the game afterwards.
+
+During the 5 minutes, the player should be able to interact with the game and see new content for most of the time.
+- While playtesting our game, we have an average playtime of ~20 minutes for the full completion of the game. Our friends who playtested took about 40 minutes to get halfway. Note: we probably won’t be adding additional gameplay elements for the final milestone since we’ve completed the game loop, just improvements.
+
+Memory management (5%)
+- Our components are consistent between biome switches. New entities are created every time a collision is detected but this was part of the provided starter code.
+
+User Input (5%)
+
+All user input is handled accordingly.
+
+Realtime Performance (5%) 
+- We noticed the FPS would drop significantly upon longer gameplay and found the root cause to be the constant inventory UI updates. We updated the UI system so that the inventory, effects, and health bar would only be updated when its corresponding entity was modified. This brought us back to a stable FPS. We do see occasional FPS drops when we open the cauldron menu but it stabilizes after a couple of seconds.
+
+Stability (15%):
+
+Include fully completed and playable prior-milestone implementations.
+
+Fix all bugs identified in prior marking sessions.
+- We resolved all prior bugs except for “Adding item to cauldron removes multiple counts from player inventory” which we will mark as “Will not fix”. This is because the issue appears in an unlikely, difficult to reproduce edge-case, when sometimes adding 12 of the same item into a single potion. This bug was originally discovered during limit-testing, and is not part of our game loop. None of our potion recipes require adding more than 3 of the same item.
+- The game resolution and aspect ratio are consistent across different machines/displays.
+- We now support full screen as part of this milestone.
+
+The game code should support continuing execution and graceful termination, with no crashes, glitches, or other unpredictable behaviour.
+- Game execution is continuous and the game terminates with stable persistence. 
+- We have not identified any crashes at the time of submission.
+
+
+Updated test plan uploaded to `/doc/test-plan.docx`
+
+Updated bug list with open and closed bugs uploaded to `/doc/bug-report.xlsx`
+
+M3 Video Submission: https://www.youtube.com/watch?v=bLyz9KP83AY
+
+
+### New Features:
+- Full screen
+- Dynamic textboxes with RmlUI
+- Updated tutorial for new game flow and features
+- Mortar and pestle menu
+- Recipe book menu
+- 3 new biomes + redesigned forest
+- 3 guardians
+- All the potion recipes and ingredients
+- Consumable potions have functionality and potions are now throwable
+- Unlocking the biomes with potions + master potion pedestal
+- Potion qualities and varying effects based on quality (5 stars)
+- Timer in potion menu
+- Sound effects and background music
+- Potion effects display and health bar
+- Red flash on taking damage
+- Notable Bug Fixes: Adding empty inventory slot to cauldron caused crash, players can now move and slide along terrain if not all the directions are blocked  
+
+### Creative Features:
+
+Physics Based Animation (Advanced)
+- The cauldron has water fluid simulation now for stirring and heating
+
+Audio Feedback (Basic)
+- Background music (from Hollow Knight) and we created sound effects for interacting with terrain
+
+Simple rendering effects (Basic)
+- Enemies and player flash red when taking damage. Upon taking damage, the player gains immunity for one second and can’t be injured until immunity passes.

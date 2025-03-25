@@ -376,7 +376,7 @@ const std::vector<Recipe> RECIPES = {
 	},
 	{
 		PotionEffect::DAMAGE,
-		0.0f, 50.0f,  // highestQualityEffect - maximum damage to enemies
+		20.0f, 100.0f,  // highestQualityEffect - maximum damage to enemies
 		0, 0,      // highestQualityDuration - instant effect, no duration
 		vec3(100, 0, 100), // finalPotionColor - purple color
 		{
@@ -403,7 +403,8 @@ const std::vector<Recipe> RECIPES = {
 		{
 			{ ItemType::POTION, (int)PotionEffect::DAMAGE, 0.0f },
 			{ ItemType::MUMMY_BANDAGES, 2, 0.0f }, // ingredients
-			{ ItemType::PETRIFIED_BONE, 4, 1.0f }  // ingredients (must be ground)
+			{ ItemType::PETRIFIED_BONE, 1, 0.0f }, // ingredients
+			{ ItemType::BONE_DUST, 2, 0.0f }  // ingredients
 		},
 		{
 			{ ActionType::ADD_INGREDIENT, 0 }, // add damage potion
@@ -411,6 +412,7 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::ADD_INGREDIENT, 1 }, // add mummy bandages
 			{ ActionType::STIR, 2 },          // stir 2 times
 			{ ActionType::ADD_INGREDIENT, 2 }, // add petrified bones
+			{ ActionType::ADD_INGREDIENT, 3 }, // add bone dust
 			{ ActionType::STIR, 2 },          // stir 2 times
 			{ ActionType::WAIT, 4 }           // wait 20 seconds
 		},
@@ -425,14 +427,14 @@ const std::vector<Recipe> RECIPES = {
 		{
 			{ ItemType::POTION, (int)PotionEffect::HEALTH, 0.0f },
 			{ ItemType::HEALING_LILY, 2, 0.0f }, // ingredients
-			{ ItemType::EVERFERN, 1, 0.0f }     // ingredients
+			{ ItemType::CACTUS_PULP, 1, 0.0f }     // ingredients
 		},
 		{
 			{ ActionType::ADD_INGREDIENT, 0 }, // add health potion
 			{ ActionType::MODIFY_HEAT, 50 },  // medium heat
 			{ ActionType::ADD_INGREDIENT, 1 }, // add healing lily
 			{ ActionType::STIR, 2 },          // stir 2 times
-			{ ActionType::ADD_INGREDIENT, 2 }, // add everfern
+			{ ActionType::ADD_INGREDIENT, 2 }, // add cactus pulp
 			{ ActionType::WAIT, 3 },          // wait 15 seconds
 			{ ActionType::STIR, 2 },          // stir 2 times
 			{ ActionType::WAIT, 3 }           // wait 15 seconds
@@ -512,7 +514,8 @@ const std::vector<Recipe> RECIPES = {
 		{
 			{ ItemType::GALEFRUIT, 2, 0.0f },   // ingredients
 			{ ItemType::STORM_BARK, 2, 0.0f },  // ingredients
-			{ ItemType::EVERFERN, 1, 0.0f }     // ingredients
+			{ ItemType::EVERFERN, 1, 0.0f },     // ingredients
+			{ ItemType::SWIFT_POWDER, 2, 0.0f },  // ingredients
 		},
 		{
 			{ ActionType::MODIFY_HEAT, 50 },  // medium heat
@@ -522,6 +525,7 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::STIR, 2 },          // stir 2 times
 			{ ActionType::WAIT, 2 },          // wait 10 seconds
 			{ ActionType::ADD_INGREDIENT, 0 }, // add galefruit
+			{ ActionType::ADD_INGREDIENT, 3 }, // add swift powder
 			{ ActionType::STIR, 3 },          // stir 3 times
 			{ ActionType::WAIT, 5 }           // wait 25 seconds
 		},
@@ -536,13 +540,15 @@ const std::vector<Recipe> RECIPES = {
 		{
 			{ ItemType::CACTUS_EXTRACT, 1, 0.0f }, // ingredients
 			{ ItemType::COFFEE_BEANS, 3, 0.0f },    // ingredients (swiftbean)
-			{ ItemType::STORM_BARK, 1, 0.0f }      // ingredients
+			{ ItemType::STORM_BARK, 1, 0.0f },      // ingredients
+			{ ItemType::MUMMY_BANDAGES, 1, 0.0f }, // ingredients
 		},
 		{
 			{ ActionType::MODIFY_HEAT, 100 }, // high heat
 			{ ActionType::ADD_INGREDIENT, 0 }, // add cactus extract
 			{ ActionType::WAIT, 2 },          // wait 10 seconds
 			{ ActionType::ADD_INGREDIENT, 1 }, // add swiftbean
+			{ ActionType::ADD_INGREDIENT, 3 }, // add mummy bandages
 			{ ActionType::STIR, 4 },          // stir 4 times
 			{ ActionType::WAIT, 2 },          // wait 10 seconds
 			{ ActionType::ADD_INGREDIENT, 2 }, // add storm bark
@@ -558,18 +564,20 @@ const std::vector<Recipe> RECIPES = {
 		0, 60,     // highestQualityDuration - duration in seconds
 		vec3(220, 220, 100), // finalPotionColor - yellow color
 		{
-			{ ItemType::STORM_BARK, 2, 0.0f },  // ingredients
+			{ ItemType::STORM_SAP, 2, 0.0f },  // ingredients
 			{ ItemType::GLOWSHROOM, 3, 0.0f },  // ingredients
-			{ ItemType::GALEFRUIT, 1, 0.0f }    // ingredients
+			{ ItemType::GLOWSPORE, 1, 0.0f },    // ingredients
+			{ ItemType::DOOMCAP, 1, 0.0f }    // ingredients
 		},
 		{
 			{ ActionType::MODIFY_HEAT, 25 },  // low heat
-			{ ActionType::ADD_INGREDIENT, 0 }, // add storm bark
+			{ ActionType::ADD_INGREDIENT, 0 }, // add storm sap
 			{ ActionType::WAIT, 1 },          // wait 5 seconds
 			{ ActionType::ADD_INGREDIENT, 1 }, // add glowshroom
+			{ ActionType::ADD_INGREDIENT, 3 }, // add doomcap
 			{ ActionType::STIR, 3 },          // stir 3 times
 			{ ActionType::WAIT, 2 },          // wait 10 seconds
-			{ ActionType::ADD_INGREDIENT, 2 }, // add galefruit
+			{ ActionType::ADD_INGREDIENT, 2 }, // add glowspore
 			{ ActionType::STIR, 2 },          // stir 2 times
 			{ ActionType::WAIT, 3 }           // wait 15 seconds
 		},
@@ -584,7 +592,7 @@ const std::vector<Recipe> RECIPES = {
 		{
 			{ ItemType::POTION, (int)PotionEffect::REGEN, 0.0f },
 			{ ItemType::QUARTZMELON, 1, 0.0f },   // ingredients
-			{ ItemType::CRYSTAL_SHARD, 1, 0.0f }, // ingredients (will be meph later)
+			{ ItemType::CRYSTAL_MEPH, 1, 0.0f }, // ingredients
 			{ ItemType::BLIGHTLEAF, 1, 0.0f },    // ingredients
 			{ ItemType::HEALING_LILY, 1, 0.0f },  // ingredients
 			{ ItemType::GLOWSHROOM, 2, 0.0f }     // ingredients
@@ -593,7 +601,7 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::ADD_INGREDIENT, 0 }, // add regen potion
 			{ ActionType::MODIFY_HEAT, 50 },  // medium heat
 			{ ActionType::ADD_INGREDIENT, 1 }, // add quartzmelon
-			{ ActionType::ADD_INGREDIENT, 2 }, // add crystal shard
+			{ ActionType::ADD_INGREDIENT, 2 }, // add crystal meph
 			{ ActionType::WAIT, 2 },          // wait 10 seconds
 			{ ActionType::ADD_INGREDIENT, 3 }, // add blightleaf
 			{ ActionType::ADD_INGREDIENT, 4 }, // add healing lily

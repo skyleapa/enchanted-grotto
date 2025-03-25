@@ -295,7 +295,7 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 				if (enemy.name == "Ent") {
 					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::STORM_BARK, 1, false);
 				}
-				else if (enemy.name == "Mummy") {
+				else if (enemy.name == "Mummy 1" || enemy.name == "Mummy 2") {
 					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MUMMY_BANDAGES, 1, false);
 				}
 
