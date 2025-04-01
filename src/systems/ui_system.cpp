@@ -654,7 +654,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 
 				// Move to inventory
 				ItemSystem::addItemToInventory(player, ingredient);
-				SoundSystem::playBottleHighQualityPotionSound((int)SOUND_CHANNEL::MENU, 0);
+				SoundSystem::playCollectItemSound((int)SOUND_CHANNEL::MENU, 0);
 
 				// Clear the mortar inventory
 				mortarInventory.items.clear();
