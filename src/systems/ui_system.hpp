@@ -73,11 +73,13 @@ public:
     // Recipe book index for saving/loading
     int current_recipe_index = 0;
 
+    // Mortar and pestle
     bool openMortarPestle(Entity mortar, bool play_sound);
     bool isMortarPestleOpen();
     void closeMortarPestle(bool play_sound);
     Entity getOpenedMortarPestle();
     void setOpenedMortarPestle(Entity new_mortar_pestle);
+    Rml::Element* getHeldPestle() { return heldPestle; }
 
     // tutorial
     void updateTutorial();
@@ -126,7 +128,7 @@ private:
 
     // Update items that should follow the mouse
     void updateFollowMouse();
-    void followMouse(Rml::Element* e, bool dummy);
+    void followMouse(Rml::Element* e, int offsetX, int offsetY);
 
     // FPS counter variables
     float m_frame_times[60] = { 0 }; // Store last 60 frame times
