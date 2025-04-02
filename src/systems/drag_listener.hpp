@@ -64,11 +64,11 @@ private:
 	bool is_heat_changing = false; // is the dial click playing
 
 	// Area where ingredients are considered
-	const Rml::Vector2f MORTAR_CENTER = Rml::Vector2f(625, 420);
+	const Rml::Vector2f MORTAR_CENTER = Rml::Vector2f(625, 450);
 	const float INGREDIENT_RADIUS = 150 * 150;
 	const float MIN_GRIND_RADIUS = 200 * 200;
-	const float MIN_GRIND_ANGLE = M_PI / 6;
-	const float MAX_GRIND_ANGLE = 5 * M_PI / 6;
+	const float MIN_GRIND_ANGLE = 0;
+	const float MAX_GRIND_ANGLE = M_PI;
 	const int REQUIRED_GRINDS = 5;
 };
 
