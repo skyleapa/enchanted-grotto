@@ -650,16 +650,15 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 					break;
 				}
 
-				Entity player = registry.players.entities[0];
-
 				// Move to inventory
-				ItemSystem::addItemToInventory(player, ingredient);
-				SoundSystem::playCollectItemSound((int)SOUND_CHANNEL::MENU, 0);
+				Entity player = registry.players.entities[0];
+				if (!ItemSystem::addItemToInventory(player, ingredient)) {
+					break;
+				}
 
-				// Clear the mortar inventory
+				SoundSystem::playCollectItemSound((int)SOUND_CHANNEL::MENU, 0);
 				mortarInventory.items.clear();
 				ItemSystem::destroyItem(ingredient);
-				break;
 			}
 		} while (false);
 	}
