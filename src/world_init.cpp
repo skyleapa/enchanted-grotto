@@ -171,12 +171,17 @@ Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemTy
 
 	Entity textbox = createTextbox(renderer, vec2(textboxX, textboxY), entity, text);
 
+	// Use item layer for Gale Fruit and Coffee Beans, otherwise use structure (so player renders above dropped items)
+	RENDER_LAYER layer = (type == ItemType::GALEFRUIT || type == ItemType::COFFEE_BEANS)
+		? RENDER_LAYER::ITEM
+		: RENDER_LAYER::STRUCTURE;
+
 	registry.renderRequests.insert(
 		entity,
 		{ info.texture,
 		 EFFECT_ASSET_ID::TEXTURED,
 		 GEOMETRY_BUFFER_ID::SPRITE,
-		 RENDER_LAYER::ITEM });
+		 layer });
 
 	return entity;
 }
@@ -1926,7 +1931,8 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 	ammo.start_pos = player_motion.position;
 	if (registry.potions.has(item_entity)) {
 		ammo.damage = registry.potions.get(item_entity).effectValue;
-	} else {
+	}
+	else {
 		ammo.damage = 50;
 	}
 

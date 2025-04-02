@@ -240,7 +240,7 @@ void BiomeSystem::createGrotto()
 		createGrottoStaticEntities(renderer, position, size, rotation, texture, layer);
 	}
 
-	createGrottoPoolMesh(renderer, vec2(GRID_CELL_WIDTH_PX * 4.8, GRID_CELL_HEIGHT_PX * 11.9));
+	createGrottoPoolMesh(renderer, vec2(GRID_CELL_WIDTH_PX * 4.8, GRID_CELL_HEIGHT_PX * 11));
 
 	if (registry.cauldrons.entities.size() == 0) {
 		std::cout << "creating cauldron in grotto" << std::endl;
@@ -337,11 +337,10 @@ void BiomeSystem::createForest()
 	createTree(renderer, vec2(530, 330));
 	createTree(renderer, vec2(703, 165));
 
-	createTree(renderer, vec2(714, 465));
-	createTree(renderer, vec2(857, 540));
-	createTree(renderer, vec2(1080, 500));
+	createTree(renderer, vec2(580, 530));
+	createTree(renderer, vec2(840, 490));
 
-	createBush(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5));
+	createBush(renderer, vec2(1078, 620));
 
 	createCollectableIngredient(renderer, vec2(1085, 282), ItemType::STORM_BARK, 1, true);
 	createCollectableIngredient(renderer, vec2(560, 160), ItemType::STORM_BARK, 1, true);
@@ -376,7 +375,6 @@ void BiomeSystem::createForestEx()
 	}
 
 	createTree(renderer, vec2(130, 130));
-	createTree(renderer, vec2(157, 540));
 	createTree(renderer, vec2(216, 240));
 	createTree(renderer, vec2(403, 180));
 	createTree(renderer, vec2(504, 535));
@@ -384,7 +382,7 @@ void BiomeSystem::createForestEx()
 	createTree(renderer, vec2(1120, 280));
 	createTree(renderer, vec2(1080, 535));
 
-	createBush(renderer, vec2(920, 392));
+	createBush(renderer, vec2(225, 600));
 
 	createCollectableIngredient(renderer, vec2(288, 101), ItemType::EVERFERN, 1, true);
 	createCollectableIngredient(renderer, vec2(708, 580), ItemType::EVERFERN, 1, true);
