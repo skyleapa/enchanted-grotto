@@ -49,7 +49,7 @@ private:
 	std::vector<std::pair<float, float>> pestleCoords;
 
 	int curGrinds = 0;
-	
+
 	// The last heat knob coords
 	Rml::Vector2f heatCoords = Rml::Vector2f(0, 0);
 
@@ -66,7 +66,7 @@ private:
 	// Area where ingredients are considered
 	const Rml::Vector2f MORTAR_CENTER = Rml::Vector2f(625, 450);
 	const float INGREDIENT_RADIUS = 150 * 150;
-	const float MIN_GRIND_RADIUS = 200 * 200;
+	const float MIN_GRIND_RADIUS = 180 * 180;
 	const float MIN_GRIND_ANGLE = 0;
 	const float MAX_GRIND_ANGLE = M_PI;
 	const int REQUIRED_GRINDS = 5;
