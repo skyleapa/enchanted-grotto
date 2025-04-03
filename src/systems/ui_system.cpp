@@ -1958,7 +1958,7 @@ std::string UISystem::getRecipeHtml(int recipe_index)
 
 std::string UISystem::getRecipeStepsText(const Recipe& recipe)
 {
-	std::string html = "<div class='recipe-steps-title'>RECIPE:</div><br />";
+	std::string html = "<div class='recipe-steps-title'>Recipe:</div><br />";
 	html += "<div class='recipe-steps'>";
 
 	// Steps with numbering
