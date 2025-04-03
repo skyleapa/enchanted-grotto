@@ -221,7 +221,8 @@ struct Chest {
 };
 
 struct Enemy {
-	int health;
+	float health;
+	float max_health;
 	int attack_radius;
 	vec2 start_pos;
 	int state; // uses enum class ENEMY_STATE

@@ -2196,3 +2196,110 @@ bool UISystem::isClickOnUIElement()
 
 	return false;
 }
+
+void UISystem::createEnemyHealthBars()
+{
+	if (!m_context) return;
+
+	// clear existing healthbars
+	for (auto& [i, bar] : enemy_healthbars) {
+		bar->Hide();
+		bar = nullptr;
+	}
+	enemy_healthbars.clear();
+	if (registry.enemies.entities.size() == 0) return;
+
+	try {
+		std::cout << "UISystem::createEnemyHealthBars - Creating enemy health bar in new biome" << std::endl;
+
+		for (auto enemy : registry.enemies.entities) {
+			if (!registry.motions.has(enemy)) continue;
+			Motion& enemy_motion = registry.motions.get(enemy);
+			Enemy& enemy_comp = registry.enemies.get(enemy);
+
+			std::string left_position = std::to_string((enemy_motion.position.x - 25)) + "px";
+			std::string top_position = std::to_string((enemy_motion.position.y - 62)) + "px";
+
+			std::string enemybar_rml = R"(
+				<rml>
+				<head>
+					<style>
+					
+						progress.horizontal {
+							position: absolute;
+							left: )" + left_position + R"(;
+							top: )" + top_position + R"(;
+							height: 10px;
+							background-color: rgba(173, 146, 132, 238);
+							border-width: 2px;
+							border-color: rgb(78, 54, 32);
+							font-family: Open Sans;
+							display: flex;
+							align-items: center;
+							justify-content: center;
+							width: 50px;
+							height: 10px;
+							background-color: transparent;
+							vertical-align: middle;
+						}
+	
+						.horizontal fill {
+							background-color:rgb(255, 96, 68);
+						}
+					</style>
+				</head>
+				<body>)";
+
+			enemybar_rml += "<progress id='enemy-bar-" + std::to_string(enemy.id()) + "' class='horizontal' max='1' value='" + std::to_string(enemy_comp.health / enemy_comp.max_health) + "'></progress></body></rml>";
+
+			Rml::ElementDocument* m_enemybar_document = m_context->LoadDocumentFromMemory(enemybar_rml.c_str());
+			if (m_enemybar_document) {
+				enemy_healthbars[enemy.id()] = m_enemybar_document;
+				m_enemybar_document->Show();
+				std::cout << "UISystem::createEnemyHealthBars - Enemy bar created successfully" << std::endl;
+			}
+			else {
+				std::cerr << "UISystem::createEnemyHealthBars - Failed to create healthbar document" << std::endl;
+			}
+		}
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::createEnemyHealthBars: " << e.what() << std::endl;
+	}
+}
+
+void UISystem::updateEnemyHealthBarPos(Entity entity, vec2 pos) {
+	if (!m_initialized || !m_context || enemy_healthbars.size() <= 0) return;
+
+	auto it = enemy_healthbars.find(entity.id());
+	if (it == enemy_healthbars.end()) return;
+	Rml::ElementDocument* enemy_doc = it->second;
+
+	try {
+		Rml::Element* enemybar_element = enemy_doc->GetElementById("enemy-bar-" + std::to_string(entity.id()));
+		if (!enemybar_element) return;
+		enemybar_element->SetProperty("left", std::to_string(pos.x - 25) + "px");
+		enemybar_element->SetProperty("top", std::to_string(pos.y - 62) + "px");
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::updateEnemyHealthBarPos: " << e.what() << std::endl;
+	}
+}
+
+void UISystem::updateEnemyHealth(Entity entity, float health_percentage) {
+	if (!m_initialized || !m_context || enemy_healthbars.size() <= 0) return;
+
+	auto it = enemy_healthbars.find(entity.id());
+	if (it == enemy_healthbars.end()) return;
+	Rml::ElementDocument* enemy_doc = it->second;
+
+	try {
+		Rml::Element* enemybar_element = enemy_doc->GetElementById("enemy-bar-" + std::to_string(entity.id()));
+		if (!enemybar_element) return;
+		if (health_percentage <= 0) enemy_doc->Hide();
+		enemybar_element->SetAttribute("value", health_percentage);
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::updateEnemyHealth: " << e.what() << std::endl;
+	}
+}

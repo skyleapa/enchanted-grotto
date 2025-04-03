@@ -1655,6 +1655,7 @@ Entity createEnt(RenderSystem* renderer, vec2 position, int movable, std::string
 	Enemy& enemy = registry.enemies.emplace(entity);
 	enemy.attack_radius = 5;
 	enemy.health = 75;
+	enemy.max_health = 75;
 	enemy.start_pos = position;
 	enemy.state = (int)ENEMY_STATE::IDLE;
 	enemy.can_move = movable;
@@ -1693,6 +1694,7 @@ Entity createMummy(RenderSystem* renderer, vec2 position, int movable, std::stri
 	Enemy& enemy = registry.enemies.emplace(entity);
 	enemy.attack_radius = 5;
 	enemy.health = 100;
+	enemy.max_health = 100;
 	enemy.start_pos = position;
 	enemy.state = (int)ENEMY_STATE::IDLE;
 	enemy.can_move = movable;

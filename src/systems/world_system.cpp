@@ -289,6 +289,7 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 			Ammo& ammo = registry.ammo.get(ammo_entity);
 			Enemy& enemy = registry.enemies.get(enemy_entity);
 			enemy.health -= ammo.damage * registry.players.get(player_entity).effect_multiplier;
+			m_ui_system->updateEnemyHealth(enemy_entity, enemy.health / enemy.max_health);
 			registry.remove_all_components_of(ammo_entity);
 			SoundSystem::playEnemyOuchSound((int)SOUND_CHANNEL::GENERAL, 0); // play enemy ouch sound
 			if (enemy.health <= 0) {
@@ -335,6 +336,7 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 				screen.biome = last_biome;
 				screen.fade_status = 0;
 				registry.collisions.clear();
+				registry.damageFlashes.clear();
 				player.health = PLAYER_MAX_HEALTH; // reset to max health
 				for (auto effect : player.active_effects) {
 					if (registry.potions.has(effect)) {

@@ -8,6 +8,7 @@ class AISystem
 {
 public:
 	void step(float elapsed_ms);
+	void setUISystem(UISystem* ui_system) { m_ui_system = ui_system; }
 
 private:
 	void updateEnemyAI(float elapsed_ms, Entity enemy_entity, Entity player_entity);
@@ -19,4 +20,6 @@ private:
 	bool isCollision(const Motion& entity_motion);
 	vec4 get_bounding_box(const Motion& motion, float width_ratio, float height_ratio);
 	bool collides(const Motion& player_motion, const Motion& terrain_motion, const Terrain* terrain);
+
+	UISystem* m_ui_system = nullptr;
 };

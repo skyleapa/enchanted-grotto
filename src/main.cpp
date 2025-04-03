@@ -56,6 +56,7 @@ int main()
 		world_system.setUISystem(&ui_system);
 		item_system.setUISystem(&ui_system);
 		biome_system.setUISystem(&ui_system);
+		ai_system.setUISystem(&ui_system);
 		glfwSetCharCallback(window, UISystem::charCallback);
 		std::cout << "UI system initialized successfully" << std::endl;
 	}

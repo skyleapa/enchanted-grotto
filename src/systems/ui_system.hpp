@@ -100,6 +100,11 @@ public:
     // Check if any UI elements are open/being clicked
     bool isClickOnUIElement();
 
+    // Enemy health bar bethods
+    void createEnemyHealthBars();
+    void updateEnemyHealthBarPos(Entity entity, vec2 pos);
+    void updateEnemyHealth(Entity entity, float health_percentage);
+
 private:
     GLFWwindow* m_window;
     RenderSystem* m_renderer;
@@ -233,4 +238,7 @@ private:
     // Effects bar variables
     Rml::ElementDocument* m_effectsbar_document = nullptr;
     int m_effectsbar_size = 4;
+
+    // Enemy healthbar variables
+    std::unordered_map<int, Rml::ElementDocument*> enemy_healthbars = {}; // int is entity id
 };
