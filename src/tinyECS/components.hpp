@@ -230,6 +230,9 @@ struct Enemy {
 	float wander_timer = 10.0f;  // 10-second random movement before returning
 	std::string name; // gets passed into killed_enemies
 	float attack_damage;
+	float dot_damage = 0.0f;
+	float dot_timer = 0.0f;
+	float dot_duration = 0.0f;
 };
 
 struct Guardian {

@@ -182,6 +182,25 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	updatePlayerState(player, player_motion, elapsed_ms_since_last_update);
 	update_textbox_visibility();
 
+	// apply damage over time on enemies
+	for (auto entity : registry.enemies.entities) {
+		if (!registry.enemies.has(entity)) continue;
+		Enemy& enemy = registry.enemies.get(entity);
+		if (enemy.dot_damage <= 0.f) continue;
+
+		enemy.dot_timer -= elapsed_ms_since_last_update;
+		enemy.dot_duration -= elapsed_ms_since_last_update;
+		if (enemy.dot_timer <= 0.f) {
+			enemy.dot_timer = DOT_TIMER;
+			handleEnemyInjured(entity, enemy.dot_damage);
+		}
+		if (enemy.dot_duration <= 0.f) {
+			enemy.dot_duration = 0.f;
+			enemy.dot_damage = 0.f;
+			enemy.dot_timer = 0.f;
+		}
+	}
+
 	return true;
 }
 
@@ -286,9 +305,12 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 			Entity ammo_entity = registry.ammo.has(collision_entity) ? collision_entity : collision.other;
 			Entity enemy_entity = registry.enemies.has(collision_entity) ? collision_entity : collision.other;
 
+			Enemy& enemy = registry.enemies.get(enemy_entity);
 			Ammo& ammo = registry.ammo.get(ammo_entity);
+			if (!registry.potions.has(ammo_entity)) continue;
+			Potion& potion = registry.potions.get(ammo_entity);
 
-			if (registry.potions.has(ammo_entity) && registry.potions.get(ammo_entity).effect == PotionEffect::MOLOTOV && registry.motions.has(enemy_entity)) {
+			if (registry.potions.get(ammo_entity).effect == PotionEffect::MOLOTOV && registry.motions.has(enemy_entity)) {
 				// damage all enemies within 100 px
 				vec2 enemy_pos = registry.motions.get(enemy_entity).position;
 				for (auto neighbour_enemy : registry.enemies.entities) {
@@ -296,11 +318,26 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 					vec2 pos = registry.motions.get(neighbour_enemy).position;
 					float dx = pos.x - enemy_pos.x;
 					float dy = pos.y - enemy_pos.y;
-					if ((dx * dx + dy * dy) <= MOLOTOV_RADIUS_SQUARED) handleEnemyInjured(neighbour_enemy, ammo.damage);
+					if ((dx * dx + dy * dy) <= MOLOTOV_RADIUS_SQUARED) {
+						// apply damage over time effect
+						Enemy& neighbour = registry.enemies.get(neighbour_enemy);
+						neighbour.dot_damage = potion.effectValue * DOT_MULTIPLIER;
+						neighbour.dot_timer = DOT_TIMER;
+						neighbour.dot_duration = potion.duration;
+						handleEnemyInjured(neighbour_enemy, ammo.damage);
+					}
 				}
 			}
-			registry.remove_all_components_of(ammo_entity);
+
+			if (potion.effect == PotionEffect::POISON || potion.effect == PotionEffect::MOLOTOV) {
+				// apply damage over time effect
+				enemy.dot_damage = potion.effectValue * DOT_MULTIPLIER;
+				enemy.dot_timer = DOT_TIMER;
+				enemy.dot_duration = potion.duration;
+			}
+
 			handleEnemyInjured(enemy_entity, ammo.damage);
+			registry.remove_all_components_of(ammo_entity);
 		}
 		// case where enemy hits player
 		else if ((registry.players.has(collision_entity) || registry.players.has(collision.other)) && (registry.enemies.has(collision_entity) || registry.enemies.has(collision.other))) {
@@ -1367,12 +1404,15 @@ void WorldSystem::removePotionEffect(Potion& potion, Entity player) {
 	}
 }
 
-void WorldSystem::handleEnemyInjured(Entity enemy_entity, float damage) {
-	if (registry.players.entities.size() == 0) return;
+void WorldSystem::handleEnemyInjured(Entity enemy_entity, float damage = 0.f) {
+	if (registry.players.entities.size() == 0 || !enemy_entity) return;
+	Player& player = registry.players.components[0];
 	ScreenState& screen = registry.screenStates.components[0];
 	Enemy& enemy = registry.enemies.get(enemy_entity);
-	enemy.health -= damage * registry.players.components[0].effect_multiplier;
+
+	enemy.health -= damage * player.effect_multiplier;
 	m_ui_system->updateEnemyHealth(enemy_entity, enemy.health / enemy.max_health);
+	registry.damageFlashes.remove(enemy_entity);
 	registry.damageFlashes.emplace(enemy_entity);
 	if (enemy.health <= 0) {
 		if (enemy.name == "Ent") {
