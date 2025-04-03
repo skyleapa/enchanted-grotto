@@ -280,8 +280,6 @@ void PhysicsSystem::step(float elapsed_ms)
 
 			if (genericCollides(ammo_motion, enemy_motion)) {
 				registry.collisions.emplace_with_duplicates(ammo_entity, enemy);
-				// enemy flashes red
-				if (!registry.damageFlashes.has(enemy)) registry.damageFlashes.emplace(enemy);
 			}
 		}
 

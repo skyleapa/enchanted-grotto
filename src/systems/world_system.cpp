@@ -287,27 +287,20 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 			Entity enemy_entity = registry.enemies.has(collision_entity) ? collision_entity : collision.other;
 
 			Ammo& ammo = registry.ammo.get(ammo_entity);
-			Enemy& enemy = registry.enemies.get(enemy_entity);
-			enemy.health -= ammo.damage * registry.players.get(player_entity).effect_multiplier;
-			m_ui_system->updateEnemyHealth(enemy_entity, enemy.health / enemy.max_health);
-			registry.remove_all_components_of(ammo_entity);
-			SoundSystem::playEnemyOuchSound((int)SOUND_CHANNEL::GENERAL, 0); // play enemy ouch sound
-			if (enemy.health <= 0) {
-				if (enemy.name == "Ent") {
-					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::STORM_BARK, 1, false);
-				}
-				else if (enemy.name == "Mummy 1" || enemy.name == "Mummy 2") {
-					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MUMMY_BANDAGES, 1, false);
-				}
 
-				// add enemy name to killed_enemies for persistence
-				if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), enemy.name) == screen.killed_enemies.end()) {
-					screen.killed_enemies.push_back(enemy.name);
+			if (registry.potions.has(ammo_entity) && registry.potions.get(ammo_entity).effect == PotionEffect::MOLOTOV && registry.motions.has(enemy_entity)) {
+				// damage all enemies within 100 px
+				vec2 enemy_pos = registry.motions.get(enemy_entity).position;
+				for (auto neighbour_enemy : registry.enemies.entities) {
+					if (neighbour_enemy == enemy_entity || !registry.motions.has(neighbour_enemy)) continue;
+					vec2 pos = registry.motions.get(neighbour_enemy).position;
+					float dx = pos.x - enemy_pos.x;
+					float dy = pos.y - enemy_pos.y;
+					if ((dx * dx + dy * dy) <= MOLOTOV_RADIUS_SQUARED) handleEnemyInjured(neighbour_enemy, ammo.damage);
 				}
-
-				registry.remove_all_components_of(enemy_entity);
 			}
-			continue;
+			registry.remove_all_components_of(ammo_entity);
+			handleEnemyInjured(enemy_entity, ammo.damage);
 		}
 		// case where enemy hits player
 		else if ((registry.players.has(collision_entity) || registry.players.has(collision.other)) && (registry.enemies.has(collision_entity) || registry.enemies.has(collision.other))) {
@@ -353,12 +346,22 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 			continue;
 		}
 		else if ((registry.ammo.has(collision_entity) || registry.ammo.has(collision.other)) && (registry.terrains.has(collision_entity) || registry.terrains.has(collision.other))) {
-			if (registry.ammo.has(collision_entity)) {
-				registry.remove_all_components_of(collision_entity);
+			Entity ammo_entity = registry.ammo.has(collision_entity) ? collision_entity : collision.other;
+			Entity terrain_entity = registry.terrains.has(collision_entity) ? collision_entity : collision.other;
+
+			if (registry.potions.has(ammo_entity) && registry.potions.get(ammo_entity).effect == PotionEffect::MOLOTOV && registry.motions.has(terrain_entity)) {
+				// damage all enemies within 100 px
+				vec2 terrain_pos = registry.motions.get(terrain_entity).position;
+				for (auto neighbour_enemy : registry.enemies.entities) {
+					if (!registry.motions.has(neighbour_enemy)) continue;
+					vec2 pos = registry.motions.get(neighbour_enemy).position;
+					float dx = pos.x - terrain_pos.x;
+					float dy = pos.y - terrain_pos.y;
+					if ((dx * dx + dy * dy) <= MOLOTOV_RADIUS_SQUARED) handleEnemyInjured(neighbour_enemy, registry.ammo.get(ammo_entity).damage);
+				}
 			}
-			else {
-				registry.remove_all_components_of(collision.other);
-			}
+
+			registry.remove_all_components_of(ammo_entity);
 			continue;
 		}
 	}
@@ -1362,4 +1365,29 @@ void WorldSystem::removePotionEffect(Potion& potion, Entity player) {
 	default:
 		break;
 	}
+}
+
+void WorldSystem::handleEnemyInjured(Entity enemy_entity, float damage) {
+	if (registry.players.entities.size() == 0) return;
+	ScreenState& screen = registry.screenStates.components[0];
+	Enemy& enemy = registry.enemies.get(enemy_entity);
+	enemy.health -= damage * registry.players.components[0].effect_multiplier;
+	m_ui_system->updateEnemyHealth(enemy_entity, enemy.health / enemy.max_health);
+	registry.damageFlashes.emplace(enemy_entity);
+	if (enemy.health <= 0) {
+		if (enemy.name == "Ent") {
+			createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::STORM_BARK, 1, false);
+		}
+		else if (enemy.name == "Mummy 1" || enemy.name == "Mummy 2") {
+			createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MUMMY_BANDAGES, 1, false);
+		}
+
+		// add enemy name to killed_enemies for persistence
+		if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), enemy.name) == screen.killed_enemies.end()) {
+			screen.killed_enemies.push_back(enemy.name);
+		}
+
+		registry.remove_all_components_of(enemy_entity);
+	}
+	SoundSystem::playEnemyOuchSound((int)SOUND_CHANNEL::GENERAL, 0); // play enemy ouch sound
 }

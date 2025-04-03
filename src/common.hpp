@@ -725,6 +725,8 @@ const std::vector<PotionEffect> consumable_potions = {
 	PotionEffect::SATURATION,
 };
 
+const float MOLOTOV_RADIUS_SQUARED = 10000.f; // within 2 grid cells
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
 #endif

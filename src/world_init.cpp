@@ -1906,9 +1906,16 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 
 	Ammo& ammo = registry.ammo.emplace(entity);
 
-	// If it's a potion add colour to it
+	// If it's a potion add colour to it and copy its attributes
 	if (registry.potions.has(item_entity)) {
 		registry.colors.insert(entity, registry.potions.get(item_entity).color / 255.f);
+		Potion& old_potion = registry.potions.get(item_entity);
+		Potion& potion = registry.potions.emplace(entity);
+		potion.color = old_potion.color;
+		potion.duration = old_potion.duration;
+		potion.effect = old_potion.effect;
+		potion.effectValue = old_potion.effectValue;
+		potion.quality = old_potion.quality;
 	}
 
 	Motion& player_motion = registry.motions.get(player_entity);
