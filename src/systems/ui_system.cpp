@@ -1733,17 +1733,24 @@ bool UISystem::openRecipeBook(Entity recipe_book)
                     }
                     .page-button {
                         display: inline-block;
-                        background-color: #d9a66f;
-                        border-width: 3px;
-                        border-color: #5c3e23;
-                        border-radius: 20px;
-                        padding: 8px 20px;
-                        margin: 0 15px;
                         cursor: pointer;
                         font-size: 18px;
                         font-weight: bold;
                         color: #5c3e23;
                         font-family: Open Sans;
+                        width: 75px;
+                        height: 75px;
+                        position: absolute;
+                        bottom: 70px;
+                        transform: scaleY(-1);
+                    }
+                    #left-arrow {
+                        left: 120px;
+                        decorator: image("recipe_arrow_left.png" contain);
+                    }
+                    #right-arrow {
+                        right: 150px;
+                        decorator: image("recipe_arrow_right.png" contain);
                     }
                     .left-page {
                         position: absolute;
@@ -1834,8 +1841,8 @@ bool UISystem::openRecipeBook(Entity recipe_book)
                     <div class="left-page" id="left-page"></div>
                     <div class="right-page" id="right-page"></div>
                     <div class="page-navigation">
-                        <div class="page-button" id="left-arrow" onclick="prevPage">Previous Recipe</div>
-                        <div class="page-button" id="right-arrow" onclick="nextPage">Next Recipe</div>
+                        <div class="page-button" id="left-arrow" onclick="prevPage"></div>
+                        <div class="page-button" id="right-arrow" onclick="nextPage"></div>
                     </div>
                 </div>
             </body>
