@@ -2044,8 +2044,7 @@ std::string UISystem::getRecipeIngredientsText(const Recipe& recipe)
 
 		std::string checkmark = "";
 		if (playerHasIngredient(playerEntity, ingredient)) {
-			// Temporary checkmark with asterisk
-			checkmark = " <span style='color: green; font-weight: bold;'>*</span>"; 
+			checkmark = R"( <img src='recipe_check.png' style='width: 16px; height: 16px; margin-left: 5px; transform: scaleY(-1); vertical-align: middle;'/>)";
 		}
 
 		text += "<span>" + std::to_string(amt) + "x " + name + checkmark + "</span>";
