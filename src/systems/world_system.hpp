@@ -53,6 +53,8 @@ public:
 
 	bool handleGuardianUnlocking(Entity guardianEntity);
 
+	void showTemporaryGuardianDialogue(Entity guardianEntity, const std::string& message);
+
 	void updatePlayerState(Entity& player, Motion& player_motion, float elapsed_ms_since_last_update);
 
 	// Set reference to UI system

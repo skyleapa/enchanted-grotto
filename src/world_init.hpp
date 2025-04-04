@@ -18,6 +18,7 @@ Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity, s
 // forest
 Entity createBush(RenderSystem* renderer, vec2 position);
 Entity createTree(RenderSystem* renderer, vec2 position);
+Entity createTreeNoFruit(RenderSystem* renderer, vec2 position);
 Entity createForestBridge(RenderSystem* renderer, vec2 position);
 // the bridge top and bottom are for the mesh part of the forest bridge
 Entity createForestBridgeTop(RenderSystem* renderer, vec2 position);

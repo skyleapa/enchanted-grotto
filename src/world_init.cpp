@@ -278,6 +278,36 @@ Entity createTree(RenderSystem* renderer, vec2 position)
 	return entity;
 }
 
+Entity createTreeNoFruit(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " tree" << std::endl;
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.height_ratio = 0.1f;
+	terrain.width_ratio = 0.2f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ TREE_WIDTH, TREE_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::TREE,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN });
+
+	return entity;
+}
+
 Entity createForestBridge(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
@@ -1736,6 +1766,10 @@ Entity createGuardianDesert(RenderSystem* renderer, vec2 position, int movable, 
 	guardian.unlock_potion = PotionEffect::SATURATION;
 	guardian.exit_direction = { 0, -1 }; // it leaves upwards
 
+	guardian.hint_dialogue = "The heat out here drains everything. I need a potion that truly saturates.";
+	guardian.wrong_potion_dialogue = "Nope. That's not what I need.";
+	guardian.success_dialogue = "Great! That's what I needed.";
+
 	auto& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
 	terrain.width_ratio = 1.0f;
@@ -1751,7 +1785,7 @@ Entity createGuardianDesert(RenderSystem* renderer, vec2 position, int movable, 
 	motion.position = position;
 	motion.scale = vec2({ DESERT_GUARDIAN_WIDTH, DESERT_GUARDIAN_WIDTH });
 
-	createTextbox(renderer, vec2(position.x + 80, position.y), entity, "[F] Use Potion of Saturation");
+	createTextbox(renderer, vec2(position.x + 80, position.y), entity, guardian.hint_dialogue);
 
 	registry.renderRequests.insert(
 		entity,
@@ -1780,6 +1814,10 @@ Entity createGuardianMushroom(RenderSystem* renderer, vec2 position, int movable
 	guardian.unlock_potion = PotionEffect::ALKALESCENCE;
 	guardian.exit_direction = vec2(0, 1);
 
+	guardian.hint_dialogue = "Things have been too acidic around here. I need something to balance it out.";
+	guardian.wrong_potion_dialogue = "Doesn't help, I need something better";
+	guardian.success_dialogue = "Okay... that's more like it.";
+
 	auto& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
 	terrain.width_ratio = 1.0f;
@@ -1795,7 +1833,8 @@ Entity createGuardianMushroom(RenderSystem* renderer, vec2 position, int movable
 	motion.position = position;
 	motion.scale = vec2({ MUSHROOM_GUARDIAN_WIDTH, MUSHROOM_GUARDIAN_HEIGHT });
 
-	createTextbox(renderer, vec2(position.x + 80, position.y - 100), entity, "[F] Use Potion of Alkalescense");
+	createTextbox(renderer, vec2(position.x + 80, position.y - 100), entity, guardian.hint_dialogue);
+
 	std::cout << "CREATED GUARDIAN MUSHROOM AT " << position.x << " and " << position.y << std::endl;
 	registry.renderRequests.insert(
 		entity,
@@ -1824,6 +1863,10 @@ Entity createGuardianCrystal(RenderSystem* renderer, vec2 position, int movable,
 	guardian.unlock_potion = PotionEffect::CLARITY;
 	guardian.exit_direction = (registry.screenStates.components[0].biome == (GLuint)BIOME::FOREST_EX) ? vec2(0, 1) : vec2(1, 0);
 
+	guardian.hint_dialogue = "Everything's a bit foggy. I need to clear my head.";
+	guardian.wrong_potion_dialogue = "That made it worse.";
+	guardian.success_dialogue = "That helped.";
+
 	auto& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
 	terrain.width_ratio = 0.8f;
@@ -1839,7 +1882,7 @@ Entity createGuardianCrystal(RenderSystem* renderer, vec2 position, int movable,
 	motion.position = position;
 	motion.scale = vec2({ CRYSTAL_GUARDIAN_WIDTH, CRYSTAL_GUARDIAN_HEIGHT });
 
-	createTextbox(renderer, vec2(position.x - 180, position.y - 90), entity, "[F] Use Potion of Clarity");
+	createTextbox(renderer, vec2(position.x - 180, position.y - 90), entity, guardian.hint_dialogue);
 
 	registry.renderRequests.insert(
 		entity,

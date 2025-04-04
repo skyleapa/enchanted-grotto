@@ -337,9 +337,9 @@ void BiomeSystem::createForest()
 	createTree(renderer, vec2(530, 330));
 	createTree(renderer, vec2(703, 165));
 
-	createTree(renderer, vec2(714, 465));
+	createTreeNoFruit(renderer, vec2(714, 465));
 	createTree(renderer, vec2(857, 540));
-	createTree(renderer, vec2(1080, 500));
+	createTreeNoFruit(renderer, vec2(1080, 500));
 
 	createBush(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5));
 
@@ -375,14 +375,14 @@ void BiomeSystem::createForestEx()
 		createBoundaryLine(renderer, position, scale);
 	}
 
-	createTree(renderer, vec2(130, 130));
+	createTreeNoFruit(renderer, vec2(130, 130));
 	createTree(renderer, vec2(157, 540));
-	createTree(renderer, vec2(216, 240));
+	createTreeNoFruit(renderer, vec2(216, 240));
 	createTree(renderer, vec2(403, 180));
 	createTree(renderer, vec2(504, 535));
-	createTree(renderer, vec2(857, 140));
-	createTree(renderer, vec2(1120, 280));
-	createTree(renderer, vec2(1080, 535));
+	createTreeNoFruit(renderer, vec2(857, 140));
+	createTreeNoFruit(renderer, vec2(1120, 280));
+	createTreeNoFruit(renderer, vec2(1080, 535));
 
 	createBush(renderer, vec2(920, 392));
 
