@@ -94,9 +94,9 @@ const float BUSH_HEIGHT = (float)130;
 const float TEXTBOX_WIDTH = (float)GRID_CELL_WIDTH_PX * 4;
 const float TEXTBOX_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 4;
 
-const float ITEM_PICKUP_RADIUS = (float)120;
-const float INTERACTION_RADIUS = (float)120;
-const float TEXTBOX_VISIBILITY_RADIUS = (float)120;
+const float ITEM_PICKUP_RADIUS = (float)110;
+const float INTERACTION_RADIUS = (float)110;
+const float TEXTBOX_VISIBILITY_RADIUS = (float)110;
 
 const float DESERT_RIVER_WIDTH = (float)GRID_CELL_WIDTH_PX * 2;
 const float DESERT_RIVER_HEIGHT = (float)WINDOW_HEIGHT_PX;

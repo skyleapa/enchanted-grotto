@@ -517,7 +517,7 @@ Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, std::st
 	auto& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
 	terrain.width_ratio = 0.80f;
-	terrain.height_ratio = 0.40f;
+	terrain.height_ratio = 0.30f;
 
 	Item& item = registry.items.emplace(entity);
 	item.type = ItemType::CAULDRON;

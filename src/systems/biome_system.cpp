@@ -137,6 +137,10 @@ void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
 			if (registry.renderRequests.has(cauldron)) {
 				RenderRequest& rr = registry.renderRequests.get(cauldron);
 				rr.is_visible = true;
+				Terrain& terrain = registry.terrains.get(cauldron);
+				terrain.collision_setting = 0.0f; // restore the collision setting when inside of grotto
+				terrain.width_ratio = 0.80f;
+				terrain.height_ratio = 0.40f;
 			}
 			// recreate textbox
 			if (registry.motions.has(cauldron)) {
@@ -166,6 +170,8 @@ void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
 			if (registry.renderRequests.has(cauldron)) {
 				RenderRequest& rr = registry.renderRequests.get(cauldron);
 				rr.is_visible = false;
+				Terrain& terrain = registry.terrains.get(cauldron);
+				terrain.collision_setting = 2.0f; // make sure our cauldron has no collision outside of grotto
 			}
 		}
 		for (Entity mortar : registry.mortarAndPestles.entities) {
