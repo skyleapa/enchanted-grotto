@@ -141,7 +141,7 @@ void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
 			// recreate textbox
 			if (registry.motions.has(cauldron)) {
 				Motion& motion = registry.motions.get(cauldron);
-				createTextbox(renderer, vec2(motion.position.x + 60, motion.position.y - 40), cauldron, "[F] Use Cauldron");
+				createTextbox(renderer, vec2(motion.position.x + 70, motion.position.y - 80), cauldron, "[F] Use Cauldron");
 			}
 
 		}
@@ -151,11 +151,6 @@ void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
 				RenderRequest& rr = registry.renderRequests.get(mortar);
 				rr.is_visible = true;
 			}
-			// recreate textbox
-			if (registry.motions.has(mortar)) {
-				createTextbox(renderer, { GRID_CELL_WIDTH_PX * 6.5, GRID_CELL_HEIGHT_PX * 3 }, mortar, "[F] Use Mortar & Pestle");
-			}
-
 		}
 	}
 	else if (screen.from_biome == (int)BIOME::GROTTO && screen.biome == (int)BIOME::FOREST) { // through grotto exit into forest
@@ -244,7 +239,7 @@ void BiomeSystem::createGrotto()
 
 	if (registry.cauldrons.entities.size() == 0) {
 		std::cout << "creating cauldron in grotto" << std::endl;
-		Entity new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.50, GRID_CELL_HEIGHT_PX * 6.05 }), vec2({ 150, 220 }), "Cauldron", false);
+		Entity new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.45, GRID_CELL_HEIGHT_PX * 6.05 }), vec2({ 140, 210 }), "Cauldron", false);
 		for (Entity cauldron : registry.cauldrons.entities) {
 			if (new_cauldron != cauldron) registry.remove_all_components_of(cauldron);
 		}
@@ -391,7 +386,7 @@ void BiomeSystem::createForestEx()
 	createEnt(renderer, vec2(606, 390), 1, "Ent");
 	createEnt(renderer, vec2(1011, 158), 1, "Ent");
 
-	createMasterPotionPedestal(renderer, vec2(638, 140));
+	createMasterPotionPedestal(renderer, vec2(638, 150));
 
 	if (!ADMIN_FLAG) {
 		ScreenState screen = registry.screenStates.components[0];
@@ -401,6 +396,12 @@ void BiomeSystem::createForestEx()
 		}
 		else {
 			createForestExToCrystal(renderer, vec2(930, 665), "Forest Ex to Crystal");
+		}
+
+		// render potion of rejuvenation on pedestal if we've saved the grotto
+		if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "saved-grotto") != screen.unlocked_biomes.end())
+		{
+			createRejuvenationPotion(renderer);
 		}
 	}
 

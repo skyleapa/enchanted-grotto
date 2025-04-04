@@ -94,9 +94,9 @@ const float BUSH_HEIGHT = (float)130;
 const float TEXTBOX_WIDTH = (float)GRID_CELL_WIDTH_PX * 4;
 const float TEXTBOX_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 4;
 
-const float ITEM_PICKUP_RADIUS = (float)100;
-const float INTERACTION_RADIUS = (float)100;
-const float TEXTBOX_VISIBILITY_RADIUS = (float)100;
+const float ITEM_PICKUP_RADIUS = (float)120;
+const float INTERACTION_RADIUS = (float)120;
+const float TEXTBOX_VISIBILITY_RADIUS = (float)120;
 
 const float DESERT_RIVER_WIDTH = (float)GRID_CELL_WIDTH_PX * 2;
 const float DESERT_RIVER_HEIGHT = (float)WINDOW_HEIGHT_PX;
@@ -170,13 +170,13 @@ const float MUSHROOM_GUARDIAN_HEIGHT = (float)150;
 const float CRYSTAL_GUARDIAN_WIDTH = (float)140;
 const float CRYSTAL_GUARDIAN_HEIGHT = (float)160;
 
-const float PEDESTAL_WIDTH = (float)82;
-const float PEDESTAL_HEIGHT = (float)117;
+const float PEDESTAL_WIDTH = (float)62;
+const float PEDESTAL_HEIGHT = (float)97;
 
 const float DETECTION_RADIUS = (float)200;  // Enemy starts moving & attacking
 const float FOLLOWING_RADIUS = (float)300;  // Enemy stops attacking if outside this
 
-const float ENEMY_SPEED = (float)110;
+const float ENEMY_SPEED = (float)80;
 
 const int THROW_DISTANCE = 300; // Player throw dist in pixels
 

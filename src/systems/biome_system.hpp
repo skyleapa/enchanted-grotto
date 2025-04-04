@@ -46,7 +46,6 @@ private:
              std::make_tuple(vec2(WINDOW_WIDTH_PX, WINDOW_HEIGHT_PX / 2), vec2(BOUNDARY_LINE_THICKNESS, WINDOW_HEIGHT_PX)), // right
              std::make_tuple(vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 13.3), vec2(750, BOUNDARY_LINE_THICKNESS)), // entrance left
              std::make_tuple(vec2(GRID_CELL_WIDTH_PX * 24, GRID_CELL_HEIGHT_PX * 13.3), vec2(150, BOUNDARY_LINE_THICKNESS)), // entrance right
-             std::make_tuple(vec2(GRID_CELL_WIDTH_PX * 13.6, GRID_CELL_HEIGHT_PX * 7), vec2(GRID_CELL_WIDTH_PX * 2.6, GRID_CELL_HEIGHT_PX * 1.5)), // cauldron 
              std::make_tuple(vec2(GRID_CELL_WIDTH_PX * 4.75, GRID_CELL_HEIGHT_PX * 6.35), vec2(460, BOUNDARY_LINE_THICKNESS)), // tools bottom
              std::make_tuple(vec2(475, 260), vec2(BOUNDARY_LINE_THICKNESS, 110)) // tools right
            }},

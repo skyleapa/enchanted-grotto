@@ -86,3 +86,4 @@ Entity createGuardianCrystal(RenderSystem* renderer, vec2 position, int movable,
 
 Entity createMasterPotionPedestal(RenderSystem* renderer, vec2 position);
 bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, Entity& player_entity);
+Entity createRejuvenationPotion(RenderSystem* renderer);

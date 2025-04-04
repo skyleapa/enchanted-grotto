@@ -988,11 +988,18 @@ bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 					createMushroomToCrystal(renderer, vec2(1220, 160), "Mushroom to Crystal");
 
 				}
+				else if (registry.items.get(guardianEntity).type == ItemType::MASTER_POTION_PEDESTAL)
+				{
+					// persist that we have finished the game
+					if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "saved-grotto") == screen.unlocked_biomes.end()) {
+						screen.unlocked_biomes.push_back("saved-grotto");
+					}
+					createRejuvenationPotion(renderer);
+				}
 
 				// remove textbox
 				for (auto textbox : registry.textboxes.entities) {
 					if (registry.textboxes.get(textbox).targetItem == guardianEntity) {
-						std::cout << "removing textbox" << std::endl;
 						m_ui_system->removeRmlUITextbox(textbox.id());
 						registry.remove_all_components_of(textbox);
 					}
@@ -1002,15 +1009,6 @@ bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 				if (registry.motions.has(guardianEntity) && guardian.exit_direction != vec2(0, 0)) {
 					registry.motions.get(guardianEntity).velocity = guardian.exit_direction * GUARDIAN_SPEED;
 				}
-
-				if (registry.items.has(guardianEntity)) {
-					Item& item = registry.items.get(guardianEntity);
-					if (item.type == ItemType::MASTER_POTION_PEDESTAL) {
-						createTextbox(renderer, vec2(558, 40), guardianEntity, "Congratulations, you've saved the grotto!");
-					}
-				}
-
-				std::cout << "You got da potion" << std::endl;
 
 				return true;
 			}
