@@ -407,7 +407,8 @@ void RenderSystem::draw(UISystem* ui_system)
 				}
 			}
 		}
-	} else {
+	}
+	else {
 		// Hide items in mortar when the menu is closed
 		for (Entity entity : registry.mortarAndPestles.entities) {
 			Inventory& mortarInventory = registry.inventories.get(entity);

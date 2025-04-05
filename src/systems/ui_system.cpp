@@ -2196,7 +2196,7 @@ void UISystem::updateEffectsBar() {
                     <img src=")" + tex + R"(" 
                     style='
                         pointer-events: none;
-                        width: 32px; 
+                        width: 32px;
                         height: 32px; 
                         margin: 4px; 
                         transform: scaleY(-1); 

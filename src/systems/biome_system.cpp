@@ -137,11 +137,15 @@ void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
 			if (registry.renderRequests.has(cauldron)) {
 				RenderRequest& rr = registry.renderRequests.get(cauldron);
 				rr.is_visible = true;
+				Terrain& terrain = registry.terrains.get(cauldron);
+				terrain.collision_setting = 0.0f; // restore the collision setting when inside of grotto
+				terrain.width_ratio = 0.80f;
+				terrain.height_ratio = 0.40f;
 			}
 			// recreate textbox
 			if (registry.motions.has(cauldron)) {
 				Motion& motion = registry.motions.get(cauldron);
-				createTextbox(renderer, vec2(motion.position.x + 60, motion.position.y - 40), cauldron, "[F] Use Cauldron");
+				createTextbox(renderer, vec2(motion.position.x + 70, motion.position.y - 80), cauldron, "[F] Use Cauldron");
 			}
 
 		}
@@ -151,11 +155,6 @@ void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
 				RenderRequest& rr = registry.renderRequests.get(mortar);
 				rr.is_visible = true;
 			}
-			// recreate textbox
-			if (registry.motions.has(mortar)) {
-				createTextbox(renderer, { GRID_CELL_WIDTH_PX * 6.5, GRID_CELL_HEIGHT_PX * 3 }, mortar, "[F] Use Mortar & Pestle");
-			}
-
 		}
 	}
 	else if (screen.from_biome == (int)BIOME::GROTTO && screen.biome == (int)BIOME::FOREST) { // through grotto exit into forest
@@ -171,6 +170,8 @@ void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
 			if (registry.renderRequests.has(cauldron)) {
 				RenderRequest& rr = registry.renderRequests.get(cauldron);
 				rr.is_visible = false;
+				Terrain& terrain = registry.terrains.get(cauldron);
+				terrain.collision_setting = 2.0f; // make sure our cauldron has no collision outside of grotto
 			}
 		}
 		for (Entity mortar : registry.mortarAndPestles.entities) {
@@ -240,11 +241,11 @@ void BiomeSystem::createGrotto()
 		createGrottoStaticEntities(renderer, position, size, rotation, texture, layer);
 	}
 
-	createGrottoPoolMesh(renderer, vec2(GRID_CELL_WIDTH_PX * 4.8, GRID_CELL_HEIGHT_PX * 11.9));
+	createGrottoPoolMesh(renderer, vec2(GRID_CELL_WIDTH_PX * 4.8, GRID_CELL_HEIGHT_PX * 11));
 
 	if (registry.cauldrons.entities.size() == 0) {
 		std::cout << "creating cauldron in grotto" << std::endl;
-		Entity new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.50, GRID_CELL_HEIGHT_PX * 6.05 }), vec2({ 150, 220 }), "Cauldron", false);
+		Entity new_cauldron = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.45, GRID_CELL_HEIGHT_PX * 6.05 }), vec2({ 140, 210 }), "Cauldron", false);
 		for (Entity cauldron : registry.cauldrons.entities) {
 			if (new_cauldron != cauldron) registry.remove_all_components_of(cauldron);
 		}
@@ -337,11 +338,10 @@ void BiomeSystem::createForest()
 	createTree(renderer, vec2(530, 330));
 	createTree(renderer, vec2(703, 165));
 
-	createTree(renderer, vec2(714, 465));
-	createTree(renderer, vec2(857, 540));
-	createTree(renderer, vec2(1080, 500));
+	createTree(renderer, vec2(580, 530));
+	createTree(renderer, vec2(840, 490));
 
-	createBush(renderer, vec2(GRID_CELL_WIDTH_PX * 11, GRID_CELL_HEIGHT_PX * 11.5));
+	createBush(renderer, vec2(1078, 620));
 
 	createCollectableIngredient(renderer, vec2(1085, 282), ItemType::STORM_BARK, 1, true);
 	createCollectableIngredient(renderer, vec2(560, 160), ItemType::STORM_BARK, 1, true);
@@ -376,7 +376,6 @@ void BiomeSystem::createForestEx()
 	}
 
 	createTree(renderer, vec2(130, 130));
-	createTree(renderer, vec2(157, 540));
 	createTree(renderer, vec2(216, 240));
 	createTree(renderer, vec2(403, 180));
 	createTree(renderer, vec2(504, 535));
@@ -384,7 +383,7 @@ void BiomeSystem::createForestEx()
 	createTree(renderer, vec2(1120, 280));
 	createTree(renderer, vec2(1080, 535));
 
-	createBush(renderer, vec2(920, 392));
+	createBush(renderer, vec2(225, 600));
 
 	createCollectableIngredient(renderer, vec2(288, 101), ItemType::EVERFERN, 1, true);
 	createCollectableIngredient(renderer, vec2(708, 580), ItemType::EVERFERN, 1, true);
@@ -393,7 +392,7 @@ void BiomeSystem::createForestEx()
 	createEnt(renderer, vec2(606, 390), 1, "Ent");
 	createEnt(renderer, vec2(1011, 158), 1, "Ent");
 
-	createMasterPotionPedestal(renderer, vec2(638, 140));
+	createMasterPotionPedestal(renderer, vec2(638, 150));
 
 	if (!ADMIN_FLAG) {
 		ScreenState screen = registry.screenStates.components[0];
@@ -403,6 +402,12 @@ void BiomeSystem::createForestEx()
 		}
 		else {
 			createForestExToCrystal(renderer, vec2(930, 665), "Forest Ex to Crystal");
+		}
+
+		// render potion of rejuvenation on pedestal if we've saved the grotto
+		if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "saved-grotto") != screen.unlocked_biomes.end())
+		{
+			createRejuvenationPotion(renderer);
 		}
 	}
 
