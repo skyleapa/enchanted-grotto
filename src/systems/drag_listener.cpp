@@ -122,17 +122,6 @@ void DragListener::endStir(Rml::Element* e) {
 }
 
 void DragListener::checkGrindingMotion() {
-	// Don't grind if cannot be grinded anymore
-	if (curGrinds < 0) {
-		return;
-	}
-	
-	// Don't grind if there's no item in the mortar
-	Entity mortar = m_ui_system->getOpenedMortarPestle();
-	if (!registry.inventories.has(mortar) || registry.inventories.get(mortar).items.empty()) {
-		return;
-	}
-
 	// Check if pestle is within the mortar square
 	if (pestleCoords.back().first > INGREDIENT_RADIUS) {
 		return;
@@ -159,20 +148,9 @@ void DragListener::checkGrindingMotion() {
 		return;
 	}
 
-	// Grind succeeded, add to count
-	curGrinds++;
-	SoundSystem::playGrindSound((int)SOUND_CHANNEL::GENERAL, 0);
-	if (curGrinds < REQUIRED_GRINDS) {
-		return;
-	}
-
-	// Ingredient successfully grinded
-	curGrinds = -1; // Cannot be grinded anymore
-	PotionSystem::grindIngredient(mortar);
-	if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::GRIND_BARK) {
-		ScreenState& screen = registry.screenStates.components[0];
-		screen.tutorial_step_complete = true;
-		screen.tutorial_state += 1;
+	// Grind movement succeeded
+	if (PotionSystem::grindIngredient(m_ui_system->getOpenedMortarPestle())) {	
+		SoundSystem::playGrindSound((int)SOUND_CHANNEL::GENERAL, 0);
 	}
 }
 
@@ -244,7 +222,6 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 
 			pestleCoords.clear();
 			pestleCoords.push_back(getPolarCoordinates(mouseCoords, MORTAR_CENTER));
-			curGrinds = 0;
 			return;
 		}
 	}
@@ -319,7 +296,6 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			}
 
 			pestleCoords.clear();
-			curGrinds = 0;
 			return;
 		}
 	}

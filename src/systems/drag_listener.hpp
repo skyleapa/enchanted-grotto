@@ -48,8 +48,6 @@ private:
 	// Pestle motion coords, also with squared magnitude and radians
 	std::vector<std::pair<float, float>> pestleCoords;
 
-	int curGrinds = 0;
-
 	// The last heat knob coords
 	Rml::Vector2f heatCoords = Rml::Vector2f(0, 0);
 

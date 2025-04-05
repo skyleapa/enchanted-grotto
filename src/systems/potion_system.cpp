@@ -267,112 +267,114 @@ void PotionSystem::resetCauldron(Entity cauldron) {
 	registry.potions.remove(cauldron);
 }
 
-void PotionSystem::grindIngredient(Entity mortar) {
+bool PotionSystem::grindIngredient(Entity mortar) {
 	if (!registry.mortarAndPestles.has(mortar)) {
 		// std::cerr << "Invalid mortar entity" << std::endl;
-		return;
+		return false;
+	}
+
+	// Do nothing if mortar marked as fully grinded
+	MortarAndPestle& mp = registry.mortarAndPestles.get(mortar);
+	if (mp.grinded) {
+		return false;
 	}
 
 	Inventory& mortarInventory = registry.inventories.get(mortar);
-
 	if (mortarInventory.items.empty()) {
-		std::cerr << "No ingredients in mortar" << std::endl;
-		return;
+		// std::cerr << "No ingredients in mortar" << std::endl;
+		return false;
 	}
 
 	// We only allow grinding the first ingredient in the mortar
 	Entity ingredient = mortarInventory.items[0];
 	if (!registry.ingredients.has(ingredient)) {
 		// std::cerr << "Item is not an ingredient" << std::endl;
-		return;
+		return false;
 	}
 
+	// Grind the item
 	Ingredient& ing = registry.ingredients.get(ingredient);
-	Item& itemComp = registry.items.get(ingredient);
+	ing.grindLevel += 0.2f;
 
-	// Increase grind level up to a maximum
+	// If item is not fully ground don't do anything
 	if (ing.grindLevel < 1.0f) {
-		ing.grindLevel += 1.0f;
-
-		// Clamp to 1.0
-		if (ing.grindLevel > 1.0f) {
-			ing.grindLevel = 1.0f;
-		}
-
-		// Check if we just fully ground it
-		if (ing.grindLevel >= 1.0f) {
-			std::cout << "Ingredient is fully ground" << std::endl;
-
-			switch (itemComp.type) {
-			case ItemType::COFFEE_BEANS:
-				itemComp.type = ItemType::SWIFT_POWDER;
-				if (registry.renderRequests.has(ingredient)) {
-					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::SWIFT_POWDER;
-				}
-				break;
-
-			case ItemType::PETRIFIED_BONE:
-				itemComp.type = ItemType::BONE_DUST;
-				if (registry.renderRequests.has(ingredient)) {
-					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::BONE_DUST;
-				}
-				break;
-
-			case ItemType::CACTUS_PULP:
-				itemComp.type = ItemType::CACTUS_EXTRACT;
-				if (registry.renderRequests.has(ingredient)) {
-					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::CACTUS_EXTRACT;
-				}
-				break;
-
-			case ItemType::GLOWSHROOM:
-				itemComp.type = ItemType::GLOWSPORE;
-				if (registry.renderRequests.has(ingredient)) {
-					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::GLOWSPORE;
-				}
-				break;
-
-			case ItemType::CRYSTAL_SHARD:
-				itemComp.type = ItemType::CRYSTAL_MEPH;
-				if (registry.renderRequests.has(ingredient)) {
-					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::CRYSTAL_MEPH;
-				}
-				break;
-
-			case ItemType::STORM_BARK:
-				itemComp.type = ItemType::STORM_SAP;
-				if (registry.renderRequests.has(ingredient)) {
-					registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::STORM_SAP;
-				}
-				break;
-
-			default:
-				std::cerr << "No grind result for item type: " << static_cast<int>(itemComp.type) << std::endl;
-				break;
-			}
-
-			// Update size
-			auto infoIt = ITEM_INFO.find(itemComp.type);
-			if (infoIt != ITEM_INFO.end() && registry.motions.has(ingredient)) {
-				vec2 baseSize = infoIt->second.size;
-				vec2 enlargedSize = baseSize * 1.5f;
-				registry.motions.get(ingredient).scale = enlargedSize;
-			}
-
-			itemComp.isCollectable = true;
-			std::cout << "Grinded ingredient can now be picked up" << std::endl;
-		}
+		return true;
 	}
+
+	// Ingredient is fully ground. Clamp to 1.0 and register grind
+	ing.grindLevel = 1.0f;
+	mp.grinded = true;
+	Item& itemComp = registry.items.get(ingredient);
+	switch (itemComp.type) {
+		case ItemType::COFFEE_BEANS:
+			itemComp.type = ItemType::SWIFT_POWDER;
+			if (registry.renderRequests.has(ingredient)) {
+				registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::SWIFT_POWDER;
+			}
+			break;
+
+		case ItemType::PETRIFIED_BONE:
+			itemComp.type = ItemType::BONE_DUST;
+			if (registry.renderRequests.has(ingredient)) {
+				registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::BONE_DUST;
+			}
+			break;
+
+		case ItemType::CACTUS_PULP:
+			itemComp.type = ItemType::CACTUS_EXTRACT;
+			if (registry.renderRequests.has(ingredient)) {
+				registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::CACTUS_EXTRACT;
+			}
+			break;
+
+		case ItemType::GLOWSHROOM:
+			itemComp.type = ItemType::GLOWSPORE;
+			if (registry.renderRequests.has(ingredient)) {
+				registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::GLOWSPORE;
+			}
+			break;
+
+		case ItemType::CRYSTAL_SHARD:
+			itemComp.type = ItemType::CRYSTAL_MEPH;
+			if (registry.renderRequests.has(ingredient)) {
+				registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::CRYSTAL_MEPH;
+			}
+			break;
+
+		case ItemType::STORM_BARK:
+			itemComp.type = ItemType::STORM_SAP;
+			if (registry.renderRequests.has(ingredient)) {
+				registry.renderRequests.get(ingredient).used_texture = TEXTURE_ASSET_ID::STORM_SAP;
+			}
+			break;
+
+		default:
+			std::cerr << "No grind result for item type: " << static_cast<int>(itemComp.type) << std::endl;
+			break;
+	}
+
+	// Update size
+	auto infoIt = ITEM_INFO.find(itemComp.type);
+	if (infoIt != ITEM_INFO.end() && registry.motions.has(ingredient)) {
+		vec2 baseSize = infoIt->second.size;
+		vec2 enlargedSize = baseSize * 1.5f;
+		registry.motions.get(ingredient).scale = enlargedSize;
+	}
+
+	itemComp.isCollectable = true;
+
+	// Check tutorial
+	if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::GRIND_BARK) {
+		ScreenState& screen = registry.screenStates.components[0];
+		screen.tutorial_step_complete = true;
+		screen.tutorial_state += 1;
+	}
+
+	return true;
 }
 
 void PotionSystem::storeIngredientInMortar(Entity mortar, Entity ingredient) {
-	if (!registry.mortarAndPestles.has(mortar)) {
-		// std::cerr << "Invalid mortar entity" << std::endl;
-		return;
-	}
-
 	Inventory& mortarInventory = registry.inventories.get(mortar);
-
 	const ItemInfo& itemInfo = ITEM_INFO.find(registry.items.get(ingredient).type)->second;
 
 	// Set ingredient to be visible inside the mortar
@@ -403,7 +405,8 @@ void PotionSystem::storeIngredientInMortar(Entity mortar, Entity ingredient) {
 	ingredientMotion.scale = mortarMotion.scale * 0.6f;
 	ingredientMotion.angle = 180.0f;
 
-	std::cout << "Ingredient stored in mortar" << std::endl;
+	// Set mortar state to ungrinded
+	registry.mortarAndPestles.get(mortar).grinded = false;
 }
 
 ////////////////////////////
