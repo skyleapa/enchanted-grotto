@@ -339,7 +339,7 @@ void RenderSystem::fadeScreen()
 
 // Render our game world
 // http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
-void RenderSystem::draw(UISystem* ui_system)
+void RenderSystem::draw(UISystem* ui_system, float elapsed_ms)
 {
 	// First render to the custom framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
@@ -389,9 +389,12 @@ void RenderSystem::draw(UISystem* ui_system)
 		}
 	}
 
+	// Draw fog
+	drawFog();
+
 	// Draw water
 	if (ui_system->isCauldronOpen()) {
-		simulate_water(ui_system->getOpenedCauldron());
+		simulateWater(ui_system->getOpenedCauldron());
 	}
 
 	// Render ui system first, so it can be faded out
@@ -425,9 +428,45 @@ void RenderSystem::draw(UISystem* ui_system)
 
 	// flicker-free display with a double buffer
 	gl_has_errors();
+
+	// Add to time
+	iTime += elapsed_ms / 1000.f;
 }
 
-void RenderSystem::simulate_water(Entity cauldron)
+void RenderSystem::drawFog() 
+{
+	// Setting vertex and index buffers
+	// Reuse the water screen quad for fog as well
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[(GLuint)GEOMETRY_BUFFER_ID::WATER_QUAD]);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffers[(GLuint)GEOMETRY_BUFFER_ID::WATER_QUAD]);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void*)0);
+	gl_has_errors();
+
+	// Draw to fog framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, fog_buffer);
+	glDisable(GL_BLEND);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	const GLuint program = (GLuint)effects[(int)EFFECT_ASSET_ID::FOG];
+	glUseProgram(program);
+	gl_has_errors();
+
+	vec2 resolution = vec2(frameBufferWidth, frameBufferHeight);
+	glUniform2fv(glGetUniformLocation(program, "iResolution"), 1, (float*)&resolution);
+	glUniform1f(glGetUniformLocation(program, "iTime"), iTime);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, fog_texture);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
+
+	// Then draw to screen
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glEnable(GL_BLEND);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
+}
+
+void RenderSystem::simulateWater(Entity cauldron)
 {
 	// FULL CREDIT TO https://www.shadertoy.com/view/tt3yzn
 	// for the Navier-Stokes simulation shader
