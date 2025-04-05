@@ -67,7 +67,6 @@ private:
 	const float MIN_GRIND_RADIUS = 180 * 180;
 	const float MIN_GRIND_ANGLE = 0;
 	const float MAX_GRIND_ANGLE = M_PI;
-	const int REQUIRED_GRINDS = 5;
 };
 
 #endif

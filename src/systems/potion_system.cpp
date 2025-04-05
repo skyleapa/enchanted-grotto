@@ -379,8 +379,6 @@ void PotionSystem::storeIngredientInMortar(Entity mortar, Entity ingredient) {
 
 	// Set ingredient to be visible inside the mortar
 	if (!registry.renderRequests.has(ingredient)) {
-		// std::cout << "Adding RenderRequest to ingredient (Entity ID: " << ingredient.id() << ")" << std::endl;
-
 		registry.renderRequests.insert(
 			ingredient,
 			{

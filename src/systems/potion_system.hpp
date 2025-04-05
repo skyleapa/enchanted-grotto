@@ -42,8 +42,10 @@ public:
 	// Empties the cauldron, resetting its values.
 	static void resetCauldron(Entity cauldron);
 
-	// Mortar stuff. Returns true if the grinding occured
+	// Grind the current ingredient in the mortar. Returns true if the grinding occured
 	static bool grindIngredient(Entity mortar);
+
+	// Stores an ingredient inside the mortar. Requires the entity is an ingredient with grindLevel < 1
 	static void storeIngredientInMortar(Entity mortar, Entity ingredient);
 
 private:
