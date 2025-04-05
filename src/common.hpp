@@ -181,8 +181,8 @@ const float ENEMY_SPEED = (float)110;
 const int THROW_DISTANCE = 300; // Player throw dist in pixels
 
 // volume ranges from 0 to 128
-const int MUSIC_VOLUME = 64;
-const int MUSIC_VOLUME_LOWER = 32;
+const int MUSIC_VOLUME = 64; //64;
+const int MUSIC_VOLUME_LOWER = 32; //32;
 
 // Item and potion constants. The enums are declared here instead of in components.hpp
 // because this file is included in components, not the other way around - otherwise,
