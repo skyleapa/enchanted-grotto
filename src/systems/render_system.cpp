@@ -389,8 +389,11 @@ void RenderSystem::draw(UISystem* ui_system, float elapsed_ms)
 		}
 	}
 
-	// Draw fog
-	drawFog();
+	ScreenState& screen = registry.screenStates.components[0];
+	if (screen.biome != (int)BIOME::GROTTO) {
+		// Draw fog
+		drawFog();
+	}
 
 	// Draw water
 	if (ui_system->isCauldronOpen()) {
@@ -410,7 +413,8 @@ void RenderSystem::draw(UISystem* ui_system, float elapsed_ms)
 				}
 			}
 		}
-	} else {
+	}
+	else {
 		// Hide items in mortar when the menu is closed
 		for (Entity entity : registry.mortarAndPestles.entities) {
 			Inventory& mortarInventory = registry.inventories.get(entity);
@@ -432,7 +436,7 @@ void RenderSystem::draw(UISystem* ui_system, float elapsed_ms)
 	iTime += elapsed_ms / 1000.f;
 }
 
-void RenderSystem::drawFog() 
+void RenderSystem::drawFog()
 {
 	// Setting vertex and index buffers
 	// Reuse the water screen quad for fog as well

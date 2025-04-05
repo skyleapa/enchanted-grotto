@@ -5,12 +5,12 @@
 out vec4 fragColor;
 
 // Change these to uniforms to be able to adjust them
-const vec3 COLOR = vec3(0.41, 0.0, 0.63);
+const vec3 COLOR = vec3(0.5, 0.0, 0.55);
 const vec3 BG = vec3(0.0, 0.0, 0.0);
 const vec2 MOTION = vec2(-0.5, 0.3);
 const float ZOOM = 3.0;
 const int OCTAVES = 4;
-const float INTENSITY = 2.0;
+const float INTENSITY = 1.5;
 
 uniform vec2 iResolution;
 uniform float iTime;
