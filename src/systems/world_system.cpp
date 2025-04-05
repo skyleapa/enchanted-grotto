@@ -569,6 +569,8 @@ void WorldSystem::on_mouse_move(vec2 mouse_position)
 
 void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 {
+	// std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
+
 	// Pass the event to the UI system if it's initialized 
 	if (m_ui_system != nullptr) {
 		bool isOpen = m_ui_system->isClickOnUIElement();

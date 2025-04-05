@@ -180,12 +180,9 @@ struct Menu
 	bool keyInput;	 // true if we allow key input
 };
 
-// TODO: Better Mortar and pestle representation
 struct MortarAndPestle
 {
-	std::vector<Entity> items;
-	int grindLevel;
-	int itemState;
+	bool grinded = false;
 };
 
 
