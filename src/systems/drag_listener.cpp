@@ -21,13 +21,13 @@ void DragListener::RegisterDragDropElement(Rml::Element* element) {
 }
 
 float DragListener::getHeatDegree(Rml::Vector2f coords, float curDegree) {
-	if (lastCoords == Rml::Vector2f(0, 0)) {
+	if (heatCoords == Rml::Vector2f(0, 0)) {
 		return 0;
 	}
 
-	float dragFactor = 1.5; // decrease = more sensitive
-	float xdiff = (coords.x - lastCoords.x) / dragFactor;
-	float ydiff = (coords.y - lastCoords.y) / dragFactor;
+	float dragFactor = 1.0; // decrease = more sensitive
+	float xdiff = (coords.x - heatCoords.x) / dragFactor;
+	float ydiff = (coords.y - heatCoords.y) / dragFactor;
 	if (curDegree <= 0) {
 		ydiff *= -1;
 	}
@@ -52,8 +52,8 @@ void DragListener::setHeatDegree(float degree) {
 	registry.cauldrons.get(cauldron).heatLevel = heatLevel;
 }
 
-std::pair<float, float> DragListener::getPolarCoordinates(Rml::Vector2f input) {
-	Rml::Vector2f cartesian = input - CAULDRON_CENTER;
+std::pair<float, float> DragListener::getPolarCoordinates(Rml::Vector2f input, Rml::Vector2f center) {
+	Rml::Vector2f cartesian = input - center;
 	cartesian.y *= -1; // Since y starts from top-down we need to flip this
 	float mag = cartesian.SquaredMagnitude();
 	float angle = atan2f(cartesian.y, cartesian.x);
@@ -118,57 +118,39 @@ void DragListener::checkCompletedStir() {
 
 void DragListener::endStir(Rml::Element* e) {
 	m_ui_system->cauldronDragUpdate(false);
-	e->SetProperty("decorator", "image(\"interactables/spoon_on_table.png\" contain)");
 	stirCoords.clear();
 }
 
 void DragListener::checkGrindingMotion() {
-	// Don't grind if there's no item in the mortar
-	Entity mortar = m_ui_system->getOpenedMortarPestle();
-	if (!registry.inventories.has(mortar) || registry.inventories.get(mortar).items.empty()) {
-		return;
-	}
-	
-	if (pestleMotion.size() < 3) {
-		return;  // Not enough movement to detect a grind action
-	}
-
-	// std::cout << "pestleX: " << pestleX << ", pestleY: " << pestleY << std::endl;
-
 	// Check if pestle is within the mortar square
-	bool inMortar = (pestleX >= MORTAR_LEFT_X && pestleX <= MORTAR_RIGHT_X) &&
-		(pestleY >= MORTAR_TOP_Y && pestleY <= MORTAR_BOTTOM_Y);
-
-	if (!inMortar) {
-		//std::cout << "not in mortar" << std::endl;
+	if (pestleCoords.back().first > INGREDIENT_RADIUS) {
 		return;
 	}
 
-	//std::cout << "Pestle in mortar" << std::endl;
-
-	// Check for alternating up and down motion
-	int up = 0;
-	int down = 0;
-	for (float move : pestleMotion) {
-		if (move > 45) down++;
-		if (move < -45) up++;
-	}
-	// std::cout << "Grinding action detected!" << " up: " << up << ", down: " << down << std::endl;
-	SoundSystem::playGrindSound((int)SOUND_CHANNEL::GENERAL, 0);
-
-	if (up >= 4 && down >= 4) {
-		// Grinding action detected
-		std::cout << "Grinding done!" << std::endl;
-		PotionSystem::grindIngredient(m_ui_system->getOpenedMortarPestle());
-
-		if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::GRIND_BARK) {
-			ScreenState& screen = registry.screenStates.components[0];
-			screen.tutorial_step_complete = true;
-			screen.tutorial_state += 1;
+	// Check if pestle exceeded required radius and stayed within angle
+	bool rad = false;
+	bool angle = true;
+	for (auto coord : pestleCoords) {
+		if (coord.first > MIN_GRIND_RADIUS) {
+			rad = true;
 		}
 
-		// Clear motion data after successful grind
-		pestleMotion.clear();
+		if (coord.second > MAX_GRIND_ANGLE || coord.second < MIN_GRIND_ANGLE) {
+			angle = false;
+		}
+	}
+
+	// Clear coords to prepare for next grind
+	pestleCoords.clear();
+
+	// Failed grind, clear coords and retry L
+	if (!(rad && angle)) {
+		return;
+	}
+
+	// Grind movement succeeded
+	if (PotionSystem::grindIngredient(m_ui_system->getOpenedMortarPestle())) {	
+		SoundSystem::playGrindSound((int)SOUND_CHANNEL::GENERAL, 0);
 	}
 }
 
@@ -214,7 +196,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 	Rml::Vector2f mouseCoords = event.GetUnprojectedMouseScreenPos();
 	if (event == "dragstart") {
 		if (cur->GetId() == "heat") {
-			lastCoords = mouseCoords;
+			heatCoords = mouseCoords;
 			return;
 		}
 
@@ -226,22 +208,20 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 				return;
 			}
 
-			cur->SetProperty("decorator", "image(\"interactables/spoon_in_hand.png\" flip-vertical contain)");
-			stirCoords.push_back(getPolarCoordinates(mouseCoords));
+			stirCoords.push_back(getPolarCoordinates(mouseCoords, CAULDRON_CENTER));
 			return;
 		}
 
-		if (cur->GetId() == "pestle") {
-			Rml::Context* context = cur->GetContext();
-			Rml::Element* possibleMortar = context->GetElementAtPoint(mouseCoords, cur);
-			if (!possibleMortar || possibleMortar->GetId() != "mortar") {
+		if (cur->GetId() == "mortar") {
+			Rml::Element* pestle = m_ui_system->getHeldPestle();
+			if (!pestle) {
+				std::cout << "No pestle" << std::endl;
 				event.StopImmediatePropagation();
 				return;
 			}
 
-			pestleY = mouseCoords.y;
-			pestleX = mouseCoords.x;
-			pestleMotion.clear();
+			pestleCoords.clear();
+			pestleCoords.push_back(getPolarCoordinates(mouseCoords, MORTAR_CENTER));
 			return;
 		}
 	}
@@ -258,7 +238,8 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 					screen.tutorial_state += 1;
 				}
 			}
-			lastCoords = mouseCoords;
+
+			heatCoords = mouseCoords;
 			if (!is_heat_changing) {
 				is_heat_changing = true;
 				SoundSystem::haltGeneralSound();
@@ -272,7 +253,7 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 		// Where all the magic happens
 		if (cur->GetId() == "ladle" && stirCoords.size()) {
 			m_ui_system->cauldronDragUpdate(true);
-			auto coords = getPolarCoordinates(mouseCoords);
+			auto coords = getPolarCoordinates(mouseCoords, CAULDRON_CENTER);
 			if (coords.first > MAX_STIR_RADIUS) {
 				endStir(cur);
 				return;
@@ -283,14 +264,12 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			return;
 		}
 
-		if (cur->GetId() == "pestle") {
-			float deltaY = mouseCoords.y - pestleY;
-			pestleX = mouseCoords.x;
-			pestleY = mouseCoords.y;
+		if (cur->GetId() == "mortar") {
+			if (!m_ui_system->getHeldPestle()) {
+				return;
+			}
 
-			pestleMotion.push_back(deltaY);
-
-			// Check if enough vertical movement happened
+			pestleCoords.push_back(getPolarCoordinates(mouseCoords, MORTAR_CENTER));
 			checkGrindingMotion();
 			return;
 		}
@@ -310,8 +289,13 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			return;
 		}
 
-		if (cur->GetId() == "pestle") {
-			pestleMotion.clear();
+		if (cur->GetId() == "mortar") {
+			Rml::Element* pestle = m_ui_system->getHeldPestle();
+			if (!pestle) {
+				return;
+			}
+
+			pestleCoords.clear();
 			return;
 		}
 	}
@@ -376,16 +360,14 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			}
 
 			Item& invItem = registry.items.get(item);
-
 			Ingredient& curItem = registry.ingredients.get(item);
-			if (curItem.grindLevel == -1.0 || curItem.grindLevel == 1.0f) {
+			if (fabs(curItem.grindLevel) == 1.0f) {
 				std::cerr << "Item is not grindable or already grinded" << std::endl;
 				return;
 			}
 
-			Inventory& mortarInventory = registry.inventories.get(m_ui_system->getOpenedMortarPestle());
-
 			// Check if the mortar already has an ingredient
+			Inventory& mortarInventory = registry.inventories.get(m_ui_system->getOpenedMortarPestle());
 			if (!mortarInventory.items.empty()) {
 				std::cerr << "Mortar already contains an ingredient" << std::endl;
 				return;
@@ -393,15 +375,14 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 
 			Entity copy = ItemSystem::copyItem(item);
 			invItem.amount -= 1;
+			m_ui_system->updateInventoryBar();
 			if (invItem.amount <= 0) {
 				ItemSystem::removeItemFromInventory(player, item);
 			}
 			registry.items.get(copy).amount = 1;
-			m_ui_system->updateInventoryBar();
 			std::cout << "Added ingredient: " << invItem.name << " to mortar" << std::endl;
 
 			createTempRenderRequestForItem(copy);
-
 			SoundSystem::playDropInBowlSound((int)SOUND_CHANNEL::MENU, 0);
 			PotionSystem::storeIngredientInMortar(m_ui_system->getOpenedMortarPestle(), copy);
 			return;
