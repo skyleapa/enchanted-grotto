@@ -254,7 +254,6 @@ enum class ItemType
 // DAMAGE: Causes damage to enemies when thrown
 // MOLOTOV: Damages enemies in an area over time (fire effect)
 // REGEN: Regenerates player health over time
-// TENACITY: Increases inventory capacity
 // POISON: Creates poisonous area when thrown
 // RESISTANCE: Reduces damage taken by player
 // SATURATION: Increases potency of other potions
@@ -270,8 +269,7 @@ enum class PotionEffect
 	DAMAGE = HEALTH + 1,
 	MOLOTOV = DAMAGE + 1,
 	REGEN = MOLOTOV + 1,
-	TENACITY = REGEN + 1,
-	POISON = TENACITY + 1,
+	POISON = REGEN + 1,
 	RESISTANCE = POISON + 1,
 	SATURATION = RESISTANCE + 1,
 	ALKALESCENCE = SATURATION + 1,
@@ -441,28 +439,6 @@ const std::vector<Recipe> RECIPES = {
 		},
 		"Potion of Regeneration",
 		"[Consumable] Gradually restores health over time."
-	},
-	{
-		PotionEffect::TENACITY,
-		3.0f, 3.0f,   // highestQualityEffect - additional inventory slots
-		0, 0,      // highestQualityDuration - permanent effect
-		vec3(75, 150, 75), // finalPotionColor - green color
-		{
-			{ ItemType::POTION, (int)PotionEffect::REGEN, 0.0f },
-			{ ItemType::CACTUS_EXTRACT, 1, 0.0f }, // ingredients      
-			{ ItemType::PETRIFIED_BONE, 2, 0.0f }  // ingredients
-		},
-		{
-			{ ActionType::ADD_INGREDIENT, 0 }, // add regen potions
-			{ ActionType::MODIFY_HEAT, 25 },  // low heat
-			{ ActionType::ADD_INGREDIENT, 1 }, // add cactus extract
-			{ ActionType::WAIT, 1 },          // wait 5 seconds
-			{ ActionType::ADD_INGREDIENT, 2 }, // add petrified bones
-			{ ActionType::STIR, 4 },          // stir 4 times
-			{ ActionType::WAIT, 4 }           // wait 20 seconds
-		},
-		"Potion of Tenacity",
-		"[Consumable] Increases your inventory capacity."
 	},
 	{
 		PotionEffect::POISON,
@@ -720,7 +696,6 @@ const std::vector<PotionEffect> consumable_potions = {
 	PotionEffect::SPEED,
 	PotionEffect::HEALTH,
 	PotionEffect::REGEN,
-	// PotionEffect::TENACITY, // to be implemented in M4
 	PotionEffect::RESISTANCE,
 	PotionEffect::SATURATION,
 };

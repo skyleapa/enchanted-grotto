@@ -102,6 +102,9 @@ public:
     // Check if any UI elements are open/being clicked
     bool isClickOnUIElement();
 
+    // Check if player inventory contains the required recipe ingredient
+    bool playerHasIngredient(Entity playerEntity, const RecipeIngredient& recipeIngredient);
+
 private:
     GLFWwindow* m_window;
     RenderSystem* m_renderer;
@@ -166,16 +169,16 @@ private:
         { (int)TUTORIAL::WELCOME_SCREEN, {
             }},
         { (int)TUTORIAL::TOGGLE_TUTORIAL, {
-            "820px", "466px", "Let’s make your first potion! Toggle the tutorial with T at any time or N to skip to the tutorial step. Try pressing N now!"
+            "820px", "466px", "Let's make your first potion! Toggle the tutorial with T at any time or N to skip to the tutorial step. Try pressing N now!"
         }},
         { (int)TUTORIAL::RECIPE_BOOK, {
             "211px", "110px", "Head to the lectern using the WASD keys and press F to open the recipe book. You can also use R to access the recipe book at any time."
         }},
         { (int)TUTORIAL::FLIP_PAGE, {
-            "790px", "455px", "Flip to the recipe page for “Potion of Harming”."
+            "790px", "455px", "Flip to the recipe page for \"Potion of Harming\"."
         }},
         { (int)TUTORIAL::EXIT_GROTTO, {
-            "790px", "455px", "Looks like we’re missing a couple of ingredients! Exit the recipe book menu by pressing F and leave the grotto from the exit in the bottom right."
+            "790px", "455px", "Looks like we're missing a couple of ingredients! Exit the recipe book menu by pressing F and leave the grotto from the exit in the bottom right."
         }},
         { (int)TUTORIAL::COLLECT_ITEMS, {
             "25%", "35%", "Welcome to the forest! Collect 2 storm bark and 1 blightleaf for your potion, you may have to explore the area to find ingredients."

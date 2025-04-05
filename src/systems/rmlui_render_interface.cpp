@@ -333,7 +333,6 @@ Rml::TextureHandle RmlUiRenderInterface::LoadTexture(Rml::Vector2i& texture_dime
 {
     // Convert the source path to use our textures_path helper
     std::string fixed_path = textures_path(source);
-    std::cout << "Attempting to load texture from: " << fixed_path << std::endl;
     
     // Load image using stb_image
     int width, height, channels;

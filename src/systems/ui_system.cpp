@@ -1726,17 +1726,24 @@ bool UISystem::openRecipeBook(Entity recipe_book)
                     }
                     .page-button {
                         display: inline-block;
-                        background-color: #d9a66f;
-                        border-width: 3px;
-                        border-color: #5c3e23;
-                        border-radius: 20px;
-                        padding: 8px 20px;
-                        margin: 0 15px;
                         cursor: pointer;
                         font-size: 18px;
                         font-weight: bold;
                         color: #5c3e23;
                         font-family: Open Sans;
+                        width: 75px;
+                        height: 75px;
+                        position: absolute;
+                        bottom: 70px;
+                        transform: scaleY(-1);
+                    }
+                    #left-arrow {
+                        left: 120px;
+                        decorator: image("recipe_arrow_left.png" contain);
+                    }
+                    #right-arrow {
+                        right: 150px;
+                        decorator: image("recipe_arrow_right.png" contain);
                     }
                     .left-page {
                         position: absolute;
@@ -1827,8 +1834,8 @@ bool UISystem::openRecipeBook(Entity recipe_book)
                     <div class="left-page" id="left-page"></div>
                     <div class="right-page" id="right-page"></div>
                     <div class="page-navigation">
-                        <div class="page-button" id="left-arrow" onclick="prevPage">Previous Recipe</div>
-                        <div class="page-button" id="right-arrow" onclick="nextPage">Next Recipe</div>
+                        <div class="page-button" id="left-arrow" onclick="prevPage"></div>
+                        <div class="page-button" id="right-arrow" onclick="nextPage"></div>
                     </div>
                 </div>
             </body>
@@ -1936,22 +1943,22 @@ std::string UISystem::getRecipeHtml(int recipe_index)
 	html += "<div class='ingredients-title'>Ingredients:</div><br />";
 	html += "<div class='ingredients-list'>" + getRecipeIngredientsText(recipe) + "</div><br /><br />";
 
-	html += "<div class='potion-quality'>PERFECT QUALITY COLOUR</div><br />";
-
 	vec3 potion_color = recipe.finalPotionColor;
-	std::string color_style = "background-color: rgb(" +
-		std::to_string(int(potion_color.x)) + "," +
-		std::to_string(int(potion_color.y)) + "," +
-		std::to_string(int(potion_color.z)) + ");";
+	std::string potion_texture_path = ITEM_INFO.at(ItemType::POTION).texture_path;
+	std::string potion_img_style = "width: 32px; height: 32px; margin-left: 8px; transform: scaleY(-1);";
+	potion_img_style += " image-color: " + getImageColorProperty(potion_color, 255) + ";";
 
-	html += "<div class='potion-color-container'><div class='potion-color' style='" + color_style + "'></div></div>";
+	html += "<div style='display: flex; align-items: center; font-family: Caveat; font-size: 20px; font-weight: bold;'>"; 
+	html += "<span>Perfect Quality:</span>";
+	html += "<img src='" + potion_texture_path + "' style='" + potion_img_style + "'/>";
+	html += "</div>";
 
 	return html;
 }
 
 std::string UISystem::getRecipeStepsText(const Recipe& recipe)
 {
-	std::string html = "<div class='recipe-steps-title'>RECIPE:</div><br />";
+	std::string html = "<div class='recipe-steps-title'>Recipe:</div><br />";
 	html += "<div class='recipe-steps'>";
 
 	// Steps with numbering
@@ -2011,40 +2018,79 @@ std::string UISystem::getRecipeIngredientsText(const Recipe& recipe)
 {
 	std::string text;
 
+	Entity playerEntity = registry.players.entities[0];
+
 	for (const auto& ingredient : recipe.ingredients) {
 		std::string name = getIngredientName(ingredient);
 		int amt = ingredient.type == ItemType::POTION ? 1 : ingredient.amount;
-		text += std::to_string(amt) + "x " + name;
-		text += "<br />";
+		std::string tex = ITEM_INFO.count(ingredient.type) ? ITEM_INFO.at(ingredient.type).texture_path : "interactables/coffee_bean.png";
+
+		text += "<div style='display: flex; align-items: center; margin-bottom: 5px;'>";
+
+		std::string img_style = "width: 24px; height: 24px; margin-right: 8px; transform: scaleY(-1);";
+		if (ingredient.type == ItemType::POTION) {
+			PotionEffect effect = static_cast<PotionEffect>(ingredient.amount);
+			vec3 potion_color = { 128, 128, 128 }; // Default potion colour (TESTING)
+			for (const Recipe& r : RECIPES) {
+				if (r.effect == effect) {
+					potion_color = r.finalPotionColor;
+					break;
+				}
+			}
+			img_style += " image-color: " + getImageColorProperty(potion_color, 255) + ";";
+		}
+
+		text += "<img src='" + tex + "' style='" + img_style + "'/>";
+
+		std::string checkmark = "";
+		if (playerHasIngredient(playerEntity, ingredient)) {
+			checkmark = R"( <img src='recipe_check.png' style='width: 16px; height: 16px; margin-left: 5px; transform: scaleY(-1); vertical-align: middle;'/>)";
+		}
+
+		text += "<span>" + std::to_string(amt) + "x " + name + checkmark + "</span>";
+		text += "</div>";
 	}
 
 	return text;
 }
 
-std::string UISystem::getIngredientName(RecipeIngredient ing)
+bool UISystem::playerHasIngredient(Entity playerEntity, const RecipeIngredient& recipeIngredient)
 {
-	// Add potion name for potions
-	if (ing.type == ItemType::POTION) {
-		PotionEffect effect = static_cast<PotionEffect>(ing.amount);
-		for (Recipe r : RECIPES) {
-			if (effect == r.effect) {
-				return r.name;
+	const Inventory& playerInventory = registry.inventories.get(playerEntity);
+
+	for (Entity itemEntity : playerInventory.items) {
+		if (!registry.items.has(itemEntity)) continue;
+
+		const Item& itemComp = registry.items.get(itemEntity);
+
+		if (itemComp.type == recipeIngredient.type) {
+			if (itemComp.type != ItemType::POTION && itemComp.amount < recipeIngredient.amount) {
+				continue;
 			}
+
+			if (itemComp.type == ItemType::POTION) {
+				if (!registry.potions.has(itemEntity)) continue;
+				const Potion& potionComp = registry.potions.get(itemEntity);
+				PotionEffect requiredEffect = static_cast<PotionEffect>(recipeIngredient.amount);
+				if (potionComp.effect != requiredEffect) {
+					continue;
+				}
+			}
+
+			if (recipeIngredient.grindAmount > 0.f) {
+				if (!registry.ingredients.has(itemEntity)) continue;
+				const Ingredient& ingredientComp = registry.ingredients.get(itemEntity);
+				// fabs for float comparison https://stackoverflow.com/questions/17333/how-do-you-compare-float-and-double-while-accounting-for-precision-loss
+				if (fabs(ingredientComp.grindLevel - recipeIngredient.grindAmount) > FLT_EPSILON) {
+					continue;
+				}
+			}
+
+			return true;
 		}
 	}
 
-	std::string name = ITEM_INFO.at(ing.type).name;
-	if (ing.amount > 1 && name.substr(name.length() - 1) != "s") {
-		name += "s";
-	}
-
-	// Add grind stat for ingredient
-	if (ing.grindAmount > 0.f) {
-		int lvl = (int)(ing.grindAmount * 100);
-		name += " (" + std::to_string(lvl) + "% Grinded)";
-	}
-
-	return name;
+	return false;
 }
 
 void UISystem::createEffectsBar()
@@ -2188,4 +2234,28 @@ bool UISystem::isClickOnUIElement()
 	}
 
 	return false;
+}
+
+std::string UISystem::getIngredientName(RecipeIngredient ing)
+{
+	if (ing.type == ItemType::POTION) {
+		PotionEffect effect = static_cast<PotionEffect>(ing.amount);
+		for (Recipe r : RECIPES) {
+			if (effect == r.effect) {
+				return r.name;
+			}
+		}
+	}
+
+	std::string name = ITEM_INFO.at(ing.type).name;
+	if (ing.amount > 1 && name.substr(name.length() - 1) != "s") {
+		name += "s";
+	}
+
+	if (ing.grindAmount > 0.f) {
+		int lvl = (int)(ing.grindAmount * 100);
+		name += " (" + std::to_string(lvl) + "% Grinded)";
+	}
+
+	return name;
 }
