@@ -497,9 +497,11 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 	if (action == GLFW_RELEASE && button == GLFW_MOUSE_BUTTON_LEFT) {
 		if (id == "ladle") {
 			hovered->SetProperty("decorator", "image(\"interactables/spoon_on_table.png\" contain)");
-		} else if (id == "pestle") {
+		}
+		else if (id == "pestle") {
 			hovered->SetProperty("transform", "rotate(0deg)");
-		} else if (id == "mortar" && heldPestle) {
+		}
+		else if (id == "mortar" && heldPestle) {
 			heldPestle->SetProperty("transform", "rotate(0deg)");
 		}
 	}
@@ -554,7 +556,8 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 					hovered->SetProperty("top", LADLE_TOP_PX);
 					hovered->SetProperty("left", LADLE_LEFT_PX);
 					heldLadle = nullptr;
-				} else {
+				}
+				else {
 					heldLadle = hovered;
 					updateFollowMouse();
 				}
@@ -632,7 +635,8 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 					hovered->SetProperty("top", PESTLE_TOP_PX);
 					hovered->SetProperty("left", PESTLE_LEFT_PX);
 					heldPestle = nullptr;
-				} else {
+				}
+				else {
 					heldPestle = hovered;
 					updateFollowMouse();
 				}
@@ -652,7 +656,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 				if (mortarInventory.items.empty()) {
 					break;
 				}
-				
+
 				// Check it's fully grinded and pickable
 				Entity ingredient = mortarInventory.items[0];
 				if (!registry.items.has(ingredient) || !registry.items.get(ingredient).isCollectable) {
@@ -1948,7 +1952,7 @@ std::string UISystem::getRecipeHtml(int recipe_index)
 	std::string potion_img_style = "width: 32px; height: 32px; margin-left: 8px; transform: scaleY(-1);";
 	potion_img_style += " image-color: " + getImageColorProperty(potion_color, 255) + ";";
 
-	html += "<div style='display: flex; align-items: center; font-family: Caveat; font-size: 20px; font-weight: bold;'>"; 
+	html += "<div style='display: flex; align-items: center; font-family: Caveat; font-size: 20px; font-weight: bold;'>";
 	html += "<span>Perfect Quality:</span>";
 	html += "<img src='" + potion_texture_path + "' style='" + potion_img_style + "'/>";
 	html += "</div>";
