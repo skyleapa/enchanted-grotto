@@ -487,14 +487,25 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 	// Get mouse position
 	Rml::Vector2f mousePos = Rml::Vector2f(mouse_pos_x, mouse_pos_y);
 
+	// Get hovered element
+	Rml::Element* hovered = m_context->GetHoverElement();
+	if (!hovered) return;
+	std::string id = hovered->GetId();
+	int slotId = getSlotFromId(id);
+
+	// Check release click for resetting ladle and pestle textures
+	if (action == GLFW_RELEASE && button == GLFW_MOUSE_BUTTON_LEFT) {
+		if (id == "ladle") {
+			hovered->SetProperty("decorator", "image(\"interactables/spoon_on_table.png\" contain)");
+		} else if (id == "pestle") {
+			hovered->SetProperty("transform", "rotate(0deg)");
+		} else if (id == "mortar" && heldPestle) {
+			heldPestle->SetProperty("transform", "rotate(0deg)");
+		}
+	}
+
 	// Check clicks for inventory bar and cauldron
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT) {
-		Rml::Element* hovered = m_context->GetHoverElement();
-		if (!hovered) return;
-
-		std::string id = hovered->GetId();
-		int slotId = getSlotFromId(id);
-
 		// Check for an inventory click
 		if (slotId != -1) {
 			selectInventorySlot(slotId);
@@ -533,6 +544,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 				// If we click cauldron don't drop ladle
 				Rml::Element* possibleCauldron = m_context->GetElementAtPoint(mousePos, hovered);
 				if (possibleCauldron && possibleCauldron->GetId() == "cauldron") {
+					hovered->SetProperty("decorator", "image(\"interactables/spoon_in_hand.png\" flip-vertical contain)");
 					break;
 				}
 
@@ -616,11 +628,6 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 			}
 
 			if (id == "pestle") {
-				Rml::Element* possibleMortar = m_context->GetElementAtPoint(mousePos, hovered);
-				if (possibleMortar && possibleMortar->GetId() == "mortar") {
-					break;
-				}
-
 				if (heldPestle) {
 					hovered->SetProperty("top", PESTLE_TOP_PX);
 					hovered->SetProperty("left", PESTLE_LEFT_PX);
@@ -635,7 +642,9 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 
 			if (id == "mortar") {
 				// If we are holding a pestle we can't pick up ingredients
+				// Set rotation component
 				if (heldPestle) {
+					heldPestle->SetProperty("transform", "rotate(28deg)");
 					break;
 				}
 
@@ -665,12 +674,6 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 
 	// Check for consuming potion in inventory
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_RIGHT) {
-		Rml::Element* hovered = m_context->GetHoverElement();
-		if (!hovered) return;
-
-		std::string id = hovered->GetId();
-		int slotId = getSlotFromId(id);
-
 		if (slotId != -1 && registry.players.entities.size() > 0) {
 			selectInventorySlot(slotId);
 			registry.players.components[0].consumed_potion = true;
@@ -679,12 +682,6 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 
 	// remove selected item from inventory
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT && shift_key_pressed) {
-		Rml::Element* hovered = m_context->GetHoverElement();
-		if (!hovered) return;
-
-		std::string id = hovered->GetId();
-		int slotId = getSlotFromId(id);
-
 		if (registry.players.entities.size() == 0) return;
 		Entity entity = registry.players.entities[0];
 		if (!registry.inventories.has(entity)) return;

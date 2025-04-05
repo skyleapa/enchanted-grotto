@@ -118,7 +118,6 @@ void DragListener::checkCompletedStir() {
 
 void DragListener::endStir(Rml::Element* e) {
 	m_ui_system->cauldronDragUpdate(false);
-	e->SetProperty("decorator", "image(\"interactables/spoon_on_table.png\" contain)");
 	stirCoords.clear();
 }
 
@@ -231,7 +230,6 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 				return;
 			}
 
-			cur->SetProperty("decorator", "image(\"interactables/spoon_in_hand.png\" flip-vertical contain)");
 			stirCoords.push_back(getPolarCoordinates(mouseCoords, CAULDRON_CENTER));
 			return;
 		}
@@ -244,7 +242,6 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 				return;
 			}
 
-			pestle->SetProperty("transform", "rotate(28deg)");
 			pestleCoords.clear();
 			pestleCoords.push_back(getPolarCoordinates(mouseCoords, MORTAR_CENTER));
 			curGrinds = 0;
@@ -321,7 +318,6 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 				return;
 			}
 
-			pestle->SetProperty("transform", "rotate(0deg)");
 			pestleCoords.clear();
 			curGrinds = 0;
 			return;
