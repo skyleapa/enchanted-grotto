@@ -79,10 +79,10 @@ void BiomeSystem::switchBiome(int biome, bool is_first_load) {
 		}
 		
 		// Register with RespawnSystem before removal if it's a tracked entity type
-		// if (registry.items.has(entity) || registry.enemies.has(entity)) {
-		// 	// Mark as still in the respawn pool (no timer running yet)
-		// 	RespawnSystem::getInstance().registerEntity(entity, true);
-		// }
+		if (registry.items.has(entity) || registry.enemies.has(entity)) {
+			// Mark as still in the respawn pool (no timer running yet)
+			RespawnSystem::getInstance().registerEntity(entity, true);
+		}
 
 		to_remove.push_back(entity);
 	}
