@@ -1315,15 +1315,12 @@ bool UISystem::openCauldron(Entity cauldron, bool play_sound = true)
             <div id="ladle"></div>
             <div id="bottle"></div>
 			<div id="close-button">X</div>
-			<lottie src="animations/a_mountain.json"></lottie>
+			<lottie src="data/animations/a_mountain.json"></lottie>
         </body>
         </rml>
         )";
 
-		// Helps point to 'animations', 'fonts', etc. in the build output
-		std::string base_data_path = "data/";
-
-		m_cauldron_document = m_context->LoadDocumentFromMemory(cauldron_rml.c_str(), base_data_path);
+		m_cauldron_document = m_context->LoadDocumentFromMemory(cauldron_rml.c_str());
 		if (!m_cauldron_document) {
 			std::cerr << "UISystem::openCauldron - Failed to open cauldron" << std::endl;
 			return false;
