@@ -186,35 +186,28 @@ if(BUILD_GAME)
         target_link_libraries(${PROJECT_NAME} PUBLIC ${PIXMAN_LIBRARIES})
     endif()
 
-    # Add Windows-specific configuration
-    if(IS_OS_WINDOWS)
-        # Create font directory in build
-        file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/data/fonts)
-        
-        # Copy font file to build directory
+    # Create data directories in build
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/data/fonts)
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/data/animations)
+
+    # Copy assets from source directory to build directory
+    file(COPY "${CMAKE_SOURCE_DIR}/data/fonts/OpenSans-Regular.ttf"
+        DESTINATION "${CMAKE_BINARY_DIR}/data/fonts")
+    file(COPY "${CMAKE_SOURCE_DIR}/data/animations/"
+        DESTINATION "${CMAKE_BINARY_DIR}/data/animations")
+    
+    # Sometimes windows may generate build files in debug/release folders
+    if(EXISTS "${CMAKE_BINARY_DIR}/Debug")
         file(COPY "${CMAKE_SOURCE_DIR}/data/fonts/OpenSans-Regular.ttf" 
-            DESTINATION "${CMAKE_BINARY_DIR}/data/fonts")
-        if(EXISTS "${CMAKE_BINARY_DIR}/Debug")
-        file(COPY "${CMAKE_SOURCE_DIR}/data/fonts/OpenSans-Regular.ttf" 
-                DESTINATION "${CMAKE_BINARY_DIR}/Debug/data/fonts")
-        endif()
-        if(EXISTS "${CMAKE_BINARY_DIR}/Release")
-        file(COPY "${CMAKE_SOURCE_DIR}/data/fonts/OpenSans-Regular.ttf" 
-                DESTINATION "${CMAKE_BINARY_DIR}/Release/data/fonts")
-        endif()
+            DESTINATION "${CMAKE_BINARY_DIR}/Debug/data/fonts")
+        file(COPY "${CMAKE_SOURCE_DIR}/data/animations" 
+            DESTINATION "${CMAKE_BINARY_DIR}/Debug/data/animations")
     endif()
-
-    # Add Mac-specific configuration
-    if(IS_OS_MAC)
-        # Create data directories in build
-        file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/data/fonts)
-        file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/data/animations)
-
-        # Copy assets from source directory to build directory
-        file(COPY "${CMAKE_SOURCE_DIR}/data/fonts/OpenSans-Regular.ttf"
-            DESTINATION "${CMAKE_BINARY_DIR}/data/fonts")
-        file(COPY "${CMAKE_SOURCE_DIR}/data/animations/"
-            DESTINATION "${CMAKE_BINARY_DIR}/data/animations")
+    if(EXISTS "${CMAKE_BINARY_DIR}/Release")
+        file(COPY "${CMAKE_SOURCE_DIR}/data/fonts/OpenSans-Regular.ttf" 
+            DESTINATION "${CMAKE_BINARY_DIR}/Release/data/fonts")
+        file(COPY "${CMAKE_SOURCE_DIR}/data/animations" 
+            DESTINATION "${CMAKE_BINARY_DIR}/Release/data/animations")
     endif()
 endif()
 
