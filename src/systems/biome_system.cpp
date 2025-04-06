@@ -79,10 +79,10 @@ void BiomeSystem::switchBiome(int biome, bool is_first_load) {
 		}
 		
 		// Register with RespawnSystem before removal if it's a tracked entity type
-		if (registry.items.has(entity) || registry.enemies.has(entity)) {
-			// Mark as still in the respawn pool (no timer running yet)
-			RespawnSystem::getInstance().registerEntity(entity, true);
-		}
+		// if (registry.items.has(entity) || registry.enemies.has(entity)) {
+		// 	// Mark as still in the respawn pool (no timer running yet)
+		// 	RespawnSystem::getInstance().registerEntity(entity, true);
+		// }
 
 		to_remove.push_back(entity);
 	}
@@ -161,6 +161,17 @@ void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
 			if (registry.renderRequests.has(mortar)) {
 				RenderRequest& rr = registry.renderRequests.get(mortar);
 				rr.is_visible = true;
+			}
+			if (registry.motions.has(mortar)) {
+				Motion& motion = registry.motions.get(mortar);
+				for (Entity tb_entity : registry.textboxes.entities) {
+					if (registry.textboxes.get(tb_entity).targetItem == mortar) {
+						m_ui_system->removeRmlUITextbox(tb_entity.id());
+						registry.remove_all_components_of(tb_entity);
+						break;
+					}
+				}
+				createTextbox(renderer, vec2(motion.position.x, motion.position.y - 25), mortar, "[F] Mortar & Pestle");
 			}
 		}
 	}
