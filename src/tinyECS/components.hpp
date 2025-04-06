@@ -60,6 +60,9 @@ struct ScreenState
 	std::vector<std::string> killed_enemies = {};
 	std::vector<std::string> unlocked_biomes = {};
 	bool first_game_load = true;
+	bool play_ending = false;
+	bool saved_grotto = false;
+	float fog_intensity = 1.5f;
 };
 
 // A struct to refer to debugging graphics in the ECS
@@ -254,6 +257,11 @@ struct WelcomeScreen {
 
 };
 
+struct TexturedEffect {
+	float animation_timer = 0.f;
+	bool done_growing = false;
+};
+
 /**
  * The following enumerators represent global identifiers refering to graphic
  * assets. For example TEXTURE_ASSET_ID are the identifiers of each texture
@@ -394,7 +402,8 @@ enum class TEXTURE_ASSET_ID
 	WELCOME_TO_GROTTO = POTION + 1,
 	CAULDRON_WATER = WELCOME_TO_GROTTO + 1,
 	POTION_OF_REJUVENATION = CAULDRON_WATER + 1,
-	TEXTURE_COUNT = POTION_OF_REJUVENATION + 1,
+	GLOW_EFFECT = POTION_OF_REJUVENATION + 1,
+	TEXTURE_COUNT = GLOW_EFFECT + 1,
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 
@@ -671,6 +680,7 @@ const std::unordered_map<ItemType, std::vector<BIOME>> itemRespawnBiomes = {
 // damage flash only to be applied to player and enemies
 struct DamageFlash {
 	float flash_value = 1.f; // defaults to 0 for no flash, and 1 for red tint
+	bool kill_after_flash = false;
 };
 
 struct Regeneration {

@@ -10,10 +10,11 @@ const vec3 BG = vec3(0.0, 0.0, 0.0);
 const vec2 MOTION = vec2(-0.5, 0.3);
 const float ZOOM = 3.0;
 const int OCTAVES = 4;
-const float INTENSITY = 1.5;
 
 uniform vec2 iResolution;
 uniform float iTime;
+uniform float INTENSITY;
+
 
 float random(vec2 st) {
     return fract(sin(dot(st.xy, vec2(12.9818,79.279)))*43758.5453123);

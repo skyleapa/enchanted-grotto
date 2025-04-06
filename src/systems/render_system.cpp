@@ -459,6 +459,9 @@ void RenderSystem::drawFog()
 	vec2 resolution = vec2(frameBufferWidth, frameBufferHeight);
 	glUniform2fv(glGetUniformLocation(program, "iResolution"), 1, (float*)&resolution);
 	glUniform1f(glGetUniformLocation(program, "iTime"), iTime);
+
+	ScreenState& screen = registry.screenStates.components[0];
+	glUniform1f(glGetUniformLocation(program, "INTENSITY"), screen.fog_intensity);
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, fog_texture);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);

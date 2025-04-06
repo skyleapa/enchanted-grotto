@@ -389,8 +389,13 @@ void BiomeSystem::createForestEx()
 	createCollectableIngredient(renderer, vec2(708, 580), ItemType::EVERFERN, 1, true);
 	createCollectableIngredient(renderer, vec2(1153, 109), ItemType::BLIGHTLEAF, 1, true);
 	createCollectableIngredient(renderer, vec2(72, 619), ItemType::BLIGHTLEAF, 1, true);
-	createEnt(renderer, vec2(606, 390), 1, "Ent");
-	createEnt(renderer, vec2(1011, 158), 1, "Ent");
+
+	ScreenState& screen = registry.screenStates.components[0];
+	if (!screen.saved_grotto) {
+		// should we also have a check for killed enemies here like we do with mummies?
+		createEnt(renderer, vec2(606, 390), 1, "Ent");
+		createEnt(renderer, vec2(1011, 158), 1, "Ent 2");
+	}
 
 	createMasterPotionPedestal(renderer, vec2(638, 150));
 
@@ -408,6 +413,7 @@ void BiomeSystem::createForestEx()
 		if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "saved-grotto") != screen.unlocked_biomes.end())
 		{
 			createRejuvenationPotion(renderer);
+			createGlowEffect(renderer, true); // don't regrow effect when re-entering biome
 		}
 	}
 
@@ -433,12 +439,14 @@ void BiomeSystem::createDesert()
 	createCollectableIngredient(renderer, vec2(400, 194), ItemType::HEALING_LILY, 1, true);
 
 	ScreenState screen = registry.screenStates.components[0];
-	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Mummy 1") == screen.killed_enemies.end())
-	{
-		createMummy(renderer, vec2(GRID_CELL_WIDTH_PX * 15, GRID_CELL_HEIGHT_PX * 5), 1, "Mummy 1");
-	}
-	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Mummy 2") == screen.killed_enemies.end()) {
-		createMummy(renderer, vec2(GRID_CELL_WIDTH_PX * 4, GRID_CELL_HEIGHT_PX * 8), 1, "Mummy 2");
+	if (!screen.saved_grotto) {
+		if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Mummy 1") == screen.killed_enemies.end())
+		{
+			createMummy(renderer, vec2(GRID_CELL_WIDTH_PX * 15, GRID_CELL_HEIGHT_PX * 5), 1, "Mummy 1");
+		}
+		if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Mummy 2") == screen.killed_enemies.end()) {
+			createMummy(renderer, vec2(GRID_CELL_WIDTH_PX * 4, GRID_CELL_HEIGHT_PX * 8), 1, "Mummy 2");
+		}
 	}
 }
 
