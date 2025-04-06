@@ -69,12 +69,19 @@ void BiomeSystem::step(float elapsed_ms_since_last_update) {
 
 void BiomeSystem::switchBiome(int biome, bool is_first_load) {
 	std::vector<Entity> to_remove;
+	
 	for (auto entity : registry.motions.entities) {
 		if (registry.players.has(entity) || registry.inventories.has(entity) || registry.potions.has(entity)) continue; // don't lose potion effects
 
 		// don't delete any render requests marked as invisible
 		if (registry.renderRequests.has(entity)) {
 			if (!registry.renderRequests.get(entity).is_visible) continue;
+		}
+		
+		// Register with RespawnSystem before removal if it's a tracked entity type
+		if (registry.items.has(entity) || registry.enemies.has(entity)) {
+			// Mark as still in the respawn pool (no timer running yet)
+			RespawnSystem::getInstance().registerEntity(entity, true);
 		}
 
 		to_remove.push_back(entity);
@@ -465,8 +472,8 @@ void BiomeSystem::createMushroom()
 	createCollectableIngredient(renderer, vec2(904, 454), ItemType::GLOWSHROOM, 1, true);
 	createCollectableIngredient(renderer, vec2(1090, 114), ItemType::DOOMCAP, 1, true);
 
-	createEvilMushroom(renderer, vec2(112, 598), 1, "Evil Mushroom 1");
-	createEvilMushroom(renderer, vec2(1037, 501), 1, "Evil Mushroom 2");
+	createEvilMushroom(renderer, vec2(112, 598), 1, "Evil Mushroom");
+	createEvilMushroom(renderer, vec2(1037, 501), 1, "Evil Mushroom");
 
 	if (!ADMIN_FLAG) {
 		ScreenState screen = registry.screenStates.components[0];
@@ -503,8 +510,8 @@ void BiomeSystem::createCrystal()
 	createCollectableIngredient(renderer, vec2(302, 617), ItemType::CRYSTAL_SHARD, 1, true);
 	createCollectableIngredient(renderer, vec2(1141, 624), ItemType::QUARTZMELON, 1, true);
 
-	createCrystalBug(renderer, vec2(632, 586), 1, "Crystal Bug 1");
-	createCrystalBug(renderer, vec2(876, 137), 1, "Crystal Bug 2");
+	createCrystalBug(renderer, vec2(632, 586), 1, "Crystal Bug");
+	createCrystalBug(renderer, vec2(876, 137), 1, "Crystal Bug");
 
 	createCrystalToMushroom(renderer, vec2(50, 200), "Crystal To Mushroom");
 	createCrystalToForestEx(renderer, vec2(930, 30), "Crystal to Forest Ex");

@@ -111,6 +111,8 @@ bool WorldSystem::init(RenderSystem* renderer_arg, BiomeSystem* biome_sys)
 
 	this->renderer = renderer_arg;
 	this->biome_sys = biome_sys;
+	
+	RespawnSystem::getInstance().renderer = renderer_arg;
 
 	// Set all states to default
 	restart_game(false);
@@ -175,6 +177,9 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		}
 	}
 
+	// Update respawn system timers for persistent respawns
+	RespawnSystem::getInstance().step(elapsed_ms_since_last_update);
+	
 	handle_item_respawn(elapsed_ms_since_last_update);
 	updateThrownAmmo(elapsed_ms_since_last_update);
 
@@ -306,11 +311,19 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 				if (enemy.name == "Ent") {
 					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::STORM_BARK, 1, false);
 				}
-				else if (enemy.name == "Mummy 1" || enemy.name == "Mummy 2") {
+				else if (enemy.name.find("Mummy") != std::string::npos) {
 					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MUMMY_BANDAGES, 1, false);
 				}
 
-				// add enemy name to killed_enemies for persistence
+				// Register this enemy for respawn with the RespawnSystem
+				if (!enemy.persistentID.empty()) {
+					// Longer respawn time for enemies (2-3 minutes)
+					float respawnTime = (rand() % 60000 + 120000); // 2-3 minutes
+					RespawnSystem::getInstance().registerEntity(enemy_entity, false);
+					RespawnSystem::getInstance().setRespawning(enemy.persistentID, respawnTime);
+				}
+
+				// add enemy name to killed_enemies for old persistence
 				if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), enemy.name) == screen.killed_enemies.end()) {
 					screen.killed_enemies.push_back(enemy.name);
 				}
@@ -852,7 +865,17 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 		}
 	}
 
-	// Set a random respawn time (10-15 seconds)
+	if (item_info.canRespawn && item_info.isCollectable) {
+		RespawnSystem::getInstance().registerEntity(item, false);
+		
+		// Set a random respawn time (60-90 seconds)
+		float respawnTime = (rand() % 30000 + 60000);
+		
+		if (!item_info.persistentID.empty()) {
+			RespawnSystem::getInstance().setRespawning(item_info.persistentID, respawnTime);
+		}
+	}
+
 	item_info.respawnTime = (rand() % 5001 + 10000);
 	item_info.lastBiome = static_cast<BIOME>(registry.screenStates.components[0].biome);
 

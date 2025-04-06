@@ -3,6 +3,7 @@
 #include "common.hpp"
 #include "tinyECS/tiny_ecs.hpp"
 #include "systems/render_system.hpp"
+#include "systems/respawn_system.hpp"
 
 Entity createGridLine(vec2 start_pos, vec2 end_pos);
 Entity createBoundaryLine(RenderSystem* renderer, vec2 position, vec2 scale);

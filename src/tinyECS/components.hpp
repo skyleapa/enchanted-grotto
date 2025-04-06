@@ -141,6 +141,7 @@ struct Item
 	bool is_ammo = false;
 	bool canRespawn = true;
 	BIOME lastBiome;
+	std::string persistentID = ""; // Unique identifier for respawn tracking
 };
 
 // an item that can be added to potions
@@ -226,6 +227,7 @@ struct Enemy {
 	float wander_timer = 10.0f;  // 10-second random movement before returning
 	std::string name; // gets passed into killed_enemies
 	float attack_damage;
+	std::string persistentID = ""; // Unique identifier for respawn tracking
 };
 
 struct Guardian {
@@ -663,6 +665,7 @@ const std::unordered_map<ItemType, std::vector<BIOME>> itemRespawnBiomes = {
 	{ ItemType::GALEFRUIT,      { BIOME::FOREST, BIOME::FOREST_EX } },
 	{ ItemType::EVERFERN,       { BIOME::FOREST, BIOME::FOREST_EX } },
 	{ ItemType::BLIGHTLEAF,     { BIOME::FOREST, BIOME::FOREST_EX } },
+	{ ItemType::STORM_BARK,     { BIOME::FOREST, BIOME::FOREST_EX } },
 
 	// Desert
 	{ ItemType::PETRIFIED_BONE, { BIOME::DESERT } },
