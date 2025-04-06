@@ -179,6 +179,13 @@ if(BUILD_GAME)
 
     target_link_libraries(${PROJECT_NAME} PUBLIC RmlUi::RmlUi)
 
+    if (IS_OS_MAC)
+        find_package(PkgConfig REQUIRED)
+        pkg_check_modules(PIXMAN REQUIRED pixman-1)
+        target_include_directories(${PROJECT_NAME} PUBLIC ${PIXMAN_INCLUDE_DIRS})
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${PIXMAN_LIBRARIES})
+    endif()
+
     # Add Windows-specific configuration
     if(IS_OS_WINDOWS)
         # Create font directory in build
@@ -199,12 +206,15 @@ if(BUILD_GAME)
 
     # Add Mac-specific configuration
     if(IS_OS_MAC)
-        # Create font directory in build
+        # Create data directories in build
         file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/data/fonts)
-        
-        # Copy fonts from ext directory to build directory
-        file(COPY "${CMAKE_SOURCE_DIR}/data/fonts/OpenSans-Regular.ttf" 
+        file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/data/animations)
+
+        # Copy assets from source directory to build directory
+        file(COPY "${CMAKE_SOURCE_DIR}/data/fonts/OpenSans-Regular.ttf"
             DESTINATION "${CMAKE_BINARY_DIR}/data/fonts")
+        file(COPY "${CMAKE_SOURCE_DIR}/data/animations/"
+            DESTINATION "${CMAKE_BINARY_DIR}/data/animations")
     endif()
 endif()
 
