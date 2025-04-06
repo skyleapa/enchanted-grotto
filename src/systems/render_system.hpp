@@ -123,6 +123,8 @@ class RenderSystem {
 		textures_path("enemies/guardian_desert.png"),
 		textures_path("enemies/guardian_shroomland.png"),
 		textures_path("enemies/guardian_crystal.png"),
+		textures_path("enemies/crystal_bug.png"),
+		textures_path("enemies/evil_mushroom.png"),
 		textures_path("interactables/master_potion_pedestal.png"),
 		textures_path("interactables/potion_item.png"),
 		textures_path("welcome_to_grotto.png"),

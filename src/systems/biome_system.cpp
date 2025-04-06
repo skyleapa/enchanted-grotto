@@ -340,7 +340,7 @@ void BiomeSystem::createForest()
 
 	createTreeNoFruit(renderer, vec2(714, 465));
 	createTree(renderer, vec2(857, 540));
-	createTreeNoFruit(renderer, vec2(1080, 500));
+	createTreeNoFruit(renderer, vec2(520, 550));
 
 	createBush(renderer, vec2(1078, 620));
 
@@ -465,6 +465,9 @@ void BiomeSystem::createMushroom()
 	createCollectableIngredient(renderer, vec2(904, 454), ItemType::GLOWSHROOM, 1, true);
 	createCollectableIngredient(renderer, vec2(1090, 114), ItemType::DOOMCAP, 1, true);
 
+	createEvilMushroom(renderer, vec2(112, 598), 1, "Evil Mushroom 1");
+	createEvilMushroom(renderer, vec2(1037, 501), 1, "Evil Mushroom 2");
+
 	if (!ADMIN_FLAG) {
 		ScreenState screen = registry.screenStates.components[0];
 		if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "crystal") == screen.unlocked_biomes.end())
@@ -499,6 +502,9 @@ void BiomeSystem::createCrystal()
 	createCollectableIngredient(renderer, vec2(458, 355), ItemType::CRYSTAL_SHARD, 1, true);
 	createCollectableIngredient(renderer, vec2(302, 617), ItemType::CRYSTAL_SHARD, 1, true);
 	createCollectableIngredient(renderer, vec2(1141, 624), ItemType::QUARTZMELON, 1, true);
+
+	createCrystalBug(renderer, vec2(632, 586), 1, "Crystal Bug 1");
+	createCrystalBug(renderer, vec2(876, 137), 1, "Crystal Bug 2");
 
 	createCrystalToMushroom(renderer, vec2(50, 200), "Crystal To Mushroom");
 	createCrystalToForestEx(renderer, vec2(930, 30), "Crystal to Forest Ex");

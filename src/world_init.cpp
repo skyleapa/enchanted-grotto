@@ -1763,6 +1763,84 @@ Entity createMummy(RenderSystem* renderer, vec2 position, int movable, std::stri
 	return entity;
 }
 
+Entity createEvilMushroom(RenderSystem* renderer, vec2 position, int movable, std::string name) {
+
+	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " ent" << std::endl;
+
+	Enemy& enemy = registry.enemies.emplace(entity);
+	enemy.attack_radius = 5;
+	enemy.health = 45;
+	enemy.start_pos = position;
+	enemy.state = (int)ENEMY_STATE::IDLE;
+	enemy.can_move = movable;
+	enemy.name = name;
+	enemy.attack_damage = 10;
+
+	// auto& terrain = registry.terrains.emplace(entity);
+	// terrain.collision_setting = 1.0f; // cannot walk past guardian
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+	motion.scale = vec2({ EVIL_MUSHROOM_WIDTH, EVIL_MUSHROOM_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::EVIL_MUSHROOM,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::TERRAIN,
+		});
+
+	return entity;
+}
+
+Entity createCrystalBug(RenderSystem* renderer, vec2 position, int movable, std::string name) {
+
+	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " ent" << std::endl;
+
+	Enemy& enemy = registry.enemies.emplace(entity);
+	enemy.attack_radius = 5;
+	enemy.health = 100;
+	enemy.start_pos = position;
+	enemy.state = (int)ENEMY_STATE::IDLE;
+	enemy.can_move = movable;
+	enemy.name = name;
+	enemy.attack_damage = 15;
+
+	// auto& terrain = registry.terrains.emplace(entity);
+	// terrain.collision_setting = 1.0f; // cannot walk past guardian
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+	motion.scale = vec2({ CRYSTAL_BUG_WIDTH, CRYSTAL_BUG_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::CRYSTAL_BUG,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::TERRAIN,
+		});
+
+	return entity;
+}
+
 Entity createGuardianDesert(RenderSystem* renderer, vec2 position, int movable, std::string name) {
 
 	auto entity = Entity();
