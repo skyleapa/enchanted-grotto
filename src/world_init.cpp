@@ -171,12 +171,17 @@ Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemTy
 
 	Entity textbox = createTextbox(renderer, vec2(textboxX, textboxY), entity, text);
 
+	// Use item layer for Gale Fruit and Coffee Beans, otherwise use structure (so player renders above dropped items)
+	RENDER_LAYER layer = (type == ItemType::GALEFRUIT || type == ItemType::COFFEE_BEANS || type == ItemType::CACTUS_PULP)
+		? RENDER_LAYER::ITEM
+		: RENDER_LAYER::STRUCTURE;
+
 	registry.renderRequests.insert(
 		entity,
 		{ info.texture,
 		 EFFECT_ASSET_ID::TEXTURED,
 		 GEOMETRY_BUFFER_ID::SPRITE,
-		 RENDER_LAYER::ITEM });
+		 layer });
 
 	return entity;
 }
@@ -539,6 +544,11 @@ Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, std::st
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " cauldron" << std::endl;
 
+	auto& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.width_ratio = 0.80f;
+	terrain.height_ratio = 0.30f;
+
 	Item& item = registry.items.emplace(entity);
 	item.type = ItemType::CAULDRON;
 	item.name = name;
@@ -558,7 +568,9 @@ Entity createCauldron(RenderSystem* renderer, vec2 position, vec2 scale, std::st
 	// Create cauldron
 	auto& cauldron = registry.cauldrons.emplace(entity);
 	cauldron.water = waterEntity;
-	if (create_textbox) createTextbox(renderer, position, entity, "[F] Use Cauldron");
+
+	// note: we are also creating textbox in biome_system, so any updates to this should be updated there too
+	if (create_textbox) createTextbox(renderer, vec2(position.x + 50, position.y - 50), entity, "[F] Use Cauldron");
 
 	// Give cauldron an inventory
 	auto& inv = registry.inventories.emplace(entity);
@@ -599,7 +611,7 @@ Entity createMortarPestle(RenderSystem* renderer, vec2 position, vec2 scale, std
 
 	// Create mortar pestle
 	registry.mortarAndPestles.emplace(entity);
-	createTextbox(renderer, { GRID_CELL_WIDTH_PX * 6.5, GRID_CELL_HEIGHT_PX * 3 }, entity, "[F] Use Mortar & Pestle");
+	createTextbox(renderer, { GRID_CELL_WIDTH_PX * 7.2, GRID_CELL_HEIGHT_PX * 3 }, entity, "[F] Mortar & Pestle");
 
 	// Give mortar an inventory
 	auto& inv = registry.inventories.emplace(entity);
@@ -673,7 +685,7 @@ Entity createRecipeBook(RenderSystem* renderer, vec2 position, vec2 scale, std::
 	motion.position = position;
 	motion.scale = scale;
 
-	Entity textbox = createTextbox(renderer, position, entity, "[F] Recipe Book");
+	Entity textbox = createTextbox(renderer, vec2(position.x - 50, position.y - 120), entity, "[F] Recipe Book");
 
 	registry.renderRequests.insert(
 		entity,
@@ -1902,8 +1914,8 @@ Entity createMasterPotionPedestal(RenderSystem* renderer, vec2 position)
 	auto entity = Entity();
 	Terrain& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
-	terrain.height_ratio = 0.1f;
-	terrain.width_ratio = 0.2f;
+	terrain.height_ratio = 0.3f;
+	terrain.width_ratio = 0.3f;
 
 	Item& item = registry.items.emplace(entity);
 	item.type = ItemType::MASTER_POTION_PEDESTAL;
@@ -1936,7 +1948,10 @@ Entity createMasterPotionPedestal(RenderSystem* renderer, vec2 position)
 		 GEOMETRY_BUFFER_ID::SPRITE,
 		 RENDER_LAYER::TERRAIN });
 
-	createTextbox(renderer, vec2(position.x - 80, position.y - 100), entity, "A calm warmth surrounds the pedestal...something is missing. Perhaps a potion strong enough to breathe life back into this place.");
+	ScreenState& screen = registry.screenStates.components[0];
+	if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "saved-grotto") == screen.unlocked_biomes.end()) {
+		createTextbox(renderer, vec2(position.x - 80, position.y - 100), entity, "A calm warmth surrounds the pedestal...something is missing. Perhaps a potion strong enough to breathe life back into this place.");
+	}
 
 	return entity;
 }
@@ -1973,7 +1988,8 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 	ammo.start_pos = player_motion.position;
 	if (registry.potions.has(item_entity)) {
 		ammo.damage = registry.potions.get(item_entity).effectValue;
-	} else {
+	}
+	else {
 		ammo.damage = 50;
 	}
 
@@ -1989,4 +2005,33 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 		});
 
 	return true;
+}
+
+Entity createRejuvenationPotion(RenderSystem* renderer)
+{
+	auto entity = Entity();
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 2.0f; // no collision
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+
+	// fixed position for potion since we're calling this code from 2 places
+	motion.position = vec2(638, 110);
+
+	motion.scale = vec2({ 40, 40 });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::POTION_OF_REJUVENATION,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::ITEM });
+
+	return entity;
 }

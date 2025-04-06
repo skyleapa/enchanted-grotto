@@ -180,12 +180,9 @@ struct Menu
 	bool keyInput;	 // true if we allow key input
 };
 
-// TODO: Better Mortar and pestle representation
 struct MortarAndPestle
 {
-	std::vector<Entity> items;
-	int grindLevel;
-	int itemState;
+	bool grinded = false;
 };
 
 
@@ -406,7 +403,8 @@ enum class TEXTURE_ASSET_ID
 	POTION = MASTER_POTION_PEDESTAL + 1,
 	WELCOME_TO_GROTTO = POTION + 1,
 	CAULDRON_WATER = WELCOME_TO_GROTTO + 1,
-	TEXTURE_COUNT = CAULDRON_WATER + 1,
+	POTION_OF_REJUVENATION = CAULDRON_WATER + 1,
+	TEXTURE_COUNT = POTION_OF_REJUVENATION + 1,
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 

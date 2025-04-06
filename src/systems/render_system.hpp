@@ -126,7 +126,8 @@ class RenderSystem {
 		textures_path("interactables/master_potion_pedestal.png"),
 		textures_path("interactables/potion_item.png"),
 		textures_path("welcome_to_grotto.png"),
-		textures_path("interactables/cauldron_water.png")
+		textures_path("interactables/cauldron_water.png"),
+		textures_path("interactables/potion_of_rejuvenation.png")
 	};
 
 	std::array<GLuint, effect_count> effects;

@@ -612,6 +612,8 @@ void WorldSystem::on_mouse_move(vec2 mouse_position)
 
 void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 {
+	// std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
+
 	// Pass the event to the UI system if it's initialized 
 	if (m_ui_system != nullptr) {
 		bool isOpen = m_ui_system->isClickOnUIElement();
@@ -626,7 +628,7 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 		return;
 	}
 
-	// std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
+	std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
 	// std::cout << "mouse tile position: " << tile_x << ", " << tile_y << std::endl;
 
 	if (button == GLFW_MOUSE_BUTTON_LEFT && throwAmmo(vec2(mouse_pos_x, mouse_pos_y))) {
@@ -1056,6 +1058,14 @@ bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 					createForestExToCrystal(renderer, vec2(930, 665), "Forest Ex to Crystal");
 					createMushroomToCrystal(renderer, vec2(1220, 160), "Mushroom to Crystal");
 
+				}
+				else if (registry.items.get(guardianEntity).type == ItemType::MASTER_POTION_PEDESTAL)
+				{
+					// persist that we have finished the game
+					if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "saved-grotto") == screen.unlocked_biomes.end()) {
+						screen.unlocked_biomes.push_back("saved-grotto");
+					}
+					createRejuvenationPotion(renderer);
 				}
 
 				// remove textbox
