@@ -1766,9 +1766,9 @@ Entity createGuardianDesert(RenderSystem* renderer, vec2 position, int movable, 
 	guardian.unlock_potion = PotionEffect::SATURATION;
 	guardian.exit_direction = { 0, -1 }; // it leaves upwards
 
-	guardian.hint_dialogue = "The heat out here drains everything. I need a potion that truly saturates.";
-	guardian.wrong_potion_dialogue = "Nope. That's not what I need.";
-	guardian.success_dialogue = "Great! That's what I needed.";
+	guardian.hint_dialogue = "I am the guardian of the Desert. Think you can douse my spirit? Ha!";
+	guardian.wrong_potion_dialogue = "You call that a potion?";
+	guardian.success_dialogue = "What—no! I'm crumbling! Whatever that was, I'm out!";
 
 	auto& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
@@ -1814,9 +1814,9 @@ Entity createGuardianMushroom(RenderSystem* renderer, vec2 position, int movable
 	guardian.unlock_potion = PotionEffect::ALKALESCENCE;
 	guardian.exit_direction = vec2(0, 1);
 
-	guardian.hint_dialogue = "Things have been too acidic around here. I need something to balance it out.";
-	guardian.wrong_potion_dialogue = "Doesn't help, I need something better";
-	guardian.success_dialogue = "Okay... that's more like it.";
+	guardian.hint_dialogue = "I'm the guardian to the Shroomlands. Fungus thrives in acid. Only something basic could challenge me.";
+	guardian.wrong_potion_dialogue = "You'll need more than that to neutralize me.";
+	guardian.success_dialogue = " Wait... what is this? A base? Do you want me to neutralize! I've gotta get out of here.";
 
 	auto& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
@@ -1863,9 +1863,9 @@ Entity createGuardianCrystal(RenderSystem* renderer, vec2 position, int movable,
 	guardian.unlock_potion = PotionEffect::CLARITY;
 	guardian.exit_direction = (registry.screenStates.components[0].biome == (GLuint)BIOME::FOREST_EX) ? vec2(0, 1) : vec2(1, 0);
 
-	guardian.hint_dialogue = "Everything's a bit foggy. I need to clear my head.";
-	guardian.wrong_potion_dialogue = "That made it worse.";
-	guardian.success_dialogue = "That helped.";
+	guardian.hint_dialogue = "They say crystals love the dark - and I thrive in it. Light? Pfft. As if you could ever shine bright enough to cut through me.";
+	guardian.wrong_potion_dialogue = "Nothing you have is strong enough to move me!";
+	guardian.success_dialogue = "What is this? Radiance? No, no, no - it's refracting everywhere! My shadows! I'm too clear-headed now!";
 
 	auto& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
@@ -1914,6 +1914,10 @@ Entity createMasterPotionPedestal(RenderSystem* renderer, vec2 position)
 	Guardian& guardian = registry.guardians.emplace(entity);
 	guardian.unlock_potion = PotionEffect::REJUVENATION;
 
+	guardian.hint_dialogue = "A calm warmth surrounds the pedestal... Something's missing—perhaps a potion to restore life to this place.";
+	guardian.wrong_potion_dialogue = "The magic stirs—but not enough. This isn't the one.";
+	guardian.success_dialogue  = "The potion flows...Light returns. The Grotto breathes once more.";
+
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
 	registry.meshPtrs.emplace(entity, &mesh);
@@ -1932,7 +1936,7 @@ Entity createMasterPotionPedestal(RenderSystem* renderer, vec2 position)
 		 GEOMETRY_BUFFER_ID::SPRITE,
 		 RENDER_LAYER::TERRAIN });
 
-	createTextbox(renderer, vec2(position.x - 80, position.y - 100), entity, "[F] Place Potion of Rejuvenation");
+	createTextbox(renderer, vec2(position.x - 80, position.y - 100), entity, "A calm warmth surrounds the pedestal...something is missing. Perhaps a potion strong enough to breathe life back into this place.");
 
 	return entity;
 }

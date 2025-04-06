@@ -40,6 +40,7 @@ public:
 	ComponentContainer<WelcomeScreen> welcomeScreens;
 	ComponentContainer<DamageFlash> damageFlashes;
 	ComponentContainer<Regeneration> regen;
+	ComponentContainer<DelayedMovement> delayedMovements;
 
 	// constructor that adds all containers for looping over them
 	ECSRegistry()

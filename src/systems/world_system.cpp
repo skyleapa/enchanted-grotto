@@ -182,6 +182,17 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	updatePlayerState(player, player_motion, elapsed_ms_since_last_update);
 	update_textbox_visibility();
 
+	for (Entity e : registry.delayedMovements.entities) {
+		DelayedMovement& delay = registry.delayedMovements.get(e);
+		delay.delay_ms -= elapsed_ms_since_last_update;
+		if (delay.delay_ms <= 0.f) {
+			if (registry.motions.has(e)) {
+				registry.motions.get(e).velocity = delay.velocity;
+			}
+			registry.delayedMovements.remove(e);
+		}
+	}	
+
 	return true;
 }
 
@@ -1048,17 +1059,20 @@ bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 				}
 
 				// remove textbox
-				for (auto textbox : registry.textboxes.entities) {
-					if (registry.textboxes.get(textbox).targetItem == guardianEntity) {
-						std::cout << "removing textbox" << std::endl;
-						m_ui_system->removeRmlUITextbox(textbox.id());
-						registry.remove_all_components_of(textbox);
-					}
-				}
+				// for (auto textbox : registry.textboxes.entities) {
+				// 	if (registry.textboxes.get(textbox).targetItem == guardianEntity) {
+				// 		std::cout << "removing textbox" << std::endl;
+				// 		m_ui_system->removeRmlUITextbox(textbox.id());
+				// 		registry.remove_all_components_of(textbox);
+				// 	}
+				// }
 
 				// Set guardian movement to the direction of the exit
+				showTemporaryGuardianDialogue(guardianEntity, guardian.success_dialogue);
 				if (registry.motions.has(guardianEntity) && guardian.exit_direction != vec2(0, 0)) {
-					registry.motions.get(guardianEntity).velocity = guardian.exit_direction * GUARDIAN_SPEED;
+					DelayedMovement& delay = registry.delayedMovements.emplace(guardianEntity);
+					delay.velocity = guardian.exit_direction * GUARDIAN_SPEED;
+					delay.delay_ms = 2000.f; // 2 seconds to let player read dialogue
 				}
 
 				if (registry.items.has(guardianEntity)) {
@@ -1069,8 +1083,6 @@ bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 				}
 
 				std::cout << "You got da potion" << std::endl;
-
-				showTemporaryGuardianDialogue(guardianEntity, guardian.success_dialogue);
 
 				return true;
 			}

@@ -351,7 +351,7 @@ void BiomeSystem::createForest()
 		ScreenState screen = registry.screenStates.components[0];
 		if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "desert") == screen.unlocked_biomes.end())
 		{
-			Entity desertGuardian = createGuardianDesert(renderer, vec2(GRID_CELL_WIDTH_PX * 2, GRID_CELL_HEIGHT_PX * 3), 0, "Desert Guardian");
+			Entity desertGuardian = createGuardianDesert(renderer, vec2(GRID_CELL_WIDTH_PX * 2, GRID_CELL_HEIGHT_PX * 2.5), 0, "Desert Guardian");
 		}
 
 		if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "mushroom") == screen.unlocked_biomes.end())
