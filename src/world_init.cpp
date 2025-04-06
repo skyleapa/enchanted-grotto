@@ -183,13 +183,18 @@ Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemTy
 		texture = it->second.texture;
 	}
 	
+	// Use item layer for Gale Fruit and Coffee Beans, otherwise use structure (so player renders above dropped items)
+	RENDER_LAYER layer = (type == ItemType::GALEFRUIT || type == ItemType::COFFEE_BEANS || type == ItemType::CACTUS_PULP)
+		? RENDER_LAYER::ITEM
+		: RENDER_LAYER::STRUCTURE;
+	
 	registry.renderRequests.insert(
 		entity,
 		{
 			texture,
 			EFFECT_ASSET_ID::TEXTURED,
 			GEOMETRY_BUFFER_ID::SPRITE,
-			RENDER_LAYER::ITEM,
+			layer,
 		}
 	);
 
