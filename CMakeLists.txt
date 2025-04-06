@@ -162,6 +162,8 @@ endif()
 
 # Get RmlUi root build folder to find package
 set(RmlUi_ROOT "${CMAKE_SOURCE_DIR}/ext/RmlUi/Build")
+set(rlottie_ROOT "${CMAKE_SOURCE_DIR}/ext/RmlUi/Dependencies/rlottie/build")
+find_package(rlottie REQUIRED)
 find_package(RmlUi REQUIRED)
 
 if(BUILD_GAME)

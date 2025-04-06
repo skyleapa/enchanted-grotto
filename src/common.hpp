@@ -33,6 +33,7 @@ inline std::string textures_path(const std::string& name) { return data_path() +
 inline std::string audio_path(const std::string& name) { return data_path() + "/audio/" + std::string(name); };
 inline std::string mesh_path(const std::string& name) { return data_path() + "/meshes/" + std::string(name); };
 inline std::string game_state_path(const std::string& name) { return data_path() + "/game_states/v2/" + std::string(name); };
+inline std::string lottie_path(const std::string& name) { return data_path() + "/animations/" + std::string(name); };
 
 const std::string GAME_STATE_FILE = "game_state.json";
 

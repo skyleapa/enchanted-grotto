@@ -1315,6 +1315,7 @@ bool UISystem::openCauldron(Entity cauldron, bool play_sound = true)
             <div id="ladle"></div>
             <div id="bottle"></div>
 			<div id="close-button">X</div>
+			<lottie src=")" + lottie_path("a_mountain.json") + R"("></lottie>
         </body>
         </rml>
         )";
