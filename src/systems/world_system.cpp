@@ -220,11 +220,18 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		screen.fog_intensity -= elapsed_ms_since_last_update / 1000.f * (1.5f / fade_duration);
 		screen.fog_intensity = std::max(0.f, screen.fog_intensity);
 
+		// Only trigger the congrats text when fog intensity has reached 0
+		if (screen.fog_intensity == 0.0f && !screen.ending_text_shown) {
+			m_ui_system->createScreenText("Congratulations, you've saved the grotto!", 3.0f);
+			screen.ending_text_shown = true;  // Mark the text as shown to prevent repeating
+		}
+
 		// make enemies flash and die
 		for (Entity entity : registry.enemies.entities) {
 			Motion& motion = registry.motions.get(entity);
 			// make enemies stop moving if they're chasing u so it doesnt look weird
 			motion.velocity = vec2(0, 0);
+			motion.position = motion.position;
 
 			// enemy will flash damage once before being deleted
 			if (!registry.damageFlashes.has(entity)) {

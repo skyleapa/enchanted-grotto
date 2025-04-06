@@ -14,6 +14,20 @@ void BiomeSystem::init(RenderSystem* renderer_arg) {
 	screen.darken_screen_factor = 1;
 	screen.fade_status = 1; // start from black screen
 	screen.is_switching_biome = true;
+
+	// we use these booleans to render new text when we first unlock and enter a biome
+	// need to populate these from persistence
+	for (const auto& biome : screen.unlocked_biomes) {
+		if (biome == "desert") {
+			desert_unlocked = true;
+		}
+		else if (biome == "mushroom") {
+			mushroom_unlocked = true;
+		}
+		else if (biome == "crystal") {
+			crystal_unlocked = true;
+		}
+	}
 }
 
 // step function to handle biome changes
@@ -101,12 +115,24 @@ void BiomeSystem::switchBiome(int biome, bool is_first_load) {
 		}
 	}
 	else if (biome == (GLuint)BIOME::DESERT) {
+		if (!desert_unlocked && m_ui_system != nullptr) {
+			m_ui_system->createScreenText("The Desert", 3.0f);  // Text will fade in and out for 3 seconds
+			desert_unlocked = true; // Mark as unlocked so we don't show the text again
+		}
 		createDesert();
 	}
 	else if (biome == (GLuint)BIOME::MUSHROOM) {
+		if (!mushroom_unlocked && m_ui_system != nullptr) {
+			m_ui_system->createScreenText("The Shroomlands", 3.0f);  // Text will fade in and out for 3 seconds
+			mushroom_unlocked = true; // Mark as unlocked so we don't show the text again
+		}
 		createMushroom();
 	}
 	else if (biome == (GLuint)BIOME::CRYSTAL) {
+		if (!crystal_unlocked && m_ui_system != nullptr) {
+			m_ui_system->createScreenText("The Crystal Caves", 3.0f);  // Text will fade in and out for 3 seconds
+			crystal_unlocked = true; // Mark as unlocked so we don't show the text again
+		}
 		createCrystal();
 	}
 

@@ -262,6 +262,9 @@ void UISystem::step(float elapsed_ms)
 			updateCauldronUI();
 		}
 
+		// Handle queued text for fade-in/fade-out
+		handleQueuedText(elapsed_ms);  // Calling the new helper function
+
 		// Update RmlUi
 		m_context->Update();
 	}
@@ -2218,6 +2221,82 @@ void UISystem::updateEffectsBar() {
 	}
 	catch (const std::exception& e) {
 		std::cerr << "Exception in UISystem::updateEffectsBar: " << e.what() << std::endl;
+	}
+}
+
+void UISystem::createScreenText(const std::string& text, float displayDuration) {
+	if (!m_context) return;
+
+	try {
+		std::cout << "UISystem::createNewBiomeText - Queueing biome text: " << text << std::endl;
+
+		// Queue the new text
+		textQueue.push({ text, displayDuration, 0.0f });
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::createNewBiomeText: " << e.what() << std::endl;
+	}
+}
+
+void UISystem::handleQueuedText(float elapsed_ms) {
+	if (!textQueue.empty()) {
+		TextQueueItem& currentItem = textQueue.front();
+
+		// Check if we have already created the text
+		if (currentItem.elapsedTime == 0.0f) {
+			std::string biome_rml = R"(
+            <rml>
+            <head>
+                <style>
+                    @keyframes fadeInOut {
+                        0% { opacity: 0; }
+                        20% { opacity: 1; } /* Fade in */
+                        80% { opacity: 1; } /* Hold for a while */
+                        100% { opacity: 0; } /* Fade out */
+                    }
+
+                    #biome-text {
+                        position: absolute;
+                        top: 300px;
+						left: 625px;
+                        width: 900px; 
+                        transform: translate(-50%, -50%);
+                        font-size: 60px;
+						text-align: center;
+                        color: white;
+                        font-family: Open Sans;
+						font-effect: outline( 1px black );
+                        animation: 3s ease-in-out forwards fadeInOut;
+                        pointer-events: none;
+                        display: block;
+                    }
+                </style>
+            </head>
+            <body>
+                <div id="biome-text">)" + currentItem.text + R"(</div>
+            </body>
+            </rml>)";
+
+			m_biome_text_document = m_context->LoadDocumentFromMemory(biome_rml.c_str());
+
+			if (m_biome_text_document) {
+				m_biome_text_document->Show();
+				std::cout << "UISystem::createNewBiomeText - Biome text displayed successfully: " << currentItem.text << std::endl;
+			}
+			else {
+				std::cerr << "UISystem::createNewBiomeText - Failed to create biome text document" << std::endl;
+			}
+		}
+
+		currentItem.elapsedTime += elapsed_ms / 1000.0f;
+
+		// If the duration has passed, remove the text
+		if (currentItem.elapsedTime >= currentItem.displayDuration) {
+			if (m_biome_text_document) {
+				m_biome_text_document->Hide();
+			}
+			textQueue.pop();
+		}
 	}
 }
 

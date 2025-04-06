@@ -601,6 +601,7 @@ void ItemSystem::deserializeScreenState(const nlohmann::json& data) {
 	{
 		screen.fog_intensity = 0;
 		screen.saved_grotto = true;
+		screen.ending_text_shown = true;
 	}
 }
 

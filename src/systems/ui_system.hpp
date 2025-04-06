@@ -16,6 +16,12 @@
 // Forward declarations
 class RenderSystem;
 
+struct TextQueueItem {
+    std::string text;
+    float displayDuration; // in seconds
+    float elapsedTime; // in seconds, tracks how long the text has been displayed
+};
+
 // Main UI system class
 class UISystem {
 public:
@@ -98,6 +104,13 @@ public:
     // Effects bar method
     void createEffectsBar();
     void updateEffectsBar();
+
+    // Text that introduces a new biome when you first enter it, will fade in and out
+    void createScreenText(const std::string& text, float displayDuration);
+    void handleQueuedText(float elapsed_ms);
+    std::queue<TextQueueItem> textQueue;
+    float fadeDuration = 3.0f; // You can adjust this as needed
+    float fadeOutTime = 3.0f; // Duration for text fade out
 
     // Check if any UI elements are open/being clicked
     bool isClickOnUIElement();
@@ -237,5 +250,9 @@ private:
 
     // Effects bar variables
     Rml::ElementDocument* m_effectsbar_document = nullptr;
+
+    // Document for creating biome text
+    Rml::ElementDocument* m_biome_text_document = nullptr;
+
     int m_effectsbar_size = 4;
 };

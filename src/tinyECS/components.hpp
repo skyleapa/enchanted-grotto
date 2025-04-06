@@ -62,6 +62,7 @@ struct ScreenState
 	bool first_game_load = true;
 	bool play_ending = false;
 	bool saved_grotto = false;
+	bool ending_text_shown = false;
 	float fog_intensity = 1.5f;
 };
 
