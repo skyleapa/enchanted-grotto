@@ -805,16 +805,6 @@ void WorldSystem::handle_player_interaction()
 
 		if (handle_textbox)
 		{
-			// Set textbox to invisible
-			for (Entity textbox : registry.textboxes.entities)
-			{
-				if (registry.textboxes.get(textbox).targetItem == item)
-				{
-					registry.textboxes.get(textbox).isVisible = false;
-					break;
-				}
-			}
-
 			// Remove visual components of the item
 			if (!item_info.isCollectable)
 				return;
@@ -996,8 +986,19 @@ void WorldSystem::update_textbox_visibility()
 				Textbox& textbox = registry.textboxes.get(textboxEntity);
 				bool shouldBeVisible = (distance < TEXTBOX_VISIBILITY_RADIUS);
 
-				// should not have "open cauldron" textbox while using cauldron
-				if (shouldBeVisible && !m_ui_system->isCauldronOpen())
+				bool uiIsOpenForItem = false;
+				Item& item_info = registry.items.get(item);
+				if (registry.cauldrons.has(item) && m_ui_system->isCauldronOpen()) {
+					uiIsOpenForItem = true;
+				} else if (registry.mortarAndPestles.has(item) && m_ui_system->isMortarPestleOpen()) {
+					uiIsOpenForItem = true;
+				} else if (item_info.type == ItemType::RECIPE_BOOK && m_ui_system->isRecipeBookOpen()) {
+					uiIsOpenForItem = true;
+				}
+
+				textbox.isVisible = shouldBeVisible && !uiIsOpenForItem;
+
+				if (textbox.isVisible)
 				{
 					m_ui_system->textboxes[textboxEntity.id()] = textbox;
 				}

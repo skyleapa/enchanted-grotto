@@ -616,6 +616,7 @@ Entity createMortarPestle(RenderSystem* renderer, vec2 position, vec2 scale, std
 	item.type = ItemType::MORTAR_PESTLE;
 	item.name = name;
 	item.isCollectable = false;
+	item.canRespawn = false;
 	item.amount = 0;
 
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -656,6 +657,7 @@ Entity createChest(RenderSystem* renderer, vec2 position, vec2 scale, std::strin
 	Item& item = registry.items.emplace(entity);
 	item.type = ItemType::CHEST;
 	item.name = name;
+	item.canRespawn = false;
 	item.isCollectable = false;
 	item.amount = 0;
 
@@ -692,6 +694,7 @@ Entity createRecipeBook(RenderSystem* renderer, vec2 position, vec2 scale, std::
 	item.type = ItemType::RECIPE_BOOK;
 	item.name = name;
 	item.isCollectable = false;
+	item.canRespawn = false;
 	item.amount = 0;
 
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
