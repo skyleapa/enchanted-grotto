@@ -1719,6 +1719,11 @@ Entity createEnt(RenderSystem* renderer, vec2 position, int movable, std::string
 		position
 	);
 
+	// Check if this entity should spawn according to the respawn system
+	if (!RespawnSystem::getInstance().shouldEntitySpawn(persistentID)) {
+		return Entity(); // Return invalid entity if it shouldn't spawn (e.g., on cooldown)
+	}
+
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " ent" << std::endl;
 
@@ -1768,6 +1773,11 @@ Entity createMummy(RenderSystem* renderer, vec2 position, int movable, std::stri
 		position
 	);
 
+	// Check if this entity should spawn according to the respawn system
+	if (!RespawnSystem::getInstance().shouldEntitySpawn(persistentID)) {
+		return Entity(); // Return invalid entity if it shouldn't spawn (e.g., on cooldown)
+	}
+
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " mummy" << std::endl;
 
@@ -1816,6 +1826,11 @@ Entity createEvilMushroom(RenderSystem* renderer, vec2 position, int movable, st
 		name,
 		position
 	);
+
+	// Check if this entity should spawn according to the respawn system
+	if (!RespawnSystem::getInstance().shouldEntitySpawn(persistentID)) {
+		return Entity(); // Return invalid entity if it shouldn't spawn (e.g., on cooldown)
+	}
 
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " evil mushroom" << std::endl;
@@ -2138,6 +2153,11 @@ Entity createCrystalBug(RenderSystem* renderer, vec2 position, int movable, std:
 		name,
 		position
 	);
+
+	// Check if this entity should spawn according to the respawn system
+	if (!RespawnSystem::getInstance().shouldEntitySpawn(persistentID)) {
+		return Entity(); // Return invalid entity if it shouldn't spawn (e.g., on cooldown)
+	}
 
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " crystal bug" << std::endl;

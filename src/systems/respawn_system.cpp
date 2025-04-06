@@ -40,7 +40,6 @@ void RespawnSystem::registerEntity(Entity entity, bool isSpawned) {
         persistentID = item.persistentID;
         
         if (respawnStates.count(persistentID) > 0) {
-            respawnStates[persistentID].isSpawned = isSpawned;
             return;
         }
         
@@ -63,9 +62,7 @@ void RespawnSystem::registerEntity(Entity entity, bool isSpawned) {
         
         persistentID = enemy.persistentID;
         
-        // If already tracking, update only spawn state
         if (respawnStates.count(persistentID) > 0) {
-            respawnStates[persistentID].isSpawned = isSpawned;
             return;
         }
         
