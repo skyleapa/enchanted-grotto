@@ -868,7 +868,7 @@ void WorldSystem::handle_player_interaction()
 		}
 
 		// If this is a cauldron/mortar & pestle and it's invisible, ignore it so if items overlap, we don't get stuck opening it
-		if (registry.cauldrons.has(item) || registry.mortarAndPestles.has(item)) {
+		if (registry.cauldrons.has(item) || registry.mortarAndPestles.has(item) || item_info.type == ItemType::RECIPE_BOOK || registry.chests.has(item)) {
 			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) {
 				continue;
 			}
