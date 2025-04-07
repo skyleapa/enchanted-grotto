@@ -585,7 +585,7 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 		return;
 	}
 
-	std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
+	// std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
 	// std::cout << "mouse tile position: " << tile_x << ", " << tile_y << std::endl;
 
 	if (button == GLFW_MOUSE_BUTTON_LEFT && throwAmmo(vec2(mouse_pos_x, mouse_pos_y))) {
