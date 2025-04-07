@@ -431,12 +431,18 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 			// player flashes red and takes damage equal to enemy's attack
 			if (!registry.damageFlashes.has(player_entity)) registry.damageFlashes.emplace(player_entity);
 			player.health -= (registry.enemies.get(enemy_entity).attack_damage * player.defense);
+			SoundSystem::playPlayerOuchSound(-1, 0);
 			player.damage_cooldown = PLAYER_DAMAGE_COOLDOWN;
 
 			// if player dies, reload from most recent save and respawn in grotto
 			if (player.health <= 0) {
 				std::cout << "player died!" << std::endl;
 				GLuint last_biome = screen.biome; // this is the biome that the player died in
+				
+				// remove any ammo from screen
+				for (auto thrown_ammo : registry.ammo.entities) {
+					if (registry.ammo.get(thrown_ammo).is_fired) registry.remove_all_components_of(thrown_ammo);
+				}
 				
 				// Apply death penalty: remove a random valid item
 				if (registry.inventories.has(player_entity)) {
@@ -630,6 +636,7 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 	}
 
 	Entity player = registry.players.entities[0]; // Assume only one player entity
+	Player& player_comp = registry.players.get(player);
 	if (!registry.motions.has(player))
 	{
 		return;
@@ -742,10 +749,10 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 	std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
 	// std::cout << "mouse tile position: " << tile_x << ", " << tile_y << std::endl;
 
-	if (button == GLFW_MOUSE_BUTTON_LEFT && throwAmmo(vec2(mouse_pos_x, mouse_pos_y))) {
+	ScreenState& screen = registry.screenStates.components[0];
+	if (!screen.is_switching_biome && button == GLFW_MOUSE_BUTTON_LEFT && throwAmmo(vec2(mouse_pos_x, mouse_pos_y))) {
 		SoundSystem::playThrowSound((int)SOUND_CHANNEL::GENERAL, 0);
 		if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::THROW_POTION) {
-			ScreenState& screen = registry.screenStates.components[0];
 			screen.tutorial_step_complete = true;
 			screen.tutorial_state += 1;
 		}
@@ -1232,6 +1239,14 @@ void WorldSystem::updatePlayerState(Entity& player, Motion& player_motion, float
 	if ((m_ui_system != nullptr && (m_ui_system->isCauldronOpen() || m_ui_system->isMortarPestleOpen() || m_ui_system->isRecipeBookOpen())) || screen.is_switching_biome || screen.tutorial_state == (int)TUTORIAL::WELCOME_SCREEN) return;
 
 	Player& player_comp = registry.players.get(player);
+
+	if (pressed_keys.size() > 0) {
+		player_comp.walking_timer -= elapsed_ms_since_last_update;
+		if (player_comp.walking_timer <= 0) {
+			SoundSystem::playWalkSound((int)SOUND_CHANNEL::WALK, 0);
+			player_comp.walking_timer = PLAYER_WALKING_SOUND_TIMER;
+		}
+	}
 
 	if (pressed_keys.count(GLFW_KEY_W)) {
 		player_motion.velocity[1] -= PLAYER_SPEED;

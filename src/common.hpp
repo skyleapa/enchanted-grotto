@@ -62,6 +62,7 @@ const float PLAYER_MAX_HEALTH = (float)100;
 const float PLAYER_DYING = (float)20;
 const float PLAYER_DAMAGE_COOLDOWN = (float)1000.f;
 const float PLAYER_THROW_COOLDOWN = (float)1000.f;
+const float PLAYER_WALKING_SOUND_TIMER = 350.f;
 
 const float GUARDIAN_SPEED = (float)100;
 
@@ -187,10 +188,10 @@ const float ENEMY_SPEED = (float)80;
 const int THROW_DISTANCE = 300; // Player throw dist in pixels
 
 // volume ranges from 0 to 128
-const int MUSIC_VOLUME = 64; //64;
-const int MUSIC_VOLUME_LOWER = 32; //32;
+const int MUSIC_VOLUME = 32;
+const int MUSIC_VOLUME_LOWER = 16;
 
-// Item and potion constants. The enums are declared here instead of in components.hpp
+// Item and potion constants. aThe enums are declared here instead of in components.hpp
 // because this file is included in components, not the other way around - otherwise,
 // it would result in compilation errors because the name constants would be referring
 // to enums that have not been declared yet.
@@ -686,7 +687,8 @@ enum class SOUND_CHANNEL {
 	GENERAL = -1, // this indicates choosing any available channel
 	BGM = 0,
 	BOILING = BGM + 1,
-	MENU = BOILING + 1
+	MENU = BOILING + 1,
+	WALK = MENU + 1
 };
 
 const std::vector<PotionEffect> throwable_potions = {
