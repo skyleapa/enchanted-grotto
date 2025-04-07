@@ -1334,7 +1334,6 @@ bool WorldSystem::consumePotion() {
 		ItemSystem::removeItemFromInventory(player_entity, selected_item);
 		ItemSystem::destroyItem(selected_item);
 	}
-	m_ui_system->updatePotionInfo();
 
 	// add copy of item to player's active effects - health is instant so don't add to active_effects
 	assert(registry.potions.has(item_copy) && "consumed item should be a potion");

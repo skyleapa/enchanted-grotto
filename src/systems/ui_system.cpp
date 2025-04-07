@@ -161,6 +161,7 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 		updateInventoryBar();
 		updateHealthBar();
 		updateEffectsBar();
+		updatePotionInfo();
 
 		std::cout << "UISystem::init - Successfully initialized" << std::endl;
 		return true;
@@ -242,6 +243,9 @@ void UISystem::step(float elapsed_ms)
 			Entity cauldron = registry.cauldrons.entities[0];
 			if (openedCauldron != cauldron) openedCauldron = cauldron;
 		}
+
+		// Update inventory text
+		updateInventoryText(elapsed_ms);
 
 		// Display tutorial
 		updateTutorial();
@@ -454,8 +458,14 @@ void UISystem::handleMouseMoveEvent(double x, double y)
 	mouse_pos_x = x;
 	mouse_pos_y = y;
 	updateFollowMouse();
-	updatePotionInfo();
 	m_context->ProcessMouseMove((int)x, (int)y, getKeyModifiers());
+
+	// If on inventory then show text
+	Rml::Element* hovered = m_context->GetHoverElement();
+	if (!hovered) return;
+	if (getSlotFromId(hovered->GetId()) != -1) {
+		showText = SHOW_TEXT_MS;
+	}
 }
 
 void UISystem::handleMouseButtonEvent(int button, int action, int mods)
@@ -756,6 +766,7 @@ void UISystem::createInventoryBar()
 					text-align: center;
 					font-size: 16px;
 					font-effect: outline( 1px black );
+					opacity: 0;
 				}
 
 				#potion-info {
@@ -765,6 +776,7 @@ void UISystem::createInventoryBar()
 					text-align: center;
 					font-size: 14px;
 					font-effect: outline( 1px black );
+					opacity: 0;
 				}
 
 				#inventory-bar {
@@ -800,7 +812,7 @@ void UISystem::createInventoryBar()
             </style>
         </head>
 		<body>
-			<div id="potion-info">TEST</div>
+			<div id="potion-info"></div>
 			<div id="item-name"></div>
         	<div id="inventory-bar">
         )";
@@ -955,6 +967,38 @@ void UISystem::updateInventoryBar()
 	}
 }
 
+void UISystem::updateInventoryText(float elapsed_ms) {
+	Rml::Element* infoElement = m_inventory_document->GetElementById("potion-info");
+	Rml::Element* nameElement = m_inventory_document->GetElementById("item-name");
+	if (!infoElement || !nameElement) {
+		return;
+	}
+
+	if (showText > 0) {
+		infoElement->SetProperty("opacity", "1");
+		nameElement->SetProperty("opacity", "1");
+		showText -= elapsed_ms;
+		if (showText <= 0) {
+			showText = 0;
+			fadeText = FADE_TEXT_MS;
+		}
+
+		return;
+	}
+
+	if (fadeText > 0) {
+		fadeText -= elapsed_ms;
+		if (fadeText <= 0) {
+			fadeText = 0;
+		}
+
+		float fadeAmt = (float) fadeText / FADE_TEXT_MS;
+		std::string fade = std::to_string(fadeAmt);
+		infoElement->SetProperty("opacity", fade);
+		nameElement->SetProperty("opacity", fade);
+	}
+}
+
 void UISystem::updatePotionInfo() {
 	Rml::Element* infoElement = m_inventory_document->GetElementById("potion-info");
 	if (!infoElement) {
@@ -962,22 +1006,10 @@ void UISystem::updatePotionInfo() {
 	}
 
 	do {
-		// Check for inventory slot
-		Rml::Element* hovered = m_context->GetHoverElement();
-		if (!hovered) {
-			break;
-		}
-
-		std::string id = hovered->GetId();
-		int slotId = getSlotFromId(id);
-		if (slotId == -1) {
-			break;
-		}
-
 		// get the item in the selected inventory slot
 		Entity player_entity = registry.players.entities[0];
 		Inventory& inv = registry.inventories.get(player_entity);
-		if (slotId != inv.selection || inv.selection >= inv.items.size()) {
+		if (inv.selection >= inv.items.size()) {
 			break;
 		}
 
@@ -1025,7 +1057,6 @@ void UISystem::selectInventorySlot(int slot) {
 	Entity entity = registry.players.entities[0];
 	if (!registry.inventories.has(entity)) return;
 	Inventory& inventory = registry.inventories.get(entity);
-
 	inventory.selection = slot;
 
 	// Update the inventory bar to reflect the selection
@@ -1033,6 +1064,9 @@ void UISystem::selectInventorySlot(int slot) {
 		updateInventoryBar();
 		updatePotionInfo();
 	}
+
+	// Show text
+	showText = SHOW_TEXT_MS;
 }
 
 int UISystem::getSelectedSlot() {

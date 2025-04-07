@@ -542,7 +542,7 @@ const std::vector<Recipe> RECIPES = {
 		},
 		"Potion of Alkalescence",
 		"[Throwable] Reacts with acidic substances. Neutralizes enemies that are highly acidic, as well as acidic mushrooms.",
-		"Currently no effects"
+		"No effects"
 	},
 	{
 		PotionEffect::CLARITY,
@@ -569,7 +569,7 @@ const std::vector<Recipe> RECIPES = {
 		},
 		"Potion of Clarity",
 		"[Throwable] Reveals hidden objects or ingredients. May be potent against enemies that are averse to the light.",
-		"Currently no effects"
+		"No effects"
 	},
 	{
 		PotionEffect::REJUVENATION,
@@ -599,7 +599,7 @@ const std::vector<Recipe> RECIPES = {
 		},
 		"Potion of Rejuvenation",
 		"[???] The ultimate healing potion.",
-		"Currently no effects"
+		"No effects"
 	}
 };
 
