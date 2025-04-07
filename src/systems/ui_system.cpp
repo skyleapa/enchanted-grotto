@@ -513,7 +513,6 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 								SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
 								
 								updateInventoryBar();
-								updateChestUI();
 							}
 						}
 					}
@@ -530,7 +529,6 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 							SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
 							
 							updateInventoryBar();
-							updateChestUI();
 						}
 					}
 				}

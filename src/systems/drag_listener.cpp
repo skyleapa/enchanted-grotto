@@ -343,7 +343,6 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			}
 			
 			m_ui_system->updateInventoryBar();
-			m_ui_system->updateChestUI();
 			return;
 		}
 		
