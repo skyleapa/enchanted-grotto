@@ -18,6 +18,7 @@ Entity createTextbox(RenderSystem* renderer, vec2 position, Entity itemEntity, s
 // forest
 Entity createBush(RenderSystem* renderer, vec2 position);
 Entity createTree(RenderSystem* renderer, vec2 position);
+Entity createTreeNoFruit(RenderSystem* renderer, vec2 position);
 Entity createForestBridge(RenderSystem* renderer, vec2 position);
 // the bridge top and bottom are for the mesh part of the forest bridge
 Entity createForestBridgeTop(RenderSystem* renderer, vec2 position);
@@ -80,6 +81,8 @@ Entity createForestExToCrystal(RenderSystem* renderer, vec2 position, std::strin
 // combat
 Entity createEnt(RenderSystem* renderer, vec2 position, int movable, std::string name);
 Entity createMummy(RenderSystem* renderer, vec2 position, int movable, std::string name);
+Entity createEvilMushroom(RenderSystem* renderer, vec2 position, int movable, std::string name);
+Entity createCrystalBug(RenderSystem* renderer, vec2 position, int movable, std::string name);
 Entity createGuardianDesert(RenderSystem* renderer, vec2 position, int movable, std::string name);
 Entity createGuardianMushroom(RenderSystem* renderer, vec2 position, int movable, std::string name);
 Entity createGuardianCrystal(RenderSystem* renderer, vec2 position, int movable, std::string name);
@@ -87,3 +90,4 @@ Entity createGuardianCrystal(RenderSystem* renderer, vec2 position, int movable,
 Entity createMasterPotionPedestal(RenderSystem* renderer, vec2 position);
 bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, Entity& player_entity);
 Entity createRejuvenationPotion(RenderSystem* renderer);
+Entity createGlowEffect(RenderSystem* renderer, bool done_growing);

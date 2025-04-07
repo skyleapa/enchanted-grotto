@@ -14,6 +14,20 @@ void BiomeSystem::init(RenderSystem* renderer_arg) {
 	screen.darken_screen_factor = 1;
 	screen.fade_status = 1; // start from black screen
 	screen.is_switching_biome = true;
+
+	// we use these booleans to render new text when we first unlock and enter a biome
+	// need to populate these from persistence
+	for (const auto& biome : screen.unlocked_biomes) {
+		if (biome == "desert") {
+			desert_unlocked = true;
+		}
+		else if (biome == "mushroom") {
+			mushroom_unlocked = true;
+		}
+		else if (biome == "crystal") {
+			crystal_unlocked = true;
+		}
+	}
 }
 
 // step function to handle biome changes
@@ -101,16 +115,29 @@ void BiomeSystem::switchBiome(int biome, bool is_first_load) {
 		}
 	}
 	else if (biome == (GLuint)BIOME::DESERT) {
+		if (!desert_unlocked && m_ui_system != nullptr) {
+			m_ui_system->createScreenText("The Desert", 3.0f);  // Text will fade in and out for 3 seconds
+			desert_unlocked = true; // Mark as unlocked so we don't show the text again
+		}
 		createDesert();
 	}
 	else if (biome == (GLuint)BIOME::MUSHROOM) {
+		if (!mushroom_unlocked && m_ui_system != nullptr) {
+			m_ui_system->createScreenText("The Shroomlands", 3.0f);  // Text will fade in and out for 3 seconds
+			mushroom_unlocked = true; // Mark as unlocked so we don't show the text again
+		}
 		createMushroom();
 	}
 	else if (biome == (GLuint)BIOME::CRYSTAL) {
+		if (!crystal_unlocked && m_ui_system != nullptr) {
+			m_ui_system->createScreenText("The Crystal Caves", 3.0f);  // Text will fade in and out for 3 seconds
+			crystal_unlocked = true; // Mark as unlocked so we don't show the text again
+		}
 		createCrystal();
 	}
 
 	renderPlayerInNewBiome(is_first_load);
+	m_ui_system->createEnemyHealthBars();
 }
 
 void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
@@ -338,20 +365,22 @@ void BiomeSystem::createForest()
 	createTree(renderer, vec2(530, 330));
 	createTree(renderer, vec2(703, 165));
 
-	createTree(renderer, vec2(580, 530));
-	createTree(renderer, vec2(840, 490));
+	createTreeNoFruit(renderer, vec2(714, 465));
+	createTree(renderer, vec2(857, 540));
+	createTreeNoFruit(renderer, vec2(520, 550));
 
 	createBush(renderer, vec2(1078, 620));
 
 	createCollectableIngredient(renderer, vec2(1085, 282), ItemType::STORM_BARK, 1, true);
 	createCollectableIngredient(renderer, vec2(560, 160), ItemType::STORM_BARK, 1, true);
+	createCollectableIngredient(renderer, vec2(650, 610), ItemType::BLIGHTLEAF, 1, true);
 
 	// admin flag used so we can test the game and disable guardian spawns
 	if (!ADMIN_FLAG) {
 		ScreenState screen = registry.screenStates.components[0];
 		if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "desert") == screen.unlocked_biomes.end())
 		{
-			Entity desertGuardian = createGuardianDesert(renderer, vec2(GRID_CELL_WIDTH_PX * 2, GRID_CELL_HEIGHT_PX * 3), 0, "Desert Guardian");
+			Entity desertGuardian = createGuardianDesert(renderer, vec2(GRID_CELL_WIDTH_PX * 2, GRID_CELL_HEIGHT_PX * 2.5), 0, "Desert Guardian");
 		}
 
 		if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "mushroom") == screen.unlocked_biomes.end())
@@ -375,13 +404,13 @@ void BiomeSystem::createForestEx()
 		createBoundaryLine(renderer, position, scale);
 	}
 
-	createTree(renderer, vec2(130, 130));
-	createTree(renderer, vec2(216, 240));
+	createTreeNoFruit(renderer, vec2(130, 130));
+	createTreeNoFruit(renderer, vec2(216, 240));
 	createTree(renderer, vec2(403, 180));
 	createTree(renderer, vec2(504, 535));
-	createTree(renderer, vec2(857, 140));
-	createTree(renderer, vec2(1120, 280));
-	createTree(renderer, vec2(1080, 535));
+	createTreeNoFruit(renderer, vec2(857, 140));
+	createTreeNoFruit(renderer, vec2(1120, 280));
+	createTreeNoFruit(renderer, vec2(1080, 535));
 
 	createBush(renderer, vec2(225, 600));
 
@@ -389,8 +418,16 @@ void BiomeSystem::createForestEx()
 	createCollectableIngredient(renderer, vec2(708, 580), ItemType::EVERFERN, 1, true);
 	createCollectableIngredient(renderer, vec2(1153, 109), ItemType::BLIGHTLEAF, 1, true);
 	createCollectableIngredient(renderer, vec2(72, 619), ItemType::BLIGHTLEAF, 1, true);
-	createEnt(renderer, vec2(606, 390), 1, "Ent");
-	createEnt(renderer, vec2(1011, 158), 1, "Ent");
+	createCollectableIngredient(renderer, vec2(63, 278), ItemType::STORM_BARK, 1, true);
+	createCollectableIngredient(renderer, vec2(950, 325), ItemType::STORM_BARK, 1, true);
+
+
+	ScreenState& screen = registry.screenStates.components[0];
+	if (!screen.saved_grotto) {
+		// should we also have a check for killed enemies here like we do with mummies?
+		createEnt(renderer, vec2(606, 390), 1, "Ent");
+		createEnt(renderer, vec2(1011, 158), 1, "Ent 2");
+	}
 
 	createMasterPotionPedestal(renderer, vec2(638, 150));
 
@@ -408,6 +445,7 @@ void BiomeSystem::createForestEx()
 		if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "saved-grotto") != screen.unlocked_biomes.end())
 		{
 			createRejuvenationPotion(renderer);
+			createGlowEffect(renderer, true); // don't regrow effect when re-entering biome
 		}
 	}
 
@@ -433,12 +471,14 @@ void BiomeSystem::createDesert()
 	createCollectableIngredient(renderer, vec2(400, 194), ItemType::HEALING_LILY, 1, true);
 
 	ScreenState screen = registry.screenStates.components[0];
-	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Mummy 1") == screen.killed_enemies.end())
-	{
-		createMummy(renderer, vec2(GRID_CELL_WIDTH_PX * 15, GRID_CELL_HEIGHT_PX * 5), 1, "Mummy 1");
-	}
-	if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Mummy 2") == screen.killed_enemies.end()) {
-		createMummy(renderer, vec2(GRID_CELL_WIDTH_PX * 4, GRID_CELL_HEIGHT_PX * 8), 1, "Mummy 2");
+	if (!screen.saved_grotto) {
+		if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Mummy 1") == screen.killed_enemies.end())
+		{
+			createMummy(renderer, vec2(GRID_CELL_WIDTH_PX * 15, GRID_CELL_HEIGHT_PX * 5), 1, "Mummy 1");
+		}
+		if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), "Mummy 2") == screen.killed_enemies.end()) {
+			createMummy(renderer, vec2(GRID_CELL_WIDTH_PX * 4, GRID_CELL_HEIGHT_PX * 8), 1, "Mummy 2");
+		}
 	}
 }
 
@@ -462,6 +502,13 @@ void BiomeSystem::createMushroom()
 	createCollectableIngredient(renderer, vec2(260, 584), ItemType::GLOWSHROOM, 1, true);
 	createCollectableIngredient(renderer, vec2(904, 454), ItemType::GLOWSHROOM, 1, true);
 	createCollectableIngredient(renderer, vec2(1090, 114), ItemType::DOOMCAP, 1, true);
+	createCollectableIngredient(renderer, vec2(1146, 598), ItemType::DOOMCAP, 1, true);
+
+	ScreenState& screen = registry.screenStates.components[0];
+	if (!screen.saved_grotto) {
+		createEvilMushroom(renderer, vec2(112, 598), 1, "Evil Mushroom 1");
+		createEvilMushroom(renderer, vec2(1037, 501), 1, "Evil Mushroom 2");
+	}
 
 	if (!ADMIN_FLAG) {
 		ScreenState screen = registry.screenStates.components[0];
@@ -497,6 +544,12 @@ void BiomeSystem::createCrystal()
 	createCollectableIngredient(renderer, vec2(458, 355), ItemType::CRYSTAL_SHARD, 1, true);
 	createCollectableIngredient(renderer, vec2(302, 617), ItemType::CRYSTAL_SHARD, 1, true);
 	createCollectableIngredient(renderer, vec2(1141, 624), ItemType::QUARTZMELON, 1, true);
+
+	ScreenState& screen = registry.screenStates.components[0];
+	if (!screen.saved_grotto) {
+		createCrystalBug(renderer, vec2(632, 586), 1, "Crystal Bug 1");
+		createCrystalBug(renderer, vec2(876, 137), 1, "Crystal Bug 2");
+	}
 
 	createCrystalToMushroom(renderer, vec2(50, 200), "Crystal To Mushroom");
 	createCrystalToForestEx(renderer, vec2(930, 30), "Crystal to Forest Ex");

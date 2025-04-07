@@ -151,6 +151,9 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 		// Create player's active effects bar
 		createEffectsBar();
 
+		// Create text info
+		createInfoBar();
+
 		m_initialized = true;
 
 		// update the bars for the first time to reload state
@@ -239,18 +242,6 @@ void UISystem::step(float elapsed_ms)
 			if (openedCauldron != cauldron) openedCauldron = cauldron;
 		}
 
-		if (!m_inventory_document) {
-			createInventoryBar();
-		}
-
-		if (!m_healthbar_document) {
-			createHealthBar();
-		}
-
-		if (!m_effectsbar_document) {
-			createEffectsBar();
-		}
-
 		// Display tutorial
 		updateTutorial();
 
@@ -261,6 +252,9 @@ void UISystem::step(float elapsed_ms)
 		if (isCauldronOpen()) {
 			updateCauldronUI();
 		}
+
+		// Handle queued text for fade-in/fade-out
+		handleQueuedText(elapsed_ms);  // Calling the new helper function
 
 		// Update RmlUi
 		m_context->Update();
@@ -278,69 +272,67 @@ void UISystem::draw()
 
 	g_ui_rendering_in_progress = true;
 
-	try {
-		// Save ALL relevant OpenGL state
-		GLint last_viewport[4];
-		glGetIntegerv(GL_VIEWPORT, last_viewport);
+	// Save ALL relevant OpenGL state
+	GLint last_viewport[4];
+	glGetIntegerv(GL_VIEWPORT, last_viewport);
 
-		GLint last_program;
-		glGetIntegerv(GL_CURRENT_PROGRAM, &last_program);
+	GLint last_program;
+	glGetIntegerv(GL_CURRENT_PROGRAM, &last_program);
 
-		GLboolean depth_test = glIsEnabled(GL_DEPTH_TEST);
-		GLboolean blend = glIsEnabled(GL_BLEND);
-		GLint blend_src, blend_dst;
-		glGetIntegerv(GL_BLEND_SRC_ALPHA, &blend_src);
-		glGetIntegerv(GL_BLEND_DST_ALPHA, &blend_dst);
+	GLboolean depth_test = glIsEnabled(GL_DEPTH_TEST);
+	GLboolean blend = glIsEnabled(GL_BLEND);
+	GLint blend_src, blend_dst;
+	glGetIntegerv(GL_BLEND_SRC_ALPHA, &blend_src);
+	glGetIntegerv(GL_BLEND_DST_ALPHA, &blend_dst);
+	gl_has_errors();
 
-		GLint last_framebuffer;
-		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &last_framebuffer);
+	GLint last_framebuffer;
+	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &last_framebuffer);
 
-		// Save additional OpenGL state
-		GLint last_vao, last_active_texture;
-		glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vao);
-		glGetIntegerv(GL_ACTIVE_TEXTURE, &last_active_texture);
+	// Save additional OpenGL state
+	GLint last_vao, last_active_texture;
+	glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vao);
+	glGetIntegerv(GL_ACTIVE_TEXTURE, &last_active_texture);
 
-		// Set up state for UI rendering
-		int width, height;
-		glfwGetFramebufferSize(m_window, &width, &height);
+	// Set up state for UI rendering
+	int width, height;
+	glfwGetFramebufferSize(m_window, &width, &height);
 
-		// Ensure we're rendering to the default framebuffer
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(last_viewport[0], last_viewport[1], last_viewport[2], last_viewport[3]);
+	// Ensure we're rendering to the default framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(last_viewport[0], last_viewport[1], last_viewport[2], last_viewport[3]);
 
-		// Enable blending for transparency
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	// Enable blending for transparency
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		// Disable depth testing for UI
+	// Disable depth testing for UI
+	glDisable(GL_DEPTH_TEST);
+
+	// Render UI
+	m_context->Render();
+
+	// Restore additional OpenGL state
+	glBindFramebuffer(GL_FRAMEBUFFER, last_framebuffer);
+	glBindVertexArray(last_vao);
+	glActiveTexture(last_active_texture);
+	gl_has_errors();
+
+	// Restore previous OpenGL state
+	glUseProgram(last_program);
+
+	if (depth_test)
+		glEnable(GL_DEPTH_TEST);
+	else
 		glDisable(GL_DEPTH_TEST);
 
-		// Render UI
-		m_context->Render();
+	if (blend)
+		glEnable(GL_BLEND);
+	else
+		glDisable(GL_BLEND);
 
-		// Restore additional OpenGL state
-		glBindFramebuffer(GL_FRAMEBUFFER, last_framebuffer);
-		glBindVertexArray(last_vao);
-		glActiveTexture(last_active_texture);
-
-		// Restore previous OpenGL state
-		glUseProgram(last_program);
-
-		if (depth_test)
-			glEnable(GL_DEPTH_TEST);
-		else
-			glDisable(GL_DEPTH_TEST);
-
-		if (blend)
-			glEnable(GL_BLEND);
-		else
-			glDisable(GL_BLEND);
-
-		glBlendFunc(blend_src, blend_dst);
-	}
-	catch (const std::exception& e) {
-		std::cerr << "Exception in UISystem::draw: " << e.what() << std::endl;
-	}
+	glBlendFunc(blend_src, blend_dst);
+	gl_has_errors();
 
 	g_ui_rendering_in_progress = false;
 }
@@ -1163,7 +1155,7 @@ void UISystem::createRmlUITextbox(int id, std::string text, vec2 pos)
 						font-family: Open Sans;
 						padding: 5px;
 						width: auto;
-						max-width: 150px;
+						max-width: 230px;
 						white-space: normal;
 						color: #000000;
     					border-radius: 5px;
@@ -2249,6 +2241,122 @@ void UISystem::updateEffectsBar() {
 	}
 }
 
+void UISystem::createScreenText(const std::string& text, float displayDuration) {
+	if (!m_context) return;
+
+	try {
+		std::cout << "UISystem::createNewBiomeText - Queueing biome text: " << text << std::endl;
+
+		// Queue the new text
+		textQueue.push({ text, displayDuration, 0.0f });
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::createNewBiomeText: " << e.what() << std::endl;
+	}
+}
+
+void UISystem::handleQueuedText(float elapsed_ms) {
+	if (textQueue.empty()) {
+		return;
+	}
+
+	TextQueueItem& currentItem = textQueue.front();
+
+	// Check if we have already created the text
+	if (currentItem.elapsedTime == 0.0f) {
+		std::string biome_rml = R"(
+		<rml>
+		<head>
+			<style>
+				@keyframes fade-in-out {
+					0% { opacity: 0; }
+					20% { opacity: 1; } /* Fade in */
+					80% { opacity: 1; } /* Hold for a while */
+					100% { opacity: 0; } /* Fade out */
+				}
+
+				#biome-text {
+					position: absolute;
+					top: 300px;
+					left: 625px;
+					width: 900px; 
+					transform: translate(-50%, -50%);
+					font-size: 60px;
+					text-align: center;
+					color: white;
+					font-family: Open Sans;
+					font-effect: outline( 1px black );
+					animation: 3s linear-in-out fade-in-out;
+					pointer-events: none;
+					display: block;
+				}
+			</style>
+		</head>
+		<body>
+			<div id="biome-text">)" + currentItem.text + R"(</div>
+		</body>
+		</rml>)";
+
+		m_biome_text_document = m_context->LoadDocumentFromMemory(biome_rml.c_str());
+
+		if (m_biome_text_document) {
+			m_biome_text_document->Show();
+			std::cout << "UISystem::createNewBiomeText - Biome text displayed successfully: " << currentItem.text << std::endl;
+		}
+		else {
+			std::cerr << "UISystem::createNewBiomeText - Failed to create biome text document" << std::endl;
+		}
+	}
+
+	currentItem.elapsedTime += elapsed_ms / 1000.0f;
+
+	// If the duration has passed, remove the text
+	if (currentItem.elapsedTime >= currentItem.displayDuration) {
+		if (m_biome_text_document) {
+			m_biome_text_document->Hide();
+		}
+		textQueue.pop();
+	}
+}
+
+void UISystem::createInfoBar() {
+	// Screw it, no try catch
+	std::cout << "UISystem::createInfoBar - Creating info bar" << std::endl;
+	std::string info_rml = R"(
+		<rml>
+		<head>
+			<style>
+				body {
+					position: absolute;
+					top: 10px;
+					left: 10px;
+					width: 300px;
+					height: 100px;
+					display: block;
+					font-size: 20px;
+					text-align: left;
+					color: white;
+					font-family: Open Sans;
+					font-effect: outline( 1px black );
+				}
+			</style>
+		</head>
+		<body>
+			<p>
+				[LMB] Throw potion<br />
+				[RMB] Consume selected potion<br />
+				[R] Open recipe book<br />
+				[T] Toggle tutorial<br />
+				[N] Skip tutorial step
+			</p>
+		</body>
+		</rml>)";
+
+	m_info_document = m_context->LoadDocumentFromMemory(info_rml.c_str());
+	m_info_document->Show();
+	std::cout << "UISystem::createInfoBar - Info bar created successfully" << std::endl;
+}
+
 bool UISystem::isClickOnUIElement()
 {
 	if (!m_context) return false;
@@ -2268,6 +2376,112 @@ bool UISystem::isClickOnUIElement()
 	return false;
 }
 
+void UISystem::createEnemyHealthBars()
+{
+	if (!m_context) return;
+
+	// clear existing healthbars
+	for (auto& [i, bar] : enemy_healthbars) {
+		bar->Hide();
+		bar = nullptr;
+	}
+	enemy_healthbars.clear();
+	if (registry.enemies.entities.size() == 0) return;
+
+	try {
+		std::cout << "UISystem::createEnemyHealthBars - Creating enemy health bar in new biome" << std::endl;
+
+		for (auto enemy : registry.enemies.entities) {
+			if (!registry.motions.has(enemy)) continue;
+			Motion& enemy_motion = registry.motions.get(enemy);
+			Enemy& enemy_comp = registry.enemies.get(enemy);
+
+			std::string left_position = std::to_string((enemy_motion.position.x - 25)) + "px";
+			std::string top_position = std::to_string((enemy_motion.position.y - 62)) + "px";
+
+			std::string enemybar_rml = R"(
+				<rml>
+				<head>
+					<style>
+					
+						progress.horizontal {
+							position: absolute;
+							left: )" + left_position + R"(;
+							top: )" + top_position + R"(;
+							height: 10px;
+							background-color: rgba(173, 146, 132, 238);
+							border-width: 2px;
+							border-color: rgb(78, 54, 32);
+							font-family: Open Sans;
+							display: flex;
+							align-items: center;
+							justify-content: center;
+							width: 50px;
+							height: 10px;
+							background-color: transparent;
+							vertical-align: middle;
+						}
+	
+						.horizontal fill {
+							background-color:rgb(138, 247, 105);
+						}
+					</style>
+				</head>
+				<body>)";
+
+			enemybar_rml += "<progress id='enemy-bar-" + std::to_string(enemy.id()) + "' class='horizontal' max='1' value='" + std::to_string(enemy_comp.health / enemy_comp.max_health) + "'></progress></body></rml>";
+
+			Rml::ElementDocument* m_enemybar_document = m_context->LoadDocumentFromMemory(enemybar_rml.c_str());
+			if (m_enemybar_document) {
+				enemy_healthbars[enemy.id()] = m_enemybar_document;
+				m_enemybar_document->Show();
+				std::cout << "UISystem::createEnemyHealthBars - Enemy bar created successfully" << std::endl;
+			}
+			else {
+				std::cerr << "UISystem::createEnemyHealthBars - Failed to create healthbar document" << std::endl;
+			}
+		}
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::createEnemyHealthBars: " << e.what() << std::endl;
+	}
+}
+
+void UISystem::updateEnemyHealthBarPos(Entity entity, vec2 pos) {
+	if (!m_initialized || !m_context || enemy_healthbars.size() <= 0) return;
+
+	auto it = enemy_healthbars.find(entity.id());
+	if (it == enemy_healthbars.end()) return;
+	Rml::ElementDocument* enemy_doc = it->second;
+
+	try {
+		Rml::Element* enemybar_element = enemy_doc->GetElementById("enemy-bar-" + std::to_string(entity.id()));
+		if (!enemybar_element) return;
+		enemybar_element->SetProperty("left", std::to_string(pos.x - 25) + "px");
+		enemybar_element->SetProperty("top", std::to_string(pos.y - 62) + "px");
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::updateEnemyHealthBarPos: " << e.what() << std::endl;
+	}
+}
+
+void UISystem::updateEnemyHealth(Entity entity, float health_percentage) {
+	if (!m_initialized || !m_context || enemy_healthbars.size() <= 0) return;
+
+	auto it = enemy_healthbars.find(entity.id());
+	if (it == enemy_healthbars.end()) return;
+	Rml::ElementDocument* enemy_doc = it->second;
+
+	try {
+		Rml::Element* enemybar_element = enemy_doc->GetElementById("enemy-bar-" + std::to_string(entity.id()));
+		if (!enemybar_element) return;
+		if (health_percentage <= 0) enemy_doc->Hide();
+		enemybar_element->SetAttribute("value", health_percentage);
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::updateEnemyHealth: " << e.what() << std::endl;
+	}
+}
 std::string UISystem::getIngredientName(RecipeIngredient ing)
 {
 	if (ing.type == ItemType::POTION) {
