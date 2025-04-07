@@ -151,6 +151,9 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 		// Create player's active effects bar
 		createEffectsBar();
 
+		// Create text info
+		createInfoBar();
+
 		m_initialized = true;
 
 		// update the bars for the first time to reload state
@@ -239,18 +242,6 @@ void UISystem::step(float elapsed_ms)
 			if (openedCauldron != cauldron) openedCauldron = cauldron;
 		}
 
-		if (!m_inventory_document) {
-			createInventoryBar();
-		}
-
-		if (!m_healthbar_document) {
-			createHealthBar();
-		}
-
-		if (!m_effectsbar_document) {
-			createEffectsBar();
-		}
-
 		// Display tutorial
 		updateTutorial();
 
@@ -281,69 +272,67 @@ void UISystem::draw()
 
 	g_ui_rendering_in_progress = true;
 
-	try {
-		// Save ALL relevant OpenGL state
-		GLint last_viewport[4];
-		glGetIntegerv(GL_VIEWPORT, last_viewport);
+	// Save ALL relevant OpenGL state
+	GLint last_viewport[4];
+	glGetIntegerv(GL_VIEWPORT, last_viewport);
 
-		GLint last_program;
-		glGetIntegerv(GL_CURRENT_PROGRAM, &last_program);
+	GLint last_program;
+	glGetIntegerv(GL_CURRENT_PROGRAM, &last_program);
 
-		GLboolean depth_test = glIsEnabled(GL_DEPTH_TEST);
-		GLboolean blend = glIsEnabled(GL_BLEND);
-		GLint blend_src, blend_dst;
-		glGetIntegerv(GL_BLEND_SRC_ALPHA, &blend_src);
-		glGetIntegerv(GL_BLEND_DST_ALPHA, &blend_dst);
+	GLboolean depth_test = glIsEnabled(GL_DEPTH_TEST);
+	GLboolean blend = glIsEnabled(GL_BLEND);
+	GLint blend_src, blend_dst;
+	glGetIntegerv(GL_BLEND_SRC_ALPHA, &blend_src);
+	glGetIntegerv(GL_BLEND_DST_ALPHA, &blend_dst);
+	gl_has_errors();
 
-		GLint last_framebuffer;
-		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &last_framebuffer);
+	GLint last_framebuffer;
+	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &last_framebuffer);
 
-		// Save additional OpenGL state
-		GLint last_vao, last_active_texture;
-		glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vao);
-		glGetIntegerv(GL_ACTIVE_TEXTURE, &last_active_texture);
+	// Save additional OpenGL state
+	GLint last_vao, last_active_texture;
+	glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vao);
+	glGetIntegerv(GL_ACTIVE_TEXTURE, &last_active_texture);
 
-		// Set up state for UI rendering
-		int width, height;
-		glfwGetFramebufferSize(m_window, &width, &height);
+	// Set up state for UI rendering
+	int width, height;
+	glfwGetFramebufferSize(m_window, &width, &height);
 
-		// Ensure we're rendering to the default framebuffer
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(last_viewport[0], last_viewport[1], last_viewport[2], last_viewport[3]);
+	// Ensure we're rendering to the default framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(last_viewport[0], last_viewport[1], last_viewport[2], last_viewport[3]);
 
-		// Enable blending for transparency
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	// Enable blending for transparency
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		// Disable depth testing for UI
+	// Disable depth testing for UI
+	glDisable(GL_DEPTH_TEST);
+
+	// Render UI
+	m_context->Render();
+
+	// Restore additional OpenGL state
+	glBindFramebuffer(GL_FRAMEBUFFER, last_framebuffer);
+	glBindVertexArray(last_vao);
+	glActiveTexture(last_active_texture);
+	gl_has_errors();
+
+	// Restore previous OpenGL state
+	glUseProgram(last_program);
+
+	if (depth_test)
+		glEnable(GL_DEPTH_TEST);
+	else
 		glDisable(GL_DEPTH_TEST);
 
-		// Render UI
-		m_context->Render();
+	if (blend)
+		glEnable(GL_BLEND);
+	else
+		glDisable(GL_BLEND);
 
-		// Restore additional OpenGL state
-		glBindFramebuffer(GL_FRAMEBUFFER, last_framebuffer);
-		glBindVertexArray(last_vao);
-		glActiveTexture(last_active_texture);
-
-		// Restore previous OpenGL state
-		glUseProgram(last_program);
-
-		if (depth_test)
-			glEnable(GL_DEPTH_TEST);
-		else
-			glDisable(GL_DEPTH_TEST);
-
-		if (blend)
-			glEnable(GL_BLEND);
-		else
-			glDisable(GL_BLEND);
-
-		glBlendFunc(blend_src, blend_dst);
-	}
-	catch (const std::exception& e) {
-		std::cerr << "Exception in UISystem::draw: " << e.what() << std::endl;
-	}
+	glBlendFunc(blend_src, blend_dst);
+	gl_has_errors();
 
 	g_ui_rendering_in_progress = false;
 }
@@ -2239,65 +2228,102 @@ void UISystem::createScreenText(const std::string& text, float displayDuration) 
 }
 
 void UISystem::handleQueuedText(float elapsed_ms) {
-	if (!textQueue.empty()) {
-		TextQueueItem& currentItem = textQueue.front();
+	if (textQueue.empty()) {
+		return;
+	}
 
-		// Check if we have already created the text
-		if (currentItem.elapsedTime == 0.0f) {
-			std::string biome_rml = R"(
-            <rml>
-            <head>
-                <style>
-                    @keyframes fade-in-out {
-                        0% { opacity: 0; }
-                        20% { opacity: 1; } /* Fade in */
-                        80% { opacity: 1; } /* Hold for a while */
-                        100% { opacity: 0; } /* Fade out */
-                    }
+	TextQueueItem& currentItem = textQueue.front();
 
-                    #biome-text {
-                        position: absolute;
-                        top: 300px;
-						left: 625px;
-                        width: 900px; 
-                        transform: translate(-50%, -50%);
-                        font-size: 60px;
-						text-align: center;
-                        color: white;
-                        font-family: Open Sans;
-						font-effect: outline( 1px black );
-                        animation: 3s linear-in-out fade-in-out;
-                        pointer-events: none;
-                        display: block;
-                    }
-                </style>
-            </head>
-            <body>
-                <div id="biome-text">)" + currentItem.text + R"(</div>
-            </body>
-            </rml>)";
+	// Check if we have already created the text
+	if (currentItem.elapsedTime == 0.0f) {
+		std::string biome_rml = R"(
+		<rml>
+		<head>
+			<style>
+				@keyframes fade-in-out {
+					0% { opacity: 0; }
+					20% { opacity: 1; } /* Fade in */
+					80% { opacity: 1; } /* Hold for a while */
+					100% { opacity: 0; } /* Fade out */
+				}
 
-			m_biome_text_document = m_context->LoadDocumentFromMemory(biome_rml.c_str());
+				#biome-text {
+					position: absolute;
+					top: 300px;
+					left: 625px;
+					width: 900px; 
+					transform: translate(-50%, -50%);
+					font-size: 60px;
+					text-align: center;
+					color: white;
+					font-family: Open Sans;
+					font-effect: outline( 1px black );
+					animation: 3s linear-in-out fade-in-out;
+					pointer-events: none;
+					display: block;
+				}
+			</style>
+		</head>
+		<body>
+			<div id="biome-text">)" + currentItem.text + R"(</div>
+		</body>
+		</rml>)";
 
-			if (m_biome_text_document) {
-				m_biome_text_document->Show();
-				std::cout << "UISystem::createNewBiomeText - Biome text displayed successfully: " << currentItem.text << std::endl;
-			}
-			else {
-				std::cerr << "UISystem::createNewBiomeText - Failed to create biome text document" << std::endl;
-			}
+		m_biome_text_document = m_context->LoadDocumentFromMemory(biome_rml.c_str());
+
+		if (m_biome_text_document) {
+			m_biome_text_document->Show();
+			std::cout << "UISystem::createNewBiomeText - Biome text displayed successfully: " << currentItem.text << std::endl;
 		}
-
-		currentItem.elapsedTime += elapsed_ms / 1000.0f;
-
-		// If the duration has passed, remove the text
-		if (currentItem.elapsedTime >= currentItem.displayDuration) {
-			if (m_biome_text_document) {
-				m_biome_text_document->Hide();
-			}
-			textQueue.pop();
+		else {
+			std::cerr << "UISystem::createNewBiomeText - Failed to create biome text document" << std::endl;
 		}
 	}
+
+	currentItem.elapsedTime += elapsed_ms / 1000.0f;
+
+	// If the duration has passed, remove the text
+	if (currentItem.elapsedTime >= currentItem.displayDuration) {
+		if (m_biome_text_document) {
+			m_biome_text_document->Hide();
+		}
+		textQueue.pop();
+	}
+}
+
+void UISystem::createInfoBar() {
+	// Screw it, no try catch
+	std::cout << "UISystem::createInfoBar - Creating info bar" << std::endl;
+	std::string info_rml = R"(
+		<rml>
+		<head>
+			<style>
+				body {
+					position: absolute;
+					top: 10px;
+					left: 10px;
+					width: 300px;
+					height: 100px;
+					display: block;
+					font-size: 20px;
+					text-align: left;
+					color: white;
+					font-family: Open Sans;
+					font-effect: outline( 1px black );
+				}
+			</style>
+		</head>
+		<body>
+			<p>
+				[R] Open recipe book<br />
+				[T] Toggle tutorial
+			</p>
+		</body>
+		</rml>)";
+
+	m_info_document = m_context->LoadDocumentFromMemory(info_rml.c_str());
+	m_info_document->Show();
+	std::cout << "UISystem::createInfoBar - Info bar created successfully" << std::endl;
 }
 
 bool UISystem::isClickOnUIElement()

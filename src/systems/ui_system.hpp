@@ -112,6 +112,9 @@ public:
     float fadeDuration = 3.0f; // You can adjust this as needed
     float fadeOutTime = 3.0f; // Duration for text fade out
 
+    // Info bar
+    void createInfoBar();
+
     // Check if any UI elements are open/being clicked
     bool isClickOnUIElement();
 
@@ -253,6 +256,8 @@ private:
 
     // Document for creating biome text
     Rml::ElementDocument* m_biome_text_document = nullptr;
-
     int m_effectsbar_size = 4;
+
+    // Info bar
+    Rml::ElementDocument* m_info_document = nullptr;
 };
