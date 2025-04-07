@@ -230,6 +230,7 @@ struct Enemy {
 	float dot_damage = 0.0f;
 	float dot_timer = 0.0f;
 	float dot_duration = 0.0f;
+	PotionEffect dot_effect = PotionEffect::WATER;
 };
 
 struct Guardian {

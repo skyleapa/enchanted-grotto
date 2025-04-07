@@ -186,18 +186,18 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	for (auto entity : registry.enemies.entities) {
 		if (!registry.enemies.has(entity)) continue;
 		Enemy& enemy = registry.enemies.get(entity);
-		if (enemy.dot_damage <= 0.f) continue;
+		if (enemy.dot_effect == PotionEffect::WATER) continue;
 
 		enemy.dot_timer -= elapsed_ms_since_last_update;
 		enemy.dot_duration -= elapsed_ms_since_last_update;
 		if (enemy.dot_timer <= 0.f) {
-			enemy.dot_timer = DOT_TIMER;
+			enemy.dot_timer = enemy.dot_effect == PotionEffect::MOLOTOV ? DOT_MOLOTOV_TIMER : DOT_POISON_TIMER;
 			handleEnemyInjured(entity, enemy.dot_damage);
 		}
 		if (enemy.dot_duration <= 0.f) {
 			enemy.dot_duration = 0.f;
 			enemy.dot_damage = 0.f;
-			enemy.dot_timer = 0.f;
+			enemy.dot_effect = PotionEffect::WATER;
 		}
 	}
 
@@ -321,19 +321,25 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 					if ((dx * dx + dy * dy) <= MOLOTOV_RADIUS_SQUARED) {
 						// apply damage over time effect
 						Enemy& neighbour = registry.enemies.get(neighbour_enemy);
-						neighbour.dot_damage = potion.effectValue * DOT_MULTIPLIER;
-						neighbour.dot_timer = DOT_TIMER;
+						neighbour.dot_damage = potion.effectValue * MOLOTOV_MULTIPLIER;
+						neighbour.dot_timer = DOT_MOLOTOV_TIMER;
 						neighbour.dot_duration = potion.duration;
+						neighbour.dot_effect = PotionEffect::MOLOTOV;
 						handleEnemyInjured(neighbour_enemy, ammo.damage);
 					}
 				}
 			}
 
-			if (potion.effect == PotionEffect::POISON || potion.effect == PotionEffect::MOLOTOV) {
-				// apply damage over time effect
-				enemy.dot_damage = potion.effectValue * DOT_MULTIPLIER;
-				enemy.dot_timer = DOT_TIMER;
+			if (potion.effect == PotionEffect::POISON) {
+				enemy.dot_damage = potion.effectValue;
+				enemy.dot_timer = DOT_POISON_TIMER;
 				enemy.dot_duration = potion.duration;
+				enemy.dot_effect = PotionEffect::POISON;
+			} else if (potion.effect == PotionEffect::MOLOTOV) {
+				enemy.dot_damage = potion.effectValue * MOLOTOV_MULTIPLIER;
+				enemy.dot_timer = DOT_MOLOTOV_TIMER;
+				enemy.dot_duration = potion.duration;
+				enemy.dot_effect = PotionEffect::MOLOTOV;
 			}
 
 			handleEnemyInjured(enemy_entity, ammo.damage);

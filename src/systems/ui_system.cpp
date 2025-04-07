@@ -2283,7 +2283,7 @@ void UISystem::createEnemyHealthBars()
 						}
 	
 						.horizontal fill {
-							background-color:rgb(255, 96, 68);
+							background-color:rgb(138, 247, 105);
 						}
 					</style>
 				</head>
