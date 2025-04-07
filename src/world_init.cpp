@@ -671,7 +671,12 @@ Entity createChest(RenderSystem* renderer, vec2 position, vec2 scale, std::strin
 	motion.position = position;
 	motion.scale = scale;
 
-	// Entity textbox = createTextbox(renderer, position, entity, "[F] Open Chest"); // not needed for Milestone 1
+	registry.chests.emplace(entity);
+
+	auto& inv = registry.inventories.emplace(entity);
+	inv.capacity = 30;
+
+	Entity textbox = createTextbox(renderer, vec2(position.x, position.y - 50), entity, "[F] Open Chest");
 
 	registry.renderRequests.insert(
 		entity,

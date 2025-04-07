@@ -352,6 +352,9 @@ nlohmann::json ItemSystem::serializeInventory(Entity inventory) {
 	}
 	else if (registry.chests.has(inventory)) {
 		data["owner_type"] = "chest";
+		if (registry.items.has(inventory)) {
+			data["name"] = registry.items.get(inventory).name;
+		}
 	}
 	else {
 		data["owner_type"] = "player";  // Default to player inventory
@@ -520,7 +523,9 @@ bool ItemSystem::saveGameState() {
 		}
 	}
 	
-	for (Entity chest : registry.chests.entities) {
+	// Only save the first chest to prevent duplicate chest entries in the save file
+	if (!registry.chests.entities.empty()) {
+		Entity chest = registry.chests.entities[0];
 		if (registry.inventories.has(chest)) {
 			inventories.push_back(serializeInventory(chest));
 		}
@@ -554,11 +559,22 @@ bool ItemSystem::saveGameState() {
 }
 
 bool ItemSystem::loadGameState() {
+	nlohmann::json data = loadCoreState();
+	
+	if (!data.is_null()) {
+		loadInventoryState(data);
+		return true;
+	}
+	
+	return false;
+}
+
+nlohmann::json ItemSystem::loadCoreState() {
 	try {
 		std::string save_path = game_state_path(GAME_STATE_FILE);
 		std::ifstream file(save_path);
 		if (!file.is_open()) {
-			return false;
+			return nlohmann::json();
 		}
 
 		nlohmann::json data;
@@ -569,59 +585,68 @@ bool ItemSystem::loadGameState() {
 			player = registry.players.entities[0];
 		}
 
-		// Load inventories
-		for (const auto& inv_data : data["inventories"]) {
-			std::string owner_type = inv_data["owner_type"];
+		deserializeScreenState(data["screen_state"]);
+		
+		if (data.contains("recipe_book_index") && UISystem::s_instance != nullptr) {
+			UISystem::s_instance->current_recipe_index = data["recipe_book_index"];
+		}
+		
+		if (data.contains("player_state") && !registry.players.entities.empty()) {
+			deserializePlayerState(registry.players.entities[0], data["player_state"]);
+		}
+		
+		if (data.contains("respawn_states")) {
+			RespawnSystem::getInstance().deserialize(data["respawn_states"]);
+		}
 
-			if (owner_type == "player") {
-				if (player) {
+		// Only load player inventory now (not chest or cauldron)
+		if (player && data.contains("inventories")) {
+			for (const auto& inv_data : data["inventories"]) {
+				std::string owner_type = inv_data["owner_type"];
+				if (owner_type == "player") {
 					deserializeInventory(player, inv_data);
 				}
 			}
-			else if (owner_type == "cauldron") {
+		}
+
+		return data;
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Failed to load core game state: " << e.what() << std::endl;
+		return nlohmann::json();
+	}
+}
+
+void ItemSystem::loadInventoryState(const nlohmann::json& data) {
+	if (data.is_null() || !data.contains("inventories")) {
+		return;
+	}
+
+	std::cout << "Loading inventory state... Chest count: " << registry.chests.entities.size() << std::endl;
+
+	try {
+		for (const auto& inv_data : data["inventories"]) {
+			std::string owner_type = inv_data["owner_type"];
+
+			if (owner_type == "cauldron") {
 				if (!registry.cauldrons.entities.empty()) {
 					deserializeInventory(registry.cauldrons.entities[0], inv_data);
 				}
 			}
 			else if (owner_type == "chest") {
-				Entity chest;
-				if (inv_data.contains("name")) {
-					std::string chest_name = inv_data["name"];
-					
-					for (Entity existing_chest : registry.chests.entities) {
-						// TODO: chest PR
-					}
-				}
-				
-				// TODO: chest PR
+				// Always use the first chest entity to maintain consistency with saveGameState
 				if (!registry.chests.entities.empty()) {
+					std::cout << "Loading chest inventory data into first chest entity" << std::endl;
 					deserializeInventory(registry.chests.entities[0], inv_data);
+				}
+				else {
+					std::cout << "Warning: Chest inventory found in save data but no chest entity exists to load it into" << std::endl;
 				}
 			}
 		}
-
-		deserializeScreenState(data["screen_state"]);
-		
-		// Load recipe book index
-		if (data.contains("recipe_book_index") && UISystem::s_instance != nullptr) {
-			UISystem::s_instance->current_recipe_index = data["recipe_book_index"];
-		}
-		
-		// Load player state
-		if (data.contains("player_state") && !registry.players.entities.empty()) {
-			deserializePlayerState(registry.players.entities[0], data["player_state"]);
-		}
-		
-		// Load respawn system state
-		if (data.contains("respawn_states")) {
-			RespawnSystem::getInstance().deserialize(data["respawn_states"]);
-		}
-
-		return true;
 	}
 	catch (const std::exception& e) {
-		std::cerr << "Failed to load game state: " << e.what() << std::endl;
-		return false;
+		std::cerr << "Failed to load inventory game state: " << e.what() << std::endl;
 	}
 }
 

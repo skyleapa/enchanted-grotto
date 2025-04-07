@@ -89,6 +89,14 @@ public:
     void setOpenedMortarPestle(Entity new_mortar_pestle);
     Rml::Element* getHeldPestle() { return heldPestle; }
 
+    // Chest menu methods
+    bool openChestMenu(Entity chest);
+    void updateChestUI();
+    bool isChestMenuOpen();
+    void closeChestMenu();
+    Entity getOpenedChest();
+    void setOpenedChest(Entity new_chest);
+
     // tutorial
     void updateTutorial();
 
@@ -190,6 +198,10 @@ private:
     Rml::ElementDocument* m_mortar_document = nullptr;
     Entity openedMortar;
     Rml::Element* heldPestle = nullptr;
+
+    // Chest variables
+    Rml::ElementDocument* m_chest_document = nullptr;
+    Entity openedChest;
 
     // Tutorial variables
     Rml::ElementDocument* m_tutorial_document = nullptr;

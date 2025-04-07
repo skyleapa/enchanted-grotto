@@ -349,11 +349,16 @@ void WorldSystem::restart_game(bool hard_reset)
 		}
 	}
 	else {
-		ItemSystem::loadGameState(); // load the game state
+		nlohmann::json loaded_data = ItemSystem::loadCoreState();
+		
+		// Initialize the biome system after core data is loaded
+		biome_sys->init(renderer);
+		
+		// For deferred inventory loading
+		if (!loaded_data.is_null()) {
+			biome_sys->setLoadedGameData(loaded_data);
+		}
 	}
-
-	biome_sys->init(renderer);
-
 }
 
 void WorldSystem::handle_collisions(float elapsed_ms)
@@ -832,6 +837,11 @@ void WorldSystem::handle_player_interaction()
 		return;
 	}
 
+	if (m_ui_system && m_ui_system->isChestMenuOpen()) {
+		m_ui_system->closeChestMenu();
+		return;
+	}
+
 	Motion& player_motion = registry.motions.get(player);
 	for (Entity item : registry.items.entities)
 	{
@@ -845,8 +855,7 @@ void WorldSystem::handle_player_interaction()
 		// Check if item is collectable or is an interactable entrance
 		if (!item_info.isCollectable && !registry.entrances.has(item) && !registry.cauldrons.has(item)
 			&& !registry.mortarAndPestles.has(item) && !registry.guardians.has(item)) {
-			// Check for recipe book specifically
-			if (item_info.type != ItemType::RECIPE_BOOK) {
+			if (item_info.type != ItemType::RECIPE_BOOK && item_info.type != ItemType::CHEST) {
 				continue;
 			}
 		}
@@ -914,6 +923,11 @@ void WorldSystem::handle_player_interaction()
 					screen.tutorial_step_complete = true;
 					screen.tutorial_state += 1;
 				}
+			}
+		}
+		else if (item_info.type == ItemType::CHEST) {
+			if (m_ui_system != nullptr) {
+				handle_textbox = m_ui_system->openChestMenu(item);
 			}
 		}
 
@@ -1107,6 +1121,8 @@ void WorldSystem::update_textbox_visibility()
 				} else if (registry.mortarAndPestles.has(item) && m_ui_system->isMortarPestleOpen()) {
 					uiIsOpenForItem = true;
 				} else if (item_info.type == ItemType::RECIPE_BOOK && m_ui_system->isRecipeBookOpen()) {
+					uiIsOpenForItem = true;
+				} else if (item_info.type == ItemType::CHEST && m_ui_system->isChestMenuOpen()) {
 					uiIsOpenForItem = true;
 				}
 
