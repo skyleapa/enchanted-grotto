@@ -995,7 +995,7 @@ void UISystem::updateInventoryText(float elapsed_ms) {
 			fadeText = 0;
 		}
 
-		float fadeAmt = (float) fadeText / FADE_TEXT_MS;
+		float fadeAmt = (float)fadeText / FADE_TEXT_MS;
 		std::string fade = std::to_string(fadeAmt);
 		infoElement->SetProperty("opacity", fade);
 		nameElement->SetProperty("opacity", fade);
@@ -1112,6 +1112,12 @@ void UISystem::updateTutorial()
 			}
 		}
 
+		// clear active animation
+		if (active_animation) {
+			active_animation->SetAttribute("src", "");
+			active_animation = nullptr;
+		}
+
 		// Mark tutorial step as incomplete again
 		screen.tutorial_step_complete = false;
 		if (screen.tutorial_state == (int)TUTORIAL::COMPLETE ||
@@ -1163,6 +1169,19 @@ void UISystem::updateTutorial()
 			</body>
 			</rml>
 		)";
+
+		// handle tutorial animations
+		if (screen.tutorial_state == (int)TUTORIAL::GRIND_BARK && registry.inventories.get(openedMortar).items.size() > 0) {
+			Inventory& mortar = registry.inventories.get(openedMortar);
+			if (registry.items.get(mortar.items[0]).type == ItemType::STORM_BARK) { // check only one item
+				active_animation = m_mortar_document->GetElementById("grinding-style");
+				active_animation->SetAttribute("src", "data/animations/grinding.json");
+			}
+		}
+		else if (screen.tutorial_state == (int)TUTORIAL::STIR) {
+			active_animation = m_cauldron_document->GetElementById("stirring-style");
+			active_animation->SetAttribute("src", "data/animations/cauldron_stir.json");
+		}
 
 		m_tutorial_document = m_context->LoadDocumentFromMemory(tutorial_rml.c_str());
 		if (m_tutorial_document) {
@@ -1402,6 +1421,11 @@ bool UISystem::openCauldron(Entity cauldron, bool play_sound = true)
                     decorator: image("interactables/timer_hand.png" flip-vertical fill);
                     transform: rotate(0deg);
 				}
+				
+				#stirring-style {
+					z-index: 10;
+					pointer-events: none;
+				}
             </style>
         </head>
         <body>
@@ -1412,6 +1436,7 @@ bool UISystem::openCauldron(Entity cauldron, bool play_sound = true)
             <div id="ladle"></div>
             <div id="bottle"></div>
 			<div id="close-button">X</div>
+			<lottie id="stirring-style"></lottie>
         </body>
         </rml>
         )";
@@ -1602,9 +1627,15 @@ bool UISystem::openMortarPestle(Entity mortar, bool play_sound = true) {
 					font-weight: bold;
 					font-family: Open Sans;
 					color: #5c3e23;
+					z-index: 10;
 				}
 				#close-button:hover {
 					background-color: #c1834e;
+				}
+
+				#grinding-style {
+					z-index: 7;
+					pointer-events: none;
 				}
             </style>
         </head>
@@ -1613,6 +1644,7 @@ bool UISystem::openMortarPestle(Entity mortar, bool play_sound = true) {
             <div id="pestle"></div>
             <div id="mortar"></div>
 			<div id="close-button">X</div>
+			<lottie id="grinding-style"></lottie>
         </body>
         </rml>
         )";
@@ -1653,6 +1685,10 @@ void UISystem::closeMortarPestle(bool play_sound = true)
 			Mix_VolumeMusic(MUSIC_VOLUME);
 		}
 		m_mortar_document->Hide();
+		if (active_animation) {
+			active_animation->SetAttribute("src", "");
+			active_animation = nullptr;
+		}
 	}
 }
 
@@ -2578,6 +2614,11 @@ std::string UISystem::getIngredientName(RecipeIngredient ing)
 	}
 
 	return name;
+}
+
+void UISystem::startGrindAnimation() {
+	active_animation = m_mortar_document->GetElementById("grinding-style");
+	active_animation->SetAttribute("src", "data/animations/grinding.json");
 }
 
 bool UISystem::openChestMenu(Entity chest) {

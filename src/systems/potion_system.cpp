@@ -176,17 +176,6 @@ void PotionSystem::stirCauldron(Entity cauldron, int amount)
 		return;
 	}
 	recordAction(cauldron, ActionType::STIR, amount);
-
-	// if we have 3 stirs for the damage potion, next tutorial step
-	Cauldron& cc = registry.cauldrons.get(cauldron);
-	Action& lastAction = cc.actions[cc.actions.size() - 1];
-	if (ActionType::STIR == lastAction.type && lastAction.value >= 3) {
-		if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::STIR) {
-			ScreenState& screen = registry.screenStates.components[0];
-			screen.tutorial_step_complete = true;
-			screen.tutorial_state += 1;
-		}
-	}
 }
 
 Potion PotionSystem::bottlePotion(Entity cauldron) {
@@ -255,6 +244,7 @@ void PotionSystem::resetCauldron(Entity cauldron) {
 	cc.timeSinceLastAction = 0;
 	cc.actions.clear();
 	cc.is_boiling = false;
+	cc.num_stirs = 0;
 
 	// Clear cauldron items
 	Inventory& cinv = registry.inventories.get(cauldron);

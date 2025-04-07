@@ -136,6 +136,11 @@ public:
     // Check if player inventory contains the required recipe ingredient
     bool playerHasIngredient(Entity playerEntity, const RecipeIngredient& recipeIngredient);
 
+    // Reference to active animation
+    Rml::Element* active_animation = nullptr;
+
+    void startGrindAnimation();
+
 private:
     GLFWwindow* m_window;
     RenderSystem* m_renderer;
@@ -229,7 +234,7 @@ private:
             "422px", "125px", "Go to the mortar and pestle and press F to open the menu"
         }},
         { (int)TUTORIAL::GRIND_BARK, {
-            "284px", "190px", "Insert a storm bark by dragging it into the mortar and pestle from your inventory. Then pickup the pestle and start pounding that bark!"
+            "1000px", "190px", "Insert a storm bark by dragging it into the mortar and pestle from your inventory. Then pickup the pestle and start pounding that bark!"
         }},
         { (int)TUTORIAL::INTERACT_CAULDRON, {
             "284px", "190px", "Now you have Storm Sap! Click it in the mortar and pestle to pick it up. Exit the menu with F and go to your cauldron. Press F to open the cauldron menu."

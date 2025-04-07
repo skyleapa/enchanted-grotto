@@ -1,8 +1,15 @@
 #!/bin/bash
 
+echo "Building rlottie..."
+cd ext/RmlUi/Dependencies/rlottie
+cmake -B build -S . -DBUILD_SHARED_LIBS=OFF
+cmake --build build --target rlottie --config Debug
+cmake --build build --target rlottie --config Release
+cd ..
+cd ..
+
 echo "Building RmlUi..."
-cd ext/RmlUi
-cmake -B Build -S . -DBUILD_SHARED_LIBS=OFF
+cmake -B Build -S . -DBUILD_SHARED_LIBS=OFF -DRMLUI_LOTTIE_PLUGIN=ON
 cmake --build Build -j
 cd ..
 cd ..
