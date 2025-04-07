@@ -132,7 +132,7 @@ public:
     void createEnemyHealthBars();
     void updateEnemyHealthBarPos(Entity entity, vec2 pos);
     void updateEnemyHealth(Entity entity, float health_percentage);
-    
+
     // Check if player inventory contains the required recipe ingredient
     bool playerHasIngredient(Entity playerEntity, const RecipeIngredient& recipeIngredient);
 
@@ -213,7 +213,7 @@ private:
         { (int)TUTORIAL::WELCOME_SCREEN, {
             }},
         { (int)TUTORIAL::TOGGLE_TUTORIAL, {
-            "820px", "466px", "Let's make your first potion! Toggle the tutorial with T at any time or N to skip to the tutorial step. Try pressing N now!"
+            "820px", "466px", "Let's make your first potion! Toggle the tutorial with T at any time or N to skip to the tutorial step. Press N now!"
         }},
         { (int)TUTORIAL::RECIPE_BOOK, {
             "211px", "110px", "Head to the lectern using the WASD keys and press F to open the recipe book. You can also use R to access the recipe book at any time."
@@ -225,40 +225,40 @@ private:
             "790px", "455px", "Looks like we're missing a couple of ingredients! Exit the recipe book menu by pressing F and leave the grotto from the exit in the bottom right."
         }},
         { (int)TUTORIAL::COLLECT_ITEMS, {
-            "25%", "35%", "Welcome to the forest! Collect 2 storm bark and 1 blightleaf for your potion, you may have to explore the area to find ingredients."
+            "25%", "35%", "Welcome to the forest! Explore and collect 2 storm bark and 1 blightleaf."
         }},
         { (int)TUTORIAL::ENTER_GROTTO, {
-            "611px", "200px", "Great, now head back into the grotto."
+            "611px", "200px", "Great, now head back to the grotto."
         }},
         { (int)TUTORIAL::MORTAR_PESTLE, {
             "422px", "125px", "Go to the mortar and pestle and press F to open the menu"
         }},
         { (int)TUTORIAL::GRIND_BARK, {
-            "1000px", "190px", "Insert a storm bark by dragging it into the mortar and pestle from your inventory. Then pickup the pestle and start pounding that bark!"
+            "1000px", "190px", "Insert a storm bark by dragging it into the mortar and pestle from your inventory. Then pickup the pestle and grind the bark!"
         }},
         { (int)TUTORIAL::INTERACT_CAULDRON, {
-            "284px", "190px", "Now you have Storm Sap! Click it in the mortar and pestle to pick it up. Exit the menu with F and go to your cauldron. Press F to open the cauldron menu."
+            "284px", "190px", "Now you have Storm Sap! Click it to pick it up. Exit the menu with F and go to your cauldron. Press F to open the cauldron menu."
         }},
         { (int)TUTORIAL::SET_HEAT, {
-            "210px", "300px", "Get started by dragging the heat dial to high. If you forget the recipe, you can always exit and take a peek, the cauldron state is saved."
+            "210px", "300px", "Drag the heat dial to high. Press R to reference the recipe or exit the menu if needed, the cauldron state is saved."
         }},
         { (int)TUTORIAL::ADD_INGREDIENTS, {
-            "210px", "300px", "Now add in 1 storm sap, 1 blightleaf and 1 storm bark by dragging it from your inventory into the cauldron."
+            "210px", "300px", "Add in 1 blightleaf, 1 storm bark and 1 storm sap by dragging it from your inventory into the cauldron."
         }},
         { (int)TUTORIAL::STIR, {
             "210px", "300px", "Pick up the ladle by clicking and dragging it in the cauldron. Stir 3 times, a successful stir will flash and play a whoosh sound."
         }},
         { (int)TUTORIAL::WAIT, {
-            "210px", "300px", "Wait for 5 seconds for the potion to develop. You can use the timer that begins turning once you start brewing."
+            "210px", "300px", "Wait for 10 seconds for the potion to develop. You can use the timer that begins turning once you start brewing."
         }},
         { (int)TUTORIAL::BOTTLE, {
-            "210px", "300px", "Now bottle your potion by dragging the bottle to the cauldron and left clicking. The closer the color to the recipe book, the better the quality and potion effect."
+            "210px", "300px", "Bottle your potion by dragging the bottle to the cauldron and left clicking. The closer the color to the recipe book, the better the quality and potion effect."
         }},
         { (int)TUTORIAL::THROW_POTION, {
-            "210px", "300px", "Exit the cauldron menu by clicking F. You can try throwing your potion at enemies with left click. Consume potions by right clicking on the potion in your inventory."
+            "210px", "300px", "Exit the cauldron menu by clicking F. Throw your damage potion at an enemy with left click. Consume potions by right clicking with the potion selected."
         }},
         { (int)TUTORIAL::POTION_EFFECT, {
-            "1020px", "336px", "You can see your player health with the green bar in the bottom right, and when you consume a potion, it will be displayed in the top right box. Good luck saving the grotto!"
+            "1020px", "336px", "Your player health is the green bar on the bottom right. Consumed potion effects appear on the top right. Good luck saving the grotto!"
         }}
     };
 

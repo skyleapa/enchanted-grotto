@@ -398,7 +398,7 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::ADD_INGREDIENT, 1 }, // add storm bark
 			{ ActionType::ADD_INGREDIENT, 2 }, // add storm sap
 			{ ActionType::STIR, 3 },          // stir 3 times
-			{ ActionType::WAIT, 1 }           // wait 5 seconds
+			{ ActionType::WAIT, 2 }           // wait 10 seconds (longer for tutorial)
 		},
 		"Potion of Harming",
 		"[Throwable] A damaging potion that can be thrown at enemies.",
