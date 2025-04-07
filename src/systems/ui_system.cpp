@@ -1019,6 +1019,12 @@ void UISystem::updateTutorial()
 			}
 		}
 
+		// clear active animation
+		if (active_animation) {
+			active_animation->SetAttribute("src", "");
+			active_animation = nullptr;
+		}
+
 		// Mark tutorial step as incomplete again
 		screen.tutorial_step_complete = false;
 		if (screen.tutorial_state == (int)TUTORIAL::COMPLETE ||
@@ -1070,6 +1076,12 @@ void UISystem::updateTutorial()
 			</body>
 			</rml>
 		)";
+
+		// handle tutorial animations
+		if (screen.tutorial_state == (int)TUTORIAL::GRIND_BARK) {
+			active_animation = m_mortar_document->GetElementById("grinding-style");
+			active_animation->SetAttribute("src", "data/animations/grinding.json");
+		}
 
 		m_tutorial_document = m_context->LoadDocumentFromMemory(tutorial_rml.c_str());
 		if (m_tutorial_document) {
@@ -1510,13 +1522,14 @@ bool UISystem::openMortarPestle(Entity mortar, bool play_sound = true) {
 					font-weight: bold;
 					font-family: Open Sans;
 					color: #5c3e23;
+					z-index: 10;
 				}
 				#close-button:hover {
 					background-color: #c1834e;
 				}
 
 				#grinding-style {
-					z-index: 12;
+					z-index: 0;
 				}
             </style>
         </head>
@@ -1525,7 +1538,7 @@ bool UISystem::openMortarPestle(Entity mortar, bool play_sound = true) {
             <div id="pestle"></div>
             <div id="mortar"></div>
 			<div id="close-button">X</div>
-			<lottie id="grinding-style" src="data/animations/grinding.json"></lottie>
+			<lottie id="grinding-style"></lottie>
         </body>
         </rml>
         )";

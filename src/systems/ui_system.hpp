@@ -238,4 +238,7 @@ private:
     // Effects bar variables
     Rml::ElementDocument* m_effectsbar_document = nullptr;
     int m_effectsbar_size = 4;
+
+    // Reference to active animation
+    Rml::Element* active_animation = nullptr;
 };
