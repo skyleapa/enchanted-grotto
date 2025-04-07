@@ -305,6 +305,49 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 		int slot = m_ui_system->getSlotFromId(cur->GetId());
 		int selected = m_ui_system->getSelectedSlot();
 		Entity player = registry.players.entities[0];
+		
+		// Handle chest inventory transfer
+		if (m_ui_system->isChestMenuOpen() && slot != -1) {
+			Entity chest = m_ui_system->getOpenedChest();
+			
+			// Player inventory slots are 30-39 in the chest UI
+			bool isChestSlot = slot < 30;
+			
+			if (isChestSlot) {
+				// Transferring from chest to player
+				if (registry.inventories.has(chest)) {
+					Inventory& chestInv = registry.inventories.get(chest);
+					
+					if (slot < chestInv.items.size() && registry.items.has(chestInv.items[slot])) {
+						Entity item = chestInv.items[slot];
+						
+						if (ItemSystem::addItemToInventory(player, item)) {
+							ItemSystem::removeItemFromInventory(chest, item);
+							SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+						}
+					}
+				}
+			} else {
+				// Transferring from player to chest (slot 30-39)
+				int playerSlot = slot - 30;
+				Inventory& playerInv = registry.inventories.get(player);
+				
+				if (playerSlot < playerInv.items.size() && registry.items.has(playerInv.items[playerSlot])) {
+					Entity item = playerInv.items[playerSlot];
+					
+					if (ItemSystem::addItemToInventory(chest, item)) {
+						ItemSystem::removeItemFromInventory(player, item);
+						SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+					}
+				}
+			}
+			
+			m_ui_system->updateInventoryBar();
+			m_ui_system->updateChestUI();
+			return;
+		}
+		
+		// Regular inventory slot handling (outside chest UI)
 		if (slot != -1) {
 			ItemSystem::swapItems(player, slot, selected);
 			m_ui_system->updateInventoryBar();

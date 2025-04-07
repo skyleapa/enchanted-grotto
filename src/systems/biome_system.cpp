@@ -5,6 +5,7 @@
 #include "world_init.hpp"
 #include "sound_system.hpp"
 #include <iostream>
+#include <fstream>
 
 #include <vector>
 
@@ -94,8 +95,12 @@ void BiomeSystem::switchBiome(int biome, bool is_first_load) {
 		
 		// Register with RespawnSystem before removal if it's a tracked entity type
 		if (registry.items.has(entity) || registry.enemies.has(entity)) {
-			// Mark as still in the respawn pool (no timer running yet)
-			RespawnSystem::getInstance().registerEntity(entity, true);
+			if (registry.items.has(entity) && registry.items.get(entity).type == ItemType::CHEST) {
+				// Skip chest registration
+			} else {
+				// Mark as still in the respawn pool (no timer running yet)
+				RespawnSystem::getInstance().registerEntity(entity, true);
+			}
 		}
 
 		to_remove.push_back(entity);
@@ -181,7 +186,33 @@ void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
 				Motion& motion = registry.motions.get(cauldron);
 				createTextbox(renderer, vec2(motion.position.x + 70, motion.position.y - 80), cauldron, "[F] Use Cauldron");
 			}
+		}
 
+		for (Entity chest : registry.chests.entities) {
+			if (registry.renderRequests.has(chest)) {
+				RenderRequest& rr = registry.renderRequests.get(chest);
+				rr.is_visible = true;
+			}
+			if (registry.motions.has(chest)) {
+				Motion& motion = registry.motions.get(chest);
+				for (Entity tb_entity : registry.textboxes.entities) {
+					if (registry.textboxes.get(tb_entity).targetItem == chest) {
+						m_ui_system->removeRmlUITextbox(tb_entity.id());
+						registry.remove_all_components_of(tb_entity);
+						break;
+					}
+				}
+				createTextbox(renderer, vec2(motion.position.x, motion.position.y - 50), chest, "[F] Open Chest"); 
+			}
+		}
+		
+		if (!m_loaded_game_data.is_null() || m_has_pending_chest_inventory) {
+			std::cout << "Loading inventory state in grotto. Current chest count: " << registry.chests.entities.size() << std::endl;
+			if (!m_loaded_game_data.is_null()) {
+				ItemSystem::loadInventoryState(m_loaded_game_data);
+				m_loaded_game_data = nullptr;
+			}
+			m_has_pending_chest_inventory = false;
 		}
 
 		for (Entity mortar : registry.mortarAndPestles.entities) {
@@ -225,6 +256,21 @@ void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
 				rr.is_visible = false;
 			}
 		}
+		for (Entity chest : registry.chests.entities) { 
+			if (registry.renderRequests.has(chest)) {
+				RenderRequest& rr = registry.renderRequests.get(chest);
+				rr.is_visible = false;
+			}
+			if (registry.motions.has(chest)) {
+				for (Entity tb_entity : registry.textboxes.entities) {
+					if (registry.textboxes.get(tb_entity).targetItem == chest) {
+						m_ui_system->removeRmlUITextbox(tb_entity.id());
+						registry.remove_all_components_of(tb_entity);
+						break;
+					}
+				}
+			}
+		}
 	}
 	// between forest and forest expansion
 	else if (screen.from_biome == (int)BIOME::FOREST && screen.biome == (int)BIOME::FOREST_EX) {
@@ -266,6 +312,41 @@ void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
 	if (is_first_load && registry.players.get(player_entity).load_position != vec2(0, 0)) {
 		screen.first_game_load = false;
 		player_motion.position = registry.players.get(player_entity).load_position;
+		
+		// For non-grotto biomes, only load non-chest inventories on first load
+		if (screen.biome != (int)BIOME::GROTTO && !m_loaded_game_data.is_null()) {
+			std::cout << "Loading non-chest inventory state. Current biome: " << (int)screen.biome << std::endl;
+			
+			// If we're not in the grotto, set the pending chest inventory flag
+			m_has_pending_chest_inventory = true;
+			
+			// If we're not in the grotto, only load player and cauldron inventories
+			if (!registry.players.entities.empty()) {
+				Entity player = registry.players.entities[0];
+				if (registry.inventories.has(player)) {
+					for (const auto& inv_data : m_loaded_game_data["inventories"]) {
+						std::string owner_type = inv_data["owner_type"];
+						if (owner_type == "player") {
+							ItemSystem::deserializeInventory(player, inv_data);
+						}
+						else if (owner_type == "cauldron" && !registry.cauldrons.entities.empty()) {
+							ItemSystem::deserializeInventory(registry.cauldrons.entities[0], inv_data);
+						}
+					}
+				}
+			}
+			
+			// Clear the loaded data but keep the pending chest inventory flag
+			m_loaded_game_data = nullptr;
+		}
+	}
+	
+	// If this is a direct load into the grotto, just load inventory data
+	if (screen.biome == (int)BIOME::GROTTO && !is_first_load && !m_loaded_game_data.is_null()) {
+		std::cout << "Loading inventory state after biome initialization. Current chest count: " << registry.chests.entities.size() << std::endl;
+		ItemSystem::loadInventoryState(m_loaded_game_data);
+		m_loaded_game_data = nullptr;
+		m_has_pending_chest_inventory = false; // Reset the flag
 	}
 }
 
@@ -331,6 +412,16 @@ bool BiomeSystem::handleEntranceInteraction(Entity entrance_entity)
 	{
 		state.is_switching_biome = true;
 		state.switching_to_biome = (GLuint)BIOME::GROTTO;
+		
+		// If we have pending chest inventory and we're entering the grotto, load it in renderPlayerInNewBiome when chest entities exist
+		if (m_has_pending_chest_inventory && m_loaded_game_data.is_null()) {
+			std::string save_path = game_state_path(GAME_STATE_FILE);
+			std::ifstream file(save_path);
+			if (file.is_open()) {
+				file >> m_loaded_game_data;
+				std::cout << "Reloaded game data for deferred chest inventory loading" << std::endl;
+			}
+		}
 	}
 	else if (entrance.target_biome == (GLuint)BIOME::FOREST) {
 		state.is_switching_biome = true;
