@@ -152,6 +152,9 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 		// Create player's active effects bar
 		createEffectsBar();
 
+		// Create text info
+		createInfoBar();
+
 		m_initialized = true;
 
 		// update the bars for the first time to reload state
@@ -240,18 +243,6 @@ void UISystem::step(float elapsed_ms)
 			if (openedCauldron != cauldron) openedCauldron = cauldron;
 		}
 
-		if (!m_inventory_document) {
-			createInventoryBar();
-		}
-
-		if (!m_healthbar_document) {
-			createHealthBar();
-		}
-
-		if (!m_effectsbar_document) {
-			createEffectsBar();
-		}
-
 		// Display tutorial
 		updateTutorial();
 
@@ -262,6 +253,9 @@ void UISystem::step(float elapsed_ms)
 		if (isCauldronOpen()) {
 			updateCauldronUI();
 		}
+
+		// Handle queued text for fade-in/fade-out
+		handleQueuedText(elapsed_ms);  // Calling the new helper function
 
 		// Update RmlUi
 		m_context->Update();
@@ -279,69 +273,67 @@ void UISystem::draw()
 
 	g_ui_rendering_in_progress = true;
 
-	try {
-		// Save ALL relevant OpenGL state
-		GLint last_viewport[4];
-		glGetIntegerv(GL_VIEWPORT, last_viewport);
+	// Save ALL relevant OpenGL state
+	GLint last_viewport[4];
+	glGetIntegerv(GL_VIEWPORT, last_viewport);
 
-		GLint last_program;
-		glGetIntegerv(GL_CURRENT_PROGRAM, &last_program);
+	GLint last_program;
+	glGetIntegerv(GL_CURRENT_PROGRAM, &last_program);
 
-		GLboolean depth_test = glIsEnabled(GL_DEPTH_TEST);
-		GLboolean blend = glIsEnabled(GL_BLEND);
-		GLint blend_src, blend_dst;
-		glGetIntegerv(GL_BLEND_SRC_ALPHA, &blend_src);
-		glGetIntegerv(GL_BLEND_DST_ALPHA, &blend_dst);
+	GLboolean depth_test = glIsEnabled(GL_DEPTH_TEST);
+	GLboolean blend = glIsEnabled(GL_BLEND);
+	GLint blend_src, blend_dst;
+	glGetIntegerv(GL_BLEND_SRC_ALPHA, &blend_src);
+	glGetIntegerv(GL_BLEND_DST_ALPHA, &blend_dst);
+	gl_has_errors();
 
-		GLint last_framebuffer;
-		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &last_framebuffer);
+	GLint last_framebuffer;
+	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &last_framebuffer);
 
-		// Save additional OpenGL state
-		GLint last_vao, last_active_texture;
-		glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vao);
-		glGetIntegerv(GL_ACTIVE_TEXTURE, &last_active_texture);
+	// Save additional OpenGL state
+	GLint last_vao, last_active_texture;
+	glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vao);
+	glGetIntegerv(GL_ACTIVE_TEXTURE, &last_active_texture);
 
-		// Set up state for UI rendering
-		int width, height;
-		glfwGetFramebufferSize(m_window, &width, &height);
+	// Set up state for UI rendering
+	int width, height;
+	glfwGetFramebufferSize(m_window, &width, &height);
 
-		// Ensure we're rendering to the default framebuffer
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(last_viewport[0], last_viewport[1], last_viewport[2], last_viewport[3]);
+	// Ensure we're rendering to the default framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(last_viewport[0], last_viewport[1], last_viewport[2], last_viewport[3]);
 
-		// Enable blending for transparency
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	// Enable blending for transparency
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		// Disable depth testing for UI
+	// Disable depth testing for UI
+	glDisable(GL_DEPTH_TEST);
+
+	// Render UI
+	m_context->Render();
+
+	// Restore additional OpenGL state
+	glBindFramebuffer(GL_FRAMEBUFFER, last_framebuffer);
+	glBindVertexArray(last_vao);
+	glActiveTexture(last_active_texture);
+	gl_has_errors();
+
+	// Restore previous OpenGL state
+	glUseProgram(last_program);
+
+	if (depth_test)
+		glEnable(GL_DEPTH_TEST);
+	else
 		glDisable(GL_DEPTH_TEST);
 
-		// Render UI
-		m_context->Render();
+	if (blend)
+		glEnable(GL_BLEND);
+	else
+		glDisable(GL_BLEND);
 
-		// Restore additional OpenGL state
-		glBindFramebuffer(GL_FRAMEBUFFER, last_framebuffer);
-		glBindVertexArray(last_vao);
-		glActiveTexture(last_active_texture);
-
-		// Restore previous OpenGL state
-		glUseProgram(last_program);
-
-		if (depth_test)
-			glEnable(GL_DEPTH_TEST);
-		else
-			glDisable(GL_DEPTH_TEST);
-
-		if (blend)
-			glEnable(GL_BLEND);
-		else
-			glDisable(GL_BLEND);
-
-		glBlendFunc(blend_src, blend_dst);
-	}
-	catch (const std::exception& e) {
-		std::cerr << "Exception in UISystem::draw: " << e.what() << std::endl;
-	}
+	glBlendFunc(blend_src, blend_dst);
+	gl_has_errors();
 
 	g_ui_rendering_in_progress = false;
 }
@@ -499,9 +491,11 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 	if (action == GLFW_RELEASE && button == GLFW_MOUSE_BUTTON_LEFT) {
 		if (id == "ladle") {
 			hovered->SetProperty("decorator", "image(\"interactables/spoon_on_table.png\" contain)");
-		} else if (id == "pestle") {
+		}
+		else if (id == "pestle") {
 			hovered->SetProperty("transform", "rotate(0deg)");
-		} else if (id == "mortar" && heldPestle) {
+		}
+		else if (id == "mortar" && heldPestle) {
 			heldPestle->SetProperty("transform", "rotate(0deg)");
 		}
 	}
@@ -556,7 +550,8 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 					hovered->SetProperty("top", LADLE_TOP_PX);
 					hovered->SetProperty("left", LADLE_LEFT_PX);
 					heldLadle = nullptr;
-				} else {
+				}
+				else {
 					heldLadle = hovered;
 					updateFollowMouse();
 				}
@@ -634,7 +629,8 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 					hovered->SetProperty("top", PESTLE_TOP_PX);
 					hovered->SetProperty("left", PESTLE_LEFT_PX);
 					heldPestle = nullptr;
-				} else {
+				}
+				else {
 					heldPestle = hovered;
 					updateFollowMouse();
 				}
@@ -654,7 +650,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 				if (mortarInventory.items.empty()) {
 					break;
 				}
-				
+
 				// Check it's fully grinded and pickable
 				Entity ingredient = mortarInventory.items[0];
 				if (!registry.items.has(ingredient) || !registry.items.get(ingredient).isCollectable) {
@@ -2012,7 +2008,7 @@ std::string UISystem::getRecipeHtml(int recipe_index)
 	std::string potion_img_style = "width: 32px; height: 32px; margin-left: 8px; transform: scaleY(-1);";
 	potion_img_style += " image-color: " + getImageColorProperty(potion_color, 255) + ";";
 
-	html += "<div style='display: flex; align-items: center; font-family: Caveat; font-size: 20px; font-weight: bold;'>"; 
+	html += "<div style='display: flex; align-items: center; font-family: Caveat; font-size: 20px; font-weight: bold;'>";
 	html += "<span>Perfect Quality:</span>";
 	html += "<img src='" + potion_texture_path + "' style='" + potion_img_style + "'/>";
 	html += "</div>";
@@ -2279,6 +2275,122 @@ void UISystem::updateEffectsBar() {
 	catch (const std::exception& e) {
 		std::cerr << "Exception in UISystem::updateEffectsBar: " << e.what() << std::endl;
 	}
+}
+
+void UISystem::createScreenText(const std::string& text, float displayDuration) {
+	if (!m_context) return;
+
+	try {
+		std::cout << "UISystem::createNewBiomeText - Queueing biome text: " << text << std::endl;
+
+		// Queue the new text
+		textQueue.push({ text, displayDuration, 0.0f });
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::createNewBiomeText: " << e.what() << std::endl;
+	}
+}
+
+void UISystem::handleQueuedText(float elapsed_ms) {
+	if (textQueue.empty()) {
+		return;
+	}
+
+	TextQueueItem& currentItem = textQueue.front();
+
+	// Check if we have already created the text
+	if (currentItem.elapsedTime == 0.0f) {
+		std::string biome_rml = R"(
+		<rml>
+		<head>
+			<style>
+				@keyframes fade-in-out {
+					0% { opacity: 0; }
+					20% { opacity: 1; } /* Fade in */
+					80% { opacity: 1; } /* Hold for a while */
+					100% { opacity: 0; } /* Fade out */
+				}
+
+				#biome-text {
+					position: absolute;
+					top: 300px;
+					left: 625px;
+					width: 900px; 
+					transform: translate(-50%, -50%);
+					font-size: 60px;
+					text-align: center;
+					color: white;
+					font-family: Open Sans;
+					font-effect: outline( 1px black );
+					animation: 3s linear-in-out fade-in-out;
+					pointer-events: none;
+					display: block;
+				}
+			</style>
+		</head>
+		<body>
+			<div id="biome-text">)" + currentItem.text + R"(</div>
+		</body>
+		</rml>)";
+
+		m_biome_text_document = m_context->LoadDocumentFromMemory(biome_rml.c_str());
+
+		if (m_biome_text_document) {
+			m_biome_text_document->Show();
+			std::cout << "UISystem::createNewBiomeText - Biome text displayed successfully: " << currentItem.text << std::endl;
+		}
+		else {
+			std::cerr << "UISystem::createNewBiomeText - Failed to create biome text document" << std::endl;
+		}
+	}
+
+	currentItem.elapsedTime += elapsed_ms / 1000.0f;
+
+	// If the duration has passed, remove the text
+	if (currentItem.elapsedTime >= currentItem.displayDuration) {
+		if (m_biome_text_document) {
+			m_biome_text_document->Hide();
+		}
+		textQueue.pop();
+	}
+}
+
+void UISystem::createInfoBar() {
+	// Screw it, no try catch
+	std::cout << "UISystem::createInfoBar - Creating info bar" << std::endl;
+	std::string info_rml = R"(
+		<rml>
+		<head>
+			<style>
+				body {
+					position: absolute;
+					top: 10px;
+					left: 10px;
+					width: 300px;
+					height: 100px;
+					display: block;
+					font-size: 20px;
+					text-align: left;
+					color: white;
+					font-family: Open Sans;
+					font-effect: outline( 1px black );
+				}
+			</style>
+		</head>
+		<body>
+			<p>
+				[LMB] Throw potion<br />
+				[RMB] Consume selected potion<br />
+				[R] Open recipe book<br />
+				[T] Toggle tutorial<br />
+				[N] Skip tutorial step
+			</p>
+		</body>
+		</rml>)";
+
+	m_info_document = m_context->LoadDocumentFromMemory(info_rml.c_str());
+	m_info_document->Show();
+	std::cout << "UISystem::createInfoBar - Info bar created successfully" << std::endl;
 }
 
 bool UISystem::isClickOnUIElement()
