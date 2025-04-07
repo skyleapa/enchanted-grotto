@@ -347,6 +347,13 @@ void WorldSystem::restart_game(bool hard_reset)
 			m_ui_system->updateHealthBar();
 			m_ui_system->updateInventoryBar();
 		}
+		
+		biome_sys->init(renderer);
+		
+		screen.is_switching_biome = true;
+		screen.fade_status = 1;
+		screen.darken_screen_factor = 1.0f;
+		biome_sys->switchBiome((int)BIOME::GROTTO, true);
 	}
 	else {
 		nlohmann::json loaded_data = ItemSystem::loadCoreState();
