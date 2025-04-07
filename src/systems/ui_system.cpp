@@ -2315,8 +2315,11 @@ void UISystem::createInfoBar() {
 		</head>
 		<body>
 			<p>
+				[LMB] Throw potion<br />
+				[RMB] Consume selected potion<br />
 				[R] Open recipe book<br />
-				[T] Toggle tutorial
+				[T] Toggle tutorial<br />
+				[N] Skip tutorial step
 			</p>
 		</body>
 		</rml>)";
