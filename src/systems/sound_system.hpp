@@ -28,9 +28,11 @@ public:
     static void playGulpSound(int channel, int loops);
     static void playInteractMenuSound(int channel, int loops);
     static void playPageFlipSound(int channel, int loops);
+    static void playPlayerOuchSound(int channel, int loops);
     static void playStirSound(int channel, int loops);
     static void playThrowSound(int channel, int loops);
     static void playTurnDialSound(int channel, int loops);
+    static void playWalkSound(int channel, int loops);
 
     static void continueBoilSound(int channel, int loops);
 
@@ -57,8 +59,10 @@ private:
     static Mix_Chunk* gulp_sound;
     static Mix_Chunk* interact_menu_sound;
     static Mix_Chunk* page_flip_sound;
+    static Mix_Chunk* player_ouch_sound;
     static Mix_Chunk* stir_sound;
     static Mix_Chunk* throw_sound;
     static Mix_Chunk* turn_dial_sound;
+    static Mix_Chunk* walk_sound;
 };
 

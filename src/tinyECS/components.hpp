@@ -12,11 +12,11 @@ struct Player
 	float health = PLAYER_MAX_HEALTH;
 	float damage_cooldown = 0.f; // cooldown before player can take damage again to prevent insta death
 	std::vector<Entity> active_effects = {}; // list of active consumed potions
-	bool consumed_potion = false;
 	float speed_multiplier = 1.f;
 	float effect_multiplier = 1.f;
 	float defense = 1.f;
 	vec2 load_position = vec2(0, 0);
+	float walking_timer = 0.f;
 };
 
 // All data relevant to the shape and motion of entities
@@ -60,6 +60,10 @@ struct ScreenState
 	std::vector<std::string> killed_enemies = {};
 	std::vector<std::string> unlocked_biomes = {};
 	bool first_game_load = true;
+	bool play_ending = false;
+	bool saved_grotto = false;
+	bool ending_text_shown = false;
+	float fog_intensity = 1.5f;
 };
 
 // A struct to refer to debugging graphics in the ECS
@@ -219,7 +223,8 @@ struct Chest {
 };
 
 struct Enemy {
-	int health;
+	float health;
+	float max_health;
 	int attack_radius;
 	vec2 start_pos;
 	int state; // uses enum class ENEMY_STATE
@@ -227,6 +232,10 @@ struct Enemy {
 	float wander_timer = 10.0f;  // 10-second random movement before returning
 	std::string name; // gets passed into killed_enemies
 	float attack_damage;
+	float dot_damage = 0.0f;
+	float dot_timer = 0.0f;
+	float dot_duration = 0.0f;
+	PotionEffect dot_effect = PotionEffect::WATER;
 	std::string persistentID = ""; // Unique identifier for respawn tracking
 };
 
@@ -264,6 +273,11 @@ struct WelcomeScreen {
 struct DelayedMovement {
 	vec2 velocity;
 	float delay_ms;
+};
+
+struct TexturedEffect {
+	float animation_timer = 0.f;
+	bool done_growing = false;
 };
 
 /**
@@ -408,7 +422,8 @@ enum class TEXTURE_ASSET_ID
 	WELCOME_TO_GROTTO = POTION + 1,
 	CAULDRON_WATER = WELCOME_TO_GROTTO + 1,
 	POTION_OF_REJUVENATION = CAULDRON_WATER + 1,
-	TEXTURE_COUNT = POTION_OF_REJUVENATION + 1,
+	GLOW_EFFECT = POTION_OF_REJUVENATION + 1,
+	TEXTURE_COUNT = GLOW_EFFECT + 1,
 };
 const int texture_count = (int)TEXTURE_ASSET_ID::TEXTURE_COUNT;
 
@@ -433,7 +448,8 @@ enum class EFFECT_ASSET_ID
 	WATER_B = WATER_A + 1,
 	WATER_C = WATER_B + 1,
 	WATER_FINAL = WATER_C + 1,
-	EFFECT_COUNT = WATER_FINAL + 1
+	FOG = WATER_FINAL + 1,
+	EFFECT_COUNT = FOG + 1
 };
 const int effect_count = (int)EFFECT_ASSET_ID::EFFECT_COUNT;
 
@@ -685,6 +701,7 @@ const std::unordered_map<ItemType, std::vector<BIOME>> itemRespawnBiomes = {
 // damage flash only to be applied to player and enemies
 struct DamageFlash {
 	float flash_value = 1.f; // defaults to 0 for no flash, and 1 for red tint
+	bool kill_after_flash = false;
 };
 
 struct Regeneration {

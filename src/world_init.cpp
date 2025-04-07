@@ -1735,6 +1735,7 @@ Entity createEnt(RenderSystem* renderer, vec2 position, int movable, std::string
 	Enemy& enemy = registry.enemies.emplace(entity);
 	enemy.attack_radius = 5;
 	enemy.health = 75;
+	enemy.max_health = 75;
 	enemy.start_pos = position;
 	enemy.state = (int)ENEMY_STATE::IDLE;
 	enemy.can_move = movable;
@@ -1788,7 +1789,8 @@ Entity createMummy(RenderSystem* renderer, vec2 position, int movable, std::stri
 
 	Enemy& enemy = registry.enemies.emplace(entity);
 	enemy.attack_radius = 5;
-	enemy.health = 50;
+	enemy.health = 100;
+	enemy.max_health = 100;
 	enemy.start_pos = position;
 	enemy.state = (int)ENEMY_STATE::IDLE;
 	enemy.can_move = movable;
@@ -2041,7 +2043,7 @@ Entity createMasterPotionPedestal(RenderSystem* renderer, vec2 position)
 	Guardian& guardian = registry.guardians.emplace(entity);
 	guardian.unlock_potion = PotionEffect::REJUVENATION;
 
-	guardian.hint_dialogue = "A calm warmth surrounds the pedestal... Something's missing—perhaps a potion to restore life to this place.";
+	guardian.hint_dialogue = "Something's missing from this pedestal, perhaps a potion to restore life to this place.";
 	guardian.wrong_potion_dialogue = "The magic stirs—but not enough. This isn't the one.";
 	guardian.success_dialogue  = "The potion flows...Light returns. The Grotto breathes once more.";
 
@@ -2065,7 +2067,7 @@ Entity createMasterPotionPedestal(RenderSystem* renderer, vec2 position)
 
 	ScreenState& screen = registry.screenStates.components[0];
 	if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "saved-grotto") == screen.unlocked_biomes.end()) {
-		createTextbox(renderer, vec2(position.x - 80, position.y - 100), entity, "A calm warmth surrounds the pedestal...something is missing. Perhaps a potion strong enough to breathe life back into this place.");
+		createTextbox(renderer, vec2(position.x - 120, position.y - 110), entity, "Something's missing from this pedestal, perhaps a potion to restore life to this place.");
 	}
 
 	return entity;
@@ -2081,9 +2083,16 @@ bool createFiredAmmo(RenderSystem* renderer, vec2 target, Entity& item_entity, E
 
 	Ammo& ammo = registry.ammo.emplace(entity);
 
-	// If it's a potion add colour to it
+	// If it's a potion add colour to it and copy its attributes
 	if (registry.potions.has(item_entity)) {
 		registry.colors.insert(entity, registry.potions.get(item_entity).color / 255.f);
+		Potion& old_potion = registry.potions.get(item_entity);
+		Potion& potion = registry.potions.emplace(entity);
+		potion.color = old_potion.color;
+		potion.duration = old_potion.duration;
+		potion.effect = old_potion.effect;
+		potion.effectValue = old_potion.effectValue;
+		potion.quality = old_potion.quality;
 	}
 
 	Motion& player_motion = registry.motions.get(player_entity);
@@ -2144,6 +2153,36 @@ Entity createRejuvenationPotion(RenderSystem* renderer)
 	registry.renderRequests.insert(
 		entity,
 		{ TEXTURE_ASSET_ID::POTION_OF_REJUVENATION,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN });
+
+	return entity;
+}
+
+
+Entity createGlowEffect(RenderSystem* renderer, bool done_growing)
+{
+	auto entity = Entity();
+	TexturedEffect& texturedEffect = registry.texturedEffects.emplace(entity);
+	texturedEffect.done_growing = done_growing;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+
+	// fixed position starting from rejuvenation potion area
+	motion.position = vec2(638, 115);
+
+	motion.scale = vec2({ 20, 20 });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::GLOW_EFFECT,
 		 EFFECT_ASSET_ID::TEXTURED,
 		 GEOMETRY_BUFFER_ID::SPRITE,
 		 RENDER_LAYER::ITEM });

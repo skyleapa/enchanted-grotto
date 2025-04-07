@@ -14,9 +14,11 @@ Mix_Chunk* SoundSystem::grind_sound = nullptr;
 Mix_Chunk* SoundSystem::gulp_sound = nullptr;
 Mix_Chunk* SoundSystem::interact_menu_sound = nullptr;
 Mix_Chunk* SoundSystem::page_flip_sound = nullptr;
+Mix_Chunk* SoundSystem::player_ouch_sound = nullptr;
 Mix_Chunk* SoundSystem::stir_sound = nullptr;
 Mix_Chunk* SoundSystem::throw_sound = nullptr;
 Mix_Chunk* SoundSystem::turn_dial_sound = nullptr;
+Mix_Chunk* SoundSystem::walk_sound = nullptr;
 
 // initialize sounds
 bool SoundSystem::startAndLoadSounds()
@@ -49,9 +51,11 @@ bool SoundSystem::startAndLoadSounds()
     gulp_sound = Mix_LoadWAV(audio_path("gulp.wav").c_str());
     interact_menu_sound = Mix_LoadWAV(audio_path("interact_menu.wav").c_str());
     page_flip_sound = Mix_LoadWAV(audio_path("page_flip.wav").c_str());
+    player_ouch_sound = Mix_LoadWAV(audio_path("player_ouch.wav").c_str());
     stir_sound = Mix_LoadWAV(audio_path("stir.wav").c_str());
     throw_sound = Mix_LoadWAV(audio_path("throw.wav").c_str());
     turn_dial_sound = Mix_LoadWAV(audio_path("turn_dial.wav").c_str());
+    walk_sound = Mix_LoadWAV(audio_path("walk.wav").c_str());
 
     Mix_VolumeMusic(MUSIC_VOLUME);
     // start playing background music indefinitely
@@ -60,7 +64,7 @@ bool SoundSystem::startAndLoadSounds()
 
     // return false if any sound failed to load
     return !(!background_music || !boil_sound || !bottle_high_quality_potion_sound || !bottle_sound || !collect_item_sound || !dial_change_sound || !drop_in_bowl_sound || !drop_in_cauldron_sound
-        || !enemy_ouch_sound || !grind_sound || !gulp_sound || !interact_menu_sound || !page_flip_sound || !stir_sound || !throw_sound || !turn_dial_sound);
+        || !enemy_ouch_sound || !grind_sound || !gulp_sound || !interact_menu_sound || !page_flip_sound || !player_ouch_sound || !stir_sound || !throw_sound || !turn_dial_sound || !walk_sound);
 }
 
 SoundSystem::~SoundSystem()
@@ -78,8 +82,10 @@ SoundSystem::~SoundSystem()
     if (gulp_sound) Mix_FreeChunk(gulp_sound);
     if (interact_menu_sound) Mix_FreeChunk(interact_menu_sound);
     if (page_flip_sound) Mix_FreeChunk(page_flip_sound);
+    if (player_ouch_sound) Mix_FreeChunk(player_ouch_sound);
     if (stir_sound) Mix_FreeChunk(stir_sound);
     if (turn_dial_sound) Mix_FreeChunk(turn_dial_sound);
+    if (walk_sound) Mix_FreeChunk(walk_sound);
 
     Mix_CloseAudio();
 }
@@ -132,6 +138,10 @@ void SoundSystem::playPageFlipSound(int channel, int loops) {
     Mix_PlayChannel(channel, page_flip_sound, loops);
 }
 
+void SoundSystem::playPlayerOuchSound(int channel, int loops) {
+    Mix_PlayChannel(channel, player_ouch_sound, loops);
+}
+
 void SoundSystem::playStirSound(int channel, int loops) {
     Mix_PlayChannel(channel, stir_sound, loops);
 }
@@ -142,6 +152,10 @@ void SoundSystem::playThrowSound(int channel, int loops) {
 
 void SoundSystem::playTurnDialSound(int channel, int loops) {
     Mix_PlayChannel(channel, turn_dial_sound, loops);
+}
+
+void SoundSystem::playWalkSound(int channel, int loops) {
+    Mix_PlayChannel(channel, walk_sound, loops);
 }
 
 void SoundSystem::continueBoilSound(int channel, int loops) {

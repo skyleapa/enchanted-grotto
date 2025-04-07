@@ -59,6 +59,7 @@ bool RenderSystem::init(GLFWwindow* window_arg)
 	initializeGlEffects();
 	initializeGlGeometryBuffers();
 	initializeWaterBuffers(true);
+	initializeFogTexture();
 
 	return true;
 }
@@ -287,6 +288,20 @@ void RenderSystem::initializeWaterBuffers(bool init)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void RenderSystem::initializeFogTexture()
+{
+	glGenFramebuffers(1, &fog_buffer);
+	glGenTextures(1, &fog_texture);
+	glBindFramebuffer(GL_FRAMEBUFFER, fog_buffer);
+	glBindTexture(GL_TEXTURE_2D, fog_texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, frameBufferWidth, frameBufferHeight, 0, GL_RGBA, GL_FLOAT, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fog_texture, 0);
+	assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 RenderSystem::~RenderSystem()
 {
 	// Don't need to free gl resources since they last for as long as the program,
@@ -295,6 +310,8 @@ RenderSystem::~RenderSystem()
 	glDeleteBuffers((GLsizei)index_buffers.size(), index_buffers.data());
 	glDeleteTextures((GLsizei)texture_gl_handles.size(), texture_gl_handles.data());
 	glDeleteTextures(1, &off_screen_render_buffer_color);
+	glDeleteTextures(1, &water_texture_one);
+	glDeleteTextures(1, &water_texture_two);
 	glDeleteRenderbuffers(1, &off_screen_render_buffer_depth);
 	gl_has_errors();
 
@@ -303,6 +320,8 @@ RenderSystem::~RenderSystem()
 	}
 	// delete allocated resources
 	glDeleteFramebuffers(1, &frame_buffer);
+	glDeleteFramebuffers(1, &water_buffer_one);
+	glDeleteFramebuffers(1, &water_buffer_two);
 	gl_has_errors();
 
 	// remove all entities created by the render system

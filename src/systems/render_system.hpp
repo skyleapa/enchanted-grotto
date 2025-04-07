@@ -129,7 +129,8 @@ class RenderSystem {
 		textures_path("interactables/potion_item.png"),
 		textures_path("welcome_to_grotto.png"),
 		textures_path("interactables/cauldron_water.png"),
-		textures_path("interactables/potion_of_rejuvenation.png")
+		textures_path("interactables/potion_of_rejuvenation.png"),
+		textures_path("glow_effect.png")
 	};
 
 	std::array<GLuint, effect_count> effects;
@@ -144,7 +145,8 @@ class RenderSystem {
 		shader_path("water_A_advection"),
 		shader_path("water_B_pressure"),
 		shader_path("water_C_projection"),
-		shader_path("water_final")
+		shader_path("water_final"),
+		shader_path("fog")
 	};
 
 	std::array<GLuint, geometry_count> vertex_buffers;
@@ -170,6 +172,8 @@ public:
 
 	void initializeWaterBuffers(bool init);
 
+	void initializeFogTexture();
+
 	// Initialize the screen texture used as intermediate render target
 	// The draw loop first renders to this texture, then it is used for the vignette shader
 	bool initScreenTexture();
@@ -179,7 +183,7 @@ public:
 
 	// Draw all entities
 	// Include UI system so we can specify order
-	void draw(UISystem* ui_system);
+	void draw(UISystem* ui_system, float elapsed_ms);
 
 	// Swap the frame buffers to display rendered content
 	void swap_buffers();
@@ -211,7 +215,8 @@ private:
 	void drawTexturedMesh(Entity entity, const mat3& projection);
 	void drawToScreen();
 	void fadeScreen();
-	void simulate_water(Entity cauldron);
+	void simulateWater(Entity cauldron);
+	void drawFog();
 
 	// Viewport numbers
 	int viewport_x;
@@ -239,6 +244,11 @@ private:
 	vec4 iMouseCauldron = vec4(0, 0, 0, 0);
 	bool isCauldronDrag = false;
 	float m_fps;
+
+	// Fog
+	GLuint fog_buffer;
+	GLuint fog_texture;
+	float iTime = 0;
 
 	Entity screen_state_entity;
 };
