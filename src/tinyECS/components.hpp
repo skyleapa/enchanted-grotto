@@ -170,6 +170,7 @@ struct Cauldron
 	std::vector<Action> actions;      // Records player actions
 	Entity water;                     // We technically only need 1 of these globally but this was easier so whatever
 	bool is_boiling = false;
+	int num_stirs = 0;
 	// If stir quality ever gets added, a penalty can be recorded here
 };
 

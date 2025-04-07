@@ -104,6 +104,20 @@ void DragListener::checkCompletedStir() {
 		if (a && b && c && d) {
 			PotionSystem::stirCauldron(m_ui_system->getOpenedCauldron());
 			std::cout << "Recorded a successful ladle stir" << std::endl;
+			registry.cauldrons.get(m_ui_system->getOpenedCauldron()).num_stirs += 1;
+
+			if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::STIR) {
+				Cauldron& cauldron = registry.cauldrons.get(m_ui_system->getOpenedCauldron());
+				if (m_ui_system->active_animation && cauldron.num_stirs >= 1) {
+					m_ui_system->active_animation->SetAttribute("src", "");
+					m_ui_system->active_animation = nullptr;
+				}
+				if (registry.cauldrons.get(m_ui_system->getOpenedCauldron()).num_stirs >= 3) {
+					ScreenState& screen = registry.screenStates.components[0];
+					screen.tutorial_step_complete = true;
+					screen.tutorial_state += 1;
+				}
+			}
 			SoundSystem::playStirSound((int)SOUND_CHANNEL::MENU, 0);
 			break;
 		}
@@ -149,7 +163,7 @@ void DragListener::checkGrindingMotion() {
 	}
 
 	// Grind movement succeeded
-	if (PotionSystem::grindIngredient(m_ui_system->getOpenedMortarPestle())) {	
+	if (PotionSystem::grindIngredient(m_ui_system->getOpenedMortarPestle())) {
 		SoundSystem::playGrindSound((int)SOUND_CHANNEL::GENERAL, 0);
 	}
 }

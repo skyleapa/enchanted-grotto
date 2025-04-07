@@ -1081,6 +1081,9 @@ void UISystem::updateTutorial()
 		if (screen.tutorial_state == (int)TUTORIAL::GRIND_BARK) {
 			active_animation = m_mortar_document->GetElementById("grinding-style");
 			active_animation->SetAttribute("src", "data/animations/grinding.json");
+		} else if (screen.tutorial_state == (int)TUTORIAL::STIR) {
+			active_animation = m_cauldron_document->GetElementById("stirring-style");
+			active_animation->SetAttribute("src", "data/animations/cauldron_stir.json");
 		}
 
 		m_tutorial_document = m_context->LoadDocumentFromMemory(tutorial_rml.c_str());
@@ -1321,6 +1324,11 @@ bool UISystem::openCauldron(Entity cauldron, bool play_sound = true)
                     decorator: image("interactables/timer_hand.png" flip-vertical fill);
                     transform: rotate(0deg);
 				}
+				
+				#stirring-style {
+					z-index: 10;
+					pointer-events: none;
+				}
             </style>
         </head>
         <body>
@@ -1331,7 +1339,7 @@ bool UISystem::openCauldron(Entity cauldron, bool play_sound = true)
             <div id="ladle"></div>
             <div id="bottle"></div>
 			<div id="close-button">X</div>
-			<lottie src="data/animations/a_mountain.json"></lottie>
+			<lottie id="stirring-style"></lottie>
         </body>
         </rml>
         )";
@@ -1529,7 +1537,8 @@ bool UISystem::openMortarPestle(Entity mortar, bool play_sound = true) {
 				}
 
 				#grinding-style {
-					z-index: 0;
+					z-index: 7;
+					pointer-events: none;
 				}
             </style>
         </head>
