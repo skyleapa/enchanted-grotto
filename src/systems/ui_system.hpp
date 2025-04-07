@@ -209,56 +209,68 @@ private:
     // Textbox variables
     std::unordered_map<int, Rml::ElementDocument*> m_textbox_documents;  // to store multiple textboxes
 
-    const std::unordered_map<int, std::tuple<std::string, std::string, std::string>> tutorial_steps = {
+    std::unordered_map<int, std::tuple<std::string, std::string, std::string, std::optional<std::tuple<std::string, std::string, std::string, std::string, std::string>>>> tutorial_steps = {
         { (int)TUTORIAL::WELCOME_SCREEN, {
             }},
         { (int)TUTORIAL::TOGGLE_TUTORIAL, {
-            "820px", "466px", "Let's make your first potion! Toggle the tutorial with T at any time or N to skip to the tutorial step. Press N now!"
+            "660px", "90px", "This tutorial will teach you to brew your first potion! Press T to toggle the tutorial or N to skip ahead. Press N to continue", std::nullopt
+        }},
+        { (int)TUTORIAL::TOOLS, {
+            "660px", "75px", "The grotto holds essential tools for potion making: a chest, recipe book, mortar & pestle and cauldron! Press N to continue",
+            std::make_optional(std::make_tuple("625px", "350px", "tools_tutorial.png", "1250px", "700px"))
         }},
         { (int)TUTORIAL::RECIPE_BOOK, {
-            "211px", "110px", "Head to the lectern using the WASD keys and press F to open the recipe book. You can also use R to access the recipe book at any time."
+            "660px", "90px", "Head to the lectern using the WASD keys and press F to open the recipe book. You can also use R to open the recipe book at any time.",
+            std::make_optional(std::make_tuple("210px", "100px", "arrow_down.png", "100px", "100px"))
         }},
         { (int)TUTORIAL::FLIP_PAGE, {
-            "790px", "455px", "Flip to the recipe page for \"Potion of Harming\"."
+            "570px", "55px", "Flip to the recipe page for \"Potion of Harming\".", std::nullopt
         }},
         { (int)TUTORIAL::EXIT_GROTTO, {
-            "790px", "455px", "Looks like we're missing a couple of ingredients! Exit the recipe book menu by pressing F and leave the grotto from the exit in the bottom right."
+            "570px", "55px", "We're missing a couple of ingredients! Exit the recipe book menu with F and leave the grotto from the bottom right exit.", std::nullopt
         }},
         { (int)TUTORIAL::COLLECT_ITEMS, {
-            "25%", "35%", "Welcome to the forest! Explore and collect 2 storm bark and 1 blightleaf."
+            "305px", "202px", "Welcome to the forest! There's a heavy fog of corruption... Collect 2 storm bark and 1 blightleaf.",
+            std::make_optional(std::make_tuple("305px", "300px", "tutorial_ingredients.png", "100px", "100px"))
         }},
         { (int)TUTORIAL::ENTER_GROTTO, {
-            "611px", "200px", "Great, now head back to the grotto."
+            "305px", "202px", "Great, now head back to the grotto.", std::nullopt
         }},
         { (int)TUTORIAL::MORTAR_PESTLE, {
-            "422px", "125px", "Go to the mortar and pestle and press F to open the menu"
+            "660px", "90px", "Go to the mortar and pestle and press F to open the menu",
+            std::make_optional(std::make_tuple("420px", "125px", "arrow_down.png", "100px", "100px"))
         }},
         { (int)TUTORIAL::GRIND_BARK, {
-            "1000px", "190px", "Insert a storm bark by dragging it into the mortar and pestle from your inventory. Then pickup the pestle and grind the bark!"
+            "272px", "200px", "Drag a storm bark from your inventory into the mortar and pestle. Then pickup the pestle and grind the bark!",
+            std::make_optional(std::make_tuple("272px", "332px", "grind_tutorial.png", "280px", "85px"))
         }},
         { (int)TUTORIAL::INTERACT_CAULDRON, {
-            "284px", "190px", "Now you have Storm Sap! Click it to pick it up. Exit the menu with F and go to your cauldron. Press F to open the cauldron menu."
+            "284px", "190px", "Now you have Storm Sap! Click it to pick it up. Exit the menu with F and go to use your cauldron.", std::nullopt
         }},
         { (int)TUTORIAL::SET_HEAT, {
-            "210px", "300px", "Drag the heat dial to high. Press R to reference the recipe or exit the menu if needed, the cauldron state is saved."
+            "210px", "300px", "Drag the heat dial to high. Press R to reference the recipe if needed.",
+            std::make_optional(std::make_tuple("125px", "452px", "arrow_right.png", "100px", "100px"))
         }},
         { (int)TUTORIAL::ADD_INGREDIENTS, {
-            "210px", "300px", "Add in 1 blightleaf, 1 storm bark and 1 storm sap by dragging it from your inventory into the cauldron."
+            "210px", "300px", "Add in 1 blightleaf, 1 storm bark and 1 storm sap by dragging it from your inventory into the cauldron.", std::nullopt
         }},
         { (int)TUTORIAL::STIR, {
-            "210px", "300px", "Pick up the ladle by clicking and dragging it in the cauldron. Stir 3 times, a successful stir will flash and play a whoosh sound."
+            "210px", "300px", "Pick up the ladle by clicking and dragging it in the cauldron. Stir 3 times, a successful stir will flash and play a whoosh sound.", std::nullopt
         }},
         { (int)TUTORIAL::WAIT, {
-            "210px", "300px", "Wait for 10 seconds for the potion to develop. You can use the timer that begins turning once you start brewing."
+            "210px", "300px", "Wait for 10 seconds for the potion to develop. You can use the timer that begins turning once you start brewing.",
+            std::make_optional(std::make_tuple("125px", "156px", "arrow_right.png", "100px", "100px"))
         }},
         { (int)TUTORIAL::BOTTLE, {
-            "210px", "300px", "Bottle your potion by dragging the bottle to the cauldron and left clicking. The closer the color to the recipe book, the better the quality and potion effect."
+            "210px", "300px", "Drag the bottle to the cauldron and left-click to bottle your potion. Match the recipe color for better quality and effect.",
+            std::make_optional(std::make_tuple("1145px", "466px", "arrow_left.png", "100px", "100px"))
         }},
         { (int)TUTORIAL::THROW_POTION, {
-            "210px", "300px", "Exit the cauldron menu by clicking F. Throw your damage potion at an enemy with left click. Consume potions by right clicking with the potion selected."
+            "660px", "90px", "Exit the cauldron menu by clicking F. Throw your damage potion at an enemy with left click. Consume potions with right click. Press N to continue.", std::nullopt
         }},
         { (int)TUTORIAL::POTION_EFFECT, {
-            "1020px", "336px", "Your player health is the green bar on the bottom right. Consumed potion effects appear on the top right. Good luck saving the grotto!"
+            "660px", "90px", "Your player health is the green bar on the bottom right. Consumed potion effects appear on the top right. Good luck saving the grotto! Press N to end the tutorial.",
+            std::make_optional(std::make_tuple("625px", "350px", "effect_health_tutorial.png", "1250px", "700px"))
         }}
     };
 

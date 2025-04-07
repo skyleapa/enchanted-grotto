@@ -1133,6 +1133,22 @@ void UISystem::updateTutorial()
 		std::string left_position = std::get<0>(it->second);
 		std::string top_position = std::get<1>(it->second);
 		std::string tutorial_text = std::get<2>(it->second);
+		std::optional<std::tuple<std::string, std::string, std::string, std::string, std::string>> image_data = std::get<3>(it->second);
+
+		std::string image_rml;
+		if (image_data.has_value()) {
+			auto [img_left, img_top, img_path, img_width, img_height] = image_data.value();
+			image_rml = "<img class=\"tutorial-image\" "
+				"style=\"position: absolute;"
+				" left: " + img_left +
+				"; top: " + img_top +
+				"; transform: translate(-50%, -50%);"
+				" width: " + img_width +
+				"; height: " + img_height +
+				";\" "
+				"src=\"" + img_path + "\" />";
+		}
+
 		std::cout << "UISystem::showTutorial - Creating tutorial step " << screen.tutorial_state << std::endl;
 
 		std::string tutorial_rml = R"(
@@ -1159,7 +1175,7 @@ void UISystem::updateTutorial()
 						font-family: Open Sans;
 						padding: 5px;
 						width: auto;
-						max-width: 250px;
+						max-width: 260px;
 						white-space: normal;
 						color: #000000;
 					}
@@ -1167,6 +1183,7 @@ void UISystem::updateTutorial()
 			</head>
 			<body>
 				<div class="text">)" + tutorial_text + R"(</div>
+				)" + image_rml + R"(
 			</body>
 			</rml>
 		)";

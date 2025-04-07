@@ -111,7 +111,7 @@ bool WorldSystem::init(RenderSystem* renderer_arg, BiomeSystem* biome_sys)
 
 	this->renderer = renderer_arg;
 	this->biome_sys = biome_sys;
-	
+
 	RespawnSystem::getInstance().renderer = renderer_arg;
 
 	// Set all states to default
@@ -176,7 +176,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 
 	// Update respawn system timers for persistent respawns
 	RespawnSystem::getInstance().step(elapsed_ms_since_last_update);
-	
+
 	handle_item_respawn(elapsed_ms_since_last_update);
 	updateThrownAmmo(elapsed_ms_since_last_update);
 
@@ -193,7 +193,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 			}
 			registry.delayedMovements.remove(e);
 		}
-	}	
+	}
 
 	// apply damage over time on enemies
 	for (auto entity : registry.enemies.entities) {
@@ -335,8 +335,9 @@ void WorldSystem::restart_game(bool hard_reset)
 	// state.tutorial_step_complete = true;
 
 	if (hard_reset) {
-		screen.from_biome = (int)BIOME::BLANK;
-		screen.biome = (int)BIOME::BLANK;
+		screen.from_biome = (int)BIOME::FOREST;
+		screen.biome = (int)BIOME::GROTTO;
+		screen.is_switching_biome = true;
 		screen.switching_to_biome = (int)BIOME::GROTTO;
 		screen.tutorial_state = 0;
 		screen.tutorial_step_complete = true;
@@ -347,13 +348,20 @@ void WorldSystem::restart_game(bool hard_reset)
 			m_ui_system->updateHealthBar();
 			m_ui_system->updateInventoryBar();
 		}
+
+		biome_sys->init(renderer);
+
+		screen.is_switching_biome = true;
+		screen.fade_status = 1;
+		screen.darken_screen_factor = 1.0f;
+		biome_sys->switchBiome((int)BIOME::GROTTO, true);
 	}
 	else {
 		nlohmann::json loaded_data = ItemSystem::loadCoreState();
-		
+
 		// Initialize the biome system after core data is loaded
 		biome_sys->init(renderer);
-		
+
 		// For deferred inventory loading
 		if (!loaded_data.is_null()) {
 			biome_sys->setLoadedGameData(loaded_data);
@@ -418,7 +426,8 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 				enemy.dot_timer = DOT_POISON_TIMER;
 				enemy.dot_duration = potion.duration;
 				enemy.dot_effect = PotionEffect::POISON;
-			} else if (potion.effect == PotionEffect::MOLOTOV) {
+			}
+			else if (potion.effect == PotionEffect::MOLOTOV) {
 				enemy.dot_damage = potion.effectValue * MOLOTOV_MULTIPLIER;
 				enemy.dot_timer = DOT_MOLOTOV_TIMER;
 				enemy.dot_duration = potion.duration;
@@ -448,12 +457,12 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 			if (player.health <= 0) {
 				std::cout << "player died!" << std::endl;
 				GLuint last_biome = screen.biome; // this is the biome that the player died in
-				
+
 				// remove any ammo from screen
 				for (auto thrown_ammo : registry.ammo.entities) {
 					if (registry.ammo.get(thrown_ammo).is_fired) registry.remove_all_components_of(thrown_ammo);
 				}
-				
+
 				// Apply death penalty: remove a random valid item
 				if (registry.inventories.has(player_entity)) {
 					Inventory& inventory = registry.inventories.get(player_entity);
@@ -740,7 +749,7 @@ void WorldSystem::on_mouse_move(vec2 mouse_position)
 
 void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 {
-	// std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
+	std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
 
 	// Pass the event to the UI system if it's initialized 
 	if (m_ui_system != nullptr) {
@@ -985,10 +994,10 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 
 	if (item_info.canRespawn && item_info.isCollectable) {
 		RespawnSystem::getInstance().registerEntity(item, false);
-		
+
 		// Set a random respawn time (60-90 seconds)
 		float respawnTime = (rand() % 30000 + 60000);
-		
+
 		if (!item_info.persistentID.empty()) {
 			RespawnSystem::getInstance().setRespawning(item_info.persistentID, respawnTime);
 		}
@@ -1118,11 +1127,14 @@ void WorldSystem::update_textbox_visibility()
 				Item& item_info = registry.items.get(item);
 				if (registry.cauldrons.has(item) && m_ui_system->isCauldronOpen()) {
 					uiIsOpenForItem = true;
-				} else if (registry.mortarAndPestles.has(item) && m_ui_system->isMortarPestleOpen()) {
+				}
+				else if (registry.mortarAndPestles.has(item) && m_ui_system->isMortarPestleOpen()) {
 					uiIsOpenForItem = true;
-				} else if (item_info.type == ItemType::RECIPE_BOOK && m_ui_system->isRecipeBookOpen()) {
+				}
+				else if (item_info.type == ItemType::RECIPE_BOOK && m_ui_system->isRecipeBookOpen()) {
 					uiIsOpenForItem = true;
-				} else if (item_info.type == ItemType::CHEST && m_ui_system->isChestMenuOpen()) {
+				}
+				else if (item_info.type == ItemType::CHEST && m_ui_system->isChestMenuOpen()) {
 					uiIsOpenForItem = true;
 				}
 
@@ -1258,7 +1270,7 @@ bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 	std::cout << "You don't have the potion!!" << std::endl;
 
 	showTemporaryGuardianDialogue(guardianEntity, guardian.wrong_potion_dialogue);
-	
+
 	return false;
 }
 
