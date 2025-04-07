@@ -51,9 +51,6 @@ public:
 
 	void update_textbox_visibility();
 
-	// DEPRECATED - use RespawnSystem instead
-	void handle_item_respawn(float elapsed_ms);
-
 	bool handleGuardianUnlocking(Entity guardianEntity);
 
 	void showTemporaryGuardianDialogue(Entity guardianEntity, const std::string& message);

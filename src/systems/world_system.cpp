@@ -176,8 +176,20 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 
 	// Update respawn system timers for persistent respawns
 	RespawnSystem::getInstance().step(elapsed_ms_since_last_update);
-
-	handle_item_respawn(elapsed_ms_since_last_update);
+	
+	// Remove enemies from killed_enemies list if they're respawned in RespawnSystem
+	for (auto& [id, state] : RespawnSystem::getInstance().getRespawnStates()) {
+		if (state.isSpawned && !state.enemyName.empty()) {
+			// Find and remove from killed_enemies if present
+			auto& killed_list = registry.screenStates.components[0].killed_enemies;
+			auto it = std::find(killed_list.begin(), killed_list.end(), state.enemyName);
+			if (it != killed_list.end()) {
+				std::cout << "Removing " << state.enemyName << " from killed_enemies list to allow respawn" << std::endl;
+				killed_list.erase(it);
+			}
+		}
+	}
+	
 	updateThrownAmmo(elapsed_ms_since_last_update);
 
 	if (m_ui_system->isCauldronOpen() || m_ui_system->isMortarPestleOpen()) return true; // skip the following updates if menu is open
@@ -675,7 +687,6 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 	}
 
 	Entity player = registry.players.entities[0]; // Assume only one player entity
-	Player& player_comp = registry.players.get(player);
 	if (!registry.motions.has(player))
 	{
 		return;
@@ -1023,96 +1034,9 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 		}
 	}
 
-	item_info.respawnTime = (rand() % 5001 + 10000);
-	item_info.lastBiome = static_cast<BIOME>(registry.screenStates.components[0].biome);
+	update_textbox_visibility();
 
 	return true;
-}
-
-
-void WorldSystem::handle_item_respawn(float elapsed_ms)
-{
-	if (registry.players.entities.size() == 0) return;
-	Entity entity = registry.players.entities[0];
-
-	if (!registry.inventories.has(entity)) return;
-	Inventory& inventory = registry.inventories.get(entity);
-
-	for (Entity item : registry.items.entities)
-	{
-		Item& item_info = registry.items.get(item);
-
-		// skip if in inventory
-		if (std::find(inventory.items.begin(), inventory.items.end(), item) != inventory.items.end()) continue;
-
-		if (!item_info.canRespawn)
-			continue;
-
-		if (item_info.respawnTime <= 0)
-			continue;
-
-		item_info.respawnTime -= elapsed_ms;
-
-		if (item_info.respawnTime > 0)
-			return;
-
-		// Check if current biome matches any allowed respawn biome for this item type
-		auto it = itemRespawnBiomes.find(item_info.type);
-		if (it == itemRespawnBiomes.end())
-			continue;
-
-		const std::vector<BIOME>& allowedBiomes = it->second;
-		BIOME originalBiome = item_info.lastBiome;
-		GLuint currentBiome = registry.screenStates.components[0].biome;
-
-		bool canRespawnHere = false;
-		for (BIOME allowedBiome : allowedBiomes) {
-			if (allowedBiome == originalBiome && static_cast<GLuint>(allowedBiome) == currentBiome) {
-				canRespawnHere = true;
-				break;
-			}
-		}
-
-		if (!canRespawnHere) {
-			// std::cout << "Biome mismatch, will not respawn. Original biome: " << static_cast<int>(originalBiome)
-			// 		<< ", Current biome: " << currentBiome << std::endl;
-			continue;
-		}
-
-		// Respawn item at its original position
-		Motion& motion = registry.motions.emplace(item);
-		motion.position = item_info.originalPosition;
-		motion.angle = 180.f;
-		motion.velocity = { 0, 0 };
-		motion.scale = ITEM_INFO.at(item_info.type).size;
-
-		// Restore render request
-		registry.renderRequests.insert(
-			item,
-			{
-				ITEM_INFO.at(item_info.type).texture,
-				EFFECT_ASSET_ID::TEXTURED,
-				GEOMETRY_BUFFER_ID::SPRITE,
-				RENDER_LAYER::ITEM
-			}
-		);
-
-		// Restore textbox visibility
-		for (Entity textbox : registry.textboxes.entities)
-		{
-			if (registry.textboxes.get(textbox).targetItem != item)
-				continue;
-
-			Textbox& textboxComp = registry.textboxes.get(textbox);
-			textboxComp.isVisible = false;
-
-			m_ui_system->textboxes[textbox.id()] = textboxComp;
-			break;
-		}
-
-		// Reset respawn time
-		item_info.respawnTime = 0;
-	}
 }
 
 void WorldSystem::update_textbox_visibility()
@@ -1171,7 +1095,6 @@ void WorldSystem::update_textbox_visibility()
 }
 
 void WorldSystem::showTemporaryGuardianDialogue(Entity guardianEntity, const std::string& message) {
-	const Motion& motion = registry.motions.get(guardianEntity);
 
 	// Store & remove existing textbox
 	Textbox old_textbox_copy;
@@ -1642,6 +1565,15 @@ void WorldSystem::handleEnemyInjured(Entity enemy_entity, float damage = 0.f) {
 	registry.damageFlashes.remove(enemy_entity);
 	registry.damageFlashes.emplace(enemy_entity);
 	if (enemy.health <= 0) {
+		if (!enemy.persistentID.empty()) {
+			// Set a respawn timer between 120-180 seconds (longer than items)
+			float respawnTime = (rand() % 60000 + 120000);
+			RespawnSystem::getInstance().registerEntity(enemy_entity, false);
+			RespawnSystem::getInstance().setRespawning(enemy.persistentID, respawnTime);
+			std::cout << "Enemy " << enemy.name << " killed, will respawn in " 
+			          << respawnTime/1000.0f << " seconds" << std::endl;
+		}
+	
 		if (enemy.name == "Ent") {
 			createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::STORM_BARK, 1, false);
 		}

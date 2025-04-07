@@ -258,11 +258,9 @@ Entity ItemSystem::copyItem(Entity toCopy) {
 	newItem.name = oldItem.name;
 	newItem.isCollectable = oldItem.isCollectable;
 	newItem.amount = oldItem.amount;
-	newItem.respawnTime = oldItem.respawnTime;
 	newItem.originalPosition = oldItem.originalPosition;
 	newItem.is_ammo = oldItem.is_ammo;
 	newItem.canRespawn = oldItem.canRespawn;
-	newItem.lastBiome = oldItem.lastBiome;
 
 	//registry.items.emplace(res, newItem);
 
