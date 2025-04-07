@@ -138,14 +138,11 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	glfwSetWindowTitle(window, title_ss.str().c_str());
 
 	// autosave every minute
-
-	if (registry.screenStates.entities.size() > 0) {
-		ScreenState& screen = registry.screenStates.components[0];
-		screen.autosave_timer -= elapsed_ms_since_last_update;
-		if (screen.autosave_timer <= 0) {
-			screen.autosave_timer = AUTOSAVE_TIMER;
-			ItemSystem::saveGameState();
-		}
+	ScreenState& screen = registry.screenStates.components[0];
+	screen.autosave_timer -= elapsed_ms_since_last_update;
+	if (screen.autosave_timer <= 0) {
+		screen.autosave_timer = AUTOSAVE_TIMER;
+		ItemSystem::saveGameState();
 	}
 
 	if (registry.players.entities.size() < 1)
@@ -181,6 +178,69 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	if (m_ui_system->isCauldronOpen() || m_ui_system->isMortarPestleOpen()) return true; // skip the following updates if menu is open
 	updatePlayerState(player, player_motion, elapsed_ms_since_last_update);
 	update_textbox_visibility();
+
+	// if we have saved grotto, should pulse rejuvenation glow effect
+	for (Entity entity : registry.texturedEffects.entities) {
+		TexturedEffect& effect = registry.texturedEffects.get(entity);
+		Motion& motion = registry.motions.get(entity);
+
+		effect.animation_timer += elapsed_ms_since_last_update / 1000.f;
+
+		// initially grow over 3 seconds
+		if (!effect.done_growing) {
+			float grow_duration = 3.f; // seconds
+			float t = effect.animation_timer / grow_duration;
+			t = std::min(t, 1.f); // clamp between 0 and 1
+
+			// linearly interpolate from small (20) to large (100)
+			float scale = 20.f + t * (100.f - 20.f);
+			motion.scale = vec2(scale, scale);
+
+			if (t >= 1.f) {
+				effect.done_growing = true;
+				effect.animation_timer = 0.f;
+			}
+		}
+
+		// pulse around larger size
+		else {
+			float base_scale = 100.f;
+			float amplitude = 10.f;
+			float frequency = 1.f / 4.f; // one cycle every 4 seconds
+
+			float scale = base_scale + amplitude * std::sin(effect.animation_timer * 2.f * M_PI * frequency);
+			motion.scale = vec2(scale, scale);
+		}
+	}
+
+	// this happens when we save the grotto and complete the game
+	if (screen.play_ending) {
+		// Fade the fog intensity from 1.5 to 0 over 5 seconds to show corruption fading
+		const float fade_duration = 5.f;
+		screen.fog_intensity -= elapsed_ms_since_last_update / 1000.f * (1.5f / fade_duration);
+		screen.fog_intensity = std::max(0.f, screen.fog_intensity);
+
+		// Only trigger the congrats text when fog intensity has reached 0
+		if (screen.fog_intensity == 0.0f && !screen.ending_text_shown) {
+			m_ui_system->createScreenText("Congratulations, you've saved the grotto!", 3.0f);
+			screen.ending_text_shown = true;  // Mark the text as shown to prevent repeating
+		}
+
+		// make enemies flash and die
+		for (Entity entity : registry.enemies.entities) {
+			Motion& motion = registry.motions.get(entity);
+			// make enemies stop moving if they're chasing u so it doesnt look weird
+			motion.velocity = vec2(0, 0);
+			motion.position = motion.position;
+
+			// enemy will flash damage once before being deleted
+			if (!registry.damageFlashes.has(entity)) {
+				DamageFlash& flash = registry.damageFlashes.emplace(entity);
+				flash.flash_value = 1.0f;
+				flash.kill_after_flash = true;
+			}
+		}
+	}
 
 	return true;
 }
@@ -997,6 +1057,9 @@ bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 						screen.unlocked_biomes.push_back("saved-grotto");
 					}
 					createRejuvenationPotion(renderer);
+					screen.play_ending = true; // initially play_ending (set to false later)
+					screen.saved_grotto = true; // this flag gets set so enemies don't spawn
+					createGlowEffect(renderer, false); // do initial grow at start
 				}
 
 				// remove textbox
