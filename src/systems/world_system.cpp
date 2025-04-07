@@ -596,6 +596,10 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 			screen.tutorial_state += 1;
 		}
 	}
+
+	if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+		consumePotion();
+	}
 }
 
 void WorldSystem::on_mouse_wheel(double xoffset, double yoffset)
@@ -1197,14 +1201,7 @@ void WorldSystem::updateConsumedPotions(float elapsed_ms_since_last_update) {
 	if (registry.players.entities.size() == 0) return;
 	Entity player_entity = registry.players.entities[0];
 	Player& player = registry.players.get(player_entity);
-
-	if (player.consumed_potion) {
-		player.consumed_potion = false;
-		consumePotion();
-	}
-
 	std::vector<Entity> to_remove = {};
-
 	for (Entity effect : player.active_effects) {
 		if (!registry.potions.has(effect)) continue; // only potions should be added
 

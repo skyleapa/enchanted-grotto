@@ -674,14 +674,6 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 		} while (false);
 	}
 
-	// Check for consuming potion in inventory
-	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_RIGHT) {
-		if (slotId != -1 && registry.players.entities.size() > 0) {
-			selectInventorySlot(slotId);
-			registry.players.components[0].consumed_potion = true;
-		}
-	}
-
 	// remove selected item from inventory
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT && shift_key_pressed) {
 		if (registry.players.entities.size() == 0) return;
