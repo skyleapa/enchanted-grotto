@@ -2248,7 +2248,7 @@ void UISystem::handleQueuedText(float elapsed_ms) {
             <rml>
             <head>
                 <style>
-                    @keyframes fadeInOut {
+                    @keyframes fade-in-out {
                         0% { opacity: 0; }
                         20% { opacity: 1; } /* Fade in */
                         80% { opacity: 1; } /* Hold for a while */
@@ -2266,7 +2266,7 @@ void UISystem::handleQueuedText(float elapsed_ms) {
                         color: white;
                         font-family: Open Sans;
 						font-effect: outline( 1px black );
-                        animation: 3s ease-in-out forwards fadeInOut;
+                        animation: 3s linear-in-out fade-in-out;
                         pointer-events: none;
                         display: block;
                     }
