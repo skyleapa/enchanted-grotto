@@ -161,6 +161,12 @@ const float ENT_HEIGHT = (float)130;
 const float MUMMY_WIDTH = (float)45;
 const float MUMMY_HEIGHT = (float)85;
 
+const float EVIL_MUSHROOM_WIDTH = (float)60;
+const float EVIL_MUSHROOM_HEIGHT = (float)80;
+
+const float CRYSTAL_BUG_WIDTH = (float)80;
+const float CRYSTAL_BUG_HEIGHT = (float)80;
+
 const float DESERT_GUARDIAN_WIDTH = (float)160;
 const float DESERT_GUARDIAN_HEIGHT = (float)150;
 
@@ -711,6 +717,11 @@ const std::vector<PotionEffect> consumable_potions = {
 	PotionEffect::RESISTANCE,
 	PotionEffect::SATURATION,
 };
+
+const float MOLOTOV_RADIUS_SQUARED = 10000.f; // within 2 grid cells
+const float DOT_POISON_TIMER = 3000.f;
+const float MOLOTOV_MULTIPLIER = 0.4f;
+const float DOT_MOLOTOV_TIMER = 1000.f;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f

@@ -198,8 +198,24 @@ bool genericCollides(const Motion& motion, const Motion& other_motion)
 	return overlap_x && overlap_y;
 }
 
+bool enemyCollides(const Motion& motion, const Motion& other_motion)
+{
+	// gets our bounding boxes for the player and terrain
+	vec4 box = get_bounding_box(motion, 1.f, 1.f);
+	vec4 other_box = get_bounding_box(other_motion, 0.8f, 0.8f);
+
+	// calculate our AABB overlapping bounding boxes
+	bool overlap_x = (box.x < other_box.x + other_box.z) && (box.x + other_box.z > other_box.x);
+	bool overlap_y = (box.y < other_box.y + other_box.w) && (box.y + other_box.w > other_box.y);
+
+	return overlap_x && overlap_y;
+}
+
 void PhysicsSystem::step(float elapsed_ms)
 {
+
+	if (registry.screenStates.components[0].is_switching_biome) return;
+
 	// move guardians towards exit
 	for (auto entity : registry.guardians.entities) {
 		if (registry.motions.has(entity)) {
@@ -208,7 +224,6 @@ void PhysicsSystem::step(float elapsed_ms)
 			guardian_motion.position += guardian_motion.velocity * elapsed_ms * TIME_UPDATE_FACTOR;
 		}
 	}
-
 
 	// first update the flash value of any enemies who took damage
 	for (Entity entity : registry.damageFlashes.entities) {
@@ -285,13 +300,11 @@ void PhysicsSystem::step(float elapsed_ms)
 
 			if (genericCollides(ammo_motion, enemy_motion)) {
 				registry.collisions.emplace_with_duplicates(ammo_entity, enemy);
-				// enemy flashes red
-				if (!registry.damageFlashes.has(enemy)) registry.damageFlashes.emplace(enemy);
 			}
 		}
 
 		// with player
-		if (genericCollides(player_motion, enemy_motion)) {
+		if (enemyCollides(player_motion, enemy_motion)) {
 			registry.collisions.emplace_with_duplicates(player_entity, enemy);
 		}
 	}

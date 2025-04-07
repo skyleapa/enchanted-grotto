@@ -120,6 +120,11 @@ public:
     // Check if any UI elements are open/being clicked
     bool isClickOnUIElement();
 
+    // Enemy health bar bethods
+    void createEnemyHealthBars();
+    void updateEnemyHealthBarPos(Entity entity, vec2 pos);
+    void updateEnemyHealth(Entity entity, float health_percentage);
+    
     // Check if player inventory contains the required recipe ingredient
     bool playerHasIngredient(Entity playerEntity, const RecipeIngredient& recipeIngredient);
 
@@ -264,6 +269,8 @@ private:
     Rml::ElementDocument* m_biome_text_document = nullptr;
     int m_effectsbar_size = 4;
 
+    // Enemy healthbar variables
+    std::unordered_map<int, Rml::ElementDocument*> enemy_healthbars = {}; // int is entity id
     // Info bar
     Rml::ElementDocument* m_info_document = nullptr;
 };

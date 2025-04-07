@@ -137,6 +137,7 @@ void BiomeSystem::switchBiome(int biome, bool is_first_load) {
 	}
 
 	renderPlayerInNewBiome(is_first_load);
+	m_ui_system->createEnemyHealthBars();
 }
 
 void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
@@ -364,20 +365,22 @@ void BiomeSystem::createForest()
 	createTree(renderer, vec2(530, 330));
 	createTree(renderer, vec2(703, 165));
 
-	createTree(renderer, vec2(580, 530));
-	createTree(renderer, vec2(840, 490));
+	createTreeNoFruit(renderer, vec2(714, 465));
+	createTree(renderer, vec2(857, 540));
+	createTreeNoFruit(renderer, vec2(520, 550));
 
 	createBush(renderer, vec2(1078, 620));
 
 	createCollectableIngredient(renderer, vec2(1085, 282), ItemType::STORM_BARK, 1, true);
 	createCollectableIngredient(renderer, vec2(560, 160), ItemType::STORM_BARK, 1, true);
+	createCollectableIngredient(renderer, vec2(650, 610), ItemType::BLIGHTLEAF, 1, true);
 
 	// admin flag used so we can test the game and disable guardian spawns
 	if (!ADMIN_FLAG) {
 		ScreenState screen = registry.screenStates.components[0];
 		if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "desert") == screen.unlocked_biomes.end())
 		{
-			Entity desertGuardian = createGuardianDesert(renderer, vec2(GRID_CELL_WIDTH_PX * 2, GRID_CELL_HEIGHT_PX * 3), 0, "Desert Guardian");
+			Entity desertGuardian = createGuardianDesert(renderer, vec2(GRID_CELL_WIDTH_PX * 2, GRID_CELL_HEIGHT_PX * 2.5), 0, "Desert Guardian");
 		}
 
 		if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "mushroom") == screen.unlocked_biomes.end())
@@ -401,13 +404,13 @@ void BiomeSystem::createForestEx()
 		createBoundaryLine(renderer, position, scale);
 	}
 
-	createTree(renderer, vec2(130, 130));
-	createTree(renderer, vec2(216, 240));
+	createTreeNoFruit(renderer, vec2(130, 130));
+	createTreeNoFruit(renderer, vec2(216, 240));
 	createTree(renderer, vec2(403, 180));
 	createTree(renderer, vec2(504, 535));
-	createTree(renderer, vec2(857, 140));
-	createTree(renderer, vec2(1120, 280));
-	createTree(renderer, vec2(1080, 535));
+	createTreeNoFruit(renderer, vec2(857, 140));
+	createTreeNoFruit(renderer, vec2(1120, 280));
+	createTreeNoFruit(renderer, vec2(1080, 535));
 
 	createBush(renderer, vec2(225, 600));
 
@@ -415,6 +418,9 @@ void BiomeSystem::createForestEx()
 	createCollectableIngredient(renderer, vec2(708, 580), ItemType::EVERFERN, 1, true);
 	createCollectableIngredient(renderer, vec2(1153, 109), ItemType::BLIGHTLEAF, 1, true);
 	createCollectableIngredient(renderer, vec2(72, 619), ItemType::BLIGHTLEAF, 1, true);
+	createCollectableIngredient(renderer, vec2(63, 278), ItemType::STORM_BARK, 1, true);
+	createCollectableIngredient(renderer, vec2(950, 325), ItemType::STORM_BARK, 1, true);
+
 
 	ScreenState& screen = registry.screenStates.components[0];
 	if (!screen.saved_grotto) {
@@ -496,6 +502,13 @@ void BiomeSystem::createMushroom()
 	createCollectableIngredient(renderer, vec2(260, 584), ItemType::GLOWSHROOM, 1, true);
 	createCollectableIngredient(renderer, vec2(904, 454), ItemType::GLOWSHROOM, 1, true);
 	createCollectableIngredient(renderer, vec2(1090, 114), ItemType::DOOMCAP, 1, true);
+	createCollectableIngredient(renderer, vec2(1146, 598), ItemType::DOOMCAP, 1, true);
+
+	ScreenState& screen = registry.screenStates.components[0];
+	if (!screen.saved_grotto) {
+		createEvilMushroom(renderer, vec2(112, 598), 1, "Evil Mushroom 1");
+		createEvilMushroom(renderer, vec2(1037, 501), 1, "Evil Mushroom 2");
+	}
 
 	if (!ADMIN_FLAG) {
 		ScreenState screen = registry.screenStates.components[0];
@@ -531,6 +544,12 @@ void BiomeSystem::createCrystal()
 	createCollectableIngredient(renderer, vec2(458, 355), ItemType::CRYSTAL_SHARD, 1, true);
 	createCollectableIngredient(renderer, vec2(302, 617), ItemType::CRYSTAL_SHARD, 1, true);
 	createCollectableIngredient(renderer, vec2(1141, 624), ItemType::QUARTZMELON, 1, true);
+
+	ScreenState& screen = registry.screenStates.components[0];
+	if (!screen.saved_grotto) {
+		createCrystalBug(renderer, vec2(632, 586), 1, "Crystal Bug 1");
+		createCrystalBug(renderer, vec2(876, 137), 1, "Crystal Bug 2");
+	}
 
 	createCrystalToMushroom(renderer, vec2(50, 200), "Crystal To Mushroom");
 	createCrystalToForestEx(renderer, vec2(930, 30), "Crystal to Forest Ex");

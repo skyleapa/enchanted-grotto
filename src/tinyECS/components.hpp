@@ -221,7 +221,8 @@ struct Chest {
 };
 
 struct Enemy {
-	int health;
+	float health;
+	float max_health;
 	int attack_radius;
 	vec2 start_pos;
 	int state; // uses enum class ENEMY_STATE
@@ -229,11 +230,20 @@ struct Enemy {
 	float wander_timer = 10.0f;  // 10-second random movement before returning
 	std::string name; // gets passed into killed_enemies
 	float attack_damage;
+	float dot_damage = 0.0f;
+	float dot_timer = 0.0f;
+	float dot_duration = 0.0f;
+	PotionEffect dot_effect = PotionEffect::WATER;
 };
 
 struct Guardian {
 	PotionEffect unlock_potion; // the potion that will "unlock the biome"
 	vec2 exit_direction = { 0,0 };
+
+	// Dialogues
+	std::string hint_dialogue;
+	std::string wrong_potion_dialogue;
+	std::string success_dialogue;
 };
 
 struct Ammo {
@@ -255,6 +265,11 @@ struct DecisionTreeNode {
 
 struct WelcomeScreen {
 
+};
+
+struct DelayedMovement {
+	vec2 velocity;
+	float delay_ms;
 };
 
 struct TexturedEffect {
@@ -395,9 +410,11 @@ enum class TEXTURE_ASSET_ID
 	GUARDIAN_DESERT = MUMMY + 1,
 	GUARDIAN_SHROOMLAND = GUARDIAN_DESERT + 1,
 	GUARDIAN_CRYSTAL = GUARDIAN_SHROOMLAND + 1,
+	CRYSTAL_BUG = GUARDIAN_CRYSTAL + 1,
+	EVIL_MUSHROOM = CRYSTAL_BUG + 1,
 
 	// extras
-	MASTER_POTION_PEDESTAL = GUARDIAN_CRYSTAL + 1,
+	MASTER_POTION_PEDESTAL = EVIL_MUSHROOM + 1,
 	POTION = MASTER_POTION_PEDESTAL + 1,
 	WELCOME_TO_GROTTO = POTION + 1,
 	CAULDRON_WATER = WELCOME_TO_GROTTO + 1,
