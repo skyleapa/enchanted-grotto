@@ -632,9 +632,17 @@ void ItemSystem::deserializeScreenState(const nlohmann::json& data) {
 	screen.biome = data["from_biome"];
 	screen.from_biome = data["from_biome"];
 	for (const auto& enemy : data["killed_enemies"]) {
-		registry.screenStates.components[0].killed_enemies.push_back(enemy);
+		screen.killed_enemies.push_back(enemy);
 	}
 	for (const auto& biome : data["unlocked_biomes"]) {
-		registry.screenStates.components[0].unlocked_biomes.push_back(biome);
+		screen.unlocked_biomes.push_back(biome);
+	}
+
+	// our game has ended
+	if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "saved-grotto") != screen.unlocked_biomes.end())
+	{
+		screen.fog_intensity = 0;
+		screen.saved_grotto = true;
+		screen.ending_text_shown = true;
 	}
 }

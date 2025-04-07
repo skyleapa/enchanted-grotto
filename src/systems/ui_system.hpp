@@ -16,6 +16,12 @@
 // Forward declarations
 class RenderSystem;
 
+struct TextQueueItem {
+    std::string text;
+    float displayDuration; // in seconds
+    float elapsedTime; // in seconds, tracks how long the text has been displayed
+};
+
 // Main UI system class
 class UISystem {
 public:
@@ -99,9 +105,24 @@ public:
     void createEffectsBar();
     void updateEffectsBar();
 
+    // Text that introduces a new biome when you first enter it, will fade in and out
+    void createScreenText(const std::string& text, float displayDuration);
+    void handleQueuedText(float elapsed_ms);
+    std::queue<TextQueueItem> textQueue;
+    float fadeDuration = 3.0f; // You can adjust this as needed
+    float fadeOutTime = 3.0f; // Duration for text fade out
+
+    // Info bar
+    void createInfoBar();
+
     // Check if any UI elements are open/being clicked
     bool isClickOnUIElement();
 
+    // Enemy health bar bethods
+    void createEnemyHealthBars();
+    void updateEnemyHealthBarPos(Entity entity, vec2 pos);
+    void updateEnemyHealth(Entity entity, float health_percentage);
+    
     // Check if player inventory contains the required recipe ingredient
     bool playerHasIngredient(Entity playerEntity, const RecipeIngredient& recipeIngredient);
 
@@ -237,5 +258,13 @@ private:
 
     // Effects bar variables
     Rml::ElementDocument* m_effectsbar_document = nullptr;
+
+    // Document for creating biome text
+    Rml::ElementDocument* m_biome_text_document = nullptr;
     int m_effectsbar_size = 4;
+
+    // Enemy healthbar variables
+    std::unordered_map<int, Rml::ElementDocument*> enemy_healthbars = {}; // int is entity id
+    // Info bar
+    Rml::ElementDocument* m_info_document = nullptr;
 };
