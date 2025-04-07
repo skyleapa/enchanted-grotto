@@ -2369,7 +2369,7 @@ void UISystem::createInfoBar() {
 					width: 300px;
 					height: 100px;
 					display: block;
-					font-size: 20px;
+					font-size: 18px;
 					text-align: left;
 					color: white;
 					font-family: Open Sans;
@@ -2381,9 +2381,10 @@ void UISystem::createInfoBar() {
 			<p>
 				[LMB] Throw potion<br />
 				[RMB] Consume selected potion<br />
-				[R] Open recipe book<br />
+				[R] Recipe book<br />
 				[T] Toggle tutorial<br />
-				[N] Skip tutorial step
+				[N] Skip tutorial step<br />
+				[Shift+LMB] Delete item
 			</p>
 		</body>
 		</rml>)";
