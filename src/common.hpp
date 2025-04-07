@@ -343,7 +343,7 @@ struct Recipe
 const std::vector<Recipe> RECIPES = {
 	{
 		PotionEffect::SPEED,
-		1.0f, 3.5f,  // highestQualityEffect - maximum speed multiplier
+		1.0f, 2.5f,  // highestQualityEffect - maximum speed multiplier
 		0, 150,   // highestQualityDuration - maximum duration in seconds
 		vec3(255, 157, 35), // finalPotionColor - green-ish color
 		{
@@ -352,11 +352,11 @@ const std::vector<Recipe> RECIPES = {
 		},
 		{
 			{ ActionType::MODIFY_HEAT, 100 }, // high heat
-			{ ActionType::WAIT, 2 },          // wait 10 seconds
+			{ ActionType::WAIT, 1 },          // wait 5 seconds
 			{ ActionType::ADD_INGREDIENT, 0 }, // add swiftbeans
 			{ ActionType::ADD_INGREDIENT, 1 }, // add galefruit
 			{ ActionType::STIR, 3 },          // stir 3 times
-			{ ActionType::WAIT, 6 }           // wait 30 seconds
+			{ ActionType::WAIT, 2 }           // wait 10 seconds
 		},
 		"Potion of Speed",
 		"[Consumable] Increases your movement speed for a limited time.",
@@ -364,7 +364,7 @@ const std::vector<Recipe> RECIPES = {
 	},
 	{
 		PotionEffect::HEALTH,
-		10.0f, 40.0f,  // highestQualityEffect - maximum health restored
+		40.0f, 80.0f,  // highestQualityEffect - maximum health restored
 		0, 0,      // highestQualityDuration - instant effect, no duration
 		vec3(220, 0, 0), // finalPotionColor - red color
 		{
@@ -375,7 +375,7 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 1 },          // wait 5 seconds
 			{ ActionType::ADD_INGREDIENT, 0 }, // add everfern
 			{ ActionType::STIR, 3 },          // stir 3 times
-			{ ActionType::WAIT, 4 }           // wait 20 seconds
+			{ ActionType::WAIT, 2 }           // wait 10 seconds
 		},
 		"Potion of Healing",
 		"[Consumable] A basic potion that instantly replenishes your health.",
@@ -430,7 +430,7 @@ const std::vector<Recipe> RECIPES = {
 	},
 	{
 		PotionEffect::REGEN,
-		2.5f, 5.0f,   // highestQualityEffect - health regen per second
+		5.0f, 10.0f,   // highestQualityEffect - health regen per second
 		5, 30,     // highestQualityDuration - regen duration in seconds
 		vec3(200, 50, 50), // finalPotionColor - pink-red color
 		{
