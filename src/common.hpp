@@ -328,6 +328,7 @@ struct Recipe
 	std::vector<Action> steps;
 	std::string name;                  // Name of the potion
 	std::string description;           // Description in recipe book
+	std::string stats;                 // Stats. Use _duration_ and _effect_ variables
 };
 
 // Potions are accepted as recipe ingredients, but their amount value is used as the PotionEffect.
@@ -352,7 +353,8 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 6 }           // wait 30 seconds
 		},
 		"Potion of Speed",
-		"[Consumable] Increases your movement speed for a limited time."
+		"[Consumable] Increases your movement speed for a limited time.",
+		"[Right click] _effect_x speed for _duration_s"
 	},
 	{
 		PotionEffect::HEALTH,
@@ -370,7 +372,8 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 4 }           // wait 20 seconds
 		},
 		"Potion of Healing",
-		"[Consumable] A basic potion that instantly replenishes your health."
+		"[Consumable] A basic potion that instantly replenishes your health.",
+		"[Right click] +_effect_ Health"
 	},
 	{
 		PotionEffect::DAMAGE,
@@ -391,7 +394,8 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 1 }           // wait 5 seconds
 		},
 		"Potion of Harming",
-		"[Throwable] A damaging potion that can be thrown at enemies."
+		"[Throwable] A damaging potion that can be thrown at enemies.",
+		"[Throwable] Deals _effect_ damage"
 	},
 	{
 		PotionEffect::MOLOTOV,
@@ -415,7 +419,8 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 4 }           // wait 20 seconds
 		},
 		"Molotov Cocktail",
-		"[Throwable] Creates a burning area when thrown."
+		"[Throwable] Creates a burning area when thrown.",
+		"[Throwable, AOE] Deals _effect_ DPS for _duration_s"
 	},
 	{
 		PotionEffect::REGEN,
@@ -438,7 +443,8 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 3 }           // wait 15 seconds
 		},
 		"Potion of Regeneration",
-		"[Consumable] Gradually restores health over time."
+		"[Consumable] Gradually restores health over time.",
+		"[Right click] +_effect_ health per second for _duration_s"
 	},
 	{
 		PotionEffect::POISON,
@@ -460,7 +466,8 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 5 }           // wait 25 seconds
 		},
 		"Potion of Poison",
-		"[Throwable] Creates a poisonous area."
+		"[Throwable] Creates a poisonous area.",
+		"[Throwabe] Deals _effect_ DPS for _duration_s"
 	},
 	{
 		PotionEffect::RESISTANCE,
@@ -480,7 +487,8 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 6 }           // wait 30 seconds
 		},
 		"Potion of Resistance",
-		"[Consumable] Reduces damage taken for a limited time."
+		"[Consumable] Reduces damage taken for a limited time.",
+		"[Right click] Take _effect_x damage for _duration_s"
 	},
 	{
 		PotionEffect::SATURATION,
@@ -506,7 +514,8 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 5 }           // wait 25 seconds
 		},
 		"Potion of Saturation",
-		"[Consumable] Temporarily increases the potency of other potions. Restores hydration to enemies that are very dry."
+		"[Consumable] Temporarily increases the potency of other potions. Restores hydration to enemies that are very dry.",
+		"[Right click] _effect_x potion effectiveness for _duration_s"
 	},
 	{
 		PotionEffect::ALKALESCENCE,
@@ -532,7 +541,8 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 4 }           // wait 20 seconds
 		},
 		"Potion of Alkalescence",
-		"[Throwable] Reacts with acidic substances. Neutralizes enemies that are highly acidic, as well as acidic mushrooms."
+		"[Throwable] Reacts with acidic substances. Neutralizes enemies that are highly acidic, as well as acidic mushrooms.",
+		"Currently no effects"
 	},
 	{
 		PotionEffect::CLARITY,
@@ -558,7 +568,8 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 3 }           // wait 15 seconds
 		},
 		"Potion of Clarity",
-		"[Throwable] Reveals hidden objects or ingredients. May be potent against enemies that are averse to the light."
+		"[Throwable] Reveals hidden objects or ingredients. May be potent against enemies that are averse to the light.",
+		"Currently no effects"
 	},
 	{
 		PotionEffect::REJUVENATION,
@@ -587,7 +598,8 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 6 }           // wait 30 seconds
 		},
 		"Potion of Rejuvenation",
-		"[???] The ultimate healing potion."
+		"[???] The ultimate healing potion.",
+		"Currently no effects"
 	}
 };
 

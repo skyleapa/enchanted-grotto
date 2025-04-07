@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <tuple>
 #include <sstream>
+#include <iomanip>
 #include <SDL.h>
 #include <SDL_mixer.h>
 
@@ -461,6 +462,7 @@ void UISystem::handleMouseMoveEvent(double x, double y)
 	mouse_pos_x = x;
 	mouse_pos_y = y;
 	updateFollowMouse();
+	updatePotionInfo();
 	m_context->ProcessMouseMove((int)x, (int)y, getKeyModifiers());
 }
 
@@ -754,17 +756,26 @@ void UISystem::createInventoryBar()
                     left: 50%;
                     margin-left: -220px;
                     width: 440px;
-                    height: 72px;
+                    height: 87px;
                     font-family: Open Sans;
                     z-index: 10;
                 }
 
 				#item-name {
 					position: absolute;
-					top: 0px;
+					top: 15px;
 					width: 440px;
 					text-align: center;
 					font-size: 16px;
+					font-effect: outline( 1px black );
+				}
+
+				#potion-info {
+					position: absolute;
+					top: 0px;
+					width: 440px;
+					text-align: center;
+					font-size: 14px;
 					font-effect: outline( 1px black );
 				}
 
@@ -801,6 +812,7 @@ void UISystem::createInventoryBar()
             </style>
         </head>
 		<body>
+			<div id="potion-info">TEST</div>
 			<div id="item-name"></div>
         	<div id="inventory-bar">
         )";
@@ -955,8 +967,67 @@ void UISystem::updateInventoryBar()
 	}
 }
 
-void UISystem::selectInventorySlot(int slot)
-{
+void UISystem::updatePotionInfo() {
+	Rml::Element* infoElement = m_inventory_document->GetElementById("potion-info");
+	if (!infoElement) {
+		return;
+	}
+
+	do {
+		// Check for inventory slot
+		Rml::Element* hovered = m_context->GetHoverElement();
+		if (!hovered) {
+			break;
+		}
+
+		std::string id = hovered->GetId();
+		int slotId = getSlotFromId(id);
+		if (slotId == -1) {
+			break;
+		}
+
+		// get the item in the selected inventory slot
+		Entity player_entity = registry.players.entities[0];
+		Inventory& inv = registry.inventories.get(player_entity);
+		if (slotId != inv.selection || inv.selection >= inv.items.size()) {
+			break;
+		}
+
+		Entity selected_item = inv.items[inv.selection];
+		if (!registry.items.has(selected_item) || !registry.potions.has(selected_item)) {
+			break;
+		}
+
+		Potion& potion = registry.potions.get(selected_item);
+		std::string infoStr = "No effect";
+		for (Recipe r : RECIPES) {
+			if (r.effect == potion.effect) {
+				infoStr = r.stats;
+				break;
+			}
+		}
+
+		int effIndex = infoStr.find("_effect_");
+		if (effIndex != std::string::npos) {
+			std::stringstream stream;
+			stream << std::fixed << std::setprecision(1) << potion.effectValue;
+			std::string effect = stream.str();
+			infoStr = infoStr.substr(0, effIndex) + effect + infoStr.substr(effIndex + 8);
+		}
+
+		int durIndex = infoStr.find("_duration_");
+		if (durIndex != std::string::npos) {
+			infoStr = infoStr.substr(0, durIndex) + std::to_string(potion.duration / 1000) + infoStr.substr(durIndex + 10);
+		}
+
+		infoElement->SetInnerRML(infoStr);
+		return;
+	} while (false);
+
+	infoElement->SetInnerRML("");
+}
+
+void UISystem::selectInventorySlot(int slot) {
 	while (slot < 0) {
 		slot += m_hotbar_size;
 	}
@@ -972,6 +1043,7 @@ void UISystem::selectInventorySlot(int slot)
 	// Update the inventory bar to reflect the selection
 	if (m_inventory_document) {
 		updateInventoryBar();
+		updatePotionInfo();
 	}
 }
 

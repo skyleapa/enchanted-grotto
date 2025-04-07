@@ -47,6 +47,7 @@ public:
     // Inventory bar methods
     void createInventoryBar();
     void updateInventoryBar();
+    void updatePotionInfo();
     void selectInventorySlot(int slot);
     int getSelectedSlot();
     int getSlotFromId(std::string id);

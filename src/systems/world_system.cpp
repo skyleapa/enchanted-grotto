@@ -1230,29 +1230,23 @@ void WorldSystem::updateConsumedPotions(float elapsed_ms_since_last_update) {
 
 bool WorldSystem::consumePotion() {
 	// get the item in the selected inventory slot
-	if (registry.players.entities.size() == 0) return false;
 	Entity player_entity = registry.players.entities[0];
-	if (!registry.inventories.has(player_entity)) return false;
-
 	Inventory& inv = registry.inventories.get(player_entity);
-	if (inv.selection + 1 > inv.items.size() || inv.items.size() == 0) {
-		std::cout << "player has no item in slot" << inv.selection << std::endl;
+	if (inv.selection >= inv.items.size()) {
 		return false;
 	}
 
 	Entity selected_item = inv.items[inv.selection];
-
 	if (!registry.items.has(selected_item)) {
-		std::cout << "selected item is not an item" << std::endl;
 		return false;
 	}
+
 	if (!registry.potions.has(selected_item)) {
-		std::cout << "selected item is not a potion" << std::endl;
 		return false;
 	}
+
 	// Check that the potion is consumable
 	if (std::find(consumable_potions.begin(), consumable_potions.end(), registry.potions.get(selected_item).effect) == consumable_potions.end()) {
-		std::cout << "selected potion is not consumable" << std::endl;
 		return false;
 	}
 
@@ -1280,6 +1274,7 @@ bool WorldSystem::consumePotion() {
 		ItemSystem::removeItemFromInventory(player_entity, selected_item);
 		ItemSystem::destroyItem(selected_item);
 	}
+	m_ui_system->updatePotionInfo();
 
 	// add copy of item to player's active effects - health is instant so don't add to active_effects
 	assert(registry.potions.has(item_copy) && "consumed item should be a potion");
