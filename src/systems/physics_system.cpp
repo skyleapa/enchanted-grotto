@@ -198,6 +198,19 @@ bool genericCollides(const Motion& motion, const Motion& other_motion)
 	return overlap_x && overlap_y;
 }
 
+bool enemyCollides(const Motion& motion, const Motion& other_motion)
+{
+	// gets our bounding boxes for the player and terrain
+	vec4 box = get_bounding_box(motion, 1.f, 1.f);
+	vec4 other_box = get_bounding_box(other_motion, 1.f, 1.f);
+
+	// calculate our AABB overlapping bounding boxes
+	bool overlap_x = (box.x < other_box.x + other_box.z) && (box.x + other_box.z > other_box.x);
+	bool overlap_y = (box.y < other_box.y + other_box.w) && (box.y + other_box.w > other_box.y);
+
+	return overlap_x && overlap_y;
+}
+
 void PhysicsSystem::step(float elapsed_ms)
 {
 	// move guardians towards exit
@@ -284,7 +297,7 @@ void PhysicsSystem::step(float elapsed_ms)
 		}
 
 		// with player
-		if (genericCollides(player_motion, enemy_motion)) {
+		if (enemyCollides(player_motion, enemy_motion)) {
 			registry.collisions.emplace_with_duplicates(player_entity, enemy);
 		}
 	}

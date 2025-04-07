@@ -346,6 +346,7 @@ void BiomeSystem::createForest()
 
 	createCollectableIngredient(renderer, vec2(1085, 282), ItemType::STORM_BARK, 1, true);
 	createCollectableIngredient(renderer, vec2(560, 160), ItemType::STORM_BARK, 1, true);
+	createCollectableIngredient(renderer, vec2(650, 610), ItemType::BLIGHTLEAF, 1, true);
 
 	// admin flag used so we can test the game and disable guardian spawns
 	if (!ADMIN_FLAG) {
@@ -377,7 +378,6 @@ void BiomeSystem::createForestEx()
 	}
 
 	createTreeNoFruit(renderer, vec2(130, 130));
-	createTree(renderer, vec2(157, 540));
 	createTreeNoFruit(renderer, vec2(216, 240));
 	createTree(renderer, vec2(403, 180));
 	createTree(renderer, vec2(504, 535));
@@ -391,6 +391,9 @@ void BiomeSystem::createForestEx()
 	createCollectableIngredient(renderer, vec2(708, 580), ItemType::EVERFERN, 1, true);
 	createCollectableIngredient(renderer, vec2(1153, 109), ItemType::BLIGHTLEAF, 1, true);
 	createCollectableIngredient(renderer, vec2(72, 619), ItemType::BLIGHTLEAF, 1, true);
+	createCollectableIngredient(renderer, vec2(63, 278), ItemType::STORM_BARK, 1, true);
+	createCollectableIngredient(renderer, vec2(950, 325), ItemType::STORM_BARK, 1, true);
+
 	createEnt(renderer, vec2(606, 390), 1, "Ent");
 	createEnt(renderer, vec2(1011, 158), 1, "Ent");
 
@@ -464,6 +467,7 @@ void BiomeSystem::createMushroom()
 	createCollectableIngredient(renderer, vec2(260, 584), ItemType::GLOWSHROOM, 1, true);
 	createCollectableIngredient(renderer, vec2(904, 454), ItemType::GLOWSHROOM, 1, true);
 	createCollectableIngredient(renderer, vec2(1090, 114), ItemType::DOOMCAP, 1, true);
+	createCollectableIngredient(renderer, vec2(1146, 598), ItemType::DOOMCAP, 1, true);
 
 	createEvilMushroom(renderer, vec2(112, 598), 1, "Evil Mushroom 1");
 	createEvilMushroom(renderer, vec2(1037, 501), 1, "Evil Mushroom 2");

@@ -2004,7 +2004,7 @@ Entity createMasterPotionPedestal(RenderSystem* renderer, vec2 position)
 	Guardian& guardian = registry.guardians.emplace(entity);
 	guardian.unlock_potion = PotionEffect::REJUVENATION;
 
-	guardian.hint_dialogue = "A calm warmth surrounds the pedestal... Something's missing—perhaps a potion to restore life to this place.";
+	guardian.hint_dialogue = "Something's missing from this pedestal, perhaps a potion to restore life to this place.";
 	guardian.wrong_potion_dialogue = "The magic stirs—but not enough. This isn't the one.";
 	guardian.success_dialogue  = "The potion flows...Light returns. The Grotto breathes once more.";
 
@@ -2028,7 +2028,7 @@ Entity createMasterPotionPedestal(RenderSystem* renderer, vec2 position)
 
 	ScreenState& screen = registry.screenStates.components[0];
 	if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "saved-grotto") == screen.unlocked_biomes.end()) {
-		createTextbox(renderer, vec2(position.x - 80, position.y - 100), entity, "A calm warmth surrounds the pedestal...something is missing. Perhaps a potion strong enough to breathe life back into this place.");
+		createTextbox(renderer, vec2(position.x - 120, position.y - 110), entity, "Something's missing from this pedestal, perhaps a potion to restore life to this place.");
 	}
 
 	return entity;

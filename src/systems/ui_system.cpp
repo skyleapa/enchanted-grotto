@@ -1144,7 +1144,7 @@ void UISystem::createRmlUITextbox(int id, std::string text, vec2 pos)
 						font-family: Open Sans;
 						padding: 5px;
 						width: auto;
-						max-width: 150px;
+						max-width: 230px;
 						white-space: normal;
 						color: #000000;
     					border-radius: 5px;
