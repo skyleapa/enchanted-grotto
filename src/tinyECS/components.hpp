@@ -222,7 +222,8 @@ struct Chest {
 };
 
 struct Enemy {
-	int health;
+	float health;
+	float max_health;
 	int attack_radius;
 	vec2 start_pos;
 	int state; // uses enum class ENEMY_STATE
@@ -230,6 +231,10 @@ struct Enemy {
 	float wander_timer = 10.0f;  // 10-second random movement before returning
 	std::string name; // gets passed into killed_enemies
 	float attack_damage;
+	float dot_damage = 0.0f;
+	float dot_timer = 0.0f;
+	float dot_duration = 0.0f;
+	PotionEffect dot_effect = PotionEffect::WATER;
 };
 
 struct Guardian {

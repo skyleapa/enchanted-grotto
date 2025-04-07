@@ -137,6 +137,7 @@ void BiomeSystem::switchBiome(int biome, bool is_first_load) {
 	}
 
 	renderPlayerInNewBiome(is_first_load);
+	m_ui_system->createEnemyHealthBars();
 }
 
 void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
