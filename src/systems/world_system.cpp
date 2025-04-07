@@ -631,6 +631,26 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 	// exit game w/ ESC
 	if (action == GLFW_RELEASE && key == GLFW_KEY_ESCAPE)
 	{
+		// Check if any UI menus are open and close them first
+		if (m_ui_system != nullptr) {
+			if (m_ui_system->isCauldronOpen()) {
+				m_ui_system->closeCauldron(true);
+				return;
+			}
+			else if (m_ui_system->isMortarPestleOpen()) {
+				m_ui_system->closeMortarPestle(true);
+				return;
+			}
+			else if (m_ui_system->isRecipeBookOpen()) {
+				m_ui_system->closeRecipeBook();
+				return;
+			}
+			else if (m_ui_system->isChestMenuOpen()) {
+				m_ui_system->closeChestMenu();
+				return;
+			}
+		}
+
 		close_window();
 	}
 
@@ -877,7 +897,7 @@ void WorldSystem::handle_player_interaction()
 		}
 
 		// If this is a cauldron/mortar & pestle and it's invisible, ignore it so if items overlap, we don't get stuck opening it
-		if (registry.cauldrons.has(item) || registry.mortarAndPestles.has(item)) {
+		if (registry.cauldrons.has(item) || registry.mortarAndPestles.has(item) || item_info.type == ItemType::RECIPE_BOOK || registry.chests.has(item)) {
 			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) {
 				continue;
 			}
@@ -935,6 +955,7 @@ void WorldSystem::handle_player_interaction()
 			}
 		}
 		else if (item_info.type == ItemType::CHEST) {
+			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
 			if (m_ui_system != nullptr) {
 				handle_textbox = m_ui_system->openChestMenu(item);
 			}
@@ -950,8 +971,7 @@ void WorldSystem::handle_player_interaction()
 				registry.motions.remove(item);
 			if (registry.renderRequests.has(item))
 				registry.renderRequests.remove(item);
-
-			return;
+			continue;
 		}
 	}
 }
