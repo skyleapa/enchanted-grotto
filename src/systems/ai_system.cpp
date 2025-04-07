@@ -70,6 +70,10 @@ void AISystem::updateEnemyAI(float elapsed_ms, Entity enemy_entity, Entity playe
 		//std::cout << "Enemy is returning to spawn" << std::endl;
 		enemy.wander_timer = 10.0f;
 	}
+
+	if (enemy.state != (int) ENEMY_STATE::IDLE){
+		m_ui_system->updateEnemyHealthBarPos(enemy_entity, enemy_motion.position);
+	}
 }
 
 void AISystem::moveEnemyTowardsPlayer(Motion& enemy_motion, Motion& player_motion, float elapsed_ms) {

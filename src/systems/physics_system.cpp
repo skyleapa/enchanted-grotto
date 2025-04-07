@@ -213,6 +213,9 @@ bool enemyCollides(const Motion& motion, const Motion& other_motion)
 
 void PhysicsSystem::step(float elapsed_ms)
 {
+
+	if (registry.screenStates.components[0].is_switching_biome) return;
+
 	// move guardians towards exit
 	for (auto entity : registry.guardians.entities) {
 		if (registry.motions.has(entity)) {
@@ -222,13 +225,19 @@ void PhysicsSystem::step(float elapsed_ms)
 		}
 	}
 
-
 	// first update the flash value of any enemies who took damage
 	for (Entity entity : registry.damageFlashes.entities) {
 		DamageFlash& flash = registry.damageFlashes.get(entity);
-		flash.flash_value -= elapsed_ms * TIME_UPDATE_FACTOR; // change this for speed of flash
+		flash.flash_value -= elapsed_ms * TIME_UPDATE_FACTOR;
+
 		if (flash.flash_value <= 0) {
-			registry.damageFlashes.remove(entity); // remove once flash value goes to 0
+			if (flash.kill_after_flash && registry.enemies.has(entity)) {
+				// this is for the end game, so enemies will flash then disappear
+				registry.remove_all_components_of(entity);
+			}
+			else {
+				registry.damageFlashes.remove(entity);
+			}
 		}
 	}
 
@@ -291,8 +300,6 @@ void PhysicsSystem::step(float elapsed_ms)
 
 			if (genericCollides(ammo_motion, enemy_motion)) {
 				registry.collisions.emplace_with_duplicates(ammo_entity, enemy);
-				// enemy flashes red
-				if (!registry.damageFlashes.has(enemy)) registry.damageFlashes.emplace(enemy);
 			}
 		}
 
