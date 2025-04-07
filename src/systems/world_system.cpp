@@ -138,14 +138,11 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	glfwSetWindowTitle(window, title_ss.str().c_str());
 
 	// autosave every minute
-
-	if (registry.screenStates.entities.size() > 0) {
-		ScreenState& screen = registry.screenStates.components[0];
-		screen.autosave_timer -= elapsed_ms_since_last_update;
-		if (screen.autosave_timer <= 0) {
-			screen.autosave_timer = AUTOSAVE_TIMER;
-			ItemSystem::saveGameState();
-		}
+	ScreenState& screen = registry.screenStates.components[0];
+	screen.autosave_timer -= elapsed_ms_since_last_update;
+	if (screen.autosave_timer <= 0) {
+		screen.autosave_timer = AUTOSAVE_TIMER;
+		ItemSystem::saveGameState();
 	}
 
 	if (registry.players.entities.size() < 1)
@@ -181,6 +178,101 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	if (m_ui_system->isCauldronOpen() || m_ui_system->isMortarPestleOpen()) return true; // skip the following updates if menu is open
 	updatePlayerState(player, player_motion, elapsed_ms_since_last_update);
 	update_textbox_visibility();
+
+	for (Entity e : registry.delayedMovements.entities) {
+		DelayedMovement& delay = registry.delayedMovements.get(e);
+		delay.delay_ms -= elapsed_ms_since_last_update;
+		if (delay.delay_ms <= 0.f) {
+			if (registry.motions.has(e)) {
+				registry.motions.get(e).velocity = delay.velocity;
+			}
+			registry.delayedMovements.remove(e);
+		}
+	}	
+
+	// apply damage over time on enemies
+	for (auto entity : registry.enemies.entities) {
+		if (!registry.enemies.has(entity)) continue;
+		Enemy& enemy = registry.enemies.get(entity);
+		if (enemy.dot_effect == PotionEffect::WATER) continue;
+
+		enemy.dot_timer -= elapsed_ms_since_last_update;
+		enemy.dot_duration -= elapsed_ms_since_last_update;
+		if (enemy.dot_timer <= 0.f) {
+			enemy.dot_timer = enemy.dot_effect == PotionEffect::MOLOTOV ? DOT_MOLOTOV_TIMER : DOT_POISON_TIMER;
+			handleEnemyInjured(entity, enemy.dot_damage);
+		}
+		if (enemy.dot_duration <= 0.f) {
+			enemy.dot_duration = 0.f;
+			enemy.dot_damage = 0.f;
+			enemy.dot_effect = PotionEffect::WATER;
+		}
+	}
+
+	// if we have saved grotto, should pulse rejuvenation glow effect
+	for (Entity entity : registry.texturedEffects.entities) {
+		TexturedEffect& effect = registry.texturedEffects.get(entity);
+		Motion& motion = registry.motions.get(entity);
+
+		effect.animation_timer += elapsed_ms_since_last_update / 1000.f;
+
+		// initially grow over 3 seconds
+		if (!effect.done_growing) {
+			float grow_duration = 3.f; // seconds
+			float t = effect.animation_timer / grow_duration;
+			t = std::min(t, 1.f); // clamp between 0 and 1
+
+			// linearly interpolate from small (20) to large (100)
+			float scale = 20.f + t * (100.f - 20.f);
+			motion.scale = vec2(scale, scale);
+
+			if (t >= 1.f) {
+				effect.done_growing = true;
+				effect.animation_timer = 0.f;
+			}
+		}
+
+		// pulse around larger size
+		else {
+			float base_scale = 100.f;
+			float amplitude = 10.f;
+			float frequency = 1.f / 4.f; // one cycle every 4 seconds
+
+			float scale = base_scale + amplitude * std::sin(effect.animation_timer * 2.f * M_PI * frequency);
+			motion.scale = vec2(scale, scale);
+		}
+	}
+
+	// this happens when we save the grotto and complete the game
+	if (screen.play_ending) {
+		// Fade the fog intensity from 1.5 to 0 over 5 seconds to show corruption fading
+		const float fade_duration = 5.f;
+		screen.fog_intensity -= elapsed_ms_since_last_update / 1000.f * (1.5f / fade_duration);
+		screen.fog_intensity = std::max(0.f, screen.fog_intensity);
+
+		// Only trigger the congrats text when fog intensity has reached 0
+		if (screen.fog_intensity == 0.0f && !screen.ending_text_shown) {
+			m_ui_system->createScreenText("Congratulations, you've saved the grotto!", 3.0f);
+			screen.ending_text_shown = true;  // Mark the text as shown to prevent repeating
+		}
+
+		// make enemies flash and die
+		for (Entity entity : registry.enemies.entities) {
+			Motion& motion = registry.motions.get(entity);
+			// make enemies stop moving if they're chasing you so it doesnt look weird
+			motion.velocity = vec2(0, 0);
+			motion.position = motion.position;
+			registry.enemies.get(entity).attack_damage = 0.f;
+
+			// enemy will flash damage once before being deleted
+			if (!registry.damageFlashes.has(entity)) {
+				DamageFlash& flash = registry.damageFlashes.emplace(entity);
+				flash.flash_value = 1.0f;
+				flash.kill_after_flash = true;
+			}
+			m_ui_system->updateEnemyHealth(entity, 0.f);
+		}
+	}
 
 	return true;
 }
@@ -286,27 +378,45 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 			Entity ammo_entity = registry.ammo.has(collision_entity) ? collision_entity : collision.other;
 			Entity enemy_entity = registry.enemies.has(collision_entity) ? collision_entity : collision.other;
 
-			Ammo& ammo = registry.ammo.get(ammo_entity);
 			Enemy& enemy = registry.enemies.get(enemy_entity);
-			enemy.health -= ammo.damage * registry.players.get(player_entity).effect_multiplier;
-			registry.remove_all_components_of(ammo_entity);
-			SoundSystem::playEnemyOuchSound((int)SOUND_CHANNEL::GENERAL, 0); // play enemy ouch sound
-			if (enemy.health <= 0) {
-				if (enemy.name == "Ent") {
-					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::STORM_BARK, 1, false);
-				}
-				else if (enemy.name == "Mummy 1" || enemy.name == "Mummy 2") {
-					createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MUMMY_BANDAGES, 1, false);
-				}
+			Ammo& ammo = registry.ammo.get(ammo_entity);
+			if (!registry.potions.has(ammo_entity)) continue;
+			Potion& potion = registry.potions.get(ammo_entity);
 
-				// add enemy name to killed_enemies for persistence
-				if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), enemy.name) == screen.killed_enemies.end()) {
-					screen.killed_enemies.push_back(enemy.name);
+			if (registry.potions.get(ammo_entity).effect == PotionEffect::MOLOTOV && registry.motions.has(enemy_entity)) {
+				// damage all enemies within 100 px
+				vec2 enemy_pos = registry.motions.get(enemy_entity).position;
+				for (auto neighbour_enemy : registry.enemies.entities) {
+					if (neighbour_enemy == enemy_entity || !registry.motions.has(neighbour_enemy)) continue;
+					vec2 pos = registry.motions.get(neighbour_enemy).position;
+					float dx = pos.x - enemy_pos.x;
+					float dy = pos.y - enemy_pos.y;
+					if ((dx * dx + dy * dy) <= MOLOTOV_RADIUS_SQUARED) {
+						// apply damage over time effect
+						Enemy& neighbour = registry.enemies.get(neighbour_enemy);
+						neighbour.dot_damage = potion.effectValue * MOLOTOV_MULTIPLIER;
+						neighbour.dot_timer = DOT_MOLOTOV_TIMER;
+						neighbour.dot_duration = potion.duration;
+						neighbour.dot_effect = PotionEffect::MOLOTOV;
+						handleEnemyInjured(neighbour_enemy, ammo.damage);
+					}
 				}
-
-				registry.remove_all_components_of(enemy_entity);
 			}
-			continue;
+
+			if (potion.effect == PotionEffect::POISON) {
+				enemy.dot_damage = potion.effectValue;
+				enemy.dot_timer = DOT_POISON_TIMER;
+				enemy.dot_duration = potion.duration;
+				enemy.dot_effect = PotionEffect::POISON;
+			} else if (potion.effect == PotionEffect::MOLOTOV) {
+				enemy.dot_damage = potion.effectValue * MOLOTOV_MULTIPLIER;
+				enemy.dot_timer = DOT_MOLOTOV_TIMER;
+				enemy.dot_duration = potion.duration;
+				enemy.dot_effect = PotionEffect::MOLOTOV;
+			}
+
+			handleEnemyInjured(enemy_entity, ammo.damage);
+			registry.remove_all_components_of(ammo_entity);
 		}
 		// case where enemy hits player
 		else if ((registry.players.has(collision_entity) || registry.players.has(collision.other)) && (registry.enemies.has(collision_entity) || registry.enemies.has(collision.other))) {
@@ -316,6 +426,7 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 			Player& player = registry.players.get(player_entity);
 
 			if (player.damage_cooldown > 0)	continue;
+			if (registry.enemies.get(enemy_entity).attack_damage == 0.f) continue;
 
 			// player flashes red and takes damage equal to enemy's attack
 			if (!registry.damageFlashes.has(player_entity)) registry.damageFlashes.emplace(player_entity);
@@ -326,6 +437,38 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 			if (player.health <= 0) {
 				std::cout << "player died!" << std::endl;
 				GLuint last_biome = screen.biome; // this is the biome that the player died in
+				
+				// Apply death penalty: remove a random valid item
+				if (registry.inventories.has(player_entity)) {
+					Inventory& inventory = registry.inventories.get(player_entity);
+
+					std::vector<Entity> valid_items;
+					for (Entity item : inventory.items) {
+						if (item != Entity() && registry.items.has(item)) {
+							valid_items.push_back(item);
+						}
+					}
+
+					if (!valid_items.empty()) {
+						int rand_index = rand() % valid_items.size();
+						Entity item_to_remove = valid_items[rand_index];
+
+						Item& item = registry.items.get(item_to_remove);
+						std::cout << "Death penalty: lost item " << item.name << std::endl;
+
+						// Remove 1 amount
+						item.amount -= 1;
+						if (item.amount <= 0) {
+							ItemSystem::removeItemFromInventory(player_entity, item_to_remove);
+							ItemSystem::destroyItem(item_to_remove);
+						}
+
+						if (m_ui_system) {
+							m_ui_system->updateInventoryBar();
+						}
+					}
+				}
+
 				ItemSystem::loadGameState();
 				screen.is_switching_biome = true;
 				screen.switching_to_biome = (GLuint)BIOME::GROTTO;
@@ -335,6 +478,7 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 				screen.biome = last_biome;
 				screen.fade_status = 0;
 				registry.collisions.clear();
+				registry.damageFlashes.clear();
 				player.health = PLAYER_MAX_HEALTH; // reset to max health
 				for (auto effect : player.active_effects) {
 					if (registry.potions.has(effect)) {
@@ -351,12 +495,22 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 			continue;
 		}
 		else if ((registry.ammo.has(collision_entity) || registry.ammo.has(collision.other)) && (registry.terrains.has(collision_entity) || registry.terrains.has(collision.other))) {
-			if (registry.ammo.has(collision_entity)) {
-				registry.remove_all_components_of(collision_entity);
+			Entity ammo_entity = registry.ammo.has(collision_entity) ? collision_entity : collision.other;
+			Entity terrain_entity = registry.terrains.has(collision_entity) ? collision_entity : collision.other;
+
+			if (registry.potions.has(ammo_entity) && registry.potions.get(ammo_entity).effect == PotionEffect::MOLOTOV && registry.motions.has(terrain_entity)) {
+				// damage all enemies within 100 px
+				vec2 terrain_pos = registry.motions.get(terrain_entity).position;
+				for (auto neighbour_enemy : registry.enemies.entities) {
+					if (!registry.motions.has(neighbour_enemy)) continue;
+					vec2 pos = registry.motions.get(neighbour_enemy).position;
+					float dx = pos.x - terrain_pos.x;
+					float dy = pos.y - terrain_pos.y;
+					if ((dx * dx + dy * dy) <= MOLOTOV_RADIUS_SQUARED) handleEnemyInjured(neighbour_enemy, registry.ammo.get(ammo_entity).damage);
+				}
 			}
-			else {
-				registry.remove_all_components_of(collision.other);
-			}
+
+			registry.remove_all_components_of(ammo_entity);
 			continue;
 		}
 	}
@@ -945,6 +1099,32 @@ void WorldSystem::update_textbox_visibility()
 	}
 }
 
+void WorldSystem::showTemporaryGuardianDialogue(Entity guardianEntity, const std::string& message) {
+	const Motion& motion = registry.motions.get(guardianEntity);
+
+	// Store & remove existing textbox
+	Textbox old_textbox_copy;
+	for (Entity tb : registry.textboxes.entities) {
+		if (registry.textboxes.get(tb).targetItem == guardianEntity) {
+			old_textbox_copy = registry.textboxes.get(tb);
+			m_ui_system->removeRmlUITextbox(tb.id());
+			registry.remove_all_components_of(tb);
+			break;
+		}
+	}
+
+	Entity temp = createTextbox(renderer, old_textbox_copy.pos, guardianEntity, message);
+	if (m_ui_system) {
+		m_ui_system->textboxes[temp.id()] = registry.textboxes.get(temp);
+	}
+
+	// Recreate original textbox
+	Entity restored = Entity();
+	Textbox& new_tb = registry.textboxes.emplace(restored);
+	new_tb = old_textbox_copy;
+	new_tb.isVisible = false;
+}
+
 bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 	Entity player = registry.players.entities[0];
 	Inventory& player_inventory = registry.inventories.get(player);
@@ -1001,26 +1181,45 @@ bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 						screen.unlocked_biomes.push_back("saved-grotto");
 					}
 					createRejuvenationPotion(renderer);
+					screen.play_ending = true; // initially play_ending (set to false later)
+					screen.saved_grotto = true; // this flag gets set so enemies don't spawn
+					createGlowEffect(renderer, false); // do initial grow at start
 				}
 
 				// remove textbox
-				for (auto textbox : registry.textboxes.entities) {
-					if (registry.textboxes.get(textbox).targetItem == guardianEntity) {
-						m_ui_system->removeRmlUITextbox(textbox.id());
-						registry.remove_all_components_of(textbox);
+				// for (auto textbox : registry.textboxes.entities) {
+				// 	if (registry.textboxes.get(textbox).targetItem == guardianEntity) {
+				// 		std::cout << "removing textbox" << std::endl;
+				// 		m_ui_system->removeRmlUITextbox(textbox.id());
+				// 		registry.remove_all_components_of(textbox);
+				// 	}
+				// }
+
+				// Set guardian movement to the direction of the exit
+				showTemporaryGuardianDialogue(guardianEntity, guardian.success_dialogue);
+				if (registry.motions.has(guardianEntity) && guardian.exit_direction != vec2(0, 0)) {
+					DelayedMovement& delay = registry.delayedMovements.emplace(guardianEntity);
+					delay.velocity = guardian.exit_direction * GUARDIAN_SPEED;
+					delay.delay_ms = 2000.f; // 2 seconds to let player read dialogue
+				}
+
+				if (registry.items.has(guardianEntity)) {
+					Item& item = registry.items.get(guardianEntity);
+					if (item.type == ItemType::MASTER_POTION_PEDESTAL) {
+						createTextbox(renderer, vec2(558, 40), guardianEntity, "Congratulations, you've saved the grotto!");
 					}
 				}
 
-				// Set guardian movement to the direction of the exit
-				if (registry.motions.has(guardianEntity) && guardian.exit_direction != vec2(0, 0)) {
-					registry.motions.get(guardianEntity).velocity = guardian.exit_direction * GUARDIAN_SPEED;
-				}
+				std::cout << "You got da potion" << std::endl;
 
 				return true;
 			}
 		}
 	}
 	std::cout << "You don't have the potion!!" << std::endl;
+
+	showTemporaryGuardianDialogue(guardianEntity, guardian.wrong_potion_dialogue);
+	
 	return false;
 }
 
@@ -1352,4 +1551,32 @@ void WorldSystem::removePotionEffect(Potion& potion, Entity player) {
 	default:
 		break;
 	}
+}
+
+void WorldSystem::handleEnemyInjured(Entity enemy_entity, float damage = 0.f) {
+	if (registry.players.entities.size() == 0 || !enemy_entity) return;
+	Player& player = registry.players.components[0];
+	ScreenState& screen = registry.screenStates.components[0];
+	Enemy& enemy = registry.enemies.get(enemy_entity);
+
+	enemy.health -= damage * player.effect_multiplier;
+	m_ui_system->updateEnemyHealth(enemy_entity, enemy.health / enemy.max_health);
+	registry.damageFlashes.remove(enemy_entity);
+	registry.damageFlashes.emplace(enemy_entity);
+	if (enemy.health <= 0) {
+		if (enemy.name == "Ent") {
+			createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::STORM_BARK, 1, false);
+		}
+		else if (enemy.name == "Mummy 1" || enemy.name == "Mummy 2") {
+			createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::MUMMY_BANDAGES, 1, false);
+		}
+
+		// add enemy name to killed_enemies for persistence
+		if (std::find(screen.killed_enemies.begin(), screen.killed_enemies.end(), enemy.name) == screen.killed_enemies.end()) {
+			screen.killed_enemies.push_back(enemy.name);
+		}
+
+		registry.remove_all_components_of(enemy_entity);
+	}
+	SoundSystem::playEnemyOuchSound((int)SOUND_CHANNEL::GENERAL, 0); // play enemy ouch sound
 }
