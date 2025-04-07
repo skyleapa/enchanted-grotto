@@ -41,6 +41,7 @@ public:
 	ComponentContainer<DamageFlash> damageFlashes;
 	ComponentContainer<Regeneration> regen;
 	ComponentContainer<TexturedEffect> texturedEffects;
+	ComponentContainer<DelayedMovement> delayedMovements;
 
 	// constructor that adds all containers for looping over them
 	ECSRegistry()

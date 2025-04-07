@@ -283,6 +283,36 @@ Entity createTree(RenderSystem* renderer, vec2 position)
 	return entity;
 }
 
+Entity createTreeNoFruit(RenderSystem* renderer, vec2 position)
+{
+	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " tree" << std::endl;
+	Terrain& terrain = registry.terrains.emplace(entity);
+	terrain.collision_setting = 0.0f;
+	terrain.height_ratio = 0.1f;
+	terrain.width_ratio = 0.2f;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+
+	motion.scale = vec2({ TREE_WIDTH, TREE_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::TREE,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN });
+
+	return entity;
+}
+
 Entity createForestBridge(RenderSystem* renderer, vec2 position)
 {
 	auto entity = Entity();
@@ -1735,6 +1765,84 @@ Entity createMummy(RenderSystem* renderer, vec2 position, int movable, std::stri
 	return entity;
 }
 
+Entity createEvilMushroom(RenderSystem* renderer, vec2 position, int movable, std::string name) {
+
+	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " ent" << std::endl;
+
+	Enemy& enemy = registry.enemies.emplace(entity);
+	enemy.attack_radius = 5;
+	enemy.health = 45;
+	enemy.start_pos = position;
+	enemy.state = (int)ENEMY_STATE::IDLE;
+	enemy.can_move = movable;
+	enemy.name = name;
+	enemy.attack_damage = 10;
+
+	// auto& terrain = registry.terrains.emplace(entity);
+	// terrain.collision_setting = 1.0f; // cannot walk past guardian
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+	motion.scale = vec2({ EVIL_MUSHROOM_WIDTH, EVIL_MUSHROOM_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::EVIL_MUSHROOM,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::TERRAIN,
+		});
+
+	return entity;
+}
+
+Entity createCrystalBug(RenderSystem* renderer, vec2 position, int movable, std::string name) {
+
+	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " ent" << std::endl;
+
+	Enemy& enemy = registry.enemies.emplace(entity);
+	enemy.attack_radius = 5;
+	enemy.health = 100;
+	enemy.start_pos = position;
+	enemy.state = (int)ENEMY_STATE::IDLE;
+	enemy.can_move = movable;
+	enemy.name = name;
+	enemy.attack_damage = 15;
+
+	// auto& terrain = registry.terrains.emplace(entity);
+	// terrain.collision_setting = 1.0f; // cannot walk past guardian
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+	motion.scale = vec2({ CRYSTAL_BUG_WIDTH, CRYSTAL_BUG_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::CRYSTAL_BUG,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::TERRAIN,
+		});
+
+	return entity;
+}
+
 Entity createGuardianDesert(RenderSystem* renderer, vec2 position, int movable, std::string name) {
 
 	auto entity = Entity();
@@ -1749,6 +1857,10 @@ Entity createGuardianDesert(RenderSystem* renderer, vec2 position, int movable, 
 	Guardian& guardian = registry.guardians.emplace(entity);
 	guardian.unlock_potion = PotionEffect::SATURATION;
 	guardian.exit_direction = { 0, -1 }; // it leaves upwards
+
+	guardian.hint_dialogue = "I am the guardian of the Desert. Think you can douse my spirit? Ha!";
+	guardian.wrong_potion_dialogue = "You call that a potion?";
+	guardian.success_dialogue = "What—no! I'm crumbling! Whatever that was, I'm out!";
 
 	auto& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
@@ -1765,7 +1877,7 @@ Entity createGuardianDesert(RenderSystem* renderer, vec2 position, int movable, 
 	motion.position = position;
 	motion.scale = vec2({ DESERT_GUARDIAN_WIDTH, DESERT_GUARDIAN_WIDTH });
 
-	createTextbox(renderer, vec2(position.x + 80, position.y), entity, "[F] Use Potion of Saturation");
+	createTextbox(renderer, vec2(position.x + 80, position.y), entity, guardian.hint_dialogue);
 
 	registry.renderRequests.insert(
 		entity,
@@ -1794,6 +1906,10 @@ Entity createGuardianMushroom(RenderSystem* renderer, vec2 position, int movable
 	guardian.unlock_potion = PotionEffect::ALKALESCENCE;
 	guardian.exit_direction = vec2(0, 1);
 
+	guardian.hint_dialogue = "I'm the guardian to the Shroomlands. Fungus thrives in acid. Only something basic could challenge me.";
+	guardian.wrong_potion_dialogue = "You'll need more than that to neutralize me.";
+	guardian.success_dialogue = " Wait... what is this? A base? Do you want me to neutralize! I've gotta get out of here.";
+
 	auto& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
 	terrain.width_ratio = 1.0f;
@@ -1809,7 +1925,8 @@ Entity createGuardianMushroom(RenderSystem* renderer, vec2 position, int movable
 	motion.position = position;
 	motion.scale = vec2({ MUSHROOM_GUARDIAN_WIDTH, MUSHROOM_GUARDIAN_HEIGHT });
 
-	createTextbox(renderer, vec2(position.x + 80, position.y - 100), entity, "[F] Use Potion of Alkalescense");
+	createTextbox(renderer, vec2(position.x + 80, position.y - 100), entity, guardian.hint_dialogue);
+
 	std::cout << "CREATED GUARDIAN MUSHROOM AT " << position.x << " and " << position.y << std::endl;
 	registry.renderRequests.insert(
 		entity,
@@ -1838,6 +1955,10 @@ Entity createGuardianCrystal(RenderSystem* renderer, vec2 position, int movable,
 	guardian.unlock_potion = PotionEffect::CLARITY;
 	guardian.exit_direction = (registry.screenStates.components[0].biome == (GLuint)BIOME::FOREST_EX) ? vec2(0, 1) : vec2(1, 0);
 
+	guardian.hint_dialogue = "They say crystals love the dark - and I thrive in it. Light? Pfft. As if you could ever shine bright enough to cut through me.";
+	guardian.wrong_potion_dialogue = "Nothing you have is strong enough to move me!";
+	guardian.success_dialogue = "What is this? Radiance? No, no, no - it's refracting everywhere! My shadows! I'm too clear-headed now!";
+
 	auto& terrain = registry.terrains.emplace(entity);
 	terrain.collision_setting = 0.0f;
 	terrain.width_ratio = 0.8f;
@@ -1853,7 +1974,7 @@ Entity createGuardianCrystal(RenderSystem* renderer, vec2 position, int movable,
 	motion.position = position;
 	motion.scale = vec2({ CRYSTAL_GUARDIAN_WIDTH, CRYSTAL_GUARDIAN_HEIGHT });
 
-	createTextbox(renderer, vec2(position.x - 180, position.y - 90), entity, "[F] Use Potion of Clarity");
+	createTextbox(renderer, vec2(position.x - 180, position.y - 90), entity, guardian.hint_dialogue);
 
 	registry.renderRequests.insert(
 		entity,
@@ -1885,6 +2006,10 @@ Entity createMasterPotionPedestal(RenderSystem* renderer, vec2 position)
 	Guardian& guardian = registry.guardians.emplace(entity);
 	guardian.unlock_potion = PotionEffect::REJUVENATION;
 
+	guardian.hint_dialogue = "Something's missing from this pedestal, perhaps a potion to restore life to this place.";
+	guardian.wrong_potion_dialogue = "The magic stirs—but not enough. This isn't the one.";
+	guardian.success_dialogue  = "The potion flows...Light returns. The Grotto breathes once more.";
+
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
 	registry.meshPtrs.emplace(entity, &mesh);
@@ -1905,7 +2030,7 @@ Entity createMasterPotionPedestal(RenderSystem* renderer, vec2 position)
 
 	ScreenState& screen = registry.screenStates.components[0];
 	if (std::find(screen.unlocked_biomes.begin(), screen.unlocked_biomes.end(), "saved-grotto") == screen.unlocked_biomes.end()) {
-		createTextbox(renderer, vec2(position.x - 80, position.y - 100), entity, "[F] Place Potion of Rejuvenation");
+		createTextbox(renderer, vec2(position.x - 120, position.y - 110), entity, "Something's missing from this pedestal, perhaps a potion to restore life to this place.");
 	}
 
 	return entity;

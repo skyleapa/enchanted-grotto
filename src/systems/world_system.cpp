@@ -179,6 +179,17 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	updatePlayerState(player, player_motion, elapsed_ms_since_last_update);
 	update_textbox_visibility();
 
+	for (Entity e : registry.delayedMovements.entities) {
+		DelayedMovement& delay = registry.delayedMovements.get(e);
+		delay.delay_ms -= elapsed_ms_since_last_update;
+		if (delay.delay_ms <= 0.f) {
+			if (registry.motions.has(e)) {
+				registry.motions.get(e).velocity = delay.velocity;
+			}
+			registry.delayedMovements.remove(e);
+		}
+	}	
+
 	// apply damage over time on enemies
 	for (auto entity : registry.enemies.entities) {
 		if (!registry.enemies.has(entity)) continue;
@@ -426,6 +437,38 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 			if (player.health <= 0) {
 				std::cout << "player died!" << std::endl;
 				GLuint last_biome = screen.biome; // this is the biome that the player died in
+				
+				// Apply death penalty: remove a random valid item
+				if (registry.inventories.has(player_entity)) {
+					Inventory& inventory = registry.inventories.get(player_entity);
+
+					std::vector<Entity> valid_items;
+					for (Entity item : inventory.items) {
+						if (item != Entity() && registry.items.has(item)) {
+							valid_items.push_back(item);
+						}
+					}
+
+					if (!valid_items.empty()) {
+						int rand_index = rand() % valid_items.size();
+						Entity item_to_remove = valid_items[rand_index];
+
+						Item& item = registry.items.get(item_to_remove);
+						std::cout << "Death penalty: lost item " << item.name << std::endl;
+
+						// Remove 1 amount
+						item.amount -= 1;
+						if (item.amount <= 0) {
+							ItemSystem::removeItemFromInventory(player_entity, item_to_remove);
+							ItemSystem::destroyItem(item_to_remove);
+						}
+
+						if (m_ui_system) {
+							m_ui_system->updateInventoryBar();
+						}
+					}
+				}
+
 				ItemSystem::loadGameState();
 				screen.is_switching_biome = true;
 				screen.switching_to_biome = (GLuint)BIOME::GROTTO;
@@ -1052,6 +1095,32 @@ void WorldSystem::update_textbox_visibility()
 	}
 }
 
+void WorldSystem::showTemporaryGuardianDialogue(Entity guardianEntity, const std::string& message) {
+	const Motion& motion = registry.motions.get(guardianEntity);
+
+	// Store & remove existing textbox
+	Textbox old_textbox_copy;
+	for (Entity tb : registry.textboxes.entities) {
+		if (registry.textboxes.get(tb).targetItem == guardianEntity) {
+			old_textbox_copy = registry.textboxes.get(tb);
+			m_ui_system->removeRmlUITextbox(tb.id());
+			registry.remove_all_components_of(tb);
+			break;
+		}
+	}
+
+	Entity temp = createTextbox(renderer, old_textbox_copy.pos, guardianEntity, message);
+	if (m_ui_system) {
+		m_ui_system->textboxes[temp.id()] = registry.textboxes.get(temp);
+	}
+
+	// Recreate original textbox
+	Entity restored = Entity();
+	Textbox& new_tb = registry.textboxes.emplace(restored);
+	new_tb = old_textbox_copy;
+	new_tb.isVisible = false;
+}
+
 bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 	Entity player = registry.players.entities[0];
 	Inventory& player_inventory = registry.inventories.get(player);
@@ -1114,23 +1183,39 @@ bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 				}
 
 				// remove textbox
-				for (auto textbox : registry.textboxes.entities) {
-					if (registry.textboxes.get(textbox).targetItem == guardianEntity) {
-						m_ui_system->removeRmlUITextbox(textbox.id());
-						registry.remove_all_components_of(textbox);
+				// for (auto textbox : registry.textboxes.entities) {
+				// 	if (registry.textboxes.get(textbox).targetItem == guardianEntity) {
+				// 		std::cout << "removing textbox" << std::endl;
+				// 		m_ui_system->removeRmlUITextbox(textbox.id());
+				// 		registry.remove_all_components_of(textbox);
+				// 	}
+				// }
+
+				// Set guardian movement to the direction of the exit
+				showTemporaryGuardianDialogue(guardianEntity, guardian.success_dialogue);
+				if (registry.motions.has(guardianEntity) && guardian.exit_direction != vec2(0, 0)) {
+					DelayedMovement& delay = registry.delayedMovements.emplace(guardianEntity);
+					delay.velocity = guardian.exit_direction * GUARDIAN_SPEED;
+					delay.delay_ms = 2000.f; // 2 seconds to let player read dialogue
+				}
+
+				if (registry.items.has(guardianEntity)) {
+					Item& item = registry.items.get(guardianEntity);
+					if (item.type == ItemType::MASTER_POTION_PEDESTAL) {
+						createTextbox(renderer, vec2(558, 40), guardianEntity, "Congratulations, you've saved the grotto!");
 					}
 				}
 
-				// Set guardian movement to the direction of the exit
-				if (registry.motions.has(guardianEntity) && guardian.exit_direction != vec2(0, 0)) {
-					registry.motions.get(guardianEntity).velocity = guardian.exit_direction * GUARDIAN_SPEED;
-				}
+				std::cout << "You got da potion" << std::endl;
 
 				return true;
 			}
 		}
 	}
 	std::cout << "You don't have the potion!!" << std::endl;
+
+	showTemporaryGuardianDialogue(guardianEntity, guardian.wrong_potion_dialogue);
+	
 	return false;
 }
 
