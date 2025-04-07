@@ -12,7 +12,6 @@ struct Player
 	float health = PLAYER_MAX_HEALTH;
 	float damage_cooldown = 0.f; // cooldown before player can take damage again to prevent insta death
 	std::vector<Entity> active_effects = {}; // list of active consumed potions
-	bool consumed_potion = false;
 	float speed_multiplier = 1.f;
 	float effect_multiplier = 1.f;
 	float defense = 1.f;

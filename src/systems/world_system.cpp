@@ -757,6 +757,10 @@ void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 			screen.tutorial_state += 1;
 		}
 	}
+
+	if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+		consumePotion();
+	}
 }
 
 void WorldSystem::on_mouse_wheel(double xoffset, double yoffset)
@@ -1411,14 +1415,7 @@ void WorldSystem::updateConsumedPotions(float elapsed_ms_since_last_update) {
 	if (registry.players.entities.size() == 0) return;
 	Entity player_entity = registry.players.entities[0];
 	Player& player = registry.players.get(player_entity);
-
-	if (player.consumed_potion) {
-		player.consumed_potion = false;
-		consumePotion();
-	}
-
 	std::vector<Entity> to_remove = {};
-
 	for (Entity effect : player.active_effects) {
 		if (!registry.potions.has(effect)) continue; // only potions should be added
 
@@ -1444,29 +1441,23 @@ void WorldSystem::updateConsumedPotions(float elapsed_ms_since_last_update) {
 
 bool WorldSystem::consumePotion() {
 	// get the item in the selected inventory slot
-	if (registry.players.entities.size() == 0) return false;
 	Entity player_entity = registry.players.entities[0];
-	if (!registry.inventories.has(player_entity)) return false;
-
 	Inventory& inv = registry.inventories.get(player_entity);
-	if (inv.selection + 1 > inv.items.size() || inv.items.size() == 0) {
-		std::cout << "player has no item in slot" << inv.selection << std::endl;
+	if (inv.selection >= inv.items.size()) {
 		return false;
 	}
 
 	Entity selected_item = inv.items[inv.selection];
-
 	if (!registry.items.has(selected_item)) {
-		std::cout << "selected item is not an item" << std::endl;
 		return false;
 	}
+
 	if (!registry.potions.has(selected_item)) {
-		std::cout << "selected item is not a potion" << std::endl;
 		return false;
 	}
+
 	// Check that the potion is consumable
 	if (std::find(consumable_potions.begin(), consumable_potions.end(), registry.potions.get(selected_item).effect) == consumable_potions.end()) {
-		std::cout << "selected potion is not consumable" << std::endl;
 		return false;
 	}
 

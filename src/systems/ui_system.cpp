@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <tuple>
 #include <sstream>
+#include <iomanip>
 #include <SDL.h>
 #include <SDL_mixer.h>
 
@@ -160,6 +161,7 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 		updateInventoryBar();
 		updateHealthBar();
 		updateEffectsBar();
+		updatePotionInfo();
 
 		std::cout << "UISystem::init - Successfully initialized" << std::endl;
 		return true;
@@ -241,6 +243,9 @@ void UISystem::step(float elapsed_ms)
 			Entity cauldron = registry.cauldrons.entities[0];
 			if (openedCauldron != cauldron) openedCauldron = cauldron;
 		}
+
+		// Update inventory text
+		updateInventoryText(elapsed_ms);
 
 		// Display tutorial
 		updateTutorial();
@@ -454,6 +459,13 @@ void UISystem::handleMouseMoveEvent(double x, double y)
 	mouse_pos_y = y;
 	updateFollowMouse();
 	m_context->ProcessMouseMove((int)x, (int)y, getKeyModifiers());
+
+	// If on inventory then show text
+	Rml::Element* hovered = m_context->GetHoverElement();
+	if (!hovered) return;
+	if (getSlotFromId(hovered->GetId()) != -1) {
+		showText = SHOW_TEXT_MS;
+	}
 }
 
 void UISystem::handleMouseButtonEvent(int button, int action, int mods)
@@ -668,14 +680,6 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 		} while (false);
 	}
 
-	// Check for consuming potion in inventory
-	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_RIGHT) {
-		if (slotId != -1 && registry.players.entities.size() > 0) {
-			selectInventorySlot(slotId);
-			registry.players.components[0].consumed_potion = true;
-		}
-	}
-
 	// remove selected item from inventory
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT && shift_key_pressed) {
 		if (registry.players.entities.size() == 0) return;
@@ -750,18 +754,29 @@ void UISystem::createInventoryBar()
                     left: 50%;
                     margin-left: -220px;
                     width: 440px;
-                    height: 72px;
+                    height: 87px;
                     font-family: Open Sans;
                     z-index: 10;
                 }
 
 				#item-name {
 					position: absolute;
-					top: 0px;
+					top: 15px;
 					width: 440px;
 					text-align: center;
 					font-size: 16px;
 					font-effect: outline( 1px black );
+					opacity: 0;
+				}
+
+				#potion-info {
+					position: absolute;
+					top: 0px;
+					width: 440px;
+					text-align: center;
+					font-size: 14px;
+					font-effect: outline( 1px black );
+					opacity: 0;
 				}
 
 				#inventory-bar {
@@ -797,6 +812,7 @@ void UISystem::createInventoryBar()
             </style>
         </head>
 		<body>
+			<div id="potion-info"></div>
 			<div id="item-name"></div>
         	<div id="inventory-bar">
         )";
@@ -951,8 +967,87 @@ void UISystem::updateInventoryBar()
 	}
 }
 
-void UISystem::selectInventorySlot(int slot)
-{
+void UISystem::updateInventoryText(float elapsed_ms) {
+	Rml::Element* infoElement = m_inventory_document->GetElementById("potion-info");
+	Rml::Element* nameElement = m_inventory_document->GetElementById("item-name");
+	if (!infoElement || !nameElement) {
+		return;
+	}
+
+	if (showText > 0) {
+		infoElement->SetProperty("opacity", "1");
+		nameElement->SetProperty("opacity", "1");
+		showText -= elapsed_ms;
+		if (showText <= 0) {
+			showText = 0;
+			fadeText = FADE_TEXT_MS;
+		}
+
+		return;
+	}
+
+	if (fadeText > 0) {
+		fadeText -= elapsed_ms;
+		if (fadeText <= 0) {
+			fadeText = 0;
+		}
+
+		float fadeAmt = (float) fadeText / FADE_TEXT_MS;
+		std::string fade = std::to_string(fadeAmt);
+		infoElement->SetProperty("opacity", fade);
+		nameElement->SetProperty("opacity", fade);
+	}
+}
+
+void UISystem::updatePotionInfo() {
+	Rml::Element* infoElement = m_inventory_document->GetElementById("potion-info");
+	if (!infoElement) {
+		return;
+	}
+
+	do {
+		// get the item in the selected inventory slot
+		Entity player_entity = registry.players.entities[0];
+		Inventory& inv = registry.inventories.get(player_entity);
+		if (inv.selection >= inv.items.size()) {
+			break;
+		}
+
+		Entity selected_item = inv.items[inv.selection];
+		if (!registry.items.has(selected_item) || !registry.potions.has(selected_item)) {
+			break;
+		}
+
+		Potion& potion = registry.potions.get(selected_item);
+		std::string infoStr = "No effect";
+		for (Recipe r : RECIPES) {
+			if (r.effect == potion.effect) {
+				infoStr = r.stats;
+				break;
+			}
+		}
+
+		int effIndex = infoStr.find("_effect_");
+		if (effIndex != std::string::npos) {
+			std::stringstream stream;
+			stream << std::fixed << std::setprecision(1) << potion.effectValue;
+			std::string effect = stream.str();
+			infoStr = infoStr.substr(0, effIndex) + effect + infoStr.substr(effIndex + 8);
+		}
+
+		int durIndex = infoStr.find("_duration_");
+		if (durIndex != std::string::npos) {
+			infoStr = infoStr.substr(0, durIndex) + std::to_string(potion.duration / 1000) + infoStr.substr(durIndex + 10);
+		}
+
+		infoElement->SetInnerRML(infoStr);
+		return;
+	} while (false);
+
+	infoElement->SetInnerRML("");
+}
+
+void UISystem::selectInventorySlot(int slot) {
 	while (slot < 0) {
 		slot += m_hotbar_size;
 	}
@@ -962,13 +1057,16 @@ void UISystem::selectInventorySlot(int slot)
 	Entity entity = registry.players.entities[0];
 	if (!registry.inventories.has(entity)) return;
 	Inventory& inventory = registry.inventories.get(entity);
-
 	inventory.selection = slot;
 
 	// Update the inventory bar to reflect the selection
 	if (m_inventory_document) {
 		updateInventoryBar();
+		updatePotionInfo();
 	}
+
+	// Show text
+	showText = SHOW_TEXT_MS;
 }
 
 int UISystem::getSelectedSlot() {
@@ -2305,7 +2403,7 @@ void UISystem::createInfoBar() {
 					width: 300px;
 					height: 100px;
 					display: block;
-					font-size: 20px;
+					font-size: 18px;
 					text-align: left;
 					color: white;
 					font-family: Open Sans;
@@ -2317,9 +2415,10 @@ void UISystem::createInfoBar() {
 			<p>
 				[LMB] Throw potion<br />
 				[RMB] Consume selected potion<br />
-				[R] Open recipe book<br />
+				[R] Recipe book<br />
 				[T] Toggle tutorial<br />
-				[N] Skip tutorial step
+				[N] Skip tutorial step<br />
+				[Shift+LMB] Delete item
 			</p>
 		</body>
 		</rml>)";

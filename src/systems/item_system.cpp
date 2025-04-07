@@ -392,7 +392,6 @@ nlohmann::json ItemSystem::serializePlayerState(Entity player_entity) {
 	data["cooldown"] = player.cooldown;
 	data["health"] = player.health;
 	data["damage_cooldown"] = player.damage_cooldown;
-	data["consumed_potion"] = player.consumed_potion;
 	data["speed_multiplier"] = player.speed_multiplier;
 	data["effect_multiplier"] = player.effect_multiplier;
 	data["defense"] = player.defense;
@@ -614,7 +613,6 @@ void ItemSystem::deserializePlayerState(const nlohmann::json& data) {
 	player.cooldown = data["cooldown"];
 	player.health = data["health"];
 	player.damage_cooldown = data["damage_cooldown"];
-	player.consumed_potion = data["consumed_potion"];
 	player.speed_multiplier = data["speed_multiplier"];
 	player.effect_multiplier = data["effect_multiplier"];
 	player.defense = data["defense"];
