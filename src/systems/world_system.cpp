@@ -926,6 +926,7 @@ void WorldSystem::handle_player_interaction()
 			}
 		}
 		else if (item_info.type == ItemType::CHEST) {
+			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
 			if (m_ui_system != nullptr) {
 				handle_textbox = m_ui_system->openChestMenu(item);
 			}
@@ -941,8 +942,7 @@ void WorldSystem::handle_player_interaction()
 				registry.motions.remove(item);
 			if (registry.renderRequests.has(item))
 				registry.renderRequests.remove(item);
-
-			return;
+			continue;
 		}
 	}
 }
