@@ -6,6 +6,7 @@
 #include "physics_system.hpp"
 #include "render_system.hpp"
 #include "world_init.hpp"
+#include <nlohmann/json.hpp>
 
 class BiomeSystem
 {
@@ -29,13 +30,24 @@ public:
     bool crystal_unlocked = false;
 
     void setUISystem(UISystem* ui_system) { m_ui_system = ui_system; }
+    
+    void setLoadedGameData(const nlohmann::json& data) { 
+        m_loaded_game_data = data; 
+        m_has_pending_chest_inventory = true;
+    }
 
-    BiomeSystem()
+    BiomeSystem() : m_loaded_game_data(nullptr), m_has_pending_chest_inventory(false)
     {
     }
 
 private:
     RenderSystem* renderer;
+    
+    // Store loaded game data for deferred inventory loading
+    nlohmann::json m_loaded_game_data;
+    
+    // Flag to track if we have pending chest inventory to load
+    bool m_has_pending_chest_inventory;
 
     // <position, scale> of boundary lines
     std::map<int, std::vector<std::tuple<vec2, vec2>>> biome_boundaries = {

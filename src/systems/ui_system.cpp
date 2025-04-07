@@ -175,64 +175,11 @@ void UISystem::updateWindowSize(float scale)
 
 void UISystem::step(float elapsed_ms)
 {
-	if (!m_initialized || !m_context) return;
+	if (!m_initialized || !m_context) {
+		return;
+	}
 
 	try {
-		// Moved FPS to title but leave code here in case we bring it back to on screen
-
-		// // Update FPS counter
-		// updateFPS(elapsed_ms);
-
-		// // Create FPS counter UI if it doesn't exist
-		// if (!m_fps_document) {
-		// 	const char* fps_rml =
-		// 		"<rml>\n"
-		// 		"<head>\n"
-		// 		"    <style>\n"
-		// 		"        body {\n"
-		// 		"            position: absolute;\n"
-		// 		"            top: 10px;\n"
-		// 		"            right: 10px;\n"
-		// 		"            font-family: Open Sans;\n"
-		// 		"            font-size: 18px;\n"
-		// 		"            font-weight: bold;\n"
-		// 		"            color: white;\n"
-		// 		"            background-color: rgba(0, 0, 0, 0.7);\n"
-		// 		"            padding: 8px 12px;\n"
-		// 		"            border-radius: 8px;\n"
-		// 		"            width: auto;\n"
-		// 		"            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);\n"
-		// 		"        }\n"
-		// 		"    </style>\n"
-		// 		"</head>\n"
-		// 		"<body id=\"fps_counter\">FPS: 0</body>\n"
-		// 		"</rml>";
-
-		// 	m_fps_document = m_context->LoadDocumentFromMemory(fps_rml);
-		// 	if (m_fps_document) {
-		// 		m_fps_document->Show();
-		// 	}
-		// }
-
-		// // Update FPS display every 250ms to avoid too frequent updates
-		// if (m_fps_document && m_fps_update_timer >= 250.0f) {
-		// 	m_fps_update_timer = 0.0f;
-
-		// 	// Determine color based on FPS (green for good, yellow for ok, red for poor)
-		// 	const char* color = "#00FF00"; // Green by default (good performance)
-		// 	if (m_current_fps < 30.0f) {
-		// 		color = "#FF0000"; // Red (poor performance)
-		// 	}
-		// 	else if (m_current_fps < 55.0f) {
-		// 		color = "#FFFF00"; // Yellow (ok performance)
-		// 	}
-
-		// 	char fps_text[64];
-		// 	snprintf(fps_text, sizeof(fps_text), "FPS: <span style=\"color: %s;\">%.1f</span>",
-		// 		color, m_current_fps);
-		// 	m_fps_document->SetInnerRML(fps_text);
-		// }
-
 		// update cauldron reference
 		if (registry.cauldrons.entities.size() > 0) {
 			Entity cauldron = registry.cauldrons.entities[0];
@@ -260,6 +207,11 @@ void UISystem::step(float elapsed_ms)
 		// Update cauldron (heat/timer)
 		if (isCauldronOpen()) {
 			updateCauldronUI();
+		}
+
+		// Update chest UI if chest menu is open
+		if (isChestMenuOpen()) {
+			updateChestUI();
 		}
 
 		// Update RmlUi
@@ -525,6 +477,57 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 			else if (id == "right-arrow") {
 				navigateRecipeBook(true);
 				SoundSystem::playPageFlipSound((int)SOUND_CHANNEL::MENU, 0);
+				return;
+			}
+		}
+
+		// Check for chest menu clicks
+		if (isChestMenuOpen()) {
+			if (id == "close-button") {
+				closeChestMenu();
+				return;
+			}
+			
+			// Handle chest slot clicks for item transfer
+			if (slotId != -1) {
+				Entity player = registry.players.entities[0];
+				Entity chest = getOpenedChest();
+				bool isChestSlot = slotId < 30;
+				
+				if (isChestSlot) {
+					// Transfer from chest to player
+					if (registry.inventories.has(chest)) {
+						Inventory& chestInv = registry.inventories.get(chest);
+						
+						if (slotId < chestInv.items.size() && registry.items.has(chestInv.items[slotId])) {
+							Entity item = chestInv.items[slotId];
+							
+							if (ItemSystem::addItemToInventory(player, item)) {
+								ItemSystem::removeItemFromInventory(chest, item);
+								SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+								
+								updateInventoryBar();
+								updateChestUI();
+							}
+						}
+					}
+				} else {
+					// Transfer from player to chest (slots 30-39)
+					int playerSlot = slotId - 30;
+					Inventory& playerInv = registry.inventories.get(player);
+					
+					if (playerSlot < playerInv.items.size() && registry.items.has(playerInv.items[playerSlot])) {
+						Entity item = playerInv.items[playerSlot];
+							
+						if (ItemSystem::addItemToInventory(chest, item)) {
+							ItemSystem::removeItemFromInventory(player, item);
+							SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+							
+							updateInventoryBar();
+							updateChestUI();
+						}
+					}
+				}
 				return;
 			}
 		}
@@ -2258,4 +2261,395 @@ std::string UISystem::getIngredientName(RecipeIngredient ing)
 	}
 
 	return name;
+}
+
+bool UISystem::openChestMenu(Entity chest) {
+  if (isChestMenuOpen() && getOpenedChest() == chest) {
+    return true;
+  }
+
+  closeCauldron(false);
+  closeMortarPestle(false);
+  closeRecipeBook();
+
+  if (isChestMenuOpen()) {
+    closeChestMenu();
+  }
+
+  if (!registry.inventories.has(chest)) {
+    auto& inv = registry.inventories.emplace(chest);
+    inv.capacity = 30;
+  }
+
+  setOpenedChest(chest);
+
+  try {
+    std::string chest_rml = R"(
+            <rml>
+            <head>
+                <title>Chest Inventory</title>
+                <style>
+                    body {
+                        width: 580px;
+                        height: 480px;
+                        margin: auto;
+                        font-family: Open Sans;
+                        background-color: #f0d6a7;
+                        border-width: 4px;
+                        border-color: #8e6e4e;
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        z-index: 10;
+                    }
+
+                    #chest-container {
+                        padding: 10px;
+                        position: relative;
+                    }
+
+                    h1 {
+                        text-align: center;
+                        color: #5c3e23;
+                        font-size: 24px;
+                        margin: 0 0 10px 0;
+                    }
+
+                    h2 {
+                        color: #5c3e23;
+                        font-size: 18px;
+                        margin: 5px 0 10px 5px;
+                        padding-left: 5px;
+                    }
+
+                    #close-button {
+                        position: absolute;
+                        top: 5px;
+                        right: 5px;
+                        width: 25px;
+                        height: 25px;
+                        line-height: 25px;
+                        text-align: center;
+                        background-color: #f0d6a7;
+                        border-width: 2px;
+                        border-color: #8e6e4e;
+                        cursor: pointer;
+                        font-size: 16px;
+                        font-weight: bold;
+                        color: #5c3e23;
+                    }
+
+                    #close-button:hover {
+                        background-color: #e8c89a;
+                    }
+
+                    .grid-container {
+                        width: 560px;
+                        background-color: #e8c89a;
+                        padding: 10px;
+                        margin: 0 auto 15px auto;
+                        border-width: 2px;
+                        border-color: #8e6e4e;
+                        display: flex;
+                        flex-wrap: wrap;
+                        justify-content: flex-start;
+                    }
+
+                    .item-slot {
+                        box-sizing: content-box;
+                        width: 44px;
+                        height: 44px;
+                        background-color: #d9c69a;
+                        border-width: 2px;
+                        border-color: #8e6e4e;
+                        margin: 4px;
+                        flex-basis: 44px;
+                        flex-grow: 0;
+                        flex-shrink: 0;
+                        cursor: pointer;
+                        position: relative;
+                    }
+
+                    .item-slot:hover {
+                        background-color: #c8b48a;
+                    }
+
+                    #chest-section {
+                        margin-bottom: 10px;
+                    }
+
+                    #player-section {
+                    }
+                </style>
+            </head>
+            <body>
+                <div id="chest-container">
+                    <h1>Storage Chest</h1>
+                    <div id="close-button">X</div>
+
+                    <div id="chest-section">
+                        <h2>Chest Contents</h2>
+                        <div class="grid-container">
+                            <div class="item-slot" id="slot-0"></div>
+                            <div class="item-slot" id="slot-1"></div>
+                            <div class="item-slot" id="slot-2"></div>
+                            <div class="item-slot" id="slot-3"></div>
+                            <div class="item-slot" id="slot-4"></div>
+                            <div class="item-slot" id="slot-5"></div>
+                            <div class="item-slot" id="slot-6"></div>
+                            <div class="item-slot" id="slot-7"></div>
+                            <div class="item-slot" id="slot-8"></div>
+                            <div class="item-slot" id="slot-9"></div>
+                            <div class="item-slot" id="slot-10"></div>
+                            <div class="item-slot" id="slot-11"></div>
+                            <div class="item-slot" id="slot-12"></div>
+                            <div class="item-slot" id="slot-13"></div>
+                            <div class="item-slot" id="slot-14"></div>
+                            <div class="item-slot" id="slot-15"></div>
+                            <div class="item-slot" id="slot-16"></div>
+                            <div class="item-slot" id="slot-17"></div>
+                            <div class="item-slot" id="slot-18"></div>
+                            <div class="item-slot" id="slot-19"></div>
+                            <div class="item-slot" id="slot-20"></div>
+                            <div class="item-slot" id="slot-21"></div>
+                            <div class="item-slot" id="slot-22"></div>
+                            <div class="item-slot" id="slot-23"></div>
+                            <div class="item-slot" id="slot-24"></div>
+                            <div class="item-slot" id="slot-25"></div>
+                            <div class="item-slot" id="slot-26"></div>
+                            <div class="item-slot" id="slot-27"></div>
+                            <div class="item-slot" id="slot-28"></div>
+                            <div class="item-slot" id="slot-29"></div>
+                        </div>
+                    </div>
+
+                    <div id="player-section">
+                        <h2>Your Inventory</h2>
+                        <div class="grid-container">
+                            <div class="item-slot" id="slot-30"></div>
+                            <div class="item-slot" id="slot-31"></div>
+                            <div class="item-slot" id="slot-32"></div>
+                            <div class="item-slot" id="slot-33"></div>
+                            <div class="item-slot" id="slot-34"></div>
+                            <div class="item-slot" id="slot-35"></div>
+                            <div class="item-slot" id="slot-36"></div>
+                            <div class="item-slot" id="slot-37"></div>
+                            <div class="item-slot" id="slot-38"></div>
+                            <div class="item-slot" id="slot-39"></div>
+                        </div>
+                    </div>
+                </div>
+           
+            </body>
+            </rml>
+        )";
+
+    m_chest_document = m_context->LoadDocumentFromMemory(chest_rml.c_str());
+    if (!m_chest_document) {
+      std::cerr << "UISystem::openChestMenu - Failed to load chest document" << std::endl;
+      return false;
+    }
+
+    for (int i = 0; i < 40; i++) {
+      std::string slot_id = "slot-" + std::to_string(i);
+      Rml::Element* slot_element = m_chest_document->GetElementById(slot_id);
+      if (slot_element) {
+        DragListener::RegisterDraggableElement(slot_element);
+        DragListener::RegisterDragDropElement(slot_element);
+      }
+    }
+
+    m_chest_document->Show();
+
+    updateChestUI();
+
+    std::cout << "UISystem::openChestMenu - Chest UI created successfully" << std::endl;
+    return true;
+
+  } catch (const std::exception& e) {
+    std::cerr << "Exception in UISystem::openChestMenu: " << e.what() << std::endl;
+    return false;
+  }
+}
+
+bool UISystem::isChestMenuOpen() {
+  return m_chest_document && m_chest_document->IsVisible();
+}
+
+void UISystem::closeChestMenu() {
+  if (isChestMenuOpen()) {
+    m_chest_document->Hide();
+    SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+    Mix_VolumeMusic(MUSIC_VOLUME);
+    openedChest = Entity();
+  }
+}
+
+Entity UISystem::getOpenedChest() {
+  return openedChest;
+}
+
+void UISystem::setOpenedChest(Entity new_chest) {
+  openedChest = new_chest;
+}
+
+void UISystem::updateChestUI() {
+  if (!m_initialized || !m_context || !m_chest_document || !isChestMenuOpen()) return;
+
+  try {
+    if (registry.players.entities.empty()) return;
+    Entity player = registry.players.entities[0];
+
+    if (!registry.inventories.has(player) || !registry.inventories.has(openedChest)) return;
+
+    Inventory& playerInventory = registry.inventories.get(player);
+    Inventory& chestInventory = registry.inventories.get(openedChest);
+
+    // Update chest inventory slots (slots 0-29)
+    for (int i = 0; i < 30; i++) {
+      std::string slot_id = "slot-" + std::to_string(i);
+      Rml::Element* slot_element = m_chest_document->GetElementById(slot_id);
+
+      if (!slot_element) continue;
+
+      std::string slot_content = "";
+      
+      if (i < chestInventory.items.size() && registry.items.has(chestInventory.items[i])) {
+        Entity item = chestInventory.items[i];
+        Item& item_comp = registry.items.get(item);
+
+        auto it = ITEM_INFO.find(item_comp.type);
+        if (it != ITEM_INFO.end()) {
+          std::string texture_path = it->second.texture_path;
+          
+          slot_content = R"(
+                    <img src=")" + texture_path + R"(" 
+                    style='
+                        pointer-events: none;
+                        width: 32px; 
+                        height: 32px; 
+                        margin: 4px; 
+                        transform: scaleY(-1); 
+                    )";
+          
+          // Add color and star if potion
+          if (item_comp.type == ItemType::POTION) {
+            Potion& potion = registry.potions.get(item);
+            slot_content += "image-color: " + getImageColorProperty(potion.color, 255) + ";'/>";
+
+            PotionQuality pq = PotionSystem::getNormalizedQuality(potion);
+            if (!isUselessEffect(potion.effect) && pq.threshold > 0) {
+              std::string star_tex = pq.star_texture_path;
+              slot_content += R"(
+                <div style='
+                  pointer-events: none; 
+                  position: absolute; 
+                  bottom: 3px;
+                  left: 3px;
+                  width: 15px;
+                  height: 15px;
+                  decorator: image(")" + star_tex + R"(" flip-vertical fill);'>
+                </div>)";
+            }
+          }
+          else {
+            slot_content += "' />";
+          }
+          
+          if (item_comp.amount > 1) {
+            slot_content += R"(
+                        <div style='
+                            pointer-events: none; 
+                            position: absolute; 
+                            bottom: 0px;
+                            right: -2px;
+                            color: #FFFFFF; 
+                            font-size: 14px; 
+                            font-weight: bold;
+                            font-effect: outline(1px black);'>
+                        )" + std::to_string(item_comp.amount) + R"(
+                        </div>)";
+          }
+        }
+      }
+      
+      slot_element->SetInnerRML(slot_content);
+    }
+
+    // Update player inventory slots (slots 30-39)
+    for (int i = 0; i < 10; i++) {
+      int slot_index = i + 30;
+      std::string slot_id = "slot-" + std::to_string(slot_index);
+      Rml::Element* slot_element = m_chest_document->GetElementById(slot_id);
+
+      if (!slot_element) continue;
+
+      std::string slot_content = "";
+      
+      if (i < playerInventory.items.size() && registry.items.has(playerInventory.items[i])) {
+        Entity item = playerInventory.items[i];
+        Item& item_comp = registry.items.get(item);
+
+        auto it = ITEM_INFO.find(item_comp.type);
+        if (it != ITEM_INFO.end()) {
+          std::string texture_path = it->second.texture_path;
+          
+          slot_content = R"(
+                    <img src=")" + texture_path + R"(" 
+                    style='
+                        pointer-events: none;
+                        width: 32px; 
+                        height: 32px; 
+                        margin: 4px; 
+                        transform: scaleY(-1); 
+                    )";
+          
+          // Add color and star if potion
+          if (item_comp.type == ItemType::POTION) {
+            Potion& potion = registry.potions.get(item);
+            slot_content += "image-color: " + getImageColorProperty(potion.color, 255) + ";'/>";
+
+            PotionQuality pq = PotionSystem::getNormalizedQuality(potion);
+            if (!isUselessEffect(potion.effect) && pq.threshold > 0) {
+              std::string star_tex = pq.star_texture_path;
+              slot_content += R"(
+                <div style='
+                  pointer-events: none; 
+                  position: absolute; 
+                  bottom: 3px;
+                  left: 3px;
+                  width: 15px;
+                  height: 15px;
+                  decorator: image(")" + star_tex + R"(" flip-vertical fill);'>
+                </div>)";
+            }
+          }
+          else {
+            slot_content += "' />";
+          }
+          
+          if (item_comp.amount > 1) {
+            slot_content += R"(
+                        <div style='
+                            pointer-events: none; 
+                            position: absolute; 
+                            bottom: 0px;
+                            right: -2px;
+                            color: #FFFFFF; 
+                            font-size: 14px; 
+                            font-weight: bold;
+                            font-effect: outline(1px black);'>
+                        )" + std::to_string(item_comp.amount) + R"(
+                        </div>)";
+          }
+        }
+      }
+      
+      slot_element->SetInnerRML(slot_content);
+    }
+  }
+  catch (const std::exception& e) {
+    std::cerr << "Exception in UISystem::updateChestUI: " << e.what() << std::endl;
+  }
 }
