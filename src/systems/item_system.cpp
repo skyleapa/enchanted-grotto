@@ -523,7 +523,9 @@ bool ItemSystem::saveGameState() {
 		}
 	}
 	
-	for (Entity chest : registry.chests.entities) {
+	// Only save the first chest to prevent duplicate chest entries in the save file
+	if (!registry.chests.entities.empty()) {
+		Entity chest = registry.chests.entities[0];
 		if (registry.inventories.has(chest)) {
 			inventories.push_back(serializeInventory(chest));
 		}
@@ -632,28 +634,9 @@ void ItemSystem::loadInventoryState(const nlohmann::json& data) {
 				}
 			}
 			else if (owner_type == "chest") {
-				Entity chest;
-				bool chest_found = false;
-				
-				if (inv_data.contains("name")) {
-					std::string chest_name = inv_data["name"];
-					
-					for (Entity existing_chest : registry.chests.entities) {
-						if (registry.items.has(existing_chest) && 
-							registry.items.get(existing_chest).name == chest_name) {
-							chest = existing_chest;
-							chest_found = true;
-							break;
-						}
-					}
-				}
-				
-				if (chest_found) {
-					std::cout << "Found matching chest, deserializing inventory" << std::endl;
-					deserializeInventory(chest, inv_data);
-				}
-				else if (!registry.chests.entities.empty()) {
-					std::cout << "No matching chest found, using first available chest" << std::endl;
+				// Always use the first chest entity to maintain consistency with saveGameState
+				if (!registry.chests.entities.empty()) {
+					std::cout << "Loading chest inventory data into first chest entity" << std::endl;
 					deserializeInventory(registry.chests.entities[0], inv_data);
 				}
 				else {
