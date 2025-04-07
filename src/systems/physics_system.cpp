@@ -215,9 +215,16 @@ void PhysicsSystem::step(float elapsed_ms)
 	// first update the flash value of any enemies who took damage
 	for (Entity entity : registry.damageFlashes.entities) {
 		DamageFlash& flash = registry.damageFlashes.get(entity);
-		flash.flash_value -= elapsed_ms * TIME_UPDATE_FACTOR; // change this for speed of flash
+		flash.flash_value -= elapsed_ms * TIME_UPDATE_FACTOR;
+
 		if (flash.flash_value <= 0) {
-			registry.damageFlashes.remove(entity); // remove once flash value goes to 0
+			if (flash.kill_after_flash && registry.enemies.has(entity)) {
+				// this is for the end game, so enemies will flash then disappear
+				registry.remove_all_components_of(entity);
+			}
+			else {
+				registry.damageFlashes.remove(entity);
+			}
 		}
 	}
 

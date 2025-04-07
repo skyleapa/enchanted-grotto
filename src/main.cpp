@@ -87,7 +87,7 @@ int main()
 		biome_system.step(elapsed_ms);
 		ui_system.step(elapsed_ms);
 
-		renderer_system.draw(&ui_system);
+		renderer_system.draw(&ui_system, elapsed_ms);
 		renderer_system.swap_buffers();
 	}
 

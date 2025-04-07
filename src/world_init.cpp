@@ -1993,6 +1993,36 @@ Entity createRejuvenationPotion(RenderSystem* renderer)
 		{ TEXTURE_ASSET_ID::POTION_OF_REJUVENATION,
 		 EFFECT_ASSET_ID::TEXTURED,
 		 GEOMETRY_BUFFER_ID::SPRITE,
+		 RENDER_LAYER::TERRAIN });
+
+	return entity;
+}
+
+
+Entity createGlowEffect(RenderSystem* renderer, bool done_growing)
+{
+	auto entity = Entity();
+	TexturedEffect& texturedEffect = registry.texturedEffects.emplace(entity);
+	texturedEffect.done_growing = done_growing;
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+
+	// fixed position starting from rejuvenation potion area
+	motion.position = vec2(638, 115);
+
+	motion.scale = vec2({ 20, 20 });
+
+	registry.renderRequests.insert(
+		entity,
+		{ TEXTURE_ASSET_ID::GLOW_EFFECT,
+		 EFFECT_ASSET_ID::TEXTURED,
+		 GEOMETRY_BUFFER_ID::SPRITE,
 		 RENDER_LAYER::ITEM });
 
 	return entity;
