@@ -487,14 +487,25 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 	// Get mouse position
 	Rml::Vector2f mousePos = Rml::Vector2f(mouse_pos_x, mouse_pos_y);
 
+	// Get hovered element
+	Rml::Element* hovered = m_context->GetHoverElement();
+	if (!hovered) return;
+	std::string id = hovered->GetId();
+	int slotId = getSlotFromId(id);
+
+	// Check release click for resetting ladle and pestle textures
+	if (action == GLFW_RELEASE && button == GLFW_MOUSE_BUTTON_LEFT) {
+		if (id == "ladle") {
+			hovered->SetProperty("decorator", "image(\"interactables/spoon_on_table.png\" contain)");
+		} else if (id == "pestle") {
+			hovered->SetProperty("transform", "rotate(0deg)");
+		} else if (id == "mortar" && heldPestle) {
+			heldPestle->SetProperty("transform", "rotate(0deg)");
+		}
+	}
+
 	// Check clicks for inventory bar and cauldron
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT) {
-		Rml::Element* hovered = m_context->GetHoverElement();
-		if (!hovered) return;
-
-		std::string id = hovered->GetId();
-		int slotId = getSlotFromId(id);
-
 		// Check for an inventory click
 		if (slotId != -1) {
 			selectInventorySlot(slotId);
@@ -533,6 +544,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 				// If we click cauldron don't drop ladle
 				Rml::Element* possibleCauldron = m_context->GetElementAtPoint(mousePos, hovered);
 				if (possibleCauldron && possibleCauldron->GetId() == "cauldron") {
+					hovered->SetProperty("decorator", "image(\"interactables/spoon_in_hand.png\" flip-vertical contain)");
 					break;
 				}
 
@@ -542,8 +554,7 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 					hovered->SetProperty("top", LADLE_TOP_PX);
 					hovered->SetProperty("left", LADLE_LEFT_PX);
 					heldLadle = nullptr;
-				}
-				else {
+				} else {
 					heldLadle = hovered;
 					updateFollowMouse();
 				}
@@ -617,17 +628,11 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 			}
 
 			if (id == "pestle") {
-				Rml::Element* possibleMortar = m_context->GetElementAtPoint(mousePos, hovered);
-				if (possibleMortar && (possibleMortar->GetId() == "mortar" || possibleMortar->GetId() == "mortar_border")) {
-					break;
-				}
-
 				if (heldPestle) {
 					hovered->SetProperty("top", PESTLE_TOP_PX);
 					hovered->SetProperty("left", PESTLE_LEFT_PX);
 					heldPestle = nullptr;
-				}
-				else {
+				} else {
 					heldPestle = hovered;
 					updateFollowMouse();
 				}
@@ -636,43 +641,39 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 			}
 
 			if (id == "mortar") {
-				Rml::Element* possibleMortar = m_context->GetElementAtPoint(mousePos, hovered);
-				if (possibleMortar && possibleMortar->GetId() == "mortar") {
+				// If we are holding a pestle we can't pick up ingredients
+				// Set rotation component
+				if (heldPestle) {
+					heldPestle->SetProperty("transform", "rotate(28deg)");
 					break;
 				}
 
 				Inventory& mortarInventory = registry.inventories.get(getOpenedMortarPestle());
-				if (!mortarInventory.items.empty()) {
-					Entity ingredient = mortarInventory.items[0];
-
-					// Check it's fully grinded and pickable
-					if (registry.items.has(ingredient) && registry.items.get(ingredient).isCollectable
-						&& heldPestle == nullptr) {
-						Entity player = registry.players.entities[0];
-
-						// Move to inventory
-						ItemSystem::addItemToInventory(player, ingredient);
-						SoundSystem::playBottleHighQualityPotionSound((int)SOUND_CHANNEL::MENU, 0);
-						std::cout << "Picked up ingredient from mortar" << std::endl;
-
-						// Clear the mortar inventory
-						mortarInventory.items.clear();
-						ItemSystem::destroyItem(ingredient);
-					}
+				if (mortarInventory.items.empty()) {
+					break;
+				}
+				
+				// Check it's fully grinded and pickable
+				Entity ingredient = mortarInventory.items[0];
+				if (!registry.items.has(ingredient) || !registry.items.get(ingredient).isCollectable) {
+					break;
 				}
 
-				break;
+				// Move to inventory
+				Entity player = registry.players.entities[0];
+				if (!ItemSystem::addItemToInventory(player, ingredient)) {
+					break;
+				}
+
+				SoundSystem::playCollectItemSound((int)SOUND_CHANNEL::MENU, 0);
+				mortarInventory.items.clear();
+				ItemSystem::destroyItem(ingredient);
 			}
 		} while (false);
 	}
+
 	// Check for consuming potion in inventory
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_RIGHT) {
-		Rml::Element* hovered = m_context->GetHoverElement();
-		if (!hovered) return;
-
-		std::string id = hovered->GetId();
-		int slotId = getSlotFromId(id);
-
 		if (slotId != -1 && registry.players.entities.size() > 0) {
 			selectInventorySlot(slotId);
 			registry.players.components[0].consumed_potion = true;
@@ -681,12 +682,6 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 
 	// remove selected item from inventory
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT && shift_key_pressed) {
-		Rml::Element* hovered = m_context->GetHoverElement();
-		if (!hovered) return;
-
-		std::string id = hovered->GetId();
-		int slotId = getSlotFromId(id);
-
 		if (registry.players.entities.size() == 0) return;
 		Entity entity = registry.players.entities[0];
 		if (!registry.inventories.has(entity)) return;
@@ -1411,28 +1406,28 @@ void UISystem::cauldronDragUpdate(bool isDown) {
 }
 
 // Added dummy bool cause vscode was doing some strange error
-void UISystem::followMouse(Rml::Element* e, bool dummy) {
+void UISystem::followMouse(Rml::Element* e, int offsetX, int offsetY) {
 	int wl = e->GetProperty("width")->GetNumericValue().number;
 	int hl = e->GetProperty("height")->GetNumericValue().number;
-	int ix = (int)mouse_pos_x - wl / 2 - 96;
-	int iy = (int)mouse_pos_y - hl / 2 - 25;
+	int ix = (int)mouse_pos_x - wl / 2 + offsetX;
+	int iy = (int)mouse_pos_y - hl / 2 + offsetY;
 	e->SetProperty("left", std::to_string(ix) + "px");
 	e->SetProperty("top", std::to_string(iy) + "px");
 }
 
 void UISystem::updateFollowMouse() {
 	if (heldLadle) {
-		followMouse(heldLadle, false);
+		followMouse(heldLadle, -96, -25);
 		return;
 	}
 
 	if (heldBottle) {
-		followMouse(heldBottle, false);
+		followMouse(heldBottle, -96, -25);
 		return;
 	}
 
 	if (heldPestle) {
-		followMouse(heldPestle, false);
+		followMouse(heldPestle, -75, -30);
 		return;
 	}
 }
@@ -1471,46 +1466,45 @@ bool UISystem::openMortarPestle(Entity mortar, bool play_sound = true) {
 					top: 300px;
 					left: 800px;
 					decorator: image("interactables/pestle.png" flip-vertical fill);
-					drag: drag;
-					z-index: 10;
-				}
-				#mortar_border {
-					position: absolute;
-					width: 400px;
-					height: 400px;
-					top: 80px;
-					left: 350px;
-					opacity: 0;
-					decorator: image("interactables/mortar_border.png" flip-vertical fill);
+					transform: rotate(0deg);
 					z-index: 5;
 				}
-                #mortar {
+				#mortar {
 					position: absolute;
-					width: 418px;
-					height: 225px;
-					top: 268px;
-					left: 336px;
-					decorator: image("interactables/mortar_frontpiece.png" flip-vertical fill);
+					width: 400px;
+					height: 500px;
+					top: 0px;
+					left: 350px;
 					z-index: 20;
+					drag: drag;
+				}
+                #mortar-inside {
+					position: absolute;
+					width: 411px;
+					height: 300px;
+					top: 197px;
+					left: 342px;
+					decorator: image("interactables/mortar_frontpiece.png" flip-vertical contain center bottom);
+					z-index: 10;
 				}
 				#close-button {
 					position: absolute;
-                        top: 20px;
-                        left: 20px;
-                        width: 40px;
-                        height: 40px;
-                        text-align: center;
-                        background-color: #d9a66f;
-                        border-width: 3px;
-                        border-color: #5c3e23;
-                        border-radius: 20px;
-                        padding-top: 5px;
-                        box-sizing: border-box;
-                        cursor: pointer;
-                        font-size: 20px;
-                        font-weight: bold;
-                        font-family: Open Sans;
-                        color: #5c3e23;
+					top: 20px;
+					left: 20px;
+					width: 40px;
+					height: 40px;
+					text-align: center;
+					background-color: #d9a66f;
+					border-width: 3px;
+					border-color: #5c3e23;
+					border-radius: 20px;
+					padding-top: 5px;
+					box-sizing: border-box;
+					cursor: pointer;
+					font-size: 20px;
+					font-weight: bold;
+					font-family: Open Sans;
+					color: #5c3e23;
 				}
 				#close-button:hover {
 					background-color: #c1834e;
@@ -1518,9 +1512,9 @@ bool UISystem::openMortarPestle(Entity mortar, bool play_sound = true) {
             </style>
         </head>
         <body>
-            <div id="mortar"></div>
-			<div id="mortar_border"></div>
+			<div id="mortar-inside"></div>
             <div id="pestle"></div>
+            <div id="mortar"></div>
 			<div id="close-button">X</div>
         </body>
         </rml>
@@ -1533,8 +1527,7 @@ bool UISystem::openMortarPestle(Entity mortar, bool play_sound = true) {
 		}
 
 		DragListener::RegisterDragDropElement(m_mortar_document->GetElementById("mortar"));
-		DragListener::RegisterDragDropElement(m_mortar_document->GetElementById("mortar_border"));
-		DragListener::RegisterDraggableElement(m_mortar_document->GetElementById("pestle"));
+		DragListener::RegisterDraggableElement(m_mortar_document->GetElementById("mortar"));
 
 		m_mortar_document->Show();
 		if (play_sound) {
@@ -1733,17 +1726,24 @@ bool UISystem::openRecipeBook(Entity recipe_book)
                     }
                     .page-button {
                         display: inline-block;
-                        background-color: #d9a66f;
-                        border-width: 3px;
-                        border-color: #5c3e23;
-                        border-radius: 20px;
-                        padding: 8px 20px;
-                        margin: 0 15px;
                         cursor: pointer;
                         font-size: 18px;
                         font-weight: bold;
                         color: #5c3e23;
                         font-family: Open Sans;
+                        width: 75px;
+                        height: 75px;
+                        position: absolute;
+                        bottom: 70px;
+                        transform: scaleY(-1);
+                    }
+                    #left-arrow {
+                        left: 120px;
+                        decorator: image("recipe_arrow_left.png" contain);
+                    }
+                    #right-arrow {
+                        right: 150px;
+                        decorator: image("recipe_arrow_right.png" contain);
                     }
                     .left-page {
                         position: absolute;
@@ -1834,8 +1834,8 @@ bool UISystem::openRecipeBook(Entity recipe_book)
                     <div class="left-page" id="left-page"></div>
                     <div class="right-page" id="right-page"></div>
                     <div class="page-navigation">
-                        <div class="page-button" id="left-arrow" onclick="prevPage">Previous Recipe</div>
-                        <div class="page-button" id="right-arrow" onclick="nextPage">Next Recipe</div>
+                        <div class="page-button" id="left-arrow" onclick="prevPage"></div>
+                        <div class="page-button" id="right-arrow" onclick="nextPage"></div>
                     </div>
                 </div>
             </body>
@@ -1943,22 +1943,22 @@ std::string UISystem::getRecipeHtml(int recipe_index)
 	html += "<div class='ingredients-title'>Ingredients:</div><br />";
 	html += "<div class='ingredients-list'>" + getRecipeIngredientsText(recipe) + "</div><br /><br />";
 
-	html += "<div class='potion-quality'>PERFECT QUALITY COLOUR</div><br />";
-
 	vec3 potion_color = recipe.finalPotionColor;
-	std::string color_style = "background-color: rgb(" +
-		std::to_string(int(potion_color.x)) + "," +
-		std::to_string(int(potion_color.y)) + "," +
-		std::to_string(int(potion_color.z)) + ");";
+	std::string potion_texture_path = ITEM_INFO.at(ItemType::POTION).texture_path;
+	std::string potion_img_style = "width: 32px; height: 32px; margin-left: 8px; transform: scaleY(-1);";
+	potion_img_style += " image-color: " + getImageColorProperty(potion_color, 255) + ";";
 
-	html += "<div class='potion-color-container'><div class='potion-color' style='" + color_style + "'></div></div>";
+	html += "<div style='display: flex; align-items: center; font-family: Caveat; font-size: 20px; font-weight: bold;'>"; 
+	html += "<span>Perfect Quality:</span>";
+	html += "<img src='" + potion_texture_path + "' style='" + potion_img_style + "'/>";
+	html += "</div>";
 
 	return html;
 }
 
 std::string UISystem::getRecipeStepsText(const Recipe& recipe)
 {
-	std::string html = "<div class='recipe-steps-title'>RECIPE:</div><br />";
+	std::string html = "<div class='recipe-steps-title'>Recipe:</div><br />";
 	html += "<div class='recipe-steps'>";
 
 	// Steps with numbering
@@ -2018,40 +2018,79 @@ std::string UISystem::getRecipeIngredientsText(const Recipe& recipe)
 {
 	std::string text;
 
+	Entity playerEntity = registry.players.entities[0];
+
 	for (const auto& ingredient : recipe.ingredients) {
 		std::string name = getIngredientName(ingredient);
 		int amt = ingredient.type == ItemType::POTION ? 1 : ingredient.amount;
-		text += std::to_string(amt) + "x " + name;
-		text += "<br />";
+		std::string tex = ITEM_INFO.count(ingredient.type) ? ITEM_INFO.at(ingredient.type).texture_path : "interactables/coffee_bean.png";
+
+		text += "<div style='display: flex; align-items: center; margin-bottom: 5px;'>";
+
+		std::string img_style = "width: 24px; height: 24px; margin-right: 8px; transform: scaleY(-1);";
+		if (ingredient.type == ItemType::POTION) {
+			PotionEffect effect = static_cast<PotionEffect>(ingredient.amount);
+			vec3 potion_color = { 128, 128, 128 }; // Default potion colour (TESTING)
+			for (const Recipe& r : RECIPES) {
+				if (r.effect == effect) {
+					potion_color = r.finalPotionColor;
+					break;
+				}
+			}
+			img_style += " image-color: " + getImageColorProperty(potion_color, 255) + ";";
+		}
+
+		text += "<img src='" + tex + "' style='" + img_style + "'/>";
+
+		std::string checkmark = "";
+		if (playerHasIngredient(playerEntity, ingredient)) {
+			checkmark = R"( <img src='recipe_check.png' style='width: 16px; height: 16px; margin-left: 5px; transform: scaleY(-1); vertical-align: middle;'/>)";
+		}
+
+		text += "<span>" + std::to_string(amt) + "x " + name + checkmark + "</span>";
+		text += "</div>";
 	}
 
 	return text;
 }
 
-std::string UISystem::getIngredientName(RecipeIngredient ing)
+bool UISystem::playerHasIngredient(Entity playerEntity, const RecipeIngredient& recipeIngredient)
 {
-	// Add potion name for potions
-	if (ing.type == ItemType::POTION) {
-		PotionEffect effect = static_cast<PotionEffect>(ing.amount);
-		for (Recipe r : RECIPES) {
-			if (effect == r.effect) {
-				return r.name;
+	const Inventory& playerInventory = registry.inventories.get(playerEntity);
+
+	for (Entity itemEntity : playerInventory.items) {
+		if (!registry.items.has(itemEntity)) continue;
+
+		const Item& itemComp = registry.items.get(itemEntity);
+
+		if (itemComp.type == recipeIngredient.type) {
+			if (itemComp.type != ItemType::POTION && itemComp.amount < recipeIngredient.amount) {
+				continue;
 			}
+
+			if (itemComp.type == ItemType::POTION) {
+				if (!registry.potions.has(itemEntity)) continue;
+				const Potion& potionComp = registry.potions.get(itemEntity);
+				PotionEffect requiredEffect = static_cast<PotionEffect>(recipeIngredient.amount);
+				if (potionComp.effect != requiredEffect) {
+					continue;
+				}
+			}
+
+			if (recipeIngredient.grindAmount > 0.f) {
+				if (!registry.ingredients.has(itemEntity)) continue;
+				const Ingredient& ingredientComp = registry.ingredients.get(itemEntity);
+				// fabs for float comparison https://stackoverflow.com/questions/17333/how-do-you-compare-float-and-double-while-accounting-for-precision-loss
+				if (fabs(ingredientComp.grindLevel - recipeIngredient.grindAmount) > FLT_EPSILON) {
+					continue;
+				}
+			}
+
+			return true;
 		}
 	}
 
-	std::string name = ITEM_INFO.at(ing.type).name;
-	if (ing.amount > 1 && name.substr(name.length() - 1) != "s") {
-		name += "s";
-	}
-
-	// Add grind stat for ingredient
-	if (ing.grindAmount > 0.f) {
-		int lvl = (int)(ing.grindAmount * 100);
-		name += " (" + std::to_string(lvl) + "% Grinded)";
-	}
-
-	return name;
+	return false;
 }
 
 void UISystem::createEffectsBar()
@@ -2157,7 +2196,7 @@ void UISystem::updateEffectsBar() {
                     <img src=")" + tex + R"(" 
                     style='
                         pointer-events: none;
-                        width: 32px; 
+                        width: 32px;
                         height: 32px; 
                         margin: 4px; 
                         transform: scaleY(-1); 
@@ -2302,4 +2341,27 @@ void UISystem::updateEnemyHealth(Entity entity, float health_percentage) {
 	catch (const std::exception& e) {
 		std::cerr << "Exception in UISystem::updateEnemyHealth: " << e.what() << std::endl;
 	}
+}
+std::string UISystem::getIngredientName(RecipeIngredient ing)
+{
+	if (ing.type == ItemType::POTION) {
+		PotionEffect effect = static_cast<PotionEffect>(ing.amount);
+		for (Recipe r : RECIPES) {
+			if (effect == r.effect) {
+				return r.name;
+			}
+		}
+	}
+
+	std::string name = ITEM_INFO.at(ing.type).name;
+	if (ing.amount > 1 && name.substr(name.length() - 1) != "s") {
+		name += "s";
+	}
+
+	if (ing.grindAmount > 0.f) {
+		int lvl = (int)(ing.grindAmount * 100);
+		name += " (" + std::to_string(lvl) + "% Grinded)";
+	}
+
+	return name;
 }

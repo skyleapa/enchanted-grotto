@@ -73,11 +73,13 @@ public:
     // Recipe book index for saving/loading
     int current_recipe_index = 0;
 
+    // Mortar and pestle
     bool openMortarPestle(Entity mortar, bool play_sound);
     bool isMortarPestleOpen();
     void closeMortarPestle(bool play_sound);
     Entity getOpenedMortarPestle();
     void setOpenedMortarPestle(Entity new_mortar_pestle);
+    Rml::Element* getHeldPestle() { return heldPestle; }
 
     // tutorial
     void updateTutorial();
@@ -104,6 +106,9 @@ public:
     void createEnemyHealthBars();
     void updateEnemyHealthBarPos(Entity entity, vec2 pos);
     void updateEnemyHealth(Entity entity, float health_percentage);
+    
+    // Check if player inventory contains the required recipe ingredient
+    bool playerHasIngredient(Entity playerEntity, const RecipeIngredient& recipeIngredient);
 
 private:
     GLFWwindow* m_window;
@@ -131,7 +136,7 @@ private:
 
     // Update items that should follow the mouse
     void updateFollowMouse();
-    void followMouse(Rml::Element* e, bool dummy);
+    void followMouse(Rml::Element* e, int offsetX, int offsetY);
 
     // FPS counter variables
     float m_frame_times[60] = { 0 }; // Store last 60 frame times
@@ -169,16 +174,16 @@ private:
         { (int)TUTORIAL::WELCOME_SCREEN, {
             }},
         { (int)TUTORIAL::TOGGLE_TUTORIAL, {
-            "820px", "466px", "Let’s make your first potion! Toggle the tutorial with T at any time or N to skip to the tutorial step. Try pressing N now!"
+            "820px", "466px", "Let's make your first potion! Toggle the tutorial with T at any time or N to skip to the tutorial step. Try pressing N now!"
         }},
         { (int)TUTORIAL::RECIPE_BOOK, {
             "211px", "110px", "Head to the lectern using the WASD keys and press F to open the recipe book. You can also use R to access the recipe book at any time."
         }},
         { (int)TUTORIAL::FLIP_PAGE, {
-            "790px", "455px", "Flip to the recipe page for “Potion of Harming”."
+            "790px", "455px", "Flip to the recipe page for \"Potion of Harming\"."
         }},
         { (int)TUTORIAL::EXIT_GROTTO, {
-            "790px", "455px", "Looks like we’re missing a couple of ingredients! Exit the recipe book menu by pressing F and leave the grotto from the exit in the bottom right."
+            "790px", "455px", "Looks like we're missing a couple of ingredients! Exit the recipe book menu by pressing F and leave the grotto from the exit in the bottom right."
         }},
         { (int)TUTORIAL::COLLECT_ITEMS, {
             "25%", "35%", "Welcome to the forest! Collect 2 storm bark and 1 blightleaf for your potion, you may have to explore the area to find ingredients."

@@ -33,8 +33,7 @@ private:
 	// the initial angle whether forward or backwards check if we can record
 	// a stir. We need a point in each quadrant who's r is at least some value.
 	// If a stir is recorded, clear the vector and go again
-	// Center coord: 625, 285
-	std::pair<float, float> getPolarCoordinates(Rml::Vector2f input);
+	std::pair<float, float> getPolarCoordinates(Rml::Vector2f input, Rml::Vector2f center);
 	void checkCompletedStir();
 	void endStir(Rml::Element* e);
 
@@ -45,16 +44,12 @@ private:
 
 	// Stir coords, in terms of SQUARED magnitude and angle in RADIANS
 	std::vector<std::pair<float, float>> stirCoords;
-	
-	// Store the X and Y position of pestle
-	float pestleY = 0.0f;
-	float pestleX = 0.0f;
 
-	// Store movement history to detect grinding
-    std::vector<float> pestleMotion; 
-	
+	// Pestle motion coords, also with squared magnitude and radians
+	std::vector<std::pair<float, float>> pestleCoords;
+
 	// The last heat knob coords
-	Rml::Vector2f lastCoords = Rml::Vector2f(0, 0);
+	Rml::Vector2f heatCoords = Rml::Vector2f(0, 0);
 
 	// The center to calculate polar coords from
 	// = center cauldron coords + an offset to account for the ladle size
@@ -66,11 +61,12 @@ private:
 
 	bool is_heat_changing = false; // is the dial click playing
 
-	// Define the square area for the mortar
-	const float MORTAR_LEFT_X = 420.0f;
-	const float MORTAR_RIGHT_X = 830.0f;
-	const float MORTAR_TOP_Y = 260.0f;
-	const float MORTAR_BOTTOM_Y = 520.0f;
+	// Area where ingredients are considered
+	const Rml::Vector2f MORTAR_CENTER = Rml::Vector2f(625, 450);
+	const float INGREDIENT_RADIUS = 150 * 150;
+	const float MIN_GRIND_RADIUS = 180 * 180;
+	const float MIN_GRIND_ANGLE = 0;
+	const float MAX_GRIND_ANGLE = M_PI;
 };
 
 #endif

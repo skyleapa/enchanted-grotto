@@ -94,9 +94,9 @@ const float BUSH_HEIGHT = (float)130;
 const float TEXTBOX_WIDTH = (float)GRID_CELL_WIDTH_PX * 4;
 const float TEXTBOX_HEIGHT = (float)GRID_CELL_HEIGHT_PX * 4;
 
-const float ITEM_PICKUP_RADIUS = (float)100;
-const float INTERACTION_RADIUS = (float)100;
-const float TEXTBOX_VISIBILITY_RADIUS = (float)100;
+const float ITEM_PICKUP_RADIUS = (float)110;
+const float INTERACTION_RADIUS = (float)110;
+const float TEXTBOX_VISIBILITY_RADIUS = (float)110;
 
 const float DESERT_RIVER_WIDTH = (float)GRID_CELL_WIDTH_PX * 2;
 const float DESERT_RIVER_HEIGHT = (float)WINDOW_HEIGHT_PX;
@@ -170,19 +170,19 @@ const float MUSHROOM_GUARDIAN_HEIGHT = (float)150;
 const float CRYSTAL_GUARDIAN_WIDTH = (float)140;
 const float CRYSTAL_GUARDIAN_HEIGHT = (float)160;
 
-const float PEDESTAL_WIDTH = (float)82;
-const float PEDESTAL_HEIGHT = (float)117;
+const float PEDESTAL_WIDTH = (float)62;
+const float PEDESTAL_HEIGHT = (float)97;
 
 const float DETECTION_RADIUS = (float)200;  // Enemy starts moving & attacking
 const float FOLLOWING_RADIUS = (float)300;  // Enemy stops attacking if outside this
 
-const float ENEMY_SPEED = (float)110;
+const float ENEMY_SPEED = (float)80;
 
 const int THROW_DISTANCE = 300; // Player throw dist in pixels
 
 // volume ranges from 0 to 128
-const int MUSIC_VOLUME = 64;
-const int MUSIC_VOLUME_LOWER = 32;
+const int MUSIC_VOLUME = 64; //64;
+const int MUSIC_VOLUME_LOWER = 32; //32;
 
 // Item and potion constants. The enums are declared here instead of in components.hpp
 // because this file is included in components, not the other way around - otherwise,
@@ -254,7 +254,6 @@ enum class ItemType
 // DAMAGE: Causes damage to enemies when thrown
 // MOLOTOV: Damages enemies in an area over time (fire effect)
 // REGEN: Regenerates player health over time
-// TENACITY: Increases inventory capacity
 // POISON: Creates poisonous area when thrown
 // RESISTANCE: Reduces damage taken by player
 // SATURATION: Increases potency of other potions
@@ -270,8 +269,7 @@ enum class PotionEffect
 	DAMAGE = HEALTH + 1,
 	MOLOTOV = DAMAGE + 1,
 	REGEN = MOLOTOV + 1,
-	TENACITY = REGEN + 1,
-	POISON = TENACITY + 1,
+	POISON = REGEN + 1,
 	RESISTANCE = POISON + 1,
 	SATURATION = RESISTANCE + 1,
 	ALKALESCENCE = SATURATION + 1,
@@ -441,28 +439,6 @@ const std::vector<Recipe> RECIPES = {
 		},
 		"Potion of Regeneration",
 		"[Consumable] Gradually restores health over time."
-	},
-	{
-		PotionEffect::TENACITY,
-		3.0f, 3.0f,   // highestQualityEffect - additional inventory slots
-		0, 0,      // highestQualityDuration - permanent effect
-		vec3(75, 150, 75), // finalPotionColor - green color
-		{
-			{ ItemType::POTION, (int)PotionEffect::REGEN, 0.0f },
-			{ ItemType::CACTUS_EXTRACT, 1, 0.0f }, // ingredients      
-			{ ItemType::PETRIFIED_BONE, 2, 0.0f }  // ingredients
-		},
-		{
-			{ ActionType::ADD_INGREDIENT, 0 }, // add regen potions
-			{ ActionType::MODIFY_HEAT, 25 },  // low heat
-			{ ActionType::ADD_INGREDIENT, 1 }, // add cactus extract
-			{ ActionType::WAIT, 1 },          // wait 5 seconds
-			{ ActionType::ADD_INGREDIENT, 2 }, // add petrified bones
-			{ ActionType::STIR, 4 },          // stir 4 times
-			{ ActionType::WAIT, 4 }           // wait 20 seconds
-		},
-		"Potion of Tenacity",
-		"[Consumable] Increases your inventory capacity."
 	},
 	{
 		PotionEffect::POISON,
@@ -720,7 +696,6 @@ const std::vector<PotionEffect> consumable_potions = {
 	PotionEffect::SPEED,
 	PotionEffect::HEALTH,
 	PotionEffect::REGEN,
-	// PotionEffect::TENACITY, // to be implemented in M4
 	PotionEffect::RESISTANCE,
 	PotionEffect::SATURATION,
 };
