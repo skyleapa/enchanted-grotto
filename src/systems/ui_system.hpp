@@ -13,6 +13,8 @@
 #include "../tinyECS/registry.hpp"
 #include "potion_system.hpp"
 
+#include <optional>
+
 // Forward declarations
 class RenderSystem;
 
