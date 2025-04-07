@@ -16,6 +16,7 @@ struct Player
 	float effect_multiplier = 1.f;
 	float defense = 1.f;
 	vec2 load_position = vec2(0, 0);
+	float walking_timer = 0.f;
 };
 
 // All data relevant to the shape and motion of entities
