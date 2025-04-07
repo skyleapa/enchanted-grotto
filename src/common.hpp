@@ -62,6 +62,7 @@ const float PLAYER_MAX_HEALTH = (float)100;
 const float PLAYER_DYING = (float)20;
 const float PLAYER_DAMAGE_COOLDOWN = (float)1000.f;
 const float PLAYER_THROW_COOLDOWN = (float)1000.f;
+const float PLAYER_WALKING_SOUND_TIMER = 350.f;
 
 const float GUARDIAN_SPEED = (float)100;
 
@@ -187,10 +188,10 @@ const float ENEMY_SPEED = (float)80;
 const int THROW_DISTANCE = 300; // Player throw dist in pixels
 
 // volume ranges from 0 to 128
-const int MUSIC_VOLUME = 64; //64;
-const int MUSIC_VOLUME_LOWER = 32; //32;
+const int MUSIC_VOLUME = 32;
+const int MUSIC_VOLUME_LOWER = 16;
 
-// Item and potion constants. The enums are declared here instead of in components.hpp
+// Item and potion constants. aThe enums are declared here instead of in components.hpp
 // because this file is included in components, not the other way around - otherwise,
 // it would result in compilation errors because the name constants would be referring
 // to enums that have not been declared yet.
@@ -334,6 +335,7 @@ struct Recipe
 	std::vector<Action> steps;
 	std::string name;                  // Name of the potion
 	std::string description;           // Description in recipe book
+	std::string stats;                 // Stats. Use _duration_ and _effect_ variables
 };
 
 // Potions are accepted as recipe ingredients, but their amount value is used as the PotionEffect.
@@ -342,7 +344,7 @@ struct Recipe
 const std::vector<Recipe> RECIPES = {
 	{
 		PotionEffect::SPEED,
-		1.0f, 3.5f,  // highestQualityEffect - maximum speed multiplier
+		1.0f, 2.5f,  // highestQualityEffect - maximum speed multiplier
 		0, 150,   // highestQualityDuration - maximum duration in seconds
 		vec3(255, 157, 35), // finalPotionColor - green-ish color
 		{
@@ -351,18 +353,19 @@ const std::vector<Recipe> RECIPES = {
 		},
 		{
 			{ ActionType::MODIFY_HEAT, 100 }, // high heat
-			{ ActionType::WAIT, 2 },          // wait 10 seconds
+			{ ActionType::WAIT, 1 },          // wait 5 seconds
 			{ ActionType::ADD_INGREDIENT, 0 }, // add swiftbeans
 			{ ActionType::ADD_INGREDIENT, 1 }, // add galefruit
 			{ ActionType::STIR, 3 },          // stir 3 times
-			{ ActionType::WAIT, 6 }           // wait 30 seconds
+			{ ActionType::WAIT, 2 }           // wait 10 seconds
 		},
 		"Potion of Speed",
-		"[Consumable] Increases your movement speed for a limited time."
+		"[Consumable] Increases your movement speed for a limited time.",
+		"[Right click] _effect_x speed for _duration_s"
 	},
 	{
 		PotionEffect::HEALTH,
-		10.0f, 40.0f,  // highestQualityEffect - maximum health restored
+		40.0f, 80.0f,  // highestQualityEffect - maximum health restored
 		0, 0,      // highestQualityDuration - instant effect, no duration
 		vec3(220, 0, 0), // finalPotionColor - red color
 		{
@@ -373,10 +376,11 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 1 },          // wait 5 seconds
 			{ ActionType::ADD_INGREDIENT, 0 }, // add everfern
 			{ ActionType::STIR, 3 },          // stir 3 times
-			{ ActionType::WAIT, 4 }           // wait 20 seconds
+			{ ActionType::WAIT, 2 }           // wait 10 seconds
 		},
 		"Potion of Healing",
-		"[Consumable] A basic potion that instantly replenishes your health."
+		"[Consumable] A basic potion that instantly replenishes your health.",
+		"[Right click] +_effect_ Health"
 	},
 	{
 		PotionEffect::DAMAGE,
@@ -397,7 +401,8 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 1 }           // wait 5 seconds
 		},
 		"Potion of Harming",
-		"[Throwable] A damaging potion that can be thrown at enemies."
+		"[Throwable] A damaging potion that can be thrown at enemies.",
+		"[Throwable] Deals _effect_ damage"
 	},
 	{
 		PotionEffect::MOLOTOV,
@@ -421,11 +426,12 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 4 }           // wait 20 seconds
 		},
 		"Molotov Cocktail",
-		"[Throwable] Creates a burning area when thrown."
+		"[Throwable] Creates a burning area when thrown.",
+		"[Throwable, AOE] Deals _effect_ DPS for _duration_s"
 	},
 	{
 		PotionEffect::REGEN,
-		2.5f, 5.0f,   // highestQualityEffect - health regen per second
+		5.0f, 10.0f,   // highestQualityEffect - health regen per second
 		5, 30,     // highestQualityDuration - regen duration in seconds
 		vec3(200, 50, 50), // finalPotionColor - pink-red color
 		{
@@ -444,7 +450,8 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 3 }           // wait 15 seconds
 		},
 		"Potion of Regeneration",
-		"[Consumable] Gradually restores health over time."
+		"[Consumable] Gradually restores health over time.",
+		"[Right click] +_effect_ health per second for _duration_s"
 	},
 	{
 		PotionEffect::POISON,
@@ -466,7 +473,8 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 5 }           // wait 25 seconds
 		},
 		"Potion of Poison",
-		"[Throwable] Creates a poisonous area."
+		"[Throwable] Creates a poisonous area.",
+		"[Throwabe] Deals _effect_ DPS for _duration_s"
 	},
 	{
 		PotionEffect::RESISTANCE,
@@ -486,7 +494,8 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 6 }           // wait 30 seconds
 		},
 		"Potion of Resistance",
-		"[Consumable] Reduces damage taken for a limited time."
+		"[Consumable] Reduces damage taken for a limited time.",
+		"[Right click] Take _effect_x damage for _duration_s"
 	},
 	{
 		PotionEffect::SATURATION,
@@ -512,7 +521,8 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 5 }           // wait 25 seconds
 		},
 		"Potion of Saturation",
-		"[Consumable] Temporarily increases the potency of other potions. Restores hydration to enemies that are very dry."
+		"[Consumable] Temporarily increases the potency of other potions. Restores hydration to enemies that are very dry.",
+		"[Right click] _effect_x potion effectiveness for _duration_s"
 	},
 	{
 		PotionEffect::ALKALESCENCE,
@@ -538,7 +548,8 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 4 }           // wait 20 seconds
 		},
 		"Potion of Alkalescence",
-		"[Throwable] Reacts with acidic substances. Neutralizes enemies that are highly acidic, as well as acidic mushrooms."
+		"[Throwable] Reacts with acidic substances. Neutralizes enemies that are highly acidic, as well as acidic mushrooms.",
+		"No effects"
 	},
 	{
 		PotionEffect::CLARITY,
@@ -564,7 +575,8 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 3 }           // wait 15 seconds
 		},
 		"Potion of Clarity",
-		"[Throwable] Reveals hidden objects or ingredients. May be potent against enemies that are averse to the light."
+		"[Throwable] Reveals hidden objects or ingredients. May be potent against enemies that are averse to the light.",
+		"No effects"
 	},
 	{
 		PotionEffect::REJUVENATION,
@@ -593,7 +605,8 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::WAIT, 6 }           // wait 30 seconds
 		},
 		"Potion of Rejuvenation",
-		"[???] The ultimate healing potion."
+		"[???] The ultimate healing potion.",
+		"No effects"
 	}
 };
 
@@ -686,7 +699,8 @@ enum class SOUND_CHANNEL {
 	GENERAL = -1, // this indicates choosing any available channel
 	BGM = 0,
 	BOILING = BGM + 1,
-	MENU = BOILING + 1
+	MENU = BOILING + 1,
+	WALK = MENU + 1
 };
 
 const std::vector<PotionEffect> throwable_potions = {

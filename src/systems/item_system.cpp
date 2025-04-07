@@ -385,21 +385,23 @@ nlohmann::json ItemSystem::serializeScreenState() {
 // serializes all player attributes except for inventory
 nlohmann::json ItemSystem::serializePlayerState(Entity player) {
 	nlohmann::json data;
-	
+
 	if (registry.players.has(player)) {
 		Player& player_comp = registry.players.get(player);
 		data["name"] = player_comp.name;
 		data["health"] = player_comp.health;
 		data["cooldown"] = player_comp.cooldown;
 		data["damage_cooldown"] = player_comp.damage_cooldown;
-		data["consumed_potion"] = player_comp.consumed_potion;
 		data["speed_multiplier"] = player_comp.speed_multiplier;
 		data["effect_multiplier"] = player_comp.effect_multiplier;
 		data["defense"] = player_comp.defense;
-		
+
 		nlohmann::json active_effects = nlohmann::json::array();
 		for (Entity effect : player_comp.active_effects) {
-			active_effects.push_back(serializeItem(effect));
+			// Ensure the effect entity exists and has item/potion components before serializing
+			if (registry.items.has(effect) && registry.potions.has(effect)) {
+				active_effects.push_back(serializeItem(effect));
+			}
 		}
 		data["active_effects"] = active_effects;
 
@@ -409,7 +411,7 @@ nlohmann::json ItemSystem::serializePlayerState(Entity player) {
 			data["load_position_y"] = motion.position.y;
 		}
 	}
-	
+
 	return data;
 }
 
@@ -484,7 +486,6 @@ void ItemSystem::deserializePlayerState(Entity player_entity, const nlohmann::js
 	player.health = data.value("health", PLAYER_MAX_HEALTH);
 	player.cooldown = data.value("cooldown", 0.0f);
 	player.damage_cooldown = data.value("damage_cooldown", 0.0f);
-	player.consumed_potion = data.value("consumed_potion", false);
 	player.speed_multiplier = data.value("speed_multiplier", 1.0f);
 	player.effect_multiplier = data.value("effect_multiplier", 1.0f);
 	player.defense = data.value("defense", 1.0f);
