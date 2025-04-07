@@ -14,6 +14,7 @@
 #include "render_system.hpp"
 #include "biome_system.hpp"
 #include "ui_system.hpp"
+#include "respawn_system.hpp"
 
 // Container for all our entities and game logic.
 // Individual rendering / updates are deferred to the update() methods.
@@ -50,6 +51,7 @@ public:
 
 	void update_textbox_visibility();
 
+	// DEPRECATED - use RespawnSystem instead
 	void handle_item_respawn(float elapsed_ms);
 
 	bool handleGuardianUnlocking(Entity guardianEntity);

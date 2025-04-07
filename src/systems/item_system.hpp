@@ -48,7 +48,7 @@ public:
 	static Entity deserializeItem(const nlohmann::json& data);
 	static void deserializeInventory(Entity inventory, const nlohmann::json& data);
 	static void deserializeScreenState(const nlohmann::json& data);
-	static void deserializePlayerState(const nlohmann::json& data);
+	static void deserializePlayerState(Entity player_entity, const nlohmann::json& data);
 
 	// Set reference to UI system
 	static void setUISystem(UISystem* ui_system) { m_ui_system = ui_system; }

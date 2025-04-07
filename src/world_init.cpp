@@ -134,54 +134,73 @@ Entity createPlayer(RenderSystem* renderer, vec2 position)
 	Collectable items and interaction textbox
 ============================================================================================================== */
 
-Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemType type, int amount, bool canRespawn)
-{
-	assert(ITEM_INFO.count(type) && "Tried to create an item that has no info!");
-	ItemInfo info = ITEM_INFO.at(type);
-	auto entity = ItemSystem::createCollectableIngredient(position, type, amount, canRespawn);
-
-	// Mesh
+Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemType type, int amount, bool canRespawn) {
+	// Persistent ID based on biome, type, and position
+	std::string itemName;
+	auto it = ITEM_INFO.find(type);
+	if (it != ITEM_INFO.end()) {
+		itemName = it->second.name;
+	} else {
+		itemName = "Unknown_" + std::to_string(static_cast<int>(type));
+	}
+	
+	std::string persistentID = RespawnSystem::getInstance().generatePersistentID(
+		static_cast<BIOME>(registry.screenStates.components[0].biome),
+		itemName,
+		position
+	);
+	
+	// Check if this item should be spawned based on respawn state
+	if (!RespawnSystem::getInstance().shouldEntitySpawn(persistentID)) {
+		return Entity();
+	}
+	
+	Entity entity = ItemSystem::createCollectableIngredient(position, type, amount, canRespawn);
+	
+	if (registry.items.has(entity)) {
+		registry.items.get(entity).persistentID = persistentID;
+		
+		RespawnSystem::getInstance().registerEntity(entity, true);
+	}
+	
+	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
 	registry.meshPtrs.emplace(entity, &mesh);
 
-	// Create motion
 	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 180.f;
 	motion.velocity = { 0, 0 };
 	motion.position = position;
-	motion.scale = info.size;
-
-	// this dynamically gets the textbox name from ITEM_INFO defined in components.hpp
-	std::string text = "[F] " + info.name;
-
-	// assumption for textbox size (max-width is 150)
-	const float TEXTBOX_WIDTH = 150.f;
-
-	// default position (left of the entity)
-	float textboxX = position.x - 140;
-	float textboxY = position.y - 20;
-
-	// adjust if going off-screen horizontally (don't need vertical adjustment for now)
-	if (textboxX < 0) {
-		textboxX = position.x + 40;
+	motion.angle = 180.f; // Set angle to 180 to make items appear correctly
+	
+	vec2 itemSize = vec2(50, 50); // Default size
+	if (it != ITEM_INFO.end()) {
+		itemSize = it->second.size;
 	}
-	else if (textboxX + TEXTBOX_WIDTH > WINDOW_WIDTH_PX) {
-		textboxX = position.x - TEXTBOX_WIDTH - 20;
+	motion.scale = itemSize;
+
+	TEXTURE_ASSET_ID texture = TEXTURE_ASSET_ID::COFFEE_BEAN; // Default texture (DEBUG)
+	if (it != ITEM_INFO.end()) {
+		texture = it->second.texture;
 	}
-
-	Entity textbox = createTextbox(renderer, vec2(textboxX, textboxY), entity, text);
-
+	
 	// Use item layer for Gale Fruit and Coffee Beans, otherwise use structure (so player renders above dropped items)
 	RENDER_LAYER layer = (type == ItemType::GALEFRUIT || type == ItemType::COFFEE_BEANS || type == ItemType::CACTUS_PULP)
 		? RENDER_LAYER::ITEM
 		: RENDER_LAYER::STRUCTURE;
-
+	
 	registry.renderRequests.insert(
 		entity,
-		{ info.texture,
-		 EFFECT_ASSET_ID::TEXTURED,
-		 GEOMETRY_BUFFER_ID::SPRITE,
-		 layer });
+		{
+			texture,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			layer,
+		}
+	);
+
+	// Textbox for item
+	std::string itemDisplayName = itemName;
+	createTextbox(renderer, vec2(position.x, position.y - 25), entity, "[F] Pick up " + itemDisplayName);
 
 	return entity;
 }
@@ -597,6 +616,7 @@ Entity createMortarPestle(RenderSystem* renderer, vec2 position, vec2 scale, std
 	item.type = ItemType::MORTAR_PESTLE;
 	item.name = name;
 	item.isCollectable = false;
+	item.canRespawn = false;
 	item.amount = 0;
 
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -637,6 +657,7 @@ Entity createChest(RenderSystem* renderer, vec2 position, vec2 scale, std::strin
 	Item& item = registry.items.emplace(entity);
 	item.type = ItemType::CHEST;
 	item.name = name;
+	item.canRespawn = false;
 	item.isCollectable = false;
 	item.amount = 0;
 
@@ -673,6 +694,7 @@ Entity createRecipeBook(RenderSystem* renderer, vec2 position, vec2 scale, std::
 	item.type = ItemType::RECIPE_BOOK;
 	item.name = name;
 	item.isCollectable = false;
+	item.canRespawn = false;
 	item.amount = 0;
 
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -1690,6 +1712,17 @@ Entity createForestExToCrystal(RenderSystem* renderer, vec2 position, std::strin
 ============================================================================================================== */
 
 Entity createEnt(RenderSystem* renderer, vec2 position, int movable, std::string name) {
+	// Persistent ID based on biome, type, and position
+	std::string persistentID = RespawnSystem::getInstance().generatePersistentID(
+		static_cast<BIOME>(registry.screenStates.components[0].biome),
+		name,
+		position
+	);
+
+	// Check if this entity should spawn according to the respawn system
+	if (!RespawnSystem::getInstance().shouldEntitySpawn(persistentID)) {
+		return Entity(); // Return invalid entity if it shouldn't spawn (e.g., on cooldown)
+	}
 
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " ent" << std::endl;
@@ -1703,6 +1736,10 @@ Entity createEnt(RenderSystem* renderer, vec2 position, int movable, std::string
 	enemy.can_move = movable;
 	enemy.name = name;
 	enemy.attack_damage = 20;
+	enemy.persistentID = persistentID;
+	
+	// Register with the respawn system
+	RespawnSystem::getInstance().registerEntity(entity, true);
 
 	// auto& terrain = registry.terrains.emplace(entity);
 	// terrain.collision_setting = 1.0f; // cannot walk past guardian
@@ -1730,6 +1767,18 @@ Entity createEnt(RenderSystem* renderer, vec2 position, int movable, std::string
 }
 
 Entity createMummy(RenderSystem* renderer, vec2 position, int movable, std::string name) {
+	// Persistent ID based on biome, type, and position
+	std::string persistentID = RespawnSystem::getInstance().generatePersistentID(
+		static_cast<BIOME>(registry.screenStates.components[0].biome),
+		name,
+		position
+	);
+
+	// Check if this entity should spawn according to the respawn system
+	if (!RespawnSystem::getInstance().shouldEntitySpawn(persistentID)) {
+		return Entity(); // Return invalid entity if it shouldn't spawn (e.g., on cooldown)
+	}
+
 	auto entity = Entity();
 	// std::cout << "Entity " << entity.id() << " mummy" << std::endl;
 
@@ -1741,7 +1790,14 @@ Entity createMummy(RenderSystem* renderer, vec2 position, int movable, std::stri
 	enemy.state = (int)ENEMY_STATE::IDLE;
 	enemy.can_move = movable;
 	enemy.name = name;
-	enemy.attack_damage = 30;
+	enemy.attack_damage = 20;
+	enemy.persistentID = persistentID;
+	
+	// Register with the respawn system
+	RespawnSystem::getInstance().registerEntity(entity, true);
+
+	// auto& terrain = registry.terrains.emplace(entity);
+	// terrain.collision_setting = 1.0f; // cannot walk past guardian
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -1766,9 +1822,20 @@ Entity createMummy(RenderSystem* renderer, vec2 position, int movable, std::stri
 }
 
 Entity createEvilMushroom(RenderSystem* renderer, vec2 position, int movable, std::string name) {
+	// Persistent ID based on biome, type, and position
+	std::string persistentID = RespawnSystem::getInstance().generatePersistentID(
+		static_cast<BIOME>(registry.screenStates.components[0].biome),
+		name,
+		position
+	);
+
+	// Check if this entity should spawn according to the respawn system
+	if (!RespawnSystem::getInstance().shouldEntitySpawn(persistentID)) {
+		return Entity(); // Return invalid entity if it shouldn't spawn (e.g., on cooldown)
+	}
 
 	auto entity = Entity();
-	// std::cout << "Entity " << entity.id() << " ent" << std::endl;
+	// std::cout << "Entity " << entity.id() << " evil mushroom" << std::endl;
 
 	Enemy& enemy = registry.enemies.emplace(entity);
 	enemy.attack_radius = 5;
@@ -1777,46 +1844,11 @@ Entity createEvilMushroom(RenderSystem* renderer, vec2 position, int movable, st
 	enemy.state = (int)ENEMY_STATE::IDLE;
 	enemy.can_move = movable;
 	enemy.name = name;
-	enemy.attack_damage = 10;
-
-	// auto& terrain = registry.terrains.emplace(entity);
-	// terrain.collision_setting = 1.0f; // cannot walk past guardian
-
-	// store a reference to the potentially re-used mesh object
-	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
-	registry.meshPtrs.emplace(entity, &mesh);
-
-	auto& motion = registry.motions.emplace(entity);
-	motion.angle = 180.f;
-	motion.velocity = { 0, 0 };
-	motion.position = position;
-	motion.scale = vec2({ EVIL_MUSHROOM_WIDTH, EVIL_MUSHROOM_HEIGHT });
-
-	registry.renderRequests.insert(
-		entity,
-		{
-			TEXTURE_ASSET_ID::EVIL_MUSHROOM,
-			EFFECT_ASSET_ID::TEXTURED,
-			GEOMETRY_BUFFER_ID::SPRITE,
-			RENDER_LAYER::TERRAIN,
-		});
-
-	return entity;
-}
-
-Entity createCrystalBug(RenderSystem* renderer, vec2 position, int movable, std::string name) {
-
-	auto entity = Entity();
-	// std::cout << "Entity " << entity.id() << " ent" << std::endl;
-
-	Enemy& enemy = registry.enemies.emplace(entity);
-	enemy.attack_radius = 5;
-	enemy.health = 100;
-	enemy.start_pos = position;
-	enemy.state = (int)ENEMY_STATE::IDLE;
-	enemy.can_move = movable;
-	enemy.name = name;
 	enemy.attack_damage = 15;
+	enemy.persistentID = persistentID;
+	
+	// Register with the respawn system
+	RespawnSystem::getInstance().registerEntity(entity, true);
 
 	// auto& terrain = registry.terrains.emplace(entity);
 	// terrain.collision_setting = 1.0f; // cannot walk past guardian
@@ -2149,6 +2181,57 @@ Entity createGlowEffect(RenderSystem* renderer, bool done_growing)
 		 EFFECT_ASSET_ID::TEXTURED,
 		 GEOMETRY_BUFFER_ID::SPRITE,
 		 RENDER_LAYER::ITEM });
+
+	return entity;
+}
+
+Entity createCrystalBug(RenderSystem* renderer, vec2 position, int movable, std::string name) {
+	// Persistent ID based on biome, type, and position
+	std::string persistentID = RespawnSystem::getInstance().generatePersistentID(
+		static_cast<BIOME>(registry.screenStates.components[0].biome),
+		name,
+		position
+	);
+
+	// Check if this entity should spawn according to the respawn system
+	if (!RespawnSystem::getInstance().shouldEntitySpawn(persistentID)) {
+		return Entity(); // Return invalid entity if it shouldn't spawn (e.g., on cooldown)
+	}
+
+	auto entity = Entity();
+	// std::cout << "Entity " << entity.id() << " crystal bug" << std::endl;
+
+	Enemy& enemy = registry.enemies.emplace(entity);
+	enemy.attack_radius = 5;
+	enemy.health = 30;
+	enemy.start_pos = position;
+	enemy.state = (int)ENEMY_STATE::IDLE;
+	enemy.can_move = movable;
+	enemy.name = name;
+	enemy.attack_damage = 15;
+	enemy.persistentID = persistentID;
+	
+	// Register with the respawn system
+	RespawnSystem::getInstance().registerEntity(entity, true);
+
+	// store a reference to the potentially re-used mesh object
+	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
+	registry.meshPtrs.emplace(entity, &mesh);
+
+	auto& motion = registry.motions.emplace(entity);
+	motion.angle = 180.f;
+	motion.velocity = { 0, 0 };
+	motion.position = position;
+	motion.scale = vec2({ CRYSTAL_BUG_WIDTH, CRYSTAL_BUG_HEIGHT });
+
+	registry.renderRequests.insert(
+		entity,
+		{
+			TEXTURE_ASSET_ID::CRYSTAL_BUG,
+			EFFECT_ASSET_ID::TEXTURED,
+			GEOMETRY_BUFFER_ID::SPRITE,
+			RENDER_LAYER::TERRAIN,
+		});
 
 	return entity;
 }

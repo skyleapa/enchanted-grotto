@@ -111,6 +111,8 @@ bool WorldSystem::init(RenderSystem* renderer_arg, BiomeSystem* biome_sys)
 
 	this->renderer = renderer_arg;
 	this->biome_sys = biome_sys;
+	
+	RespawnSystem::getInstance().renderer = renderer_arg;
 
 	// Set all states to default
 	restart_game(false);
@@ -172,6 +174,9 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 		}
 	}
 
+	// Update respawn system timers for persistent respawns
+	RespawnSystem::getInstance().step(elapsed_ms_since_last_update);
+	
 	handle_item_respawn(elapsed_ms_since_last_update);
 	updateThrownAmmo(elapsed_ms_since_last_update);
 
@@ -914,16 +919,6 @@ void WorldSystem::handle_player_interaction()
 
 		if (handle_textbox)
 		{
-			// Set textbox to invisible
-			for (Entity textbox : registry.textboxes.entities)
-			{
-				if (registry.textboxes.get(textbox).targetItem == item)
-				{
-					registry.textboxes.get(textbox).isVisible = false;
-					break;
-				}
-			}
-
 			// Remove visual components of the item
 			if (!item_info.isCollectable)
 				return;
@@ -974,7 +969,17 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 		}
 	}
 
-	// Set a random respawn time (10-15 seconds)
+	if (item_info.canRespawn && item_info.isCollectable) {
+		RespawnSystem::getInstance().registerEntity(item, false);
+		
+		// Set a random respawn time (60-90 seconds)
+		float respawnTime = (rand() % 30000 + 60000);
+		
+		if (!item_info.persistentID.empty()) {
+			RespawnSystem::getInstance().setRespawning(item_info.persistentID, respawnTime);
+		}
+	}
+
 	item_info.respawnTime = (rand() % 5001 + 10000);
 	item_info.lastBiome = static_cast<BIOME>(registry.screenStates.components[0].biome);
 
@@ -1095,8 +1100,19 @@ void WorldSystem::update_textbox_visibility()
 				Textbox& textbox = registry.textboxes.get(textboxEntity);
 				bool shouldBeVisible = (distance < TEXTBOX_VISIBILITY_RADIUS);
 
-				// should not have "open cauldron" textbox while using cauldron
-				if (shouldBeVisible && !m_ui_system->isCauldronOpen())
+				bool uiIsOpenForItem = false;
+				Item& item_info = registry.items.get(item);
+				if (registry.cauldrons.has(item) && m_ui_system->isCauldronOpen()) {
+					uiIsOpenForItem = true;
+				} else if (registry.mortarAndPestles.has(item) && m_ui_system->isMortarPestleOpen()) {
+					uiIsOpenForItem = true;
+				} else if (item_info.type == ItemType::RECIPE_BOOK && m_ui_system->isRecipeBookOpen()) {
+					uiIsOpenForItem = true;
+				}
+
+				textbox.isVisible = shouldBeVisible && !uiIsOpenForItem;
+
+				if (textbox.isVisible)
 				{
 					m_ui_system->textboxes[textboxEntity.id()] = textbox;
 				}

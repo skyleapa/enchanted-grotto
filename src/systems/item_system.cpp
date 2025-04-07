@@ -383,30 +383,33 @@ nlohmann::json ItemSystem::serializeScreenState() {
 }
 
 // serializes all player attributes except for inventory
-nlohmann::json ItemSystem::serializePlayerState(Entity player_entity) {
-
-	Player& player = registry.players.get(player_entity);
+nlohmann::json ItemSystem::serializePlayerState(Entity player) {
 	nlohmann::json data;
 
-	data["name"] = player.name;
-	data["cooldown"] = player.cooldown;
-	data["health"] = player.health;
-	data["damage_cooldown"] = player.damage_cooldown;
-	data["speed_multiplier"] = player.speed_multiplier;
-	data["effect_multiplier"] = player.effect_multiplier;
-	data["defense"] = player.defense;
+	if (registry.players.has(player)) {
+		Player& player_comp = registry.players.get(player);
+		data["name"] = player_comp.name;
+		data["health"] = player_comp.health;
+		data["cooldown"] = player_comp.cooldown;
+		data["damage_cooldown"] = player_comp.damage_cooldown;
+		data["speed_multiplier"] = player_comp.speed_multiplier;
+		data["effect_multiplier"] = player_comp.effect_multiplier;
+		data["defense"] = player_comp.defense;
 
-	nlohmann::json active_effects = nlohmann::json::array();
-	for (Entity effect : player.active_effects) {
-		if (registry.items.has(effect) && registry.potions.has(effect)) {
-			active_effects.push_back(serializeItem(effect));
+		nlohmann::json active_effects = nlohmann::json::array();
+		for (Entity effect : player_comp.active_effects) {
+			// Ensure the effect entity exists and has item/potion components before serializing
+			if (registry.items.has(effect) && registry.potions.has(effect)) {
+				active_effects.push_back(serializeItem(effect));
+			}
 		}
-	}
-	data["active_effects"] = active_effects;
+		data["active_effects"] = active_effects;
 
-	if (registry.motions.has(player_entity)) {
-		data["load_position_x"] = registry.motions.get(player_entity).position.x;
-		data["load_position_y"] = registry.motions.get(player_entity).position.y;
+		if (registry.motions.has(player)) {
+			Motion& motion = registry.motions.get(player);
+			data["load_position_x"] = motion.position.x;
+			data["load_position_y"] = motion.position.y;
+		}
 	}
 
 	return data;
@@ -475,38 +478,67 @@ void ItemSystem::deserializeInventory(Entity inventory, const nlohmann::json& da
 	}
 }
 
-bool ItemSystem::saveGameState() {
-	nlohmann::json data;
-	nlohmann::json inventories = nlohmann::json::array();
-
-	// First, find and save the player inventory if it exists
-	Entity player_inventory;
-	bool found_player = false;
-	for (Entity inventory : registry.inventories.entities) {
-		// Only save player inventory if it belongs to a player entity
-		if (registry.players.has(inventory) ||
-			(!registry.cauldrons.has(inventory) && !registry.chests.has(inventory))) {
-			if (!found_player) {
-				inventories.push_back(serializeInventory(inventory));
-				found_player = true;
-			}
-			// Skip any other player inventories
-			continue;
-		}
-		inventories.push_back(serializeInventory(inventory));
+void ItemSystem::deserializePlayerState(Entity player_entity, const nlohmann::json& data) {
+	if (!registry.players.has(player_entity)) return;
+	
+	Player& player = registry.players.get(player_entity);
+	player.name = data.value("name", "Player");
+	player.health = data.value("health", PLAYER_MAX_HEALTH);
+	player.cooldown = data.value("cooldown", 0.0f);
+	player.damage_cooldown = data.value("damage_cooldown", 0.0f);
+	player.speed_multiplier = data.value("speed_multiplier", 1.0f);
+	player.effect_multiplier = data.value("effect_multiplier", 1.0f);
+	player.defense = data.value("defense", 1.0f);
+	
+	player.active_effects.clear();
+	
+	for (const auto& effect : data["active_effects"]) {
+		player.active_effects.push_back(deserializeItem(effect));
 	}
+
+	registry.players.get(player_entity).load_position = vec2(data["load_position_x"], data["load_position_y"]);
+}
+
+bool ItemSystem::saveGameState() {
+	std::cout << "Saving game state..." << std::endl;
+	
+	nlohmann::json data;
+	
+	nlohmann::json inventories = nlohmann::json::array();
+	
+	if (!registry.cauldrons.entities.empty()) {
+		Entity cauldron = registry.cauldrons.entities[0];
+		if (registry.inventories.has(cauldron)) {
+			inventories.push_back(serializeInventory(cauldron));
+		}
+	}
+	
+	if (!registry.players.entities.empty()) {
+		Entity player = registry.players.entities[0];
+		if (registry.inventories.has(player)) {
+			inventories.push_back(serializeInventory(player));
+		}
+	}
+	
+	for (Entity chest : registry.chests.entities) {
+		if (registry.inventories.has(chest)) {
+			inventories.push_back(serializeInventory(chest));
+		}
+	}
+	
 	data["inventories"] = inventories;
 	data["screen_state"] = serializeScreenState();
-
-	// Save the current recipe book index
+	
 	if (UISystem::s_instance != nullptr) {
 		data["recipe_book_index"] = UISystem::s_instance->current_recipe_index;
 	}
-
-	// Save player state
+	
 	if (registry.players.size() > 0) {
 		data["player_state"] = serializePlayerState(registry.players.entities[0]);
 	}
+	
+	// Save respawn system state (items, enemies)
+	data["respawn_states"] = RespawnSystem::getInstance().serialize();
 
 	try {
 		std::string save_path = game_state_path(GAME_STATE_FILE);
@@ -547,30 +579,42 @@ bool ItemSystem::loadGameState() {
 				}
 			}
 			else if (owner_type == "cauldron") {
-				// Leave out cauldron serialization for now
-				// if (registry.cauldrons.entities.size() > 1) continue;
-				// Entity cauldron_inv = createCauldron(renderer, vec2({ GRID_CELL_WIDTH_PX * 13.35, GRID_CELL_HEIGHT_PX * 5.85 }), vec2({ 175, 280 }), 8, "Cauldron", false);
-				// std::cout << "Entity " << cauldron_inv.id() << " cauldron" << std::endl;
-				// deserializeInventory(cauldron_inv, inv_data);
+				if (!registry.cauldrons.entities.empty()) {
+					deserializeInventory(registry.cauldrons.entities[0], inv_data);
+				}
 			}
-			else {
-				// For non-player inventories, create new entities
-				Entity inv = Entity();
-				// std::cout << "Entity " << inv.id() << " item copy" << std::endl;
-				deserializeInventory(inv, inv_data);
+			else if (owner_type == "chest") {
+				Entity chest;
+				if (inv_data.contains("name")) {
+					std::string chest_name = inv_data["name"];
+					
+					for (Entity existing_chest : registry.chests.entities) {
+						// TODO: chest PR
+					}
+				}
+				
+				// TODO: chest PR
+				if (!registry.chests.entities.empty()) {
+					deserializeInventory(registry.chests.entities[0], inv_data);
+				}
 			}
 		}
 
-		if (!data["screen_state"].empty()) {
-			deserializeScreenState(data["screen_state"]);
-		}
-
-		if (!data["player_state"].empty()) {
-			deserializePlayerState(data["player_state"]);
-		}
-
+		deserializeScreenState(data["screen_state"]);
+		
+		// Load recipe book index
 		if (data.contains("recipe_book_index") && UISystem::s_instance != nullptr) {
 			UISystem::s_instance->current_recipe_index = data["recipe_book_index"];
+		}
+		
+		// Load player state
+		if (data.contains("player_state") && !registry.players.entities.empty()) {
+			deserializePlayerState(registry.players.entities[0], data["player_state"]);
+		}
+		
+		// Load respawn system state
+		if (data.contains("respawn_states")) {
+			RespawnSystem::getInstance().deserialize(data["respawn_states"]);
 		}
 
 		return true;
@@ -602,24 +646,4 @@ void ItemSystem::deserializeScreenState(const nlohmann::json& data) {
 		screen.saved_grotto = true;
 		screen.ending_text_shown = true;
 	}
-}
-
-void ItemSystem::deserializePlayerState(const nlohmann::json& data) {
-	if (registry.players.entities.size() == 0) return;
-	Entity player_entity = registry.players.entities[0];
-	Player& player = registry.players.get(player_entity);
-
-	player.name = data["name"];
-	player.cooldown = data["cooldown"];
-	player.health = data["health"];
-	player.damage_cooldown = data["damage_cooldown"];
-	player.speed_multiplier = data["speed_multiplier"];
-	player.effect_multiplier = data["effect_multiplier"];
-	player.defense = data["defense"];
-
-	for (const auto& effect : data["active_effects"]) {
-		player.active_effects.push_back(deserializeItem(effect));
-	}
-
-	registry.players.get(player_entity).load_position = vec2(data["load_position_x"], data["load_position_y"]);
 }
