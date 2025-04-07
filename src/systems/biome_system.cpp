@@ -504,8 +504,11 @@ void BiomeSystem::createMushroom()
 	createCollectableIngredient(renderer, vec2(1090, 114), ItemType::DOOMCAP, 1, true);
 	createCollectableIngredient(renderer, vec2(1146, 598), ItemType::DOOMCAP, 1, true);
 
-	createEvilMushroom(renderer, vec2(112, 598), 1, "Evil Mushroom 1");
-	createEvilMushroom(renderer, vec2(1037, 501), 1, "Evil Mushroom 2");
+	ScreenState& screen = registry.screenStates.components[0];
+	if (!screen.saved_grotto) {
+		createEvilMushroom(renderer, vec2(112, 598), 1, "Evil Mushroom 1");
+		createEvilMushroom(renderer, vec2(1037, 501), 1, "Evil Mushroom 2");
+	}
 
 	if (!ADMIN_FLAG) {
 		ScreenState screen = registry.screenStates.components[0];
@@ -542,8 +545,11 @@ void BiomeSystem::createCrystal()
 	createCollectableIngredient(renderer, vec2(302, 617), ItemType::CRYSTAL_SHARD, 1, true);
 	createCollectableIngredient(renderer, vec2(1141, 624), ItemType::QUARTZMELON, 1, true);
 
-	createCrystalBug(renderer, vec2(632, 586), 1, "Crystal Bug 1");
-	createCrystalBug(renderer, vec2(876, 137), 1, "Crystal Bug 2");
+	ScreenState& screen = registry.screenStates.components[0];
+	if (!screen.saved_grotto) {
+		createCrystalBug(renderer, vec2(632, 586), 1, "Crystal Bug 1");
+		createCrystalBug(renderer, vec2(876, 137), 1, "Crystal Bug 2");
+	}
 
 	createCrystalToMushroom(renderer, vec2(50, 200), "Crystal To Mushroom");
 	createCrystalToForestEx(renderer, vec2(930, 30), "Crystal to Forest Ex");
