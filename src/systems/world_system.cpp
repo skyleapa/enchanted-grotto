@@ -622,6 +622,26 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 	// exit game w/ ESC
 	if (action == GLFW_RELEASE && key == GLFW_KEY_ESCAPE)
 	{
+		// Check if any UI menus are open and close them first
+		if (m_ui_system != nullptr) {
+			if (m_ui_system->isCauldronOpen()) {
+				m_ui_system->closeCauldron(true);
+				return;
+			}
+			else if (m_ui_system->isMortarPestleOpen()) {
+				m_ui_system->closeMortarPestle(true);
+				return;
+			}
+			else if (m_ui_system->isRecipeBookOpen()) {
+				m_ui_system->closeRecipeBook();
+				return;
+			}
+			else if (m_ui_system->isChestMenuOpen()) {
+				m_ui_system->closeChestMenu();
+				return;
+			}
+		}
+		
 		close_window();
 	}
 
