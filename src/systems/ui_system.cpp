@@ -992,7 +992,7 @@ void UISystem::updateInventoryText(float elapsed_ms) {
 			fadeText = 0;
 		}
 
-		float fadeAmt = (float) fadeText / FADE_TEXT_MS;
+		float fadeAmt = (float)fadeText / FADE_TEXT_MS;
 		std::string fade = std::to_string(fadeAmt);
 		infoElement->SetProperty("opacity", fade);
 		nameElement->SetProperty("opacity", fade);
@@ -1168,10 +1168,14 @@ void UISystem::updateTutorial()
 		)";
 
 		// handle tutorial animations
-		if (screen.tutorial_state == (int)TUTORIAL::GRIND_BARK) {
-			active_animation = m_mortar_document->GetElementById("grinding-style");
-			active_animation->SetAttribute("src", "data/animations/grinding.json");
-		} else if (screen.tutorial_state == (int)TUTORIAL::STIR) {
+		if (screen.tutorial_state == (int)TUTORIAL::GRIND_BARK && registry.inventories.get(openedMortar).items.size() > 0) {
+			Inventory& mortar = registry.inventories.get(openedMortar);
+			if (registry.items.get(mortar.items[0]).type == ItemType::STORM_BARK) { // check only one item
+				active_animation = m_mortar_document->GetElementById("grinding-style");
+				active_animation->SetAttribute("src", "data/animations/grinding.json");
+			}
+		}
+		else if (screen.tutorial_state == (int)TUTORIAL::STIR) {
 			active_animation = m_cauldron_document->GetElementById("stirring-style");
 			active_animation->SetAttribute("src", "data/animations/cauldron_stir.json");
 		}
@@ -1678,6 +1682,10 @@ void UISystem::closeMortarPestle(bool play_sound = true)
 			Mix_VolumeMusic(MUSIC_VOLUME);
 		}
 		m_mortar_document->Hide();
+		if (active_animation) {
+			active_animation->SetAttribute("src", "");
+			active_animation = nullptr;
+		}
 	}
 }
 
@@ -2603,4 +2611,10 @@ std::string UISystem::getIngredientName(RecipeIngredient ing)
 	}
 
 	return name;
+}
+
+void UISystem::startGrindAnimation() {
+	active_animation = m_mortar_document->GetElementById("grinding-style");
+	active_animation->SetAttribute("src", "data/animations/grinding.json");
+	std::cout << "playing grind animation" << std::endl;
 }

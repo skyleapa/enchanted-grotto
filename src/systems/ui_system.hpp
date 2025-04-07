@@ -131,6 +131,8 @@ public:
     // Reference to active animation
     Rml::Element* active_animation = nullptr;
 
+    void startGrindAnimation();
+
 private:
     GLFWwindow* m_window;
     RenderSystem* m_renderer;

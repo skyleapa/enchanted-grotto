@@ -396,6 +396,12 @@ void DragListener::ProcessEvent(Rml::Event& event) {
 			registry.items.get(copy).amount = 1;
 			std::cout << "Added ingredient: " << invItem.name << " to mortar" << std::endl;
 
+			if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::GRIND_BARK) {
+				if (invItem.type == ItemType::STORM_BARK) {
+					m_ui_system->startGrindAnimation();
+				}
+			}
+
 			createTempRenderRequestForItem(copy);
 			SoundSystem::playDropInBowlSound((int)SOUND_CHANNEL::MENU, 0);
 			PotionSystem::storeIngredientInMortar(m_ui_system->getOpenedMortarPestle(), copy);
