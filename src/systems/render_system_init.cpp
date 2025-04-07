@@ -103,7 +103,8 @@ void RenderSystem::initializeGlEffects()
 		std::string vertex_shader = effect_paths[i] + ".vs.glsl";
 		if (effect_paths[i].find("water_") != std::string::npos) {
 			vertex_shader = std::string(PROJECT_SOURCE_DIR) + "/shaders/water_vertex.vs.glsl";
-		} else {
+		}
+		else {
 			vertex_shader = effect_paths[i] + ".vs.glsl";
 		}
 
@@ -244,8 +245,8 @@ void RenderSystem::initializeGlGeometryBuffers()
 	std::vector<vec3> water_vertices(4);
 	water_vertices[0] = { -1.f, -1.f, 0.f };
 	water_vertices[1] = { -1.f,  1.f, 0.f };
-	water_vertices[2] = {  1.f,  1.f, 0.f };
-	water_vertices[3] = {  1.f, -1.f, 0.f };
+	water_vertices[2] = { 1.f,  1.f, 0.f };
+	water_vertices[3] = { 1.f, -1.f, 0.f };
 
 	const std::vector<uint16_t> water_indices = { 0, 1, 3, 1, 2, 3 };
 	bindVBOandIBO(GEOMETRY_BUFFER_ID::WATER_QUAD, water_vertices, water_indices);
@@ -294,7 +295,7 @@ void RenderSystem::initializeFogTexture()
 	glGenTextures(1, &fog_texture);
 	glBindFramebuffer(GL_FRAMEBUFFER, fog_buffer);
 	glBindTexture(GL_TEXTURE_2D, fog_texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, frameBufferWidth, frameBufferHeight, 0, GL_RGBA, GL_FLOAT, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, frameBufferWidth, frameBufferHeight, 0, GL_RGBA, GL_FLOAT, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fog_texture, 0);

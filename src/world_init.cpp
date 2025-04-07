@@ -140,29 +140,30 @@ Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemTy
 	auto it = ITEM_INFO.find(type);
 	if (it != ITEM_INFO.end()) {
 		itemName = it->second.name;
-	} else {
+	}
+	else {
 		itemName = "Unknown_" + std::to_string(static_cast<int>(type));
 	}
-	
+
 	std::string persistentID = RespawnSystem::getInstance().generatePersistentID(
 		static_cast<BIOME>(registry.screenStates.components[0].biome),
 		itemName,
 		position
 	);
-	
+
 	// Check if this item should be spawned based on respawn state
 	if (!RespawnSystem::getInstance().shouldEntitySpawn(persistentID)) {
 		return Entity();
 	}
-	
+
 	Entity entity = ItemSystem::createCollectableIngredient(position, type, amount, canRespawn);
-	
+
 	if (registry.items.has(entity)) {
 		registry.items.get(entity).persistentID = persistentID;
-		
+
 		RespawnSystem::getInstance().registerEntity(entity, true);
 	}
-	
+
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
 	registry.meshPtrs.emplace(entity, &mesh);
@@ -171,7 +172,7 @@ Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemTy
 	motion.velocity = { 0, 0 };
 	motion.position = position;
 	motion.angle = 180.f; // Set angle to 180 to make items appear correctly
-	
+
 	vec2 itemSize = vec2(50, 50); // Default size
 	if (it != ITEM_INFO.end()) {
 		itemSize = it->second.size;
@@ -182,12 +183,12 @@ Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemTy
 	if (it != ITEM_INFO.end()) {
 		texture = it->second.texture;
 	}
-	
+
 	// Use item layer for Gale Fruit and Coffee Beans, otherwise use structure (so player renders above dropped items)
 	RENDER_LAYER layer = (type == ItemType::GALEFRUIT || type == ItemType::COFFEE_BEANS || type == ItemType::CACTUS_PULP)
 		? RENDER_LAYER::ITEM
 		: RENDER_LAYER::STRUCTURE;
-	
+
 	registry.renderRequests.insert(
 		entity,
 		{
@@ -196,7 +197,7 @@ Entity createCollectableIngredient(RenderSystem* renderer, vec2 position, ItemTy
 			GEOMETRY_BUFFER_ID::SPRITE,
 			layer,
 		}
-	);
+		);
 
 	// Textbox for item
 	std::string itemDisplayName = itemName;
@@ -1742,7 +1743,7 @@ Entity createEnt(RenderSystem* renderer, vec2 position, int movable, std::string
 	enemy.name = name;
 	enemy.attack_damage = 20;
 	enemy.persistentID = persistentID;
-	
+
 	// Register with the respawn system
 	RespawnSystem::getInstance().registerEntity(entity, true);
 
@@ -1797,7 +1798,7 @@ Entity createMummy(RenderSystem* renderer, vec2 position, int movable, std::stri
 	enemy.name = name;
 	enemy.attack_damage = 20;
 	enemy.persistentID = persistentID;
-	
+
 	// Register with the respawn system
 	RespawnSystem::getInstance().registerEntity(entity, true);
 
@@ -1844,14 +1845,14 @@ Entity createEvilMushroom(RenderSystem* renderer, vec2 position, int movable, st
 
 	Enemy& enemy = registry.enemies.emplace(entity);
 	enemy.attack_radius = 5;
-	enemy.health = 45;
+	enemy.health = 80;
 	enemy.start_pos = position;
 	enemy.state = (int)ENEMY_STATE::IDLE;
 	enemy.can_move = movable;
 	enemy.name = name;
 	enemy.attack_damage = 15;
 	enemy.persistentID = persistentID;
-	
+
 	// Register with the respawn system
 	RespawnSystem::getInstance().registerEntity(entity, true);
 
@@ -2045,7 +2046,7 @@ Entity createMasterPotionPedestal(RenderSystem* renderer, vec2 position)
 
 	guardian.hint_dialogue = "Something's missing from this pedestal, perhaps a potion to restore life to this place.";
 	guardian.wrong_potion_dialogue = "The magic stirs—but not enough. This isn't the one.";
-	guardian.success_dialogue  = "The potion flows...Light returns. The Grotto breathes once more.";
+	guardian.success_dialogue = "The potion flows...Light returns. The Grotto breathes once more.";
 
 	// store a reference to the potentially re-used mesh object
 	Mesh& mesh = renderer->getMesh(GEOMETRY_BUFFER_ID::SPRITE);
@@ -2208,14 +2209,14 @@ Entity createCrystalBug(RenderSystem* renderer, vec2 position, int movable, std:
 
 	Enemy& enemy = registry.enemies.emplace(entity);
 	enemy.attack_radius = 5;
-	enemy.health = 30;
+	enemy.health = 80;
 	enemy.start_pos = position;
 	enemy.state = (int)ENEMY_STATE::IDLE;
 	enemy.can_move = movable;
 	enemy.name = name;
 	enemy.attack_damage = 15;
 	enemy.persistentID = persistentID;
-	
+
 	// Register with the respawn system
 	RespawnSystem::getInstance().registerEntity(entity, true);
 

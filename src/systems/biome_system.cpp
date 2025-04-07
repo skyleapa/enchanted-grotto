@@ -84,7 +84,7 @@ void BiomeSystem::step(float elapsed_ms_since_last_update) {
 
 void BiomeSystem::switchBiome(int biome, bool is_first_load) {
 	std::vector<Entity> to_remove;
-	
+
 	for (auto entity : registry.motions.entities) {
 		if (registry.players.has(entity) || registry.inventories.has(entity) || registry.potions.has(entity)) continue; // don't lose potion effects
 
@@ -92,12 +92,13 @@ void BiomeSystem::switchBiome(int biome, bool is_first_load) {
 		if (registry.renderRequests.has(entity)) {
 			if (!registry.renderRequests.get(entity).is_visible) continue;
 		}
-		
+
 		// Register with RespawnSystem before removal if it's a tracked entity type
 		if (registry.items.has(entity) || registry.enemies.has(entity)) {
 			if (registry.items.has(entity) && registry.items.get(entity).type == ItemType::CHEST) {
 				// Skip chest registration
-			} else {
+			}
+			else {
 				// Mark as still in the respawn pool (no timer running yet)
 				RespawnSystem::getInstance().registerEntity(entity, true);
 			}
@@ -202,10 +203,10 @@ void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
 						break;
 					}
 				}
-				createTextbox(renderer, vec2(motion.position.x, motion.position.y - 50), chest, "[F] Open Chest"); 
+				createTextbox(renderer, vec2(motion.position.x, motion.position.y - 50), chest, "[F] Open Chest");
 			}
 		}
-		
+
 		if (!m_loaded_game_data.is_null() || m_has_pending_chest_inventory) {
 			std::cout << "Loading inventory state in grotto. Current chest count: " << registry.chests.entities.size() << std::endl;
 			if (!m_loaded_game_data.is_null()) {
@@ -256,7 +257,7 @@ void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
 				rr.is_visible = false;
 			}
 		}
-		for (Entity chest : registry.chests.entities) { 
+		for (Entity chest : registry.chests.entities) {
 			if (registry.renderRequests.has(chest)) {
 				RenderRequest& rr = registry.renderRequests.get(chest);
 				rr.is_visible = false;
@@ -312,14 +313,14 @@ void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
 	if (is_first_load && registry.players.get(player_entity).load_position != vec2(0, 0)) {
 		screen.first_game_load = false;
 		player_motion.position = registry.players.get(player_entity).load_position;
-		
+
 		// For non-grotto biomes, only load non-chest inventories on first load
 		if (screen.biome != (int)BIOME::GROTTO && !m_loaded_game_data.is_null()) {
 			std::cout << "Loading non-chest inventory state. Current biome: " << (int)screen.biome << std::endl;
-			
+
 			// If we're not in the grotto, set the pending chest inventory flag
 			m_has_pending_chest_inventory = true;
-			
+
 			// If we're not in the grotto, only load player and cauldron inventories
 			if (!registry.players.entities.empty()) {
 				Entity player = registry.players.entities[0];
@@ -335,12 +336,12 @@ void BiomeSystem::renderPlayerInNewBiome(bool is_first_load) {
 					}
 				}
 			}
-			
+
 			// Clear the loaded data but keep the pending chest inventory flag
 			m_loaded_game_data = nullptr;
 		}
 	}
-	
+
 	// If this is a direct load into the grotto, just load inventory data
 	if (screen.biome == (int)BIOME::GROTTO && !is_first_load && !m_loaded_game_data.is_null()) {
 		std::cout << "Loading inventory state after biome initialization. Current chest count: " << registry.chests.entities.size() << std::endl;
@@ -412,7 +413,7 @@ bool BiomeSystem::handleEntranceInteraction(Entity entrance_entity)
 	{
 		state.is_switching_biome = true;
 		state.switching_to_biome = (GLuint)BIOME::GROTTO;
-		
+
 		// If we have pending chest inventory and we're entering the grotto, load it in renderPlayerInNewBiome when chest entities exist
 		if (m_has_pending_chest_inventory && m_loaded_game_data.is_null()) {
 			std::string save_path = game_state_path(GAME_STATE_FILE);
