@@ -53,6 +53,8 @@ public:
     // Inventory bar methods
     void createInventoryBar();
     void updateInventoryBar();
+    void updateInventoryText(float elapsed_ms);
+    void updatePotionInfo();
     void selectInventorySlot(int slot);
     int getSelectedSlot();
     int getSlotFromId(std::string id);
@@ -167,6 +169,10 @@ private:
     // Inventory bar variables
     Rml::ElementDocument* m_inventory_document = nullptr;
     int m_hotbar_size = 10;
+    const int SHOW_TEXT_MS = 4000;
+    const int FADE_TEXT_MS = 1000;
+    int showText = 0;
+    int fadeText = 0;
 
     // Cauldron variables
     Rml::ElementDocument* m_cauldron_document = nullptr;
