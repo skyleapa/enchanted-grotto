@@ -173,6 +173,7 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
 		// update bar if inventory belongs to player
 		if (registry.players.has(inventory) && m_ui_system != nullptr) {
 			m_ui_system->updateInventoryBar();
+			m_ui_system->updatePotionInfo();
 		}
 
 		return true;
@@ -220,6 +221,7 @@ bool ItemSystem::removeItemFromInventory(Entity inventory, Entity item) {
 		// update bar if inventory belongs to player
 		if (registry.players.has(inventory) && m_ui_system != nullptr) {
 			m_ui_system->updateInventoryBar();
+			m_ui_system->updatePotionInfo();
 		}
 		return true;
 	}
