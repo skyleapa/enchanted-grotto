@@ -166,10 +166,10 @@ struct Cauldron
 	vec3 color = DEFAULT_COLOR;       // The water entity to send the color to
 	int heatLevel = 0;                // 0-100
 	bool filled = false;              // Whether the cauldron has water
-	int timeElapsed = 0;              // Time elapsed since water filled and heat knob turned, in ms
-	int timeSinceLastAction = 0;      // Time elapsed since the last action, in ms. -1 means
-	int colorElapsed = 0;             // Time in ms for color updates
-	int stirFlash = 0;                // Time remaining for stir flash
+	float timeElapsed = 0.f;              // Time elapsed since water filled and heat knob turned, in ms
+	float timeSinceLastAction = 0.f;      // Time elapsed since the last action, in ms. -1 means
+	float colorElapsed = 0.f;             // Time in ms for color updates
+	float stirFlash = 0.f;                // Time remaining for stir flash
 	std::vector<Action> actions;      // Records player actions
 	Entity water;                     // We technically only need 1 of these globally but this was easier so whatever
 	bool is_boiling = false;

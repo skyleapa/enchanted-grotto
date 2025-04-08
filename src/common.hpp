@@ -642,16 +642,16 @@ enum class ENEMY_STATE
 };
 
 // Default time represented by each "WAIT" action, in ms
-const int DEFAULT_WAIT = 5000;
+const float DEFAULT_WAIT = 5000.f;
 
 // Potion settings
 const vec3 DEFAULT_COLOR = vec3(116, 204, 244);
 
 // Cauldron settings
-const int COLOR_FADE_DURATION = 5000;
+const float COLOR_FADE_DURATION = 5000.f;
 const float CAULDRON_D = 316;               // cauldron is a circle, this is diameter
 const vec2 CAULDRON_WATER_POS = vec2(0.4976f, 0.5757f); // center of cauldron relative to window
-const int STIR_FLASH_DURATION = 1000;
+const float STIR_FLASH_DURATION = 1000.f;
 const float WATER_FPS = 120.f;           // The default FPS to normalize water sim to
 
 // Ladle offset coords for mouse and cauldron center

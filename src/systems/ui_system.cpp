@@ -15,6 +15,7 @@
 #include <iomanip>
 #include <SDL.h>
 #include <SDL_mixer.h>
+#include <cmath>
 
 // Global flag to indicate when UI rendering is in progress
 // Used to prevent OpenGL error checking during RmlUi rendering
@@ -1499,8 +1500,8 @@ void UISystem::updateCauldronUI() {
 	heatknob->SetProperty("transform", s.str());
 
 	// Update timer rotation
-	int modElapsed = cauldron.timeElapsed % 60000;
-	float rotation = 360 * modElapsed / 60000.f;
+	float modElapsed = fmodf(cauldron.timeElapsed, 60000.f);
+	float rotation = 360.f * modElapsed / 60000.f;
 	Rml::Element* timerHand = m_cauldron_document->GetElementById("timer");
 	timerHand->SetProperty("transform", "rotate(" + std::to_string(rotation) + "deg)");
 }

@@ -28,7 +28,7 @@ void PotionSystem::updateCauldrons(float elapsed_ms) {
 		// Add wait action if threshold exceeded
 		if (cc.timeSinceLastAction >= DEFAULT_WAIT) {
 			std::cout << "WAIT action recorded!" << std::endl;
-			recordAction(cauldron, ActionType::WAIT, cc.timeSinceLastAction / DEFAULT_WAIT);
+			recordAction(cauldron, ActionType::WAIT, static_cast<int>(cc.timeSinceLastAction / DEFAULT_WAIT));
 
 			// checks if we have waited 1 wait action (5 seconds) to advance tutorial
 			Action& lastAction = cc.actions[cc.actions.size() - 1];
@@ -40,7 +40,7 @@ void PotionSystem::updateCauldrons(float elapsed_ms) {
 				}
 			}
 
-			cc.timeSinceLastAction = 0;
+			cc.timeSinceLastAction = 0.f;
 		}
 
 		// Update cauldron color
@@ -238,10 +238,10 @@ void PotionSystem::resetCauldron(Entity cauldron) {
 	Cauldron& cc = registry.cauldrons.get(cauldron);
 	cc.color = DEFAULT_COLOR;
 	// cc.filled = false; FOR NOW CAULDRON IS ALWAYS FILLED
-	cc.colorElapsed = 0;
+	cc.colorElapsed = 0.f;
 	cc.heatLevel = 0;
-	cc.timeElapsed = 0;
-	cc.timeSinceLastAction = 0;
+	cc.timeElapsed = 0.f;
+	cc.timeSinceLastAction = 0.f;
 	cc.actions.clear();
 	cc.is_boiling = false;
 	cc.num_stirs = 0;
@@ -652,7 +652,7 @@ void PotionSystem::updatePotion(Entity cauldron) {
 	potion.color = getBaseColor(ci);
 
 	// Reset last action time, since every action triggers an update
-	cc.timeSinceLastAction = 0;
+	cc.timeSinceLastAction = 0.f;
 
 	// Step 1: Get recipe
 	Recipe recipe = getRecipe(ci);
@@ -690,5 +690,5 @@ void PotionSystem::updatePotion(Entity cauldron) {
 	registry.potions.insert(cauldron, potion);
 
 	// Allow color update to happen
-	cc.colorElapsed = 0;
+	cc.colorElapsed = 0.f;
 }
