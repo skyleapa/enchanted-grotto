@@ -726,6 +726,8 @@ const float DOT_POISON_TIMER = 3000.f;
 const float MOLOTOV_MULTIPLIER = 0.4f;
 const float DOT_MOLOTOV_TIMER = 1000.f;
 
+const float FOG_INTENSITY = 1.5f;
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
 #endif

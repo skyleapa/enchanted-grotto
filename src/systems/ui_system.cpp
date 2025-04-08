@@ -2445,6 +2445,7 @@ void UISystem::handleQueuedText(float elapsed_ms) {
 			m_biome_text_document->Hide();
 		}
 		textQueue.pop();
+		if (registry.screenStates.components[0].play_ending = true) registry.screenStates.components[0].play_ending = false;
 	}
 }
 

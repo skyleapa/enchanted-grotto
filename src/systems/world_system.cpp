@@ -340,7 +340,7 @@ void WorldSystem::restart_game(bool hard_reset)
 
 	if (registry.players.components.size() == 0)
 	{
-		createPlayer(renderer, vec2(GRID_CELL_WIDTH_PX * 17.5, GRID_CELL_HEIGHT_PX * 6.5)); // bring player to front of door));
+		createPlayer(renderer, vec2(GRID_CELL_WIDTH_PX * 17.5, GRID_CELL_HEIGHT_PX * 12.0));
 	}
 
 	// re-open tutorial, state is loaded from persistence
@@ -353,8 +353,10 @@ void WorldSystem::restart_game(bool hard_reset)
 		screen.switching_to_biome = (int)BIOME::GROTTO;
 		screen.tutorial_state = 0;
 		screen.tutorial_step_complete = true;
+		screen.fog_intensity = FOG_INTENSITY;
 		createWelcomeScreen(renderer, vec2(WINDOW_WIDTH_PX / 2, WINDOW_HEIGHT_PX / 2 - 50));
 		screen.killed_enemies = {};
+		screen.unlocked_biomes = {};
 		if (m_ui_system) {
 			m_ui_system->updateEffectsBar();
 			m_ui_system->updateHealthBar();
@@ -668,6 +670,7 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 
 	if (action == GLFW_RELEASE && key == GLFW_KEY_L)
 	{
+		if (registry.screenStates.components[0].play_ending || registry.screenStates.components[0].is_switching_biome) return;
 		restart_game(true);
 	}
 
@@ -724,7 +727,7 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 		}
 	}
 
-	if (screen.is_switching_biome) return; // don't handle character movement or interaction if screen is switching
+	if (screen.is_switching_biome || screen.tutorial_state == (int) TUTORIAL::WELCOME_SCREEN) return; // don't handle character movement or interaction if screen is switching
 	if (action == GLFW_PRESS && key == GLFW_KEY_F)
 	{
 		handle_player_interaction();

@@ -63,7 +63,7 @@ struct ScreenState
 	bool play_ending = false;
 	bool saved_grotto = false;
 	bool ending_text_shown = false;
-	float fog_intensity = 1.5f;
+	float fog_intensity = FOG_INTENSITY;
 };
 
 // A struct to refer to debugging graphics in the ECS
