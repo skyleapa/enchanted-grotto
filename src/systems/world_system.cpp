@@ -670,7 +670,7 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 
 	if (action == GLFW_RELEASE && key == GLFW_KEY_L)
 	{
-		if (registry.screenStates.components[0].play_ending || registry.screenStates.components[0].is_switching_biome) return;
+		if ((m_ui_system && m_ui_system->textQueue.size() > 0) || registry.screenStates.components[0].is_switching_biome) return;
 		restart_game(true);
 	}
 
