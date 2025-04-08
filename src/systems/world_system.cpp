@@ -982,7 +982,7 @@ void WorldSystem::handle_player_interaction()
 				registry.motions.remove(item);
 			if (registry.renderRequests.has(item))
 				registry.renderRequests.remove(item);
-			continue;
+			return;
 		}
 	}
 }
