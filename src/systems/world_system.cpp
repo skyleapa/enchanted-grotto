@@ -176,7 +176,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 
 	// Update respawn system timers for persistent respawns
 	RespawnSystem::getInstance().step(elapsed_ms_since_last_update);
-	
+
 	// Remove enemies from killed_enemies list if they're respawned in RespawnSystem
 	for (auto& [id, state] : RespawnSystem::getInstance().getRespawnStates()) {
 		if (state.isSpawned && !state.enemyName.empty()) {
@@ -189,7 +189,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 			}
 		}
 	}
-	
+
 	updateThrownAmmo(elapsed_ms_since_last_update);
 
 	if (m_ui_system->isCauldronOpen() || m_ui_system->isMortarPestleOpen()) return true; // skip the following updates if menu is open
@@ -1123,6 +1123,7 @@ bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 	Entity player = registry.players.entities[0];
 	Inventory& player_inventory = registry.inventories.get(player);
 	Guardian& guardian = registry.guardians.get(guardianEntity);
+	if (guardian.received_potion) return true;
 
 	// Check if the correct potion is in the player's inventory
 	for (auto it = player_inventory.items.begin(); it != player_inventory.items.end(); ++it)
@@ -1192,9 +1193,11 @@ bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 				// Set guardian movement to the direction of the exit
 				showTemporaryGuardianDialogue(guardianEntity, guardian.success_dialogue);
 				if (registry.motions.has(guardianEntity) && guardian.exit_direction != vec2(0, 0)) {
-					DelayedMovement& delay = registry.delayedMovements.emplace(guardianEntity);
-					delay.velocity = guardian.exit_direction * GUARDIAN_SPEED;
-					delay.delay_ms = 2000.f; // 2 seconds to let player read dialogue
+					if (!registry.delayedMovements.has(guardianEntity)) {
+						DelayedMovement& delay = registry.delayedMovements.emplace(guardianEntity);
+						delay.velocity = guardian.exit_direction * GUARDIAN_SPEED;
+						delay.delay_ms = 2000.f; // 2 seconds to let player read dialogue
+					}
 				}
 
 				if (registry.items.has(guardianEntity)) {
@@ -1205,6 +1208,8 @@ bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 				}
 
 				std::cout << "You got da potion" << std::endl;
+				guardian.received_potion = true;
+				m_ui_system->updateInventoryBar();
 
 				return true;
 			}
@@ -1316,6 +1321,7 @@ void WorldSystem::updatePlayerState(Entity& player, Motion& player_motion, float
 		if (regen.timer <= 0) {
 			player_comp.health = std::min(player_comp.health + regen.heal_amount, PLAYER_MAX_HEALTH);
 			regen.timer = REGEN_TIMER;
+			m_ui_system->updateHealthBar();
 		}
 	}
 
@@ -1570,10 +1576,10 @@ void WorldSystem::handleEnemyInjured(Entity enemy_entity, float damage = 0.f) {
 			float respawnTime = (rand() % 60000 + 120000);
 			RespawnSystem::getInstance().registerEntity(enemy_entity, false);
 			RespawnSystem::getInstance().setRespawning(enemy.persistentID, respawnTime);
-			std::cout << "Enemy " << enemy.name << " killed, will respawn in " 
-			          << respawnTime/1000.0f << " seconds" << std::endl;
+			std::cout << "Enemy " << enemy.name << " killed, will respawn in "
+				<< respawnTime / 1000.0f << " seconds" << std::endl;
 		}
-	
+
 		if (enemy.name == "Ent") {
 			createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::STORM_BARK, 1, false);
 		}

@@ -246,6 +246,8 @@ struct Guardian {
 	std::string hint_dialogue;
 	std::string wrong_potion_dialogue;
 	std::string success_dialogue;
+
+	bool received_potion = false;
 };
 
 struct Ammo {
