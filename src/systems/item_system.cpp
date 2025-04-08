@@ -179,7 +179,7 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
 	}
 
 	// If we couldn't stack, check capacity
-	if (inv.isFull) {
+	if (inv.items.size() >= inv.capacity) {
 		return false;
 	}
 
@@ -193,10 +193,8 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
 		inv.items.push_back(item);
 	}
 
-	// Update capacity
-	if (inv.items.size() >= inv.capacity) {
-		inv.isFull = true;
-	}
+	// Update capacity status
+	inv.isFull = (inv.items.size() >= inv.capacity);
 
 	//std::cout << "Added new item: " << item_comp.name << " to inventory." << std::endl;
 
