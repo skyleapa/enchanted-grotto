@@ -1867,12 +1867,12 @@ Entity createEvilMushroom(RenderSystem* renderer, vec2 position, int movable, st
 	motion.angle = 180.f;
 	motion.velocity = { 0, 0 };
 	motion.position = position;
-	motion.scale = vec2({ CRYSTAL_BUG_WIDTH, CRYSTAL_BUG_HEIGHT });
+	motion.scale = vec2({ EVIL_MUSHROOM_WIDTH, EVIL_MUSHROOM_HEIGHT });
 
 	registry.renderRequests.insert(
 		entity,
 		{
-			TEXTURE_ASSET_ID::CRYSTAL_BUG,
+			TEXTURE_ASSET_ID::EVIL_MUSHROOM,
 			EFFECT_ASSET_ID::TEXTURED,
 			GEOMETRY_BUFFER_ID::SPRITE,
 			RENDER_LAYER::TERRAIN,
