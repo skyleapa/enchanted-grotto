@@ -493,44 +493,43 @@ void UISystem::handleMouseButtonEvent(int button, int action, int mods)
 				closeChestMenu();
 				return;
 			}
-			
+
 			// Handle chest slot clicks for item transfer
 			if (slotId != -1) {
 				Entity player = registry.players.entities[0];
 				Entity chest = getOpenedChest();
 				bool isChestSlot = slotId < 30;
-				
+
 				if (isChestSlot) {
 					// Transfer from chest to player
 					if (registry.inventories.has(chest)) {
 						Inventory& chestInv = registry.inventories.get(chest);
-						
+
 						if (slotId < chestInv.items.size() && registry.items.has(chestInv.items[slotId])) {
 							Entity item = chestInv.items[slotId];
-							
+
 							if (ItemSystem::addItemToInventory(player, item)) {
 								ItemSystem::removeItemFromInventory(chest, item);
 								SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
-								
+
 								updateInventoryBar();
-								updateChestUI();
 							}
 						}
 					}
-				} else {
+				}
+				else {
 					// Transfer from player to chest (slots 30-39)
 					int playerSlot = slotId - 30;
 					Inventory& playerInv = registry.inventories.get(player);
-					
+
 					if (playerSlot < playerInv.items.size() && registry.items.has(playerInv.items[playerSlot])) {
 						Entity item = playerInv.items[playerSlot];
-							
+
 						if (ItemSystem::addItemToInventory(chest, item)) {
 							ItemSystem::removeItemFromInventory(player, item);
 							SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
-							
+
 							updateInventoryBar();
-							updateChestUI();
 						}
 					}
 				}
@@ -1132,6 +1131,22 @@ void UISystem::updateTutorial()
 		std::string left_position = std::get<0>(it->second);
 		std::string top_position = std::get<1>(it->second);
 		std::string tutorial_text = std::get<2>(it->second);
+		std::optional<std::tuple<std::string, std::string, std::string, std::string, std::string>> image_data = std::get<3>(it->second);
+
+		std::string image_rml;
+		if (image_data.has_value()) {
+			auto [img_left, img_top, img_path, img_width, img_height] = image_data.value();
+			image_rml = "<img class=\"tutorial-image\" "
+				"style=\"position: absolute;"
+				" left: " + img_left +
+				"; top: " + img_top +
+				"; transform: translate(-50%, -50%);"
+				" width: " + img_width +
+				"; height: " + img_height +
+				";\" "
+				"src=\"" + img_path + "\" />";
+		}
+
 		std::cout << "UISystem::showTutorial - Creating tutorial step " << screen.tutorial_state << std::endl;
 
 		std::string tutorial_rml = R"(
@@ -1158,7 +1173,7 @@ void UISystem::updateTutorial()
 						font-family: Open Sans;
 						padding: 5px;
 						width: auto;
-						max-width: 250px;
+						max-width: 260px;
 						white-space: normal;
 						color: #000000;
 					}
@@ -1166,6 +1181,7 @@ void UISystem::updateTutorial()
 			</head>
 			<body>
 				<div class="text">)" + tutorial_text + R"(</div>
+				)" + image_rml + R"(
 			</body>
 			</rml>
 		)";
@@ -2008,6 +2024,10 @@ void UISystem::updateRecipeBookUI()
 		screen.tutorial_state += 1;
 	}
 
+	// lock the harming recipe page for the tutorial
+	if (registry.screenStates.components[0].tutorial_state == (int)TUTORIAL::FLIP_PAGE + 1)
+		current_recipe_index = 2;
+
 	// Update left page (potion info and ingredients)
 	if (Rml::Element* leftPage = m_recipe_book_document->GetElementById("left-page")) {
 		leftPage->SetInnerRML(getRecipeHtml(current_recipe_index));
@@ -2425,6 +2445,7 @@ void UISystem::handleQueuedText(float elapsed_ms) {
 			m_biome_text_document->Hide();
 		}
 		textQueue.pop();
+		if (registry.screenStates.components[0].play_ending = true) registry.screenStates.components[0].play_ending = false;
 	}
 }
 
@@ -2622,27 +2643,27 @@ void UISystem::startGrindAnimation() {
 }
 
 bool UISystem::openChestMenu(Entity chest) {
-  if (isChestMenuOpen() && getOpenedChest() == chest) {
-    return true;
-  }
+	if (isChestMenuOpen() && getOpenedChest() == chest) {
+		return true;
+	}
 
-  closeCauldron(false);
-  closeMortarPestle(false);
-  closeRecipeBook();
+	closeCauldron(false);
+	closeMortarPestle(false);
+	closeRecipeBook();
 
-  if (isChestMenuOpen()) {
-    closeChestMenu();
-  }
+	if (isChestMenuOpen()) {
+		closeChestMenu();
+	}
 
-  if (!registry.inventories.has(chest)) {
-    auto& inv = registry.inventories.emplace(chest);
-    inv.capacity = 30;
-  }
+	if (!registry.inventories.has(chest)) {
+		auto& inv = registry.inventories.emplace(chest);
+		inv.capacity = 30;
+	}
 
-  setOpenedChest(chest);
+	setOpenedChest(chest);
 
-  try {
-    std::string chest_rml = R"(
+	try {
+		std::string chest_rml = R"(
             <rml>
             <head>
                 <title>Chest Inventory</title>
@@ -2803,85 +2824,86 @@ bool UISystem::openChestMenu(Entity chest) {
             </rml>
         )";
 
-    m_chest_document = m_context->LoadDocumentFromMemory(chest_rml.c_str());
-    if (!m_chest_document) {
-      std::cerr << "UISystem::openChestMenu - Failed to load chest document" << std::endl;
-      return false;
-    }
+		m_chest_document = m_context->LoadDocumentFromMemory(chest_rml.c_str());
+		if (!m_chest_document) {
+			std::cerr << "UISystem::openChestMenu - Failed to load chest document" << std::endl;
+			return false;
+		}
 
-    for (int i = 0; i < 40; i++) {
-      std::string slot_id = "slot-" + std::to_string(i);
-      Rml::Element* slot_element = m_chest_document->GetElementById(slot_id);
-      if (slot_element) {
-        DragListener::RegisterDraggableElement(slot_element);
-        DragListener::RegisterDragDropElement(slot_element);
-      }
-    }
+		for (int i = 0; i < 40; i++) {
+			std::string slot_id = "slot-" + std::to_string(i);
+			Rml::Element* slot_element = m_chest_document->GetElementById(slot_id);
+			if (slot_element) {
+				DragListener::RegisterDraggableElement(slot_element);
+				DragListener::RegisterDragDropElement(slot_element);
+			}
+		}
 
-    m_chest_document->Show();
+		m_chest_document->Show();
 
-    updateChestUI();
+		updateChestUI();
 
-    std::cout << "UISystem::openChestMenu - Chest UI created successfully" << std::endl;
-    return true;
+		std::cout << "UISystem::openChestMenu - Chest UI created successfully" << std::endl;
+		return true;
 
-  } catch (const std::exception& e) {
-    std::cerr << "Exception in UISystem::openChestMenu: " << e.what() << std::endl;
-    return false;
-  }
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::openChestMenu: " << e.what() << std::endl;
+		return false;
+	}
 }
 
 bool UISystem::isChestMenuOpen() {
-  return m_chest_document && m_chest_document->IsVisible();
+	return m_chest_document && m_chest_document->IsVisible();
 }
 
 void UISystem::closeChestMenu() {
-  if (isChestMenuOpen()) {
-    m_chest_document->Hide();
-    SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
-    Mix_VolumeMusic(MUSIC_VOLUME);
-    openedChest = Entity();
-  }
+	if (isChestMenuOpen()) {
+		m_chest_document->Hide();
+		SoundSystem::playInteractMenuSound((int)SOUND_CHANNEL::MENU, 0);
+		Mix_VolumeMusic(MUSIC_VOLUME);
+		openedChest = Entity();
+	}
 }
 
 Entity UISystem::getOpenedChest() {
-  return openedChest;
+	return openedChest;
 }
 
 void UISystem::setOpenedChest(Entity new_chest) {
-  openedChest = new_chest;
+	openedChest = new_chest;
 }
 
 void UISystem::updateChestUI() {
-  if (!m_initialized || !m_context || !m_chest_document || !isChestMenuOpen()) return;
+	if (!m_initialized || !m_context || !m_chest_document || !isChestMenuOpen()) return;
 
-  try {
-    if (registry.players.entities.empty()) return;
-    Entity player = registry.players.entities[0];
+	try {
+		if (registry.players.entities.empty()) return;
+		Entity player = registry.players.entities[0];
 
-    if (!registry.inventories.has(player) || !registry.inventories.has(openedChest)) return;
+		if (!registry.inventories.has(player) || !registry.inventories.has(openedChest)) return;
 
-    Inventory& playerInventory = registry.inventories.get(player);
-    Inventory& chestInventory = registry.inventories.get(openedChest);
+		Inventory& playerInventory = registry.inventories.get(player);
+		Inventory& chestInventory = registry.inventories.get(openedChest);
 
-    // Update chest inventory slots (slots 0-29)
-    for (int i = 0; i < 30; i++) {
-      std::string slot_id = "slot-" + std::to_string(i);
-      Rml::Element* slot_element = m_chest_document->GetElementById(slot_id);
+		// Update chest inventory slots (slots 0-29)
+		for (int i = 0; i < 30; i++) {
+			std::string slot_id = "slot-" + std::to_string(i);
+			Rml::Element* slot_element = m_chest_document->GetElementById(slot_id);
 
-      if (!slot_element) continue;
+			if (!slot_element) continue;
 
-      std::string slot_content = "";
-      
-      if (i < chestInventory.items.size() && registry.items.has(chestInventory.items[i])) {
-        Entity item = chestInventory.items[i];
-        Item& item_comp = registry.items.get(item);
+			std::string slot_content = "";
 
-        auto it = ITEM_INFO.find(item_comp.type);
-        if (it != ITEM_INFO.end()) {
-          std::string texture_path = it->second.texture_path;
-          
-          slot_content = R"(
+			if (i < chestInventory.items.size() && registry.items.has(chestInventory.items[i])) {
+				Entity item = chestInventory.items[i];
+				Item& item_comp = registry.items.get(item);
+
+				auto it = ITEM_INFO.find(item_comp.type);
+				if (it != ITEM_INFO.end()) {
+					std::string texture_path = it->second.texture_path;
+
+					slot_content = R"(
                     <img src=")" + texture_path + R"(" 
                     style='
                         pointer-events: none;
@@ -2890,16 +2912,16 @@ void UISystem::updateChestUI() {
                         margin: 4px; 
                         transform: scaleY(-1); 
                     )";
-          
-          // Add color and star if potion
-          if (item_comp.type == ItemType::POTION) {
-            Potion& potion = registry.potions.get(item);
-            slot_content += "image-color: " + getImageColorProperty(potion.color, 255) + ";'/>";
 
-            PotionQuality pq = PotionSystem::getNormalizedQuality(potion);
-            if (!isUselessEffect(potion.effect) && pq.threshold > 0) {
-              std::string star_tex = pq.star_texture_path;
-              slot_content += R"(
+					// Add color and star if potion
+					if (item_comp.type == ItemType::POTION) {
+						Potion& potion = registry.potions.get(item);
+						slot_content += "image-color: " + getImageColorProperty(potion.color, 255) + ";'/>";
+
+						PotionQuality pq = PotionSystem::getNormalizedQuality(potion);
+						if (!isUselessEffect(potion.effect) && pq.threshold > 0) {
+							std::string star_tex = pq.star_texture_path;
+							slot_content += R"(
                 <div style='
                   pointer-events: none; 
                   position: absolute; 
@@ -2909,14 +2931,14 @@ void UISystem::updateChestUI() {
                   height: 15px;
                   decorator: image(")" + star_tex + R"(" flip-vertical fill);'>
                 </div>)";
-            }
-          }
-          else {
-            slot_content += "' />";
-          }
-          
-          if (item_comp.amount > 1) {
-            slot_content += R"(
+						}
+					}
+					else {
+						slot_content += "' />";
+					}
+
+					if (item_comp.amount > 1) {
+						slot_content += R"(
                         <div style='
                             pointer-events: none; 
                             position: absolute; 
@@ -2928,32 +2950,32 @@ void UISystem::updateChestUI() {
                             font-effect: outline(1px black);'>
                         )" + std::to_string(item_comp.amount) + R"(
                         </div>)";
-          }
-        }
-      }
-      
-      slot_element->SetInnerRML(slot_content);
-    }
+					}
+				}
+			}
 
-    // Update player inventory slots (slots 30-39)
-    for (int i = 0; i < 10; i++) {
-      int slot_index = i + 30;
-      std::string slot_id = "slot-" + std::to_string(slot_index);
-      Rml::Element* slot_element = m_chest_document->GetElementById(slot_id);
+			slot_element->SetInnerRML(slot_content);
+		}
 
-      if (!slot_element) continue;
+		// Update player inventory slots (slots 30-39)
+		for (int i = 0; i < 10; i++) {
+			int slot_index = i + 30;
+			std::string slot_id = "slot-" + std::to_string(slot_index);
+			Rml::Element* slot_element = m_chest_document->GetElementById(slot_id);
 
-      std::string slot_content = "";
-      
-      if (i < playerInventory.items.size() && registry.items.has(playerInventory.items[i])) {
-        Entity item = playerInventory.items[i];
-        Item& item_comp = registry.items.get(item);
+			if (!slot_element) continue;
 
-        auto it = ITEM_INFO.find(item_comp.type);
-        if (it != ITEM_INFO.end()) {
-          std::string texture_path = it->second.texture_path;
-          
-          slot_content = R"(
+			std::string slot_content = "";
+
+			if (i < playerInventory.items.size() && registry.items.has(playerInventory.items[i])) {
+				Entity item = playerInventory.items[i];
+				Item& item_comp = registry.items.get(item);
+
+				auto it = ITEM_INFO.find(item_comp.type);
+				if (it != ITEM_INFO.end()) {
+					std::string texture_path = it->second.texture_path;
+
+					slot_content = R"(
                     <img src=")" + texture_path + R"(" 
                     style='
                         pointer-events: none;
@@ -2962,16 +2984,16 @@ void UISystem::updateChestUI() {
                         margin: 4px; 
                         transform: scaleY(-1); 
                     )";
-          
-          // Add color and star if potion
-          if (item_comp.type == ItemType::POTION) {
-            Potion& potion = registry.potions.get(item);
-            slot_content += "image-color: " + getImageColorProperty(potion.color, 255) + ";'/>";
 
-            PotionQuality pq = PotionSystem::getNormalizedQuality(potion);
-            if (!isUselessEffect(potion.effect) && pq.threshold > 0) {
-              std::string star_tex = pq.star_texture_path;
-              slot_content += R"(
+					// Add color and star if potion
+					if (item_comp.type == ItemType::POTION) {
+						Potion& potion = registry.potions.get(item);
+						slot_content += "image-color: " + getImageColorProperty(potion.color, 255) + ";'/>";
+
+						PotionQuality pq = PotionSystem::getNormalizedQuality(potion);
+						if (!isUselessEffect(potion.effect) && pq.threshold > 0) {
+							std::string star_tex = pq.star_texture_path;
+							slot_content += R"(
                 <div style='
                   pointer-events: none; 
                   position: absolute; 
@@ -2981,14 +3003,14 @@ void UISystem::updateChestUI() {
                   height: 15px;
                   decorator: image(")" + star_tex + R"(" flip-vertical fill);'>
                 </div>)";
-            }
-          }
-          else {
-            slot_content += "' />";
-          }
-          
-          if (item_comp.amount > 1) {
-            slot_content += R"(
+						}
+					}
+					else {
+						slot_content += "' />";
+					}
+
+					if (item_comp.amount > 1) {
+						slot_content += R"(
                         <div style='
                             pointer-events: none; 
                             position: absolute; 
@@ -3000,14 +3022,14 @@ void UISystem::updateChestUI() {
                             font-effect: outline(1px black);'>
                         )" + std::to_string(item_comp.amount) + R"(
                         </div>)";
-          }
-        }
-      }
-      
-      slot_element->SetInnerRML(slot_content);
-    }
-  }
-  catch (const std::exception& e) {
-    std::cerr << "Exception in UISystem::updateChestUI: " << e.what() << std::endl;
-  }
+					}
+				}
+			}
+
+			slot_element->SetInnerRML(slot_content);
+		}
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception in UISystem::updateChestUI: " << e.what() << std::endl;
+	}
 }

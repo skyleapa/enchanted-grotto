@@ -345,7 +345,7 @@ const std::vector<Recipe> RECIPES = {
 	{
 		PotionEffect::SPEED,
 		1.0f, 2.5f,  // highestQualityEffect - maximum speed multiplier
-		0, 150,   // highestQualityDuration - maximum duration in seconds
+		0, 60,   // highestQualityDuration - maximum duration in seconds
 		vec3(255, 157, 35), // finalPotionColor - green-ish color
 		{
 			{ ItemType::COFFEE_BEANS, 2, 0.0f }, // ingredients (renamed to Swiftbeans in display)
@@ -384,7 +384,7 @@ const std::vector<Recipe> RECIPES = {
 	},
 	{
 		PotionEffect::DAMAGE,
-		20.0f, 100.0f,  // highestQualityEffect - maximum damage to enemies
+		20.0f, 80.0f,  // highestQualityEffect - maximum damage to enemies
 		0, 0,      // highestQualityDuration - instant effect, no duration
 		vec3(100, 0, 100), // finalPotionColor - purple color
 		{
@@ -398,7 +398,7 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::ADD_INGREDIENT, 1 }, // add storm bark
 			{ ActionType::ADD_INGREDIENT, 2 }, // add storm sap
 			{ ActionType::STIR, 3 },          // stir 3 times
-			{ ActionType::WAIT, 1 }           // wait 5 seconds
+			{ ActionType::WAIT, 2 }           // wait 10 seconds (longer for tutorial)
 		},
 		"Potion of Harming",
 		"[Throwable] A damaging potion that can be thrown at enemies.",
@@ -406,9 +406,9 @@ const std::vector<Recipe> RECIPES = {
 	},
 	{
 		PotionEffect::MOLOTOV,
-		0.0f, 25.0f,  // highestQualityEffect - burn damage per second
-		0, 25,     // highestQualityDuration - burn duration in seconds
-		vec3(255, 100, 0), // finalPotionColor - orange/fire color
+		5.0f, 15.0f,  // highestQualityEffect - burn damage per second
+		5, 25,     // highestQualityDuration - burn duration in seconds
+		vec3(158, 89, 25), // finalPotionColor - brown color
 		{
 			{ ItemType::POTION, (int)PotionEffect::DAMAGE, 0.0f },
 			{ ItemType::MUMMY_BANDAGES, 2, 0.0f }, // ingredients
@@ -433,7 +433,7 @@ const std::vector<Recipe> RECIPES = {
 		PotionEffect::REGEN,
 		5.0f, 10.0f,   // highestQualityEffect - health regen per second
 		5, 30,     // highestQualityDuration - regen duration in seconds
-		vec3(200, 50, 50), // finalPotionColor - pink-red color
+		vec3(212, 59, 148), // finalPotionColor - pink color
 		{
 			{ ItemType::POTION, (int)PotionEffect::HEALTH, 0.0f },
 			{ ItemType::HEALING_LILY, 2, 0.0f }, // ingredients
@@ -455,8 +455,8 @@ const std::vector<Recipe> RECIPES = {
 	},
 	{
 		PotionEffect::POISON,
-		0.0f, 8.0f,   // highestQualityEffect - poison damage per second
-		0, 20,     // highestQualityDuration - poison duration in seconds
+		5.0f, 25.0f,   // highestQualityEffect - poison damage per second
+		0, 15,     // highestQualityDuration - poison duration in seconds
 		vec3(0, 150, 0), // finalPotionColor - green color
 		{
 			{ ItemType::POTION, (int)PotionEffect::DAMAGE, 0.0f },
@@ -478,8 +478,8 @@ const std::vector<Recipe> RECIPES = {
 	},
 	{
 		PotionEffect::RESISTANCE,
-		0.0f, 0.8f,   // highestQualityEffect - damage reduction multiplier (0.5 = 50% reduced damage)
-		0, 60,     // highestQualityDuration - resistance duration in seconds
+		0.2f, 0.8f,   // highestQualityEffect - damage reduction multiplier (0.5 = 50% reduced damage)
+		0, 30,     // highestQualityDuration - resistance duration in seconds
 		vec3(150, 150, 150), // finalPotionColor - silver/gray color
 		{
 			{ ItemType::CRYSTAL_SHARD, 2, 0.0f }, // ingredients
@@ -511,10 +511,10 @@ const std::vector<Recipe> RECIPES = {
 		{
 			{ ActionType::MODIFY_HEAT, 50 },  // medium heat
 			{ ActionType::ADD_INGREDIENT, 1 }, // add storm bark
-			{ ActionType::WAIT, 2 },          // wait 10 seconds
+			{ ActionType::WAIT, 1 },          // wait 5 seconds
 			{ ActionType::ADD_INGREDIENT, 2 }, // add everfern
 			{ ActionType::STIR, 2 },          // stir 2 times
-			{ ActionType::WAIT, 2 },          // wait 10 seconds
+			{ ActionType::WAIT, 1 },          // wait 5 seconds
 			{ ActionType::ADD_INGREDIENT, 0 }, // add galefruit
 			{ ActionType::ADD_INGREDIENT, 3 }, // add swift powder
 			{ ActionType::STIR, 3 },          // stir 3 times
@@ -538,14 +538,14 @@ const std::vector<Recipe> RECIPES = {
 		{
 			{ ActionType::MODIFY_HEAT, 100 }, // high heat
 			{ ActionType::ADD_INGREDIENT, 0 }, // add cactus extract
-			{ ActionType::WAIT, 2 },          // wait 10 seconds
+			{ ActionType::WAIT, 1 },          // wait 5 seconds
 			{ ActionType::ADD_INGREDIENT, 1 }, // add swiftbean
 			{ ActionType::ADD_INGREDIENT, 3 }, // add mummy bandages
 			{ ActionType::STIR, 4 },          // stir 4 times
-			{ ActionType::WAIT, 2 },          // wait 10 seconds
+			{ ActionType::WAIT, 1 },          // wait 5 seconds
 			{ ActionType::ADD_INGREDIENT, 2 }, // add storm bark
 			{ ActionType::STIR, 2 },          // stir 2 times
-			{ ActionType::WAIT, 4 }           // wait 20 seconds
+			{ ActionType::WAIT, 2 }           // wait 10 seconds
 		},
 		"Potion of Alkalescence",
 		"[Throwable] Reacts with acidic substances. Neutralizes enemies that are highly acidic, as well as acidic mushrooms.",
@@ -557,14 +557,14 @@ const std::vector<Recipe> RECIPES = {
 		0, 60,     // highestQualityDuration - duration in seconds
 		vec3(220, 220, 100), // finalPotionColor - yellow color
 		{
-			{ ItemType::STORM_SAP, 2, 0.0f },  // ingredients
-			{ ItemType::GLOWSHROOM, 3, 0.0f },  // ingredients
+			{ ItemType::CACTUS_EXTRACT, 2, 0.0f },  // ingredients
+			{ ItemType::GLOWSHROOM, 2, 0.0f },  // ingredients
 			{ ItemType::GLOWSPORE, 1, 0.0f },    // ingredients
 			{ ItemType::DOOMCAP, 1, 0.0f }    // ingredients
 		},
 		{
 			{ ActionType::MODIFY_HEAT, 25 },  // low heat
-			{ ActionType::ADD_INGREDIENT, 0 }, // add storm sap
+			{ ActionType::ADD_INGREDIENT, 0 }, // add cactus extract
 			{ ActionType::WAIT, 1 },          // wait 5 seconds
 			{ ActionType::ADD_INGREDIENT, 1 }, // add glowshroom
 			{ ActionType::ADD_INGREDIENT, 3 }, // add doomcap
@@ -587,7 +587,7 @@ const std::vector<Recipe> RECIPES = {
 			{ ItemType::POTION, (int)PotionEffect::REGEN, 0.0f },
 			{ ItemType::QUARTZMELON, 1, 0.0f },   // ingredients
 			{ ItemType::CRYSTAL_MEPH, 1, 0.0f }, // ingredients
-			{ ItemType::BLIGHTLEAF, 1, 0.0f },    // ingredients
+			{ ItemType::CRYSTABLOOM, 1, 0.0f },    // ingredients
 			{ ItemType::HEALING_LILY, 1, 0.0f },  // ingredients
 			{ ItemType::GLOWSHROOM, 2, 0.0f }     // ingredients
 		},
@@ -597,7 +597,7 @@ const std::vector<Recipe> RECIPES = {
 			{ ActionType::ADD_INGREDIENT, 1 }, // add quartzmelon
 			{ ActionType::ADD_INGREDIENT, 2 }, // add crystal meph
 			{ ActionType::WAIT, 2 },          // wait 10 seconds
-			{ ActionType::ADD_INGREDIENT, 3 }, // add blightleaf
+			{ ActionType::ADD_INGREDIENT, 3 }, // add crystabloom
 			{ ActionType::ADD_INGREDIENT, 4 }, // add healing lily
 			{ ActionType::STIR, 3 },          // stir 3 times
 			{ ActionType::ADD_INGREDIENT, 5 }, // add glowshroom
@@ -677,7 +677,8 @@ const float REGEN_TIMER = 1000.f;
 enum class TUTORIAL {
 	WELCOME_SCREEN = 0,
 	TOGGLE_TUTORIAL = WELCOME_SCREEN + 1,
-	RECIPE_BOOK = TOGGLE_TUTORIAL + 1,
+	TOOLS = TOGGLE_TUTORIAL + 1,
+	RECIPE_BOOK = TOOLS + 1,
 	FLIP_PAGE = RECIPE_BOOK + 1,
 	EXIT_GROTTO = FLIP_PAGE + 1,
 	COLLECT_ITEMS = EXIT_GROTTO + 1,
@@ -724,6 +725,8 @@ const float MOLOTOV_RADIUS_SQUARED = 10000.f; // within 2 grid cells
 const float DOT_POISON_TIMER = 3000.f;
 const float MOLOTOV_MULTIPLIER = 0.4f;
 const float DOT_MOLOTOV_TIMER = 1000.f;
+
+const float FOG_INTENSITY = 1.5f;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f

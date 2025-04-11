@@ -111,7 +111,7 @@ bool WorldSystem::init(RenderSystem* renderer_arg, BiomeSystem* biome_sys)
 
 	this->renderer = renderer_arg;
 	this->biome_sys = biome_sys;
-	
+
 	RespawnSystem::getInstance().renderer = renderer_arg;
 
 	// Set all states to default
@@ -176,8 +176,20 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 
 	// Update respawn system timers for persistent respawns
 	RespawnSystem::getInstance().step(elapsed_ms_since_last_update);
-	
-	handle_item_respawn(elapsed_ms_since_last_update);
+
+	// Remove enemies from killed_enemies list if they're respawned in RespawnSystem
+	for (auto& [id, state] : RespawnSystem::getInstance().getRespawnStates()) {
+		if (state.isSpawned && !state.enemyName.empty()) {
+			// Find and remove from killed_enemies if present
+			auto& killed_list = registry.screenStates.components[0].killed_enemies;
+			auto it = std::find(killed_list.begin(), killed_list.end(), state.enemyName);
+			if (it != killed_list.end()) {
+				std::cout << "Removing " << state.enemyName << " from killed_enemies list to allow respawn" << std::endl;
+				killed_list.erase(it);
+			}
+		}
+	}
+
 	updateThrownAmmo(elapsed_ms_since_last_update);
 
 	if (m_ui_system->isCauldronOpen() || m_ui_system->isMortarPestleOpen()) return true; // skip the following updates if menu is open
@@ -193,7 +205,7 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 			}
 			registry.delayedMovements.remove(e);
 		}
-	}	
+	}
 
 	// apply damage over time on enemies
 	for (auto entity : registry.enemies.entities) {
@@ -328,32 +340,42 @@ void WorldSystem::restart_game(bool hard_reset)
 
 	if (registry.players.components.size() == 0)
 	{
-		createPlayer(renderer, vec2(GRID_CELL_WIDTH_PX * 17.5, GRID_CELL_HEIGHT_PX * 6.5)); // bring player to front of door));
+		createPlayer(renderer, vec2(GRID_CELL_WIDTH_PX * 17.5, GRID_CELL_HEIGHT_PX * 12.0));
 	}
 
 	// re-open tutorial, state is loaded from persistence
 	// state.tutorial_step_complete = true;
 
 	if (hard_reset) {
-		screen.from_biome = (int)BIOME::BLANK;
-		screen.biome = (int)BIOME::BLANK;
+		screen.from_biome = (int)BIOME::FOREST;
+		screen.biome = (int)BIOME::GROTTO;
+		screen.is_switching_biome = true;
 		screen.switching_to_biome = (int)BIOME::GROTTO;
 		screen.tutorial_state = 0;
 		screen.tutorial_step_complete = true;
+		screen.fog_intensity = FOG_INTENSITY;
 		createWelcomeScreen(renderer, vec2(WINDOW_WIDTH_PX / 2, WINDOW_HEIGHT_PX / 2 - 50));
 		screen.killed_enemies = {};
+		screen.unlocked_biomes = {};
 		if (m_ui_system) {
 			m_ui_system->updateEffectsBar();
 			m_ui_system->updateHealthBar();
 			m_ui_system->updateInventoryBar();
 		}
+
+		biome_sys->init(renderer);
+
+		screen.is_switching_biome = true;
+		screen.fade_status = 1;
+		screen.darken_screen_factor = 1.0f;
+		biome_sys->switchBiome((int)BIOME::GROTTO, true);
 	}
 	else {
 		nlohmann::json loaded_data = ItemSystem::loadCoreState();
-		
+
 		// Initialize the biome system after core data is loaded
 		biome_sys->init(renderer);
-		
+
 		// For deferred inventory loading
 		if (!loaded_data.is_null()) {
 			biome_sys->setLoadedGameData(loaded_data);
@@ -418,7 +440,8 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 				enemy.dot_timer = DOT_POISON_TIMER;
 				enemy.dot_duration = potion.duration;
 				enemy.dot_effect = PotionEffect::POISON;
-			} else if (potion.effect == PotionEffect::MOLOTOV) {
+			}
+			else if (potion.effect == PotionEffect::MOLOTOV) {
 				enemy.dot_damage = potion.effectValue * MOLOTOV_MULTIPLIER;
 				enemy.dot_timer = DOT_MOLOTOV_TIMER;
 				enemy.dot_duration = potion.duration;
@@ -448,12 +471,12 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 			if (player.health <= 0) {
 				std::cout << "player died!" << std::endl;
 				GLuint last_biome = screen.biome; // this is the biome that the player died in
-				
+
 				// remove any ammo from screen
 				for (auto thrown_ammo : registry.ammo.entities) {
 					if (registry.ammo.get(thrown_ammo).is_fired) registry.remove_all_components_of(thrown_ammo);
 				}
-				
+
 				// Apply death penalty: remove a random valid item
 				if (registry.inventories.has(player_entity)) {
 					Inventory& inventory = registry.inventories.get(player_entity);
@@ -622,11 +645,32 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 	// exit game w/ ESC
 	if (action == GLFW_RELEASE && key == GLFW_KEY_ESCAPE)
 	{
+		// Check if any UI menus are open and close them first
+		if (m_ui_system != nullptr) {
+			if (m_ui_system->isCauldronOpen()) {
+				m_ui_system->closeCauldron(true);
+				return;
+			}
+			else if (m_ui_system->isMortarPestleOpen()) {
+				m_ui_system->closeMortarPestle(true);
+				return;
+			}
+			else if (m_ui_system->isRecipeBookOpen()) {
+				m_ui_system->closeRecipeBook();
+				return;
+			}
+			else if (m_ui_system->isChestMenuOpen()) {
+				m_ui_system->closeChestMenu();
+				return;
+			}
+		}
+
 		close_window();
 	}
 
 	if (action == GLFW_RELEASE && key == GLFW_KEY_L)
 	{
+		if ((m_ui_system && m_ui_system->textQueue.size() > 0) || registry.screenStates.components[0].is_switching_biome) return;
 		restart_game(true);
 	}
 
@@ -646,7 +690,6 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 	}
 
 	Entity player = registry.players.entities[0]; // Assume only one player entity
-	Player& player_comp = registry.players.get(player);
 	if (!registry.motions.has(player))
 	{
 		return;
@@ -684,7 +727,7 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 		}
 	}
 
-	if (screen.is_switching_biome) return; // don't handle character movement or interaction if screen is switching
+	if (screen.is_switching_biome || screen.tutorial_state == (int) TUTORIAL::WELCOME_SCREEN) return; // don't handle character movement or interaction if screen is switching
 	if (action == GLFW_PRESS && key == GLFW_KEY_F)
 	{
 		handle_player_interaction();
@@ -740,7 +783,7 @@ void WorldSystem::on_mouse_move(vec2 mouse_position)
 
 void WorldSystem::on_mouse_button_pressed(int button, int action, int mods)
 {
-	// std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
+	std::cout << "mouse position: " << mouse_pos_x << ", " << mouse_pos_y << std::endl;
 
 	// Pass the event to the UI system if it's initialized 
 	if (m_ui_system != nullptr) {
@@ -868,7 +911,7 @@ void WorldSystem::handle_player_interaction()
 		}
 
 		// If this is a cauldron/mortar & pestle and it's invisible, ignore it so if items overlap, we don't get stuck opening it
-		if (registry.cauldrons.has(item) || registry.mortarAndPestles.has(item)) {
+		if (registry.cauldrons.has(item) || registry.mortarAndPestles.has(item) || item_info.type == ItemType::RECIPE_BOOK || registry.chests.has(item)) {
 			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) {
 				continue;
 			}
@@ -926,6 +969,7 @@ void WorldSystem::handle_player_interaction()
 			}
 		}
 		else if (item_info.type == ItemType::CHEST) {
+			if (registry.renderRequests.has(item) && !registry.renderRequests.get(item).is_visible) return;
 			if (m_ui_system != nullptr) {
 				handle_textbox = m_ui_system->openChestMenu(item);
 			}
@@ -941,7 +985,6 @@ void WorldSystem::handle_player_interaction()
 				registry.motions.remove(item);
 			if (registry.renderRequests.has(item))
 				registry.renderRequests.remove(item);
-
 			return;
 		}
 	}
@@ -985,105 +1028,18 @@ bool WorldSystem::handle_item_pickup(Entity player, Entity item)
 
 	if (item_info.canRespawn && item_info.isCollectable) {
 		RespawnSystem::getInstance().registerEntity(item, false);
-		
+
 		// Set a random respawn time (60-90 seconds)
 		float respawnTime = (rand() % 30000 + 60000);
-		
+
 		if (!item_info.persistentID.empty()) {
 			RespawnSystem::getInstance().setRespawning(item_info.persistentID, respawnTime);
 		}
 	}
 
-	item_info.respawnTime = (rand() % 5001 + 10000);
-	item_info.lastBiome = static_cast<BIOME>(registry.screenStates.components[0].biome);
+	update_textbox_visibility();
 
 	return true;
-}
-
-
-void WorldSystem::handle_item_respawn(float elapsed_ms)
-{
-	if (registry.players.entities.size() == 0) return;
-	Entity entity = registry.players.entities[0];
-
-	if (!registry.inventories.has(entity)) return;
-	Inventory& inventory = registry.inventories.get(entity);
-
-	for (Entity item : registry.items.entities)
-	{
-		Item& item_info = registry.items.get(item);
-
-		// skip if in inventory
-		if (std::find(inventory.items.begin(), inventory.items.end(), item) != inventory.items.end()) continue;
-
-		if (!item_info.canRespawn)
-			continue;
-
-		if (item_info.respawnTime <= 0)
-			continue;
-
-		item_info.respawnTime -= elapsed_ms;
-
-		if (item_info.respawnTime > 0)
-			return;
-
-		// Check if current biome matches any allowed respawn biome for this item type
-		auto it = itemRespawnBiomes.find(item_info.type);
-		if (it == itemRespawnBiomes.end())
-			continue;
-
-		const std::vector<BIOME>& allowedBiomes = it->second;
-		BIOME originalBiome = item_info.lastBiome;
-		GLuint currentBiome = registry.screenStates.components[0].biome;
-
-		bool canRespawnHere = false;
-		for (BIOME allowedBiome : allowedBiomes) {
-			if (allowedBiome == originalBiome && static_cast<GLuint>(allowedBiome) == currentBiome) {
-				canRespawnHere = true;
-				break;
-			}
-		}
-
-		if (!canRespawnHere) {
-			// std::cout << "Biome mismatch, will not respawn. Original biome: " << static_cast<int>(originalBiome)
-			// 		<< ", Current biome: " << currentBiome << std::endl;
-			continue;
-		}
-
-		// Respawn item at its original position
-		Motion& motion = registry.motions.emplace(item);
-		motion.position = item_info.originalPosition;
-		motion.angle = 180.f;
-		motion.velocity = { 0, 0 };
-		motion.scale = ITEM_INFO.at(item_info.type).size;
-
-		// Restore render request
-		registry.renderRequests.insert(
-			item,
-			{
-				ITEM_INFO.at(item_info.type).texture,
-				EFFECT_ASSET_ID::TEXTURED,
-				GEOMETRY_BUFFER_ID::SPRITE,
-				RENDER_LAYER::ITEM
-			}
-		);
-
-		// Restore textbox visibility
-		for (Entity textbox : registry.textboxes.entities)
-		{
-			if (registry.textboxes.get(textbox).targetItem != item)
-				continue;
-
-			Textbox& textboxComp = registry.textboxes.get(textbox);
-			textboxComp.isVisible = false;
-
-			m_ui_system->textboxes[textbox.id()] = textboxComp;
-			break;
-		}
-
-		// Reset respawn time
-		item_info.respawnTime = 0;
-	}
 }
 
 void WorldSystem::update_textbox_visibility()
@@ -1118,11 +1074,14 @@ void WorldSystem::update_textbox_visibility()
 				Item& item_info = registry.items.get(item);
 				if (registry.cauldrons.has(item) && m_ui_system->isCauldronOpen()) {
 					uiIsOpenForItem = true;
-				} else if (registry.mortarAndPestles.has(item) && m_ui_system->isMortarPestleOpen()) {
+				}
+				else if (registry.mortarAndPestles.has(item) && m_ui_system->isMortarPestleOpen()) {
 					uiIsOpenForItem = true;
-				} else if (item_info.type == ItemType::RECIPE_BOOK && m_ui_system->isRecipeBookOpen()) {
+				}
+				else if (item_info.type == ItemType::RECIPE_BOOK && m_ui_system->isRecipeBookOpen()) {
 					uiIsOpenForItem = true;
-				} else if (item_info.type == ItemType::CHEST && m_ui_system->isChestMenuOpen()) {
+				}
+				else if (item_info.type == ItemType::CHEST && m_ui_system->isChestMenuOpen()) {
 					uiIsOpenForItem = true;
 				}
 
@@ -1139,7 +1098,6 @@ void WorldSystem::update_textbox_visibility()
 }
 
 void WorldSystem::showTemporaryGuardianDialogue(Entity guardianEntity, const std::string& message) {
-	const Motion& motion = registry.motions.get(guardianEntity);
 
 	// Store & remove existing textbox
 	Textbox old_textbox_copy;
@@ -1168,6 +1126,7 @@ bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 	Entity player = registry.players.entities[0];
 	Inventory& player_inventory = registry.inventories.get(player);
 	Guardian& guardian = registry.guardians.get(guardianEntity);
+	if (guardian.received_potion) return true;
 
 	// Check if the correct potion is in the player's inventory
 	for (auto it = player_inventory.items.begin(); it != player_inventory.items.end(); ++it)
@@ -1237,9 +1196,11 @@ bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 				// Set guardian movement to the direction of the exit
 				showTemporaryGuardianDialogue(guardianEntity, guardian.success_dialogue);
 				if (registry.motions.has(guardianEntity) && guardian.exit_direction != vec2(0, 0)) {
-					DelayedMovement& delay = registry.delayedMovements.emplace(guardianEntity);
-					delay.velocity = guardian.exit_direction * GUARDIAN_SPEED;
-					delay.delay_ms = 2000.f; // 2 seconds to let player read dialogue
+					if (!registry.delayedMovements.has(guardianEntity)) {
+						DelayedMovement& delay = registry.delayedMovements.emplace(guardianEntity);
+						delay.velocity = guardian.exit_direction * GUARDIAN_SPEED;
+						delay.delay_ms = 2000.f; // 2 seconds to let player read dialogue
+					}
 				}
 
 				if (registry.items.has(guardianEntity)) {
@@ -1250,6 +1211,8 @@ bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 				}
 
 				std::cout << "You got da potion" << std::endl;
+				guardian.received_potion = true;
+				m_ui_system->updateInventoryBar();
 
 				return true;
 			}
@@ -1258,7 +1221,7 @@ bool WorldSystem::handleGuardianUnlocking(Entity guardianEntity) {
 	std::cout << "You don't have the potion!!" << std::endl;
 
 	showTemporaryGuardianDialogue(guardianEntity, guardian.wrong_potion_dialogue);
-	
+
 	return false;
 }
 
@@ -1361,6 +1324,7 @@ void WorldSystem::updatePlayerState(Entity& player, Motion& player_motion, float
 		if (regen.timer <= 0) {
 			player_comp.health = std::min(player_comp.health + regen.heal_amount, PLAYER_MAX_HEALTH);
 			regen.timer = REGEN_TIMER;
+			m_ui_system->updateHealthBar();
 		}
 	}
 
@@ -1610,6 +1574,15 @@ void WorldSystem::handleEnemyInjured(Entity enemy_entity, float damage = 0.f) {
 	registry.damageFlashes.remove(enemy_entity);
 	registry.damageFlashes.emplace(enemy_entity);
 	if (enemy.health <= 0) {
+		if (!enemy.persistentID.empty()) {
+			// Set a respawn timer between 120-180 seconds (longer than items)
+			float respawnTime = (rand() % 60000 + 120000);
+			RespawnSystem::getInstance().registerEntity(enemy_entity, false);
+			RespawnSystem::getInstance().setRespawning(enemy.persistentID, respawnTime);
+			std::cout << "Enemy " << enemy.name << " killed, will respawn in "
+				<< respawnTime / 1000.0f << " seconds" << std::endl;
+		}
+
 		if (enemy.name == "Ent") {
 			createCollectableIngredient(renderer, registry.motions.get(enemy_entity).position, ItemType::STORM_BARK, 1, false);
 		}

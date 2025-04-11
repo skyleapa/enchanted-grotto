@@ -46,6 +46,11 @@ public:
     // Create entity from respawn state
     Entity spawnEntityFromState(RenderSystem* renderer, const std::string& persistentID);
     
+    // Getter for respawn states (needed for world system to check enemy respawns)
+    const std::unordered_map<std::string, RespawnState>& getRespawnStates() const {
+        return respawnStates;
+    }
+    
     // Serialize and deserialize for save/load
     nlohmann::json serialize();
     void deserialize(const nlohmann::json& data);

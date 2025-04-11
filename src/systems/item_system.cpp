@@ -173,13 +173,14 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
 		// update bar if inventory belongs to player
 		if (registry.players.has(inventory) && m_ui_system != nullptr) {
 			m_ui_system->updateInventoryBar();
+			m_ui_system->updatePotionInfo();
 		}
 
 		return true;
 	}
 
 	// If we couldn't stack, check capacity
-	if (inv.isFull) {
+	if (inv.items.size() >= inv.capacity) {
 		return false;
 	}
 
@@ -193,10 +194,8 @@ bool ItemSystem::addItemToInventory(Entity inventory, Entity item) {
 		inv.items.push_back(item);
 	}
 
-	// Update capacity
-	if (inv.items.size() >= inv.capacity) {
-		inv.isFull = true;
-	}
+	// Update capacity status
+	inv.isFull = (inv.items.size() >= inv.capacity);
 
 	//std::cout << "Added new item: " << item_comp.name << " to inventory." << std::endl;
 
@@ -222,6 +221,7 @@ bool ItemSystem::removeItemFromInventory(Entity inventory, Entity item) {
 		// update bar if inventory belongs to player
 		if (registry.players.has(inventory) && m_ui_system != nullptr) {
 			m_ui_system->updateInventoryBar();
+			m_ui_system->updatePotionInfo();
 		}
 		return true;
 	}
@@ -258,11 +258,9 @@ Entity ItemSystem::copyItem(Entity toCopy) {
 	newItem.name = oldItem.name;
 	newItem.isCollectable = oldItem.isCollectable;
 	newItem.amount = oldItem.amount;
-	newItem.respawnTime = oldItem.respawnTime;
 	newItem.originalPosition = oldItem.originalPosition;
 	newItem.is_ammo = oldItem.is_ammo;
 	newItem.canRespawn = oldItem.canRespawn;
-	newItem.lastBiome = oldItem.lastBiome;
 
 	//registry.items.emplace(res, newItem);
 

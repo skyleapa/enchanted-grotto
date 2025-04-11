@@ -63,7 +63,7 @@ struct ScreenState
 	bool play_ending = false;
 	bool saved_grotto = false;
 	bool ending_text_shown = false;
-	float fog_intensity = 1.5f;
+	float fog_intensity = FOG_INTENSITY;
 };
 
 // A struct to refer to debugging graphics in the ECS
@@ -140,11 +140,9 @@ struct Item
 	std::string name;
 	bool isCollectable;
 	int amount;
-	float respawnTime = 0.0f;
 	vec2 originalPosition;
 	bool is_ammo = false;
 	bool canRespawn = true;
-	BIOME lastBiome;
 	std::string persistentID = ""; // Unique identifier for respawn tracking
 };
 
@@ -248,6 +246,8 @@ struct Guardian {
 	std::string hint_dialogue;
 	std::string wrong_potion_dialogue;
 	std::string success_dialogue;
+
+	bool received_potion = false;
 };
 
 struct Ammo {
@@ -674,29 +674,6 @@ const std::unordered_map<ItemType, ItemInfo> ITEM_INFO = {
 			TEXTURE_ASSET_ID::CRYSTAL_MEPH,
 			"interactables/crystal_meph.png",
 			false} },
-};
-
-const std::unordered_map<ItemType, std::vector<BIOME>> itemRespawnBiomes = {
-	// Forest
-	{ ItemType::COFFEE_BEANS,   { BIOME::FOREST, BIOME::FOREST_EX } },
-	{ ItemType::GALEFRUIT,      { BIOME::FOREST, BIOME::FOREST_EX } },
-	{ ItemType::EVERFERN,       { BIOME::FOREST, BIOME::FOREST_EX } },
-	{ ItemType::BLIGHTLEAF,     { BIOME::FOREST, BIOME::FOREST_EX } },
-	{ ItemType::STORM_BARK,     { BIOME::FOREST, BIOME::FOREST_EX } },
-
-	// Desert
-	{ ItemType::PETRIFIED_BONE, { BIOME::DESERT } },
-	{ ItemType::HEALING_LILY,   { BIOME::DESERT } },
-	{ ItemType::CACTUS_PULP,    { BIOME::DESERT } },
-
-	// Mushroom
-	{ ItemType::GLOWSHROOM,    { BIOME::MUSHROOM } },
-	{ ItemType::DOOMCAP,        { BIOME::MUSHROOM } },
-
-	// Crystal Mountains
-	{ ItemType::CRYSTABLOOM,    { BIOME::CRYSTAL } },
-	{ ItemType::CRYSTAL_SHARD,  { BIOME::CRYSTAL } },
-	{ ItemType::QUARTZMELON,    { BIOME::CRYSTAL } }
 };
 
 // damage flash only to be applied to player and enemies

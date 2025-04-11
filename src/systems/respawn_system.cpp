@@ -34,7 +34,18 @@ void RespawnSystem::registerEntity(Entity entity, bool isSpawned) {
             } else {
                 entityType = "Unknown_" + std::to_string(static_cast<int>(item.type));
             }
-            item.persistentID = generatePersistentID(item.lastBiome, entityType, item.originalPosition);
+            
+            // Get current biome consistently for both ID and state
+            BIOME currentBiome = static_cast<BIOME>(registry.screenStates.components[0].biome);
+            item.persistentID = generatePersistentID(currentBiome, entityType, item.originalPosition);
+            
+            std::string prefix = item.persistentID.substr(0, item.persistentID.find('_'));
+            int biomeFromID = std::stoi(prefix);
+            state.biome = static_cast<BIOME>(biomeFromID);
+        } else {
+            std::string prefix = item.persistentID.substr(0, item.persistentID.find('_'));
+            int biomeFromID = std::stoi(prefix);
+            state.biome = static_cast<BIOME>(biomeFromID);
         }
         
         persistentID = item.persistentID;
@@ -46,18 +57,26 @@ void RespawnSystem::registerEntity(Entity entity, bool isSpawned) {
         state.persistentID = persistentID;
         state.isSpawned = isSpawned;
         state.originalPosition = item.originalPosition;
-        state.biome = item.lastBiome;
         state.itemType = item.type;
         state.itemAmount = item.amount;
     }
     else if (registry.enemies.has(entity)) {
         Enemy& enemy = registry.enemies.get(entity);
         if (enemy.persistentID.empty()) {
+            BIOME currentBiome = static_cast<BIOME>(registry.screenStates.components[0].biome);
             enemy.persistentID = generatePersistentID(
-                static_cast<BIOME>(registry.screenStates.components[0].biome), 
+                currentBiome, 
                 enemy.name, 
                 enemy.start_pos
             );
+            
+            std::string prefix = enemy.persistentID.substr(0, enemy.persistentID.find('_'));
+            int biomeFromID = std::stoi(prefix);
+            state.biome = static_cast<BIOME>(biomeFromID);
+        } else {
+            std::string prefix = enemy.persistentID.substr(0, enemy.persistentID.find('_'));
+            int biomeFromID = std::stoi(prefix);
+            state.biome = static_cast<BIOME>(biomeFromID);
         }
         
         persistentID = enemy.persistentID;
@@ -69,7 +88,6 @@ void RespawnSystem::registerEntity(Entity entity, bool isSpawned) {
         state.persistentID = persistentID;
         state.isSpawned = isSpawned;
         state.originalPosition = enemy.start_pos;
-        state.biome = static_cast<BIOME>(registry.screenStates.components[0].biome);
         state.enemyName = enemy.name;
         state.enemyMovable = enemy.can_move;
     }
@@ -87,7 +105,9 @@ void RespawnSystem::setRespawning(const std::string& persistentID, float respawn
 
 bool RespawnSystem::shouldEntitySpawn(const std::string& persistentID) {
     if (respawnStates.count(persistentID) > 0) {
-        return respawnStates[persistentID].isSpawned;
+        RespawnState& state = respawnStates[persistentID];
+        
+        return state.isSpawned || state.respawnCooldownRemaining <= 0;
     }
     
     // Default to spawning if not tracked yet
@@ -115,15 +135,28 @@ void RespawnSystem::step(float elapsed_ms) {
             // Check if cooldown is complete
             if (state.respawnCooldownRemaining <= 0) {
                 state.isSpawned = true;
-                std::cout << "Respawning entity " << id << " in biome " << static_cast<int>(state.biome) << std::endl;
+                
+                std::cout << "Timer finished for entity " << id << " in biome " 
+                          << static_cast<int>(state.biome) << std::endl;
                 
                 // Only spawn entities in the current biome
-                if (static_cast<GLuint>(state.biome) == currentBiome) {
+                if (static_cast<GLuint>(state.biome) == currentBiome) { 
+                    std::cout << "Creating entity now because player is in the correct biome" << std::endl;
                     Entity entity = spawnEntityFromState(renderer, id);
                     
-                    if (registry.motions.has(entity)) {
-                        registry.motions.get(entity).angle = 180.f;
+                    if (entity) {
+                        std::cout << "Successfully created entity with ID " << entity.id() << std::endl;
+                        
+                        if (registry.motions.has(entity)) {
+                            registry.motions.get(entity).angle = 180.f;
+                        }
+                    } else {
+                        std::cout << "Failed to create entity!" << std::endl;
                     }
+                } else {
+                    std::cout << "Player is in biome " << currentBiome 
+                              << ", entity will spawn when player enters biome " 
+                              << static_cast<int>(state.biome) << std::endl;
                 }
             }
         }
@@ -140,30 +173,6 @@ Entity RespawnSystem::spawnEntityFromState(RenderSystem* renderer, const std::st
     
     // Spawn item
     if (state.itemType != ItemType::POTION) {
-        bool canRespawnHere = false;
-        
-        // Check if this item type is in the itemRespawnBiomes map
-        auto it = itemRespawnBiomes.find(state.itemType);
-        if (it != itemRespawnBiomes.end()) {
-            const std::vector<BIOME>& allowedBiomes = it->second;
-            
-            for (BIOME allowedBiome : allowedBiomes) {
-                if (allowedBiome == state.biome && 
-                    static_cast<GLuint>(allowedBiome) == registry.screenStates.components[0].biome) {
-                    canRespawnHere = true;
-                    break;
-                }
-            }
-        } else {
-            if (static_cast<GLuint>(state.biome) == registry.screenStates.components[0].biome) {
-                canRespawnHere = true;
-            }
-        }
-        
-        if (!canRespawnHere) {
-            return Entity(); // Don't respawn
-        }
-        
         entity = createCollectableIngredient(renderer, state.originalPosition, state.itemType, state.itemAmount, true);
         
         if (registry.items.has(entity) && registry.motions.has(entity)) {
@@ -238,7 +247,22 @@ void RespawnSystem::deserialize(const nlohmann::json& data) {
         state.respawnCooldownRemaining = stateData["respawnCooldownRemaining"];
         state.isSpawned = stateData["isSpawned"];
         state.originalPosition = vec2(stateData["position_x"], stateData["position_y"]);
-        state.biome = static_cast<BIOME>(stateData["biome"]);
+
+        std::string persistentID = state.persistentID;
+        if (!persistentID.empty() && persistentID.find('_') != std::string::npos) {
+            std::string prefix = persistentID.substr(0, persistentID.find('_'));
+            try {
+                int biomeFromID = std::stoi(prefix);
+                state.biome = static_cast<BIOME>(biomeFromID);
+                std::cout << "Fixed biome for " << persistentID << ": using biome " << biomeFromID 
+                          << " from ID instead of saved biome " << static_cast<int>(stateData["biome"]) << std::endl;
+            } catch (const std::exception& e) {
+                state.biome = static_cast<BIOME>(stateData["biome"]);
+                std::cout << "Failed to parse biome from ID " << persistentID << ", using saved biome" << std::endl;
+            }
+        } else {
+            state.biome = static_cast<BIOME>(stateData["biome"]);
+        }
         
         std::string entityType = stateData["entityType"];
         if (entityType == "item") {
