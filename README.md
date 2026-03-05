@@ -18,6 +18,6 @@ Requires `freetype` to be installed. On macOS, use `brew install freetype`.
 chmod +x run.sh
 ./run.sh [game|test]
 ```
-progress 1 video: https://www.youtube.com/watch?v=Tv99njp9Pmo
-progress 2 video: https://youtu.be/Qz-uyPb_oww
-progress 3 video: https://www.youtube.com/watch?v=bLyz9KP83AY
+- progress 1 video: https://www.youtube.com/watch?v=Tv99njp9Pmo
+- progress 2 video: https://youtu.be/Qz-uyPb_oww
+- progress 3 video: https://www.youtube.com/watch?v=bLyz9KP83AY
