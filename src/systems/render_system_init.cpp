@@ -102,7 +102,7 @@ void RenderSystem::initializeGlEffects()
 	{
 		std::string vertex_shader = effect_paths[i] + ".vs.glsl";
 		if (effect_paths[i].find("water_") != std::string::npos) {
-			vertex_shader = std::string(PROJECT_SOURCE_DIR) + "/shaders/water_vertex.vs.glsl";
+			vertex_shader = shader_path("water_vertex.vs.glsl");
 		}
 		else {
 			vertex_shader = effect_paths[i] + ".vs.glsl";
@@ -456,4 +456,3 @@ bool loadEffectFromFile(
 
 	return true;
 }
-

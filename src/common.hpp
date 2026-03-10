@@ -7,6 +7,12 @@
 #include <vector>
 #include <map>
 
+// macOS bundle resource path lookup
+#ifdef __APPLE__
+#include <CoreFoundation/CoreFoundation.h>
+#include <limits.h>
+#endif
+
 // glfw (OpenGL)
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -27,8 +33,37 @@ using namespace glm;
 // audio_path("audio.ogg") -> data/audio/audio.ogg
 // Get defintion of PROJECT_SOURCE_DIR from:
 #include "../ext/project_path.hpp"
-inline std::string data_path() { return std::string(PROJECT_SOURCE_DIR) + "data"; };
-inline std::string shader_path(const std::string& name) { return std::string(PROJECT_SOURCE_DIR) + "/shaders/" + name; };
+
+// Resolve runtime resources on macOS (inside .app/Contents/Resources) while preserving
+// the existing dev workflow where assets live in the repo next to the executable.
+inline std::string resource_root()
+{
+#ifdef __APPLE__
+	CFBundleRef mainBundle = CFBundleGetMainBundle();
+	if (mainBundle) {
+		CFURLRef resourcesURL = CFBundleCopyResourcesDirectoryURL(mainBundle);
+		if (resourcesURL) {
+			char path[PATH_MAX];
+			if (CFURLGetFileSystemRepresentation(resourcesURL, true, (UInt8*)path, PATH_MAX)) {
+				CFRelease(resourcesURL);
+				std::string root = std::string(path);
+				// Only treat this as a bundle resource path if it actually comes from an .app bundle.
+				// Otherwise (e.g. running the raw executable from build/), keep using the repo paths.
+				if (root.find(".app/Contents/Resources") != std::string::npos) {
+					if (!root.empty() && root.back() != '/')
+						root.push_back('/');
+					return root;
+				}
+			}
+			CFRelease(resourcesURL);
+		}
+	}
+#endif
+	return std::string(PROJECT_SOURCE_DIR);
+}
+
+inline std::string data_path() { return resource_root() + "data"; };
+inline std::string shader_path(const std::string& name) { return resource_root() + "shaders/" + name; };
 inline std::string textures_path(const std::string& name) { return data_path() + "/textures/" + std::string(name); };
 inline std::string audio_path(const std::string& name) { return data_path() + "/audio/" + std::string(name); };
 inline std::string mesh_path(const std::string& name) { return data_path() + "/meshes/" + std::string(name); };

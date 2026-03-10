@@ -63,7 +63,6 @@ if(BUILD_GAME)
 endif()
 
 if(IS_OS_MAC AND BUILD_GAME)
-    # === 1. Create app bundle structure ===
     set(APP_DIR "${CMAKE_BINARY_DIR}/${PROJECT_NAME}.app")
     set(MACOS_DIR "${APP_DIR}/Contents/MacOS")
     set(RESOURCES_DIR "${APP_DIR}/Contents/Resources")
@@ -74,33 +73,32 @@ if(IS_OS_MAC AND BUILD_GAME)
     file(MAKE_DIRECTORY "${RESOURCES_DIR}/data/animations")
     file(MAKE_DIRECTORY ${FRAMEWORKS_DIR})
 
-    # === 2. Copy executable into MacOS folder, then bundle non-system dylibs ===
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> "${MACOS_DIR}/${PROJECT_NAME}"
-        COMMAND ${CMAKE_COMMAND}
-            -DAPP=${APP_DIR}
-            -DSEARCH_DIRS="/opt/homebrew/lib;/usr/local/lib"
-            -P "${CMAKE_SOURCE_DIR}/cmake/macos_bundle_fixup.cmake"
-        VERBATIM
-    )
+	    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+	        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> "${MACOS_DIR}/${PROJECT_NAME}"
+	        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/data" "${RESOURCES_DIR}/data"
+	        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/shaders" "${RESOURCES_DIR}/shaders"
+	        COMMAND ${CMAKE_COMMAND}
+	            -DAPP=${APP_DIR}
+	            -DSEARCH_DIRS=/opt/homebrew/lib\;/usr/local/lib
+	            -DSIGN_IDENTITY=-
+	            -P "${CMAKE_SOURCE_DIR}/cmake/macos_bundle_fixup.cmake"
+	        VERBATIM
+	    )
 
-    # === 3. Copy assets ===
-    file(COPY "${CMAKE_SOURCE_DIR}/data/fonts/OpenSans-Regular.ttf"
-         DESTINATION "${RESOURCES_DIR}/data/fonts")
-    file(COPY "${CMAKE_SOURCE_DIR}/data/fonts/Caveat-VariableFont_wght.ttf"
-        DESTINATION "${RESOURCES_DIR}/data/fonts")
-    file(COPY "${CMAKE_SOURCE_DIR}/data/animations"
-         DESTINATION "${RESOURCES_DIR}/data/animations")
-
-    # === 5. Create minimal Info.plist ===
-    set(PLIST_PATH "${APP_DIR}/Contents/Info.plist")
-    file(WRITE ${PLIST_PATH} "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
-    file(APPEND ${PLIST_PATH} "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n")
-    file(APPEND ${PLIST_PATH} "<plist version=\"1.0\">\n<dict>\n")
-    file(APPEND ${PLIST_PATH} "  <key>CFBundleExecutable</key>\n  <string>${PROJECT_NAME}</string>\n")
-    file(APPEND ${PLIST_PATH} "  <key>CFBundleIdentifier</key>\n  <string>com.yourname.${PROJECT_NAME}</string>\n")
-    file(APPEND ${PLIST_PATH} "  <key>CFBundlePackageType</key>\n  <string>APPL</string>\n")
-    file(APPEND ${PLIST_PATH} "</dict>\n</plist>\n")
+	    set(PLIST_PATH "${APP_DIR}/Contents/Info.plist")
+	    file(WRITE ${PLIST_PATH} "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+	    file(APPEND ${PLIST_PATH} "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n")
+	    file(APPEND ${PLIST_PATH} "<plist version=\"1.0\">\n<dict>\n")
+	    file(APPEND ${PLIST_PATH} "  <key>CFBundleName</key>\n  <string>${PROJECT_NAME}</string>\n")
+	    file(APPEND ${PLIST_PATH} "  <key>CFBundleDisplayName</key>\n  <string>${PROJECT_NAME}</string>\n")
+	    file(APPEND ${PLIST_PATH} "  <key>CFBundleExecutable</key>\n  <string>${PROJECT_NAME}</string>\n")
+	    file(APPEND ${PLIST_PATH} "  <key>CFBundleIdentifier</key>\n  <string>com.yourname.${PROJECT_NAME}</string>\n")
+	    file(APPEND ${PLIST_PATH} "  <key>CFBundlePackageType</key>\n  <string>APPL</string>\n")
+	    file(APPEND ${PLIST_PATH} "  <key>NSPrincipalClass</key>\n  <string>NSApplication</string>\n")
+	    file(APPEND ${PLIST_PATH} "  <key>NSHighResolutionCapable</key>\n  <true/>\n")
+	    file(APPEND ${PLIST_PATH} "  <key>CFBundleShortVersionString</key>\n  <string>0.1.0</string>\n")
+	    file(APPEND ${PLIST_PATH} "  <key>CFBundleVersion</key>\n  <string>1</string>\n")
+	    file(APPEND ${PLIST_PATH} "</dict>\n</plist>\n")
 endif()
 
 set(glm_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/glm/cmake/glm) # if necessary
