@@ -33,7 +33,7 @@ public:
 	
 	// Serialization
 	static bool saveGameState();
-	static bool loadGameState();
+	static bool loadGameState(bool supreme); // load the supreme game state (fully unlocked)
 	
 	// Item factory methods
 	static Entity createItem(ItemType type, int amount = 1, bool isCollectable = false, bool is_ammo = false, bool canRespawn = true);
@@ -56,7 +56,7 @@ public:
 	static void setUISystem(UISystem* ui_system) { m_ui_system = ui_system; }
 
 	// Split loading into two phases to handle biome initialization timing for the CHEST :(
-	static nlohmann::json loadCoreState(); // Load screen state & other core data, returns the parsed JSON
+	static nlohmann::json loadCoreState(bool supreme); // Load screen state & other core data, returns the parsed JSON
 	static void loadInventoryState(const nlohmann::json& data); // Load inventory data after biomes initialized
 
 private:

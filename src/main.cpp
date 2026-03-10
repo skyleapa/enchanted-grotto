@@ -91,8 +91,9 @@ int main()
 		renderer_system.swap_buffers();
 	}
 
-	// Save game state before exit
-	item_system.saveGameState();
+	// Save game state before exit ONLY if not supreme state
+	if (!world_system.supremeState)
+		item_system.saveGameState();
 
 	return EXIT_SUCCESS;
 }

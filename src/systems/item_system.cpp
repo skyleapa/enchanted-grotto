@@ -481,7 +481,7 @@ void ItemSystem::deserializeInventory(Entity inventory, const nlohmann::json& da
 
 void ItemSystem::deserializePlayerState(Entity player_entity, const nlohmann::json& data) {
 	if (!registry.players.has(player_entity)) return;
-	
+
 	Player& player = registry.players.get(player_entity);
 	player.name = data.value("name", "Player");
 	player.health = data.value("health", PLAYER_MAX_HEALTH);
@@ -490,9 +490,9 @@ void ItemSystem::deserializePlayerState(Entity player_entity, const nlohmann::js
 	player.speed_multiplier = data.value("speed_multiplier", 1.0f);
 	player.effect_multiplier = data.value("effect_multiplier", 1.0f);
 	player.defense = data.value("defense", 1.0f);
-	
+
 	player.active_effects.clear();
-	
+
 	for (const auto& effect : data["active_effects"]) {
 		player.active_effects.push_back(deserializeItem(effect));
 	}
@@ -502,25 +502,25 @@ void ItemSystem::deserializePlayerState(Entity player_entity, const nlohmann::js
 
 bool ItemSystem::saveGameState() {
 	std::cout << "Saving game state..." << std::endl;
-	
+
 	nlohmann::json data;
-	
+
 	nlohmann::json inventories = nlohmann::json::array();
-	
+
 	if (!registry.cauldrons.entities.empty()) {
 		Entity cauldron = registry.cauldrons.entities[0];
 		if (registry.inventories.has(cauldron)) {
 			inventories.push_back(serializeInventory(cauldron));
 		}
 	}
-	
+
 	if (!registry.players.entities.empty()) {
 		Entity player = registry.players.entities[0];
 		if (registry.inventories.has(player)) {
 			inventories.push_back(serializeInventory(player));
 		}
 	}
-	
+
 	// Only save the first chest to prevent duplicate chest entries in the save file
 	if (!registry.chests.entities.empty()) {
 		Entity chest = registry.chests.entities[0];
@@ -528,18 +528,18 @@ bool ItemSystem::saveGameState() {
 			inventories.push_back(serializeInventory(chest));
 		}
 	}
-	
+
 	data["inventories"] = inventories;
 	data["screen_state"] = serializeScreenState();
-	
+
 	if (UISystem::s_instance != nullptr) {
 		data["recipe_book_index"] = UISystem::s_instance->current_recipe_index;
 	}
-	
+
 	if (registry.players.size() > 0) {
 		data["player_state"] = serializePlayerState(registry.players.entities[0]);
 	}
-	
+
 	// Save respawn system state (items, enemies)
 	data["respawn_states"] = RespawnSystem::getInstance().serialize();
 
@@ -556,20 +556,28 @@ bool ItemSystem::saveGameState() {
 	}
 }
 
-bool ItemSystem::loadGameState() {
-	nlohmann::json data = loadCoreState();
-	
+bool ItemSystem::loadGameState(bool supreme = false) {
+	nlohmann::json data = loadCoreState(supreme);
+
 	if (!data.is_null()) {
 		loadInventoryState(data);
 		return true;
 	}
-	
+
 	return false;
 }
 
-nlohmann::json ItemSystem::loadCoreState() {
+nlohmann::json ItemSystem::loadCoreState(bool supreme = false) {
 	try {
-		std::string save_path = game_state_path(GAME_STATE_FILE);
+		std::string save_path;
+		if (supreme) {
+			std::cout << "loaded supreme" << std::endl;
+			save_path = game_state_path(SUPREME_GAME_STATE_FILE);
+		}
+		else {
+			save_path = game_state_path(GAME_STATE_FILE);
+		}
+
 		std::ifstream file(save_path);
 		if (!file.is_open()) {
 			return nlohmann::json();
@@ -584,15 +592,15 @@ nlohmann::json ItemSystem::loadCoreState() {
 		}
 
 		deserializeScreenState(data["screen_state"]);
-		
+
 		if (data.contains("recipe_book_index") && UISystem::s_instance != nullptr) {
 			UISystem::s_instance->current_recipe_index = data["recipe_book_index"];
 		}
-		
+
 		if (data.contains("player_state") && !registry.players.entities.empty()) {
 			deserializePlayerState(registry.players.entities[0], data["player_state"]);
 		}
-		
+
 		if (data.contains("respawn_states")) {
 			RespawnSystem::getInstance().deserialize(data["respawn_states"]);
 		}

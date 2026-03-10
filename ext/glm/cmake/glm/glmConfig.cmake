@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
-cmake_policy(VERSION 3.2)
+cmake_minimum_required(VERSION 3.12)
+cmake_policy(VERSION 3.12)
 
 set(GLM_VERSION 0.9.9)
 

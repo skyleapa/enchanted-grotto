@@ -144,7 +144,8 @@ bool WorldSystem::step(float elapsed_ms_since_last_update)
 	screen.autosave_timer -= elapsed_ms_since_last_update;
 	if (screen.autosave_timer <= 0) {
 		screen.autosave_timer = AUTOSAVE_TIMER;
-		ItemSystem::saveGameState();
+		if (!supremeState)
+			ItemSystem::saveGameState();
 	}
 
 	if (registry.players.entities.size() < 1)
@@ -371,7 +372,7 @@ void WorldSystem::restart_game(bool hard_reset)
 		biome_sys->switchBiome((int)BIOME::GROTTO, true);
 	}
 	else {
-		nlohmann::json loaded_data = ItemSystem::loadCoreState();
+		nlohmann::json loaded_data = ItemSystem::loadCoreState(false);
 
 		// Initialize the biome system after core data is loaded
 		biome_sys->init(renderer);
@@ -508,7 +509,7 @@ void WorldSystem::handle_collisions(float elapsed_ms)
 					}
 				}
 
-				ItemSystem::loadGameState();
+				ItemSystem::loadGameState(WorldSystem::supremeState);
 				screen.is_switching_biome = true;
 				screen.switching_to_biome = (GLuint)BIOME::GROTTO;
 				screen.from_biome = (GLuint)BIOME::GROTTO;
@@ -665,7 +666,7 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 			}
 		}
 
-		close_window();
+		// close_window(); // get rid of closing game, kinda annoying
 	}
 
 	if (action == GLFW_RELEASE && key == GLFW_KEY_L)
@@ -686,7 +687,24 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 
 	if (action == GLFW_RELEASE && key == GLFW_KEY_P)
 	{
-		ItemSystem::saveGameState();
+		if (!supremeState)
+			ItemSystem::saveGameState();
+	}
+
+	// upon pressing M, load all potions into inventory
+	if (action == GLFW_RELEASE && key == GLFW_KEY_M)
+	{
+		supremeState = true;
+		ItemSystem::loadGameState(true);
+
+		ScreenState& screen = registry.screenStates.components[0];
+		biome_sys->switchBiome(screen.biome, true);
+
+		if (m_ui_system) {
+			m_ui_system->updateEffectsBar();
+			m_ui_system->updateHealthBar();
+			m_ui_system->updateInventoryBar();
+		}
 	}
 
 	Entity player = registry.players.entities[0]; // Assume only one player entity
@@ -727,7 +745,7 @@ void WorldSystem::on_key(int key, int scancode, int action, int mod)
 		}
 	}
 
-	if (screen.is_switching_biome || screen.tutorial_state == (int) TUTORIAL::WELCOME_SCREEN) return; // don't handle character movement or interaction if screen is switching
+	if (screen.is_switching_biome || screen.tutorial_state == (int)TUTORIAL::WELCOME_SCREEN) return; // don't handle character movement or interaction if screen is switching
 	if (action == GLFW_PRESS && key == GLFW_KEY_F)
 	{
 		handle_player_interaction();

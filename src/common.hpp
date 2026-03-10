@@ -35,6 +35,7 @@ inline std::string mesh_path(const std::string& name) { return data_path() + "/m
 inline std::string game_state_path(const std::string& name) { return data_path() + "/game_states/v3/" + std::string(name); };
 
 const std::string GAME_STATE_FILE = "game_state.json";
+const std::string SUPREME_GAME_STATE_FILE = "supreme_game_state.json";
 
 
 // 0 = lower quality (higher FPS), 1 = higher quality (computer fan go brrr)

@@ -15,7 +15,7 @@ cd ..
 cd ..
 
 echo "Building Enchanted Grotto..."
-if [ $1 = "test" ]; then
+if [ "$1" = "test" ]; then
     cmake -S . -B build -DBUILD_GAME=OFF -DBUILD_TESTING=ON
     cmake --build build
     cd build && ctest --output-on-failure

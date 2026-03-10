@@ -23,6 +23,9 @@ class WorldSystem
 public:
 	WorldSystem();
 
+	// if we have loaded a supreme state, don't save
+	bool supremeState = false;
+
 	// creates main window
 	GLFWwindow* create_window();
 
@@ -71,6 +74,7 @@ public:
 	bool consumePotion();
 	void addPotionEffect(Potion& potion, Entity player);
 	void removePotionEffect(Potion& potion, Entity player);
+
 private:
 
 	float mouse_pos_x = 0.0f;

@@ -1,0 +1,374 @@
+{
+	"inventories": [
+		{
+			"capacity": 2147483647,
+			"items": [],
+			"owner_type": "cauldron",
+			"saved_id": 42
+		},
+		{
+			"capacity": 10,
+			"items": [
+				{
+					"amount": 20,
+					"is_ammo": false,
+					"potion": {
+						"color": [
+							183.0,
+							121.0,
+							209.0
+						],
+						"duration": 240000,
+						"effect": 9,
+						"effectValue": 1.7999999523162842,
+						"quality": 0.800000011920929
+					},
+					"saved_id": 9,
+					"type": "potion",
+					"type_id": 0
+				},
+				{
+					"amount": 20,
+					"is_ammo": false,
+					"potion": {
+						"color": [
+							183.0,
+							201.0,
+							252.0
+						],
+						"duration": 16000,
+						"effect": 10,
+						"effectValue": 8.0,
+						"quality": 0.800000011920929
+					},
+					"saved_id": 11,
+					"type": "potion",
+					"type_id": 0
+				},
+				{
+					"amount": 20,
+					"is_ammo": true,
+					"potion": {
+						"color": [
+							199.0,
+							216.0,
+							129.0
+						],
+						"duration": 48000,
+						"effect": 11,
+						"effectValue": 24.0,
+						"quality": 0.800000011920929
+					},
+					"saved_id": 13,
+					"type": "potion",
+					"type_id": 0
+				},
+				{
+					"amount": 20,
+					"is_ammo": false,
+					"potion": {
+						"color": [
+							221.0,
+							113.0,
+							30.0
+						],
+						"duration": 24000,
+						"effect": 12,
+						"effectValue": 40.0,
+						"quality": 0.4000000059604645
+					},
+					"saved_id": 15,
+					"type": "potion",
+					"type_id": 0
+				},
+				{
+					"amount": 20,
+					"is_ammo": false,
+					"potion": {
+						"color": [
+							199.0,
+							41.0,
+							49.0
+						],
+						"duration": 0,
+						"effect": 3,
+						"effectValue": 72.0,
+						"quality": 0.800000011920929
+					},
+					"saved_id": 17,
+					"type": "potion",
+					"type_id": 0
+				},
+				{
+					"amount": 20,
+					"is_ammo": false,
+					"potion": {
+						"color": [
+							255.0,
+							157.0,
+							35.0
+						],
+						"duration": 150000,
+						"effect": 2,
+						"effectValue": 2.5,
+						"quality": 1.0
+					},
+					"saved_id": 19,
+					"type": "potion",
+					"type_id": 0
+				},
+				{
+					"amount": 22,
+					"is_ammo": true,
+					"potion": {
+						"color": [
+							104.0,
+							41.0,
+							129.0
+						],
+						"duration": 0,
+						"effect": 4,
+						"effectValue": 84.0,
+						"quality": 0.800000011920929
+					},
+					"saved_id": 21,
+					"type": "potion",
+					"type_id": 0
+				},
+				{
+					"amount": 20,
+					"is_ammo": true,
+					"potion": {
+						"color": [
+							42.0,
+							106.0,
+							52.0
+						],
+						"duration": 12000,
+						"effect": 7,
+						"effectValue": 4.800000190734863,
+						"quality": 0.6000000238418579
+					},
+					"saved_id": 23,
+					"type": "potion",
+					"type_id": 0
+				},
+				{
+					"amount": 20,
+					"is_ammo": false,
+					"potion": {
+						"color": [
+							129.0,
+							183.0,
+							207.0
+						],
+						"duration": 24000,
+						"effect": 8,
+						"effectValue": 0.320000022649765,
+						"quality": 0.4000000059604645
+					},
+					"saved_id": 25,
+					"type": "potion",
+					"type_id": 0
+				},
+				{
+					"amount": 20,
+					"is_ammo": false,
+					"potion": {
+						"color": [
+							199.0,
+							46.0,
+							49.0
+						],
+						"duration": 20000,
+						"effect": 6,
+						"effectValue": 8.0,
+						"quality": 0.6000000238418579
+					},
+					"saved_id": 27,
+					"type": "potion",
+					"type_id": 0
+				}
+			],
+			"owner_type": "player",
+			"saved_id": 6
+		},
+		{
+			"capacity": 30,
+			"items": [
+				{
+					"amount": 9,
+					"ingredient": {
+						"grindLevel": 0.0
+					},
+					"is_ammo": false,
+					"saved_id": 61,
+					"type": "ingredient",
+					"type_id": 23
+				},
+				{
+					"amount": 17,
+					"ingredient": {
+						"grindLevel": 1.0
+					},
+					"is_ammo": false,
+					"saved_id": 63,
+					"type": "ingredient",
+					"type_id": 34
+				},
+				{
+					"amount": 2,
+					"ingredient": {
+						"grindLevel": 0.0
+					},
+					"is_ammo": false,
+					"saved_id": 65,
+					"type": "ingredient",
+					"type_id": 27
+				},
+				{
+					"amount": 2,
+					"ingredient": {
+						"grindLevel": -1.0
+					},
+					"is_ammo": false,
+					"saved_id": 67,
+					"type": "ingredient",
+					"type_id": 21
+				},
+				{
+					"amount": 3,
+					"ingredient": {
+						"grindLevel": 0.0
+					},
+					"is_ammo": false,
+					"saved_id": 69,
+					"type": "ingredient",
+					"type_id": 25
+				},
+				{
+					"amount": 2,
+					"ingredient": {
+						"grindLevel": -1.0
+					},
+					"is_ammo": false,
+					"saved_id": 73,
+					"type": "ingredient",
+					"type_id": 29
+				},
+				{
+					"amount": 1,
+					"ingredient": {
+						"grindLevel": -1.0
+					},
+					"is_ammo": false,
+					"saved_id": 75,
+					"type": "ingredient",
+					"type_id": 32
+				},
+				{
+					"amount": 3,
+					"ingredient": {
+						"grindLevel": -1.0
+					},
+					"is_ammo": false,
+					"saved_id": 77,
+					"type": "ingredient",
+					"type_id": 26
+				},
+				{
+					"amount": 1,
+					"ingredient": {
+						"grindLevel": -1.0
+					},
+					"is_ammo": false,
+					"saved_id": 79,
+					"type": "ingredient",
+					"type_id": 31
+				},
+				{
+					"amount": 8,
+					"ingredient": {
+						"grindLevel": -1.0
+					},
+					"is_ammo": false,
+					"saved_id": 81,
+					"type": "ingredient",
+					"type_id": 2
+				},
+				{
+					"amount": 2,
+					"ingredient": {
+						"grindLevel": 0.0
+					},
+					"is_ammo": false,
+					"saved_id": 83,
+					"type": "ingredient",
+					"type_id": 1
+				},
+				{
+					"amount": 4,
+					"ingredient": {
+						"grindLevel": -1.0
+					},
+					"is_ammo": false,
+					"saved_id": 85,
+					"type": "ingredient",
+					"type_id": 22
+				},
+				{
+					"amount": 1,
+					"ingredient": {
+						"grindLevel": 0.0
+					},
+					"is_ammo": false,
+					"saved_id": 87,
+					"type": "ingredient",
+					"type_id": 30
+				},
+				{
+					"amount": 20,
+					"is_ammo": true,
+					"potion": {
+						"color": [
+							194.0,
+							76.0,
+							52.0
+						],
+						"duration": 15000,
+						"effect": 5,
+						"effectValue": 15.000000953674316,
+						"quality": 0.6000000238418579
+					},
+					"saved_id": 71,
+					"type": "potion",
+					"type_id": 0
+				}
+			],
+			"name": "Chest",
+			"owner_type": "chest",
+			"saved_id": 50
+		}
+	],
+	"player_state": {
+		"active_effects": [],
+		"cooldown": 0.0,
+		"damage_cooldown": 0.0,
+		"defense": 1.0,
+		"effect_multiplier": 1.0,
+		"health": 100.0,
+		"load_position_x": 671.675537109375,
+		"load_position_y": 468.8053894042969,
+		"name": "Madoka",
+		"speed_multiplier": 1.0
+	},
+	"recipe_book_index": 0,
+	"respawn_states": [],
+	"screen_state": {
+		"biome": 0,
+		"from_biome": 0,
+		"killed_enemies": [],
+		"tutorial_state": 18,
+		"unlocked_biomes": []
+	}
+}
