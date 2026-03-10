@@ -22,6 +22,7 @@ Itch.io Link: https://skyleapa.itch.io/enchanted-grotto
 - *R*: Open/Close recipe book
 - *Left Click*: Throw a potion that you have selected in your inventory (only if potion is throwable). Rearrange inventory and chest
 - *Right Click*: Consume a potion that you have selected in your inventory (only if potion is consumable)
+- *Shift + Left Click*: Delete an item in your inventory
 - *0-9*: Select a inventory slot
 
 ### Tutorial
