@@ -22,5 +22,9 @@ if [ "$1" = "test" ]; then
 else
     cmake -S . -B build -DBUILD_GAME=ON -DBUILD_TESTING=OFF
     cmake --build build
-    cd build && ./enchanted_grotto
+    if [ "$(uname)" = "Darwin" ]; then
+        open build/enchanted_grotto.app
+    else
+        cd build && ./enchanted_grotto
+    fi
 fi
