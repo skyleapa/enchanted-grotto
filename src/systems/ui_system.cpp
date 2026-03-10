@@ -16,6 +16,33 @@
 #include <SDL.h>
 #include <SDL_mixer.h>
 
+#ifdef __APPLE__
+#include <CoreFoundation/CoreFoundation.h>
+#include <limits.h>
+#include <string>
+
+static std::string GetResourcePath(const std::string& relative_path)
+{
+	CFBundleRef mainBundle = CFBundleGetMainBundle();
+	if (!mainBundle) return relative_path; // fallback
+
+	CFURLRef resourcesURL = CFBundleCopyResourcesDirectoryURL(mainBundle);
+	if (!resourcesURL) return relative_path;
+
+	char path[PATH_MAX];
+	if (!CFURLGetFileSystemRepresentation(resourcesURL, true, (UInt8*)path, PATH_MAX)) {
+		CFRelease(resourcesURL);
+		return relative_path;
+	}
+	CFRelease(resourcesURL);
+
+	std::string full_path = std::string(path) + "/" + relative_path;
+	return full_path;
+}
+#else
+static std::string GetResourcePath(const std::string& relative_path) { return relative_path; }
+#endif
+
 // Global flag to indicate when UI rendering is in progress
 // Used to prevent OpenGL error checking during RmlUi rendering
 bool g_ui_rendering_in_progress = false;
@@ -89,47 +116,25 @@ bool UISystem::init(GLFWwindow* window, RenderSystem* renderer)
 
 		std::cout << "UISystem::init - RmlUi initialized successfully" << std::endl;
 
-		// Load font (definitely not excessive)
-		std::vector<std::string> font_paths = {
-			"/ext/data/fonts/OpenSans-Regular.ttf",
-			"../ext/data/fonts/OpenSans-Regular.ttf",
-			"\\ext\\data\\fonts\\OpenSans-Regular.ttf",
-			"..\\ext\\data\\fonts\\OpenSans-Regular.ttf",
-			"./data/fonts/OpenSans-Regular.ttf",
-			".\\ext\\data\\fonts\\OpenSans-Regular.ttf",
-			"../data/fonts/OpenSans-Regular.ttf",
-			"data/fonts/OpenSans-Regular.ttf"
-		};
-
-		// Add Caveat font for the recipe book
-		std::vector<std::string> caveat_font_paths = {
-			"./data/fonts/Caveat-VariableFont_wght.ttf",
-			"../data/fonts/Caveat-VariableFont_wght.ttf",
-			"data/fonts/Caveat-VariableFont_wght.ttf"
+		std::vector<std::string> font_names = {
+			"OpenSans-Regular.ttf",
+			"Caveat-VariableFont_wght.ttf"
 		};
 
 		bool font_loaded = false;
-		for (const auto& path : font_paths) {
-			std::cout << "UISystem::init - Attempting to load font from: " << path << std::endl;
-			if (Rml::LoadFontFace(path)) {
-				std::cout << "UISystem::init - Successfully loaded font from: " << path << std::endl;
+		for (const auto& font_name : font_names) {
+			std::string font_path = GetResourcePath("data/fonts/" + font_name);
+			std::cout << "UISystem::init - Attempting to load font from: " << font_path << std::endl;
+			if (Rml::LoadFontFace(font_path)) {
+				std::cout << "UISystem::init - Successfully loaded font from: " << font_path << std::endl;
 				font_loaded = true;
-				break;
 			}
-			std::cerr << "UISystem::init - Failed to load font from: " << path << std::endl;
-		}
-
-		for (const auto& path : caveat_font_paths) {
-			std::cout << "UISystem::init - Attempting to load Caveat font from: " << path << std::endl;
-			if (Rml::LoadFontFace(path)) {
-				std::cout << "UISystem::init - Successfully loaded Caveat font from: " << path << std::endl;
-				break;
+			else {
+				std::cerr << "UISystem::init - Failed to load font from: " << font_path << std::endl;
 			}
-			std::cerr << "UISystem::init - Failed to load Caveat font from: " << path << std::endl;
 		}
-
 		if (!font_loaded) {
-			std::cerr << "UISystem::init - Failed to load font from any path" << std::endl;
+			std::cerr << "UISystem::init - Failed to load any font, continuing without UI" << std::endl;
 			return false;
 		}
 
